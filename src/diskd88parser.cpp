@@ -148,9 +148,9 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 	}
 	// invalid sector size
 	if (sector_header->size > 2048) {
-		result->SetError(DiskResult::ERRV_SECTOR_SIZE, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
+		result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
 	} else if (sector_header->size == 0) {
-		result->SetWarn(DiskResult::ERRV_SECTOR_SIZE, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
+		result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
 	}
 
 	// 追加
@@ -465,6 +465,11 @@ int DiskD88Parser::Parse(wxInputStream &istream)
 		result->SetError(DiskResult::ERRV_DISK_SIZE_ZERO, disk_number);
 		return result->GetValid();
 	}
+	// チェック
+	if (Check(istream) != 0) {
+		result->SetError(DiskResult::ERRV_INVALID_DISK, disk_number);
+		return result->GetValid();
+	}
 	for(; read_size < stream_size && result->GetValid() >= 0; disk_number++) {
 		wxUint32 size = ParseDisk(istream, read_size, disk_number);
 		if (size == 0) break;
@@ -473,9 +478,33 @@ int DiskD88Parser::Parse(wxInputStream &istream)
 	return result->GetValid();
 }
 
-/// チェック しない
+/// チェック
 /// @return 0 
 int DiskD88Parser::Check(wxInputStream &istream)
 {
-	return 0;
+	istream.SeekI(0);
+
+	d88_header_t header;
+	wxUint32 header_size_min = (wxUint32)sizeof(header) - 32;
+	wxUint32 header_size_max = (wxUint32)sizeof(header) + 16;
+
+	size_t len = istream.Read(&header, sizeof(header)).LastRead();
+	if (len < (size_t)header_size_min) {
+		// too short
+		return -1;
+	}
+
+	istream.SeekI(0);
+
+	// check offset
+	int valid = -1;
+	for(int i=0; i < DISKD88_MAX_TRACKS; i++) {
+		wxUint32 offset = header.offsets[i];
+		offset = wxUINT32_SWAP_ON_BE(offset);
+		if (offset >= header_size_min && offset <= header_size_max && (offset & 0xf) == 0) {
+			valid = 0;
+			break;
+		}
+	}
+	return valid;
 }

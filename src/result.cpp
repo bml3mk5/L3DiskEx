@@ -16,45 +16,61 @@
 //
 ResultInfo::ResultInfo()
 {
-	valid = 0;
-	msgs.Empty();
+	Clear();
+}
+ResultInfo::ResultInfo(const ResultInfo &src)
+{
+	valid = src.valid;
+	msgs = src.msgs;
+	bufs.Empty();
+}
+ResultInfo &ResultInfo::operator=(const ResultInfo &src)
+{
+	valid = src.valid;
+	msgs = src.msgs;
+	bufs.Empty();
+	return *this;
 }
 void ResultInfo::Clear()
 {
 	valid = 0;
 	msgs.Empty();
+	bufs.Empty();
 }
 void ResultInfo::SetError(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-
-	SetMessage(error_number, ap);
-
+	SetError(error_number, ap);
 	va_end(ap);
-
-	valid = -1;
 }
 void ResultInfo::SetWarn(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-
-	SetMessage(error_number, ap);
-
+	SetWarn(error_number, ap);
 	va_end(ap);
-
-	if (valid == 0) valid = 1;
 }
 void ResultInfo::SetInfo(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-
-	SetMessage(error_number, ap);
-
+	SetInfo(error_number, ap);
 	va_end(ap);
-
+}
+void ResultInfo::SetError(int error_number, va_list ap)
+{
+	SetMessage(error_number, ap);
+	valid = -1;
+}
+void ResultInfo::SetWarn(int error_number, va_list ap)
+{
+	SetMessage(error_number, ap);
+	if (valid == 0) valid = 1;
+}
+void ResultInfo::SetInfo(int error_number, va_list ap)
+{
+	SetMessage(error_number, ap);
 	if (valid == 0) valid = 2;
 }
 void ResultInfo::GetMessages(wxArrayString &arr)

@@ -34,52 +34,76 @@ enum en_type_name_2 {
 class DiskBasicDirItemFAT8 : public DiskBasicDirItem
 {
 protected:
+	int m_start_address;	///< ファイル内部で持っている開始アドレス
+	int m_end_address;		///< ファイル内部で持っている終了アドレス
+	int m_exec_address;		///< ファイル内部で持っている実行アドレス
+
 	DiskBasicDirItemFAT8() : DiskBasicDirItem() {}
 	DiskBasicDirItemFAT8(const DiskBasicDirItemFAT8 &src) : DiskBasicDirItem(src) {}
 
-	/// 使用しているアイテムか
+	/// @brief 使用しているアイテムか
 	bool			CheckUsed(bool unuse);
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType1Pos() const;
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType2Pos() const;
-	/// インポート時ダイアログ表示前にファイルの属性を設定
+	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
+	/// @brief ファイル内部のアドレスを取り出す
+	virtual void	TakeAddressesInFile();
+
+	/// @brief ファイル名に拡張子を付ける
+	virtual wxString AddExtension(int file_type_1, const wxString &name) const { return name; }
 
 public:
 	DiskBasicDirItemFAT8(DiskBasic *basic);
-	DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemFAT8(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// 属性を設定
+	/// @brief 属性を設定
 	void			SetFileAttr(const DiskBasicFileType &file_type);
 
-	/// 属性を返す
+	/// @brief 属性を返す
 	DiskBasicFileType GetFileAttr() const;
 
-//	/// リストの位置から属性を返す(プロパティダイアログ用)
-//	int				CalcFileTypeFromPos(int pos1, int pos2);
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	wxString 		GetFileAttrStr() const;
 
-	/// ファイルサイズとグループ数を計算する
-	virtual void	CalcFileSize();
-	/// 指定ディレクトリのすべてのグループを取得
-	virtual void	GetAllGroups(DiskBasicGroups &group_items);
+	/// @brief 最終セクタのサイズを計算してファイルサイズを返す
+	virtual int		RecalcFileSize(DiskBasicGroups &group_items, int occupied_size);
 
+	/// @brief ファイルサイズとグループ数を計算する
+	virtual void	CalcFileUnitSize(int fileunit_num);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	virtual void	GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
+
+	/// @brief アイテムがアドレスを持っているか
+	virtual bool	HasAddress() const { return true; }
+	/// @brief アドレスを編集できるか
+	virtual bool	IsAddressEditable() const { return false; }
+	/// @brief 開始アドレスを返す
+	virtual int		GetStartAddress() const;
+	/// @brief 終了アドレスを返す
+	virtual int		GetEndAddress() const;
+	/// @brief 実行アドレスを返す
+	virtual int		GetExecuteAddress() const;
+
+	/// @brief ファイル名から属性を決定する
+	virtual int		ConvFileTypeFromFileName(const wxString &filename) const;
 
 	// ダイアログ用
 
 #define ATTR_DIALOG_IDC_RADIO_TYPE1 51
 #define ATTR_DIALOG_IDC_RADIO_TYPE2 52
 
-	/// ダイアログ内の属性部分のレイアウトを作成
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// 属性を変更した際に呼ばれるコールバック
+	/// @brief 属性を変更した際に呼ばれるコールバック
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// 機種依存の属性を設定する
-	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// @brief 機種依存の属性を設定する
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 };
 
 //
@@ -92,45 +116,48 @@ protected:
 	DiskBasicDirItemFAT8F() : DiskBasicDirItemFAT8() {}
 	DiskBasicDirItemFAT8F(const DiskBasicDirItemFAT8F &src) : DiskBasicDirItemFAT8(src) {}
 
-	/// ディレクトリアイテムのチェック
+	/// @brief ディレクトリアイテムのチェック
 	bool 			Check(bool &last);
 
-	/// ファイル名を格納する位置を返す
-	virtual wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	virtual int		GetFileNameSize(bool *invert = NULL) const;
-	/// 属性１を返す
+	/// @brief ファイル名を格納する位置を返す
+	virtual wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 属性１を返す
 	virtual int		GetFileType1() const;
-	/// 属性２を返す
+	/// @brief 属性２を返す
 	virtual int		GetFileType2() const;
-	/// 属性３を返す
+	/// @brief 属性３を返す
 	virtual int		GetFileType3() const;
-	/// 属性１のセット
+	/// @brief 属性１のセット
 	virtual void	SetFileType1(int val);
-	/// 属性２のセット
+	/// @brief 属性２のセット
 	virtual void	SetFileType2(int val);
-	/// 属性３のセット
+	/// @brief 属性３のセット
 	virtual void	SetFileType3(int val);
 
 public:
 	DiskBasicDirItemFAT8F(DiskBasic *basic);
-	DiskBasicDirItemFAT8F(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemFAT8F(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemFAT8F(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ディレクトリアイテムのサイズ
+	/// @brief ディレクトリアイテムのサイズ
 	virtual size_t	GetDataSize() const;
 
-	/// 最初のグループ番号をセット
-	virtual void	SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	virtual wxUint32 GetStartGroup() const;
+	/// @brief 最初のグループ番号をセット
+	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	virtual wxUint32 GetStartGroup(int fileunit_num) const;
 
-	/// ファイルサイズをセット
+	/// @brief ファイルサイズをセット
 	virtual void 	SetFileSize(int val);
 
-	/// ファイルの終端コードをチェックする必要があるか
+//	/// @brief データをエクスポートする前に必要な処理
+//	virtual bool	PreExportDataFile(wxString &filename);
+	/// @brief インポート時などのダイアログを出す前にファイルパスから内部ファイル名を生成する
+	virtual bool	PreImportDataFile(wxString &filename);
+
+	/// @brief ファイルの終端コードをチェックする必要があるか
 	virtual bool 	NeedCheckEofCode();
-	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
+	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 	virtual int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 };
 

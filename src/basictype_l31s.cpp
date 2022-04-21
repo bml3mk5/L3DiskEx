@@ -17,8 +17,8 @@ DiskBasicTypeL31S::DiskBasicTypeL31S(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 {
 }
 
-/// FATエリアをチェック
-bool DiskBasicTypeL31S::CheckFat()
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+double DiskBasicTypeL31S::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
@@ -27,16 +27,25 @@ bool DiskBasicTypeL31S::CheckFat()
 		end_group /= basic->GetSectorsPerGroup();
 		basic->SetFatEndGroup(end_group - 1);
 	}
+	return 1.0;
+}
 
-	bool valid = DiskBasicType::CheckFat();
-	if (valid) {
+/// FATエリアをチェック
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeL31S::CheckFat(bool is_formatting)
+{
+	double valid_ratio = DiskBasicTypeFAT8::CheckFat(is_formatting);
+	if (valid_ratio >= 0.0) {
 		// FAT先頭エリアのチェック
 		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 		if (!sector) {
-			valid = false;
+			valid_ratio = -1.0;
 		} else if (!((sector->Get(0) == 0 || sector->Get(0) == 0xff) && sector->Get(1) == 0xff)) {
-			valid = false;
+			valid_ratio = -1.0;
 		}
 	}
-	return valid;
+	return valid_ratio;
 }

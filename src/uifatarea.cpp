@@ -84,9 +84,14 @@ void L3DiskFatAreaFrame::SetGroup(wxUint32 group_num)
 	panel->SetGroup(group_num);
 }
 
-void L3DiskFatAreaFrame::SetGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num)
+void L3DiskFatAreaFrame::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
-	panel->SetGroup(group_items, extra_group_num);
+	panel->SetGroup(group_items, extra_group_nums);
+}
+
+void L3DiskFatAreaFrame::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+{
+	panel->UnsetGroup(group_items, extra_group_nums);
 }
 
 void L3DiskFatAreaFrame::ClearGroup()
@@ -128,6 +133,27 @@ L3DiskFatAreaPanel::L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent)
 	SetScrollRate(10, 10);
 
 	ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
+
+	// pen color
+	pens[FAT_AVAIL_FREE] = *wxBLACK_PEN;
+	pens[FAT_AVAIL_SYSTEM] = *wxBLACK_PEN;
+	pens[FAT_AVAIL_USED] = *wxBLACK_PEN;
+	pens[FAT_AVAIL_USED_FIRST] = *wxBLACK_PEN;
+	pens[FAT_AVAIL_USED_LAST] = *wxBLACK_PEN;
+	pens[FAT_AVAIL_MISSING] = *wxGREY_PEN;
+	pens[FAT_AVAIL_LEAK] = *wxLIGHT_GREY_PEN;
+
+	// brush color
+	brushes[FAT_AVAIL_FREE] = *wxWHITE_BRUSH;
+	brushes[FAT_AVAIL_SYSTEM] = *wxGREY_BRUSH;
+	brushes[FAT_AVAIL_USED] = *wxCYAN_BRUSH;
+	brushes[FAT_AVAIL_USED_FIRST] = wxBrush(wxColor(0x00, 0xff, 0x80));
+	brushes[FAT_AVAIL_USED_LAST] = wxBrush(wxColor(0x00, 0x80, 0xff));
+	brushes[FAT_AVAIL_MISSING] = *wxLIGHT_GREY_BRUSH;
+	brushes[FAT_AVAIL_LEAK] = wxBrush(wxColor(0xc0, 0xff, 0xff));
+
+	brush_select = *wxRED_BRUSH;
+	brush_extra = wxBrush(wxColor(0xff, 0, 0xff));
 }
 
 L3DiskFatAreaPanel::~L3DiskFatAreaPanel()
@@ -187,39 +213,16 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 			x += (ll + margin);
 		}
 
-		switch(sts & 0xffff) {
-		case FAT_AVAIL_MISSING:
-			dc.SetPen(*wxGREY_PEN);
-			break;
-		default:
-			dc.SetPen(*wxBLACK_PEN);
-			break;
-		}
-		switch(sts & 0xffff0000) {
-		case 0x10000:
-			dc.SetBrush(*wxRED_BRUSH);
-			break;
-		case 0x20000:
-			// magenta
-			dc.SetBrush(wxBrush(wxColor(0xff, 0, 0xff)));
-			break;
-		default:
-			switch(sts) {
-			case FAT_AVAIL_USED:
-				dc.SetBrush(*wxCYAN_BRUSH);
-				break;
-			case FAT_AVAIL_USED_LAST:
-				dc.SetBrush(*wxBLUE_BRUSH);
-				break;
-			case FAT_AVAIL_SYSTEM:
-				dc.SetBrush(*wxGREY_BRUSH);
-				break;
-			case FAT_AVAIL_FREE:
-				dc.SetBrush(*wxWHITE_BRUSH);
-				break;
-			case FAT_AVAIL_MISSING:
-				dc.SetBrush(*wxLIGHT_GREY_BRUSH);
-				break;
+		if (sts & 0x10000) {
+			// selected (red)
+			dc.SetBrush(brush_select);
+		} else if (sts & 0x20000) {
+			// selected (magenta)
+			dc.SetBrush(brush_extra);
+		} else {
+			if (sts < FAT_AVAIL_NULLEND) {
+				dc.SetPen(pens[sts]);
+				dc.SetBrush(brushes[sts]);
 			}
 		}
 		dc.DrawRectangle(x, y, sq.x, sq.y);
@@ -266,6 +269,16 @@ void L3DiskFatAreaPanel::SetGroupBase(wxUint32 group_num, int highlight)
 	}
 }
 
+void L3DiskFatAreaPanel::UnsetGroupBase(wxUint32 group_num)
+{
+	wxUint32 pos = (group_num + offset);
+	if (pos < (wxUint32)datas.Count()) {
+		int val = datas.Item(pos);
+		val &= 0xffff;
+		datas.Item(pos) = val;
+	}
+}
+
 void L3DiskFatAreaPanel::ClearGroupBase()
 {
 	for(size_t pos = 0; pos < datas.Count(); pos++) {
@@ -277,18 +290,29 @@ void L3DiskFatAreaPanel::ClearGroupBase()
 
 void L3DiskFatAreaPanel::SetGroup(wxUint32 group_num)
 {
-	ClearGroupBase();
 	SetGroupBase(group_num, 0x10000);
 	Refresh(false);
 }
 
-void L3DiskFatAreaPanel::SetGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num)
+void L3DiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
-	ClearGroupBase();
-	for(size_t n = 0; n < group_items->Count(); n++) {
-		SetGroupBase(group_items->Item(n).group, 0x10000);
+	for(size_t n = 0; n < group_items.Count(); n++) {
+		SetGroupBase(group_items.Item(n).group, 0x10000);
 	}
-	SetGroupBase(extra_group_num, 0x20000);
+	for(size_t n = 0; n < extra_group_nums.Count(); n++) {
+		SetGroupBase(extra_group_nums.Item(n), 0x20000);
+	}
+	Refresh(false);
+}
+
+void L3DiskFatAreaPanel::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+{
+	for(size_t n = 0; n < group_items.Count(); n++) {
+		UnsetGroupBase(group_items.Item(n).group);
+	}
+	for(size_t n = 0; n < extra_group_nums.Count(); n++) {
+		UnsetGroupBase(extra_group_nums.Item(n));
+	}
 	Refresh(false);
 }
 

@@ -39,8 +39,8 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic)
 	: DiskBasicDirItemFAT8(basic)
 {
 }
-DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemFAT8(basic, sector, data)
+DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemFAT8(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -48,57 +48,48 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int num, int track, i
 {
 	// n88
 	Used(CheckUsed(unuse));
-	unuse = (unuse || (this->data->n88.name[0] == 0xff));
+	unuse = (unuse || (m_data->n88.name[0] == 0xff));
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemN88::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemN88::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
 	// N88
-	size = len = sizeof(data->n88.name);
-	return data->n88.name;
+	if (num == 0) {
+		size = len = sizeof(m_data->n88.name);
+		return m_data->n88.name;
+	} else {
+		size = len = 0;
+		return NULL;
+	}
 }
 
 /// 拡張子を格納する位置を返す
 wxUint8 *DiskBasicDirItemN88::GetFileExtPos(size_t &len) const
 {
-	len = sizeof(data->n88.ext);
-	return data->n88.ext;
+	len = sizeof(m_data->n88.ext);
+	return m_data->n88.ext;
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemN88::GetFileNameSize(bool *invert) const
-{
-	return (int)sizeof(data->n88.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemN88::GetFileExtSize(bool *invert) const
-{
-	return (int)sizeof(data->n88.ext);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemN88::GetFileType1() const
 {
-	return data->n88.type;
+	return m_data->n88.type;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemN88::SetFileType1(int val)
 {
-	data->n88.type = val & 0xff;
+	m_data->n88.type = val & 0xff;
 }
 
 /// 使用しているアイテムか
 bool DiskBasicDirItemN88::CheckUsed(bool unuse)
 {
-	return (!unuse && this->data->n88.name[0] != 0 && this->data->n88.name[0] != 0xff);
+	return (!unuse && this->m_data->n88.name[0] != 0 && this->m_data->n88.name[0] != 0xff);
 }
 
 /// ディレクトリアイテムのチェック
@@ -106,10 +97,10 @@ bool DiskBasicDirItemN88::CheckUsed(bool unuse)
 /// @return チェックOK
 bool DiskBasicDirItemN88::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
-	if (data->n88.name[0] == 0xff) {
+	if (m_data->n88.name[0] == 0xff) {
 		last = true;
 		return valid;
 	}
@@ -120,6 +111,7 @@ bool DiskBasicDirItemN88::Check(bool &last)
 	return valid;
 }
 
+/// 属性を設定
 /// @param [in] file_type
 void DiskBasicDirItemN88::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -127,26 +119,37 @@ void DiskBasicDirItemN88::SetFileAttr(const DiskBasicFileType &file_type)
 	if (ftype == -1) return;
 
 	// n88
-	int t = 0;
-	if (ftype & FILE_TYPE_MACHINE_MASK) {
-		t = FILETYPE_N88_MACHINE;
-	} else if (ftype & FILE_TYPE_BINARY_MASK) {
-		t = FILETYPE_N88_BINARY;
-	} else {
-		t = FILETYPE_N88_ASCII;
-	}
+	int t1 = ConvFileType1(ftype);
+
+	m_external_attr = ((ftype & FILE_TYPE_RANDOM_MASK) ? 1 : 0);
+
 	if (ftype & FILE_TYPE_READONLY_MASK) {
-		t |= DATATYPE_MASK_N88_READ_ONLY;
+		t1 |= DATATYPE_MASK_N88_READ_ONLY;
 	}
 	if (ftype & FILE_TYPE_ENCRYPTED_MASK) {
-		t |= DATATYPE_MASK_N88_ENCRYPTED;
+		t1 |= DATATYPE_MASK_N88_ENCRYPTED;
 	}
 	if (ftype & FILE_TYPE_READWRITE_MASK) {
-		t |= DATATYPE_MASK_N88_READ_WRITE;
+		t1 |= DATATYPE_MASK_N88_READ_WRITE;
 	}
-	SetFileType1(t);
+	SetFileType1(t1);
 }
 
+/// 属性を変換
+int DiskBasicDirItemN88::ConvFileType1(int file_type) const
+{
+	int t1 = 0;
+	if (file_type & FILE_TYPE_MACHINE_MASK) {
+		t1 = FILETYPE_N88_MACHINE;
+	} else if (file_type & FILE_TYPE_BINARY_MASK) {
+		t1 = FILETYPE_N88_BINARY;
+	} else {
+		t1 = FILETYPE_N88_ASCII;
+	}
+	return t1;
+}
+
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemN88::GetFileAttr() const
 {
 	int t1 = GetFileType1();
@@ -178,7 +181,7 @@ DiskBasicFileType DiskBasicDirItemN88::GetFileAttr() const
 wxString DiskBasicDirItemN88::GetFileAttrStr() const
 {
 	// n88
-	wxString attr = wxGetTranslation(gTypeNameN88_1[GetFileType1Pos()]);
+	wxString attr = wxGetTranslation(gTypeNameN88_1[ConvFileType1Pos(GetFileType1())]);
 	//
 	int t = GetFileType1();
 	if (t & DATATYPE_MASK_N88_READ_ONLY) {
@@ -201,7 +204,7 @@ void DiskBasicDirItemN88::SetFileSize(int val)
 {
 	// ファイルサイズはセクタサイズ境界で丸める
 	int sector_size = basic->GetSectorSize();
-	file_size = (((val - 1) / sector_size) + 1) * sector_size;
+	m_groups.SetSize((((val - 1) / sector_size) + 1) * sector_size);
 }
 
 /// ディレクトリサイズを返す
@@ -210,25 +213,47 @@ size_t DiskBasicDirItemN88::GetDataSize() const
 	return sizeof(directory_n88_t);
 }
 
+/// ファイル内部のアドレスを取り出す
+void DiskBasicDirItemN88::TakeAddressesInFile()
+{
+	if (m_groups.Count() == 0 || (GetFileType1() & FILETYPE_N88_MACHINE) == 0) {
+		m_start_address = -1;
+		m_end_address = -1;
+		m_exec_address = -1;
+		return;
+	}
+
+	DiskBasicGroupItem *item = &m_groups.Item(0);
+	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	if (!sector) return;
+
+	bool is_bigendian = basic->IsBigEndian();
+
+	// 開始アドレス
+	m_start_address = (int)sector->Get16(0, is_bigendian);
+	// 終了アドレス
+	m_end_address = (int)sector->Get16(2, is_bigendian);
+}
+
 /// 最初のグループ番号を設定
-void DiskBasicDirItemN88::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemN88::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 	// n88
-	data->n88.start_group = (val & 0xff);
+	m_data->n88.start_group = (val & 0xff);
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemN88::GetStartGroup() const
+wxUint32 DiskBasicDirItemN88::GetStartGroup(int fileunit_num) const
 {
 	// n88
-	return data->n88.start_group;
+	return m_data->n88.start_group;
 }
 
 /// ENDマークがあるか(一度も使用していないか)
 bool DiskBasicDirItemN88::HasEndMark()
 {
 	bool val = false;
-	val = ((wxUint32)data->n88.name[0] == basic->GetGroupUnusedCode());
+	val = ((wxUint32)m_data->n88.name[0] == basic->GetGroupUnusedCode());
 	return val;
 }
 
@@ -244,35 +269,19 @@ void DiskBasicDirItemN88::SetEndMark(DiskBasicDirItem *next_item)
 bool DiskBasicDirItemN88::NeedCheckEofCode()
 {
 	// Asc形式のときはEOFコードが必要
-	return (((GetFileType1() & (FILETYPE_N88_MACHINE | FILETYPE_N88_BINARY)) == 0) && (external_attr == 0));
+	return (((GetFileType1() & (FILETYPE_N88_MACHINE | FILETYPE_N88_BINARY)) == 0) && (m_external_attr == 0));
 }
-
-#if 0
-/// データをエクスポートする前に必要な処理
-/// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemN88::PreExportDataFile(wxString &filename)
-{
-	if (((GetFileType1() & (FILETYPE_N88_MACHINE | FILETYPE_N88_BINARY)) == 0) && (external_attr == 0)) {
-		int sts = wxMessageBox(wxString::Format(_("Is '%s' a random access file?"), filename)
-			, _("Select file type."), wxYES_NO);
-		if (sts == wxYES) {
-			external_attr = 1;
-		}
-	}
-	return true;
-}
-#endif
 
 /// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 int DiskBasicDirItemN88::RecalcFileSizeOnSave(wxInputStream *istream, int file_size)
 {
 	if (NeedCheckEofCode()) {
 		// ファイルの最終が終端記号で終わっているかを調べる
-		// ただし、ファイルサイズがクラスタサイズと合うなら終端記号は不要
-		if ((file_size % (basic->GetSectorSize() * basic->GetSectorsPerGroup())) != 0) {
-			file_size = CheckEofCode(istream, file_size);
+		file_size = CheckEofCode(istream, file_size);
+		// ただし、ファイルサイズがセクタサイズと合うなら終端記号は不要
+		if ((file_size % basic->GetSectorSize()) == 1) {
+			// 残り１バイトは終端コードのみなので不要
+			file_size--;
 		}
 	}
 	return file_size;
@@ -281,11 +290,43 @@ int DiskBasicDirItemN88::RecalcFileSizeOnSave(wxInputStream *istream, int file_s
 /// ディレクトリをクリア
 void DiskBasicDirItemN88::ClearData()
 {
-	if (!data) return;
+	if (!m_data) return;
 	int c = basic->GetFillCodeOnDir();
 	size_t l;
 	l = GetDataSize();
-	memset(data, c, l);
+	memset(m_data, c, l);
+
+	m_data->n88.type = 0;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemN88::ConvFileTypeFromFileName(const wxString &filename) const
+{
+	int ftype = 0;
+	// 拡張子で属性を設定する
+	wxFileName fn(filename);
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	if (sa) {
+		ftype = sa->GetType();
+	} else {
+		ftype = FILE_TYPE_ASCII_MASK;
+	}
+	return ftype;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemN88::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	int t1 = 0;
+	// 拡張子で属性を設定する
+	wxFileName fn(filename);
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	if (sa) {
+		t1 = ConvFileType1(sa->GetType());
+	} else {
+		t1 = TYPE_NAME_N88_ASCII;
+	}
+	return t1;
 }
 
 //
@@ -305,16 +346,15 @@ void DiskBasicDirItemN88::ClearData()
 #define IDC_RADIO_TYPE2 55
 
 /// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemN88::GetFileType1Pos() const
+int DiskBasicDirItemN88::ConvFileType1Pos(int t1) const
 {
-	int t = GetFileType1();
 	int val = 0;
-	if ((t & FILETYPE_N88_MACHINE) != 0) {
+	if ((t1 & FILETYPE_N88_MACHINE) != 0) {
 		val = TYPE_NAME_N88_MACHINE;
 	} else {
-		if (t & FILETYPE_N88_BINARY) {
+		if (t1 & FILETYPE_N88_BINARY) {
 			val = TYPE_NAME_N88_BINARY;
-		} else if (external_attr) {
+		} else if (m_external_attr) {
 			val = TYPE_NAME_N88_RANDOM;
 		} else {
 			val = TYPE_NAME_N88_ASCII;
@@ -323,11 +363,13 @@ int DiskBasicDirItemN88::GetFileType1Pos() const
 	return val;
 }
 
+#if 0
 /// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemN88::GetFileType2Pos() const
+int DiskBasicDirItemN88::ConvFileType2Pos(int t2) const
 {
 	return GetFileAttr().GetType();
 }
+#endif
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -337,17 +379,9 @@ int DiskBasicDirItemN88::GetFileType2Pos() const
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemN88::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
 {
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".BAS")) {
-			file_type_1 = TYPE_NAME_N88_BINARY;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_N88_ASCII;
-		} else if (ext == wxT(".BIN")) {
-			file_type_1 = TYPE_NAME_N88_MACHINE;
-		}
+		file_type_1 = ConvOriginalTypeFromFileName(name);
 	}
 }
 
@@ -359,14 +393,17 @@ void DiskBasicDirItemN88::SetFileTypeForAttrDialog(int show_flags, const wxStrin
 /// @param [in] flags
 void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
 	wxRadioBox *radType1;
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkReadWrite;
 	wxCheckBox *chkEncrypt;
 
+	int file_type_1 = GetFileType1();
+	int file_type_2 = GetFileAttr().GetType();
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
+	file_type_1 = ConvFileType1Pos(file_type_1);
+
+	wxBoxSizer *gszr = new wxBoxSizer(wxHORIZONTAL);
 
 	wxArrayString types1;
 	for(size_t i=0; gTypeNameN88_1[i] != NULL; i++) {
@@ -374,7 +411,8 @@ void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 	}
 	radType1 = new wxRadioBox(parent, IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 0, wxRA_SPECIFY_ROWS);
 	radType1->SetSelection(file_type_1);
-	sizer->Add(radType1, flags);
+	gszr->Add(radType1, flags);
+
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	chkReadOnly = new wxCheckBox(parent, IDC_CHECK_READONLY, wxGetTranslation(gTypeNameN88_2[TYPE_NAME_N88_READ_ONLY]));
 	chkReadOnly->SetValue((file_type_2 & FILE_TYPE_READONLY_MASK) != 0);
@@ -385,7 +423,9 @@ void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 	chkEncrypt = new wxCheckBox(parent, IDC_CHECK_ENCRYPT, wxGetTranslation(gTypeNameN88_2[TYPE_NAME_N88_ENCRYPTED]));
 	chkEncrypt->SetValue((file_type_2 &FILE_TYPE_ENCRYPTED_MASK) != 0);
 	staType4->Add(chkEncrypt, flags);
-	sizer->Add(staType4, flags);
+	gszr->Add(staType4, flags);
+
+	sizer->Add(gszr);
 
 	// event handler
 	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
@@ -412,6 +452,7 @@ void DiskBasicDirItemN88::ChangeTypeInAttrDialog(IntNameBox *parent)
 		chkEncrypt->Enable(false);
 		break;
 	case TYPE_NAME_N88_ASCII:
+	case TYPE_NAME_N88_RANDOM:
 		// ascii
 		chkReadOnly->Enable(true);
 		chkReadWrite->Enable(true);
@@ -427,23 +468,27 @@ void DiskBasicDirItemN88::ChangeTypeInAttrDialog(IntNameBox *parent)
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemN88::CalcFileTypeFromPos(int pos)
+int	DiskBasicDirItemN88::CalcFileTypeFromPos(int pos) const
 {
 	int val = 0;
-	val = (pos == TYPE_NAME_N88_MACHINE ? FILE_TYPE_MACHINE_MASK : (
-		(pos == TYPE_NAME_N88_BINARY ? FILE_TYPE_BINARY_MASK : (
-		FILE_TYPE_ASCII_MASK
-	))));
-
-	external_attr = (pos == TYPE_NAME_N88_RANDOM ? 1 : 0);
-
+	if (pos == TYPE_NAME_N88_MACHINE) {
+		val = FILE_TYPE_MACHINE_MASK;
+	} else if (pos == TYPE_NAME_N88_BINARY) {
+		val = FILE_TYPE_BINARY_MASK;
+	} else {
+		val = FILE_TYPE_ASCII_MASK;
+		if (pos == TYPE_NAME_N88_RANDOM) {
+			val |= FILE_TYPE_RANDOM_MASK;
+		}
+	}
 	return val;
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemN88::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemN88::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(IDC_RADIO_TYPE1);
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
@@ -455,7 +500,7 @@ bool DiskBasicDirItemN88::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 	val |= chkEncrypt->GetValue() ? FILE_TYPE_ENCRYPTED_MASK : 0;
 	val |= chkReadWrite->GetValue() ? FILE_TYPE_READWRITE_MASK : 0;
 
-	DiskBasicDirItem::SetFileAttr(val);
+	attr.SetFileAttr(FORMAT_TYPE_UNKNOWN, val);
 
 	return true;
 }

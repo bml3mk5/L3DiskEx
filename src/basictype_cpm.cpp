@@ -20,27 +20,25 @@ DiskBasicTypeCPM::DiskBasicTypeCPM(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 {
 }
 
-/// エリアをチェック
-bool DiskBasicTypeCPM::CheckFat()
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+/// @retval 1.0>      正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeCPM::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
-	bool valid = true;
-
 	// 最終グループ番号
 	if (basic->GetFatEndGroup() == 0) {
 		wxUint32 max_group = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup() - 1;
 		basic->SetFatEndGroup(max_group);
 	}
-
-	return valid;
+	return 1.0;
 }
 
-#if 0
-/// ディスクから各パラメータを取得
-int DiskBasicTypeCPM::ParseParamOnDisk(DiskD88Disk *disk)
+/// エリアをチェック
+double DiskBasicTypeCPM::CheckFat(bool is_formatting)
 {
-	return 0;
+	return 1.0;
 }
-#endif
 
 //
 
@@ -76,7 +74,7 @@ bool DiskBasicTypeCPM::AssignRootDirectory(int start_sector, int end_sector, Dis
 	for(size_t i = 0; i < sort_items.Count(); i++) {
 		DiskBasicDirItemCPM *citem = (DiskBasicDirItemCPM *)sort_items.Item(i);
 		if (citem->IsUsedAndVisible()) {
-			citem->CalcFileSize();
+			citem->CalcFileUnitSize(0);
 		}
 	}
 
@@ -95,21 +93,27 @@ void DiskBasicTypeCPM::CalcDiskFreeSize(bool wrote)
 {
 	wxUint32 fsize = 0;
 	wxUint32 grps = 0;
-//	fat_availability.Empty();
 
+	fat_availability.Empty();
 	fat_availability.SetCount(basic->GetFatEndGroup() + 1, FAT_AVAIL_FREE);
 
 	const DiskBasicDirItems *items = dir->GetCurrentItems();
 	for(size_t idx = 0; idx < items->Count(); idx++) {
-		DiskBasicDirItemCPM *citem = (DiskBasicDirItemCPM *)items->Item(idx);
-		if (!citem || !citem->IsUsed()) continue;
+		DiskBasicDirItem *item = items->Item(idx);
+		if (!item || !item->IsUsed()) continue;
 
 		// グループ番号のマップを調べる
-		for(int n = 0; n < citem->GetGroupEntries(); n++) {
-			wxUint32 gnum = citem->GetGroup(n);
-			if (gnum == 0) break;
+		const DiskBasicGroups *groups = &item->GetGroups();
+		int count = (int)groups->Count();
+		for(int n = 0; n < count; n++) {
+			const DiskBasicGroupItem *group = groups->ItemPtr(n);
+			wxUint32 gnum = group->group;
 			if (gnum <= basic->GetFatEndGroup()) {
-				fat_availability.Item(gnum) = FAT_AVAIL_USED;
+				if (n + 1 == count) {
+					fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;
+				} else {
+					fat_availability.Item(gnum) = FAT_AVAIL_USED;
+				}
 			}
 		}
 	}
@@ -120,8 +124,8 @@ void DiskBasicTypeCPM::CalcDiskFreeSize(bool wrote)
 		if (pos < dir_area) {
 			// ディレクトリエリアは使用済み
 			fat_availability.Item(pos) = FAT_AVAIL_SYSTEM;
-		} else if (fat_availability.Item(pos) != FAT_AVAIL_USED) {
-			fat_availability.Item(pos) = FAT_AVAIL_FREE;
+		} else if (fat_availability.Item(pos) == FAT_AVAIL_FREE) {
+//			fat_availability.Item(pos) = FAT_AVAIL_FREE;
 			grps++;
 		}
 	}
@@ -181,12 +185,13 @@ wxUint32 DiskBasicTypeCPM::GetNextEmptyGroupNumber(wxUint32 curr_group)
 }
 
 /// データサイズ分のグループを確保する
-/// @param [in]  item        ディレクトリアイテム
-/// @param [in]  data_size   確保するデータサイズ（バイト）
-/// @param [in]  flags       新規か追加か
-/// @param [out] group_items 確保したセクタリスト
+/// @param [in]  fileunit_num ファイル番号
+/// @param [in]  item         ディレクトリアイテム
+/// @param [in]  data_size    確保するデータサイズ（バイト）
+/// @param [in]  flags        新規か追加か
+/// @param [out] group_items  確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
+int DiskBasicTypeCPM::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int rc = 0;
 
@@ -237,7 +242,7 @@ int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, Allo
 		limit--;
 
 		gpos++;
-		if ((gpos % group_entries) == 0) {
+		if (remain_size > 0 && (gpos % group_entries) == 0) {
 			// グループエントリ数に達したら次のディレクトリエントリに移動
 			ditem = ditem->GetNextItem();
 			if (!ditem) {
@@ -282,25 +287,24 @@ int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, Allo
 /// @return 残りサイズ
 int DiskBasicTypeCPM::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size)
 {
-	int size = remain_size - 1;
-
 	// ファイルサイズはセクタサイズ境界なので要計算
-
-	// 終端コードは除く
-	wxUint8 eof_code = basic->InvertUint8(0x1a);
-	for(; size >= 0; size--) {
-		if (sector_buffer[size] != eof_code) {
-			break;
+	if (item->NeedCheckEofCode()) {
+		// 終端コードの1つ前までを出力
+		wxUint8 eof_code = basic->InvertUint8(basic->GetTextTerminateCode());
+		for(int len = 0; len < remain_size; len++) {
+			if (sector_buffer[len] == eof_code) {
+				remain_size = len;
+				break;
+			}
+		}
+	} else {
+		// 計算手段がないので残りサイズをそのまま返す
+		if (istream) {
+			// 比較時は、比較先のファイルサイズ
+			remain_size = istream->GetLength() % sector_size;
 		}
 	}
-	if (size < 0) {
-		// 終端コードだけで埋まるのはおかしい
-		size = remain_size - 1;
-	}
-
-	size++;
-
-	return size;
+	return remain_size;
 }
 
 /// グループ番号からセクタ番号を得る
@@ -324,7 +328,7 @@ int DiskBasicTypeCPM::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_gr
 /// データ領域の開始セクタを計算
 int DiskBasicTypeCPM::CalcDataStartSectorPos()
 {
-	return basic->GetSectorPosFromNum(basic->GetManagedTrackNumber(), basic->GetDirStartSector());
+	return GetSectorPosFromNumS(basic->GetManagedTrackNumber(), basic->GetDirStartSector());
 }
 
 /// ルートディレクトリか
@@ -375,7 +379,7 @@ bool DiskBasicTypeCPM::PrepareToSaveFile(wxInputStream &istream, int &file_size,
 	DiskBasicDirItemCPM *aitem = NULL;
 	while (limit_size < remain_size) {
 		// １ディレクトリで入りきらないので追加でディレクトリエントリを確保
-		aitem = (DiskBasicDirItemCPM *)dir->GetEmptyItemPtr(NULL);
+		aitem = (DiskBasicDirItemCPM *)dir->GetEmptyItemOnCurrent(NULL);
 		if (aitem == NULL) {
 			errinfo.SetError(DiskBasicError::ERR_DIRECTORY_FULL);
 			return false;
@@ -412,29 +416,19 @@ int DiskBasicTypeCPM::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, 
 	int len = 0;
 	if (remain <= size) {
 		// 残り少ない
+		wxUint8 term = 0;
 		if (remain < 0) remain = 0;
+		if (remain > 0) istream.Read((void *)buffer, remain);
 		if (need_eof_code && ((remain % SECTOR_UNIT_CPM) != 0)) {
-			// 最終は終端コード
-			if (remain > 1) istream.Read((void *)buffer, remain - 1);
-			if (remain > 0) buffer[remain - 1]=0x1a;
-			if (SECTOR_UNIT_CPM > remain) {
-				// バッファの余りは0x1aサプレス(128バイト未満)
-				memset((void *)&buffer[remain], 0x1a, SECTOR_UNIT_CPM - remain);
-				size = SECTOR_UNIT_CPM;
-			} else if (size > remain && remain > SECTOR_UNIT_CPM) {
-				// バッファの余りは0x1aサプレス
-				memset((void *)&buffer[remain], 0x1a, size - remain);
-			}
-		} else {
-			if (remain > 0) istream.Read((void *)buffer, remain);
-			if (SECTOR_UNIT_CPM > remain) {
-				// バッファの余りは0サプレス(128バイト未満)
-				memset((void *)&buffer[remain], 0, SECTOR_UNIT_CPM - remain);
-				size = SECTOR_UNIT_CPM;
-			} else if (size > remain && remain > SECTOR_UNIT_CPM) {
-				// バッファの余りは0サプレス
-				memset((void *)&buffer[remain], 0, size - remain);
-			}
+			// アスキーは終端コードをサプレス
+			term = basic->GetTextTerminateCode();
+		}
+		// 残りを128バイトで丸める
+		int size128 = ((remain + SECTOR_UNIT_CPM - 1) / SECTOR_UNIT_CPM) * SECTOR_UNIT_CPM;
+		if (remain < size128) {
+			// バッファの余りはサプレス(128バイト境界まで)
+			memset((void *)&buffer[remain], term, size128 - remain);
+			size = size128;
 		}
 		len = remain;
 	} else {

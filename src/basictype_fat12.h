@@ -49,29 +49,29 @@ public:
 
 	/// @name access to FAT area
 	//@{
-	/// FAT位置をセット
+	/// @brief FAT位置をセット
 	void			SetGroupNumber(wxUint32 num, wxUint32 val);
-	/// FAT位置を返す
+	/// @brief FAT位置を返す
 	wxUint32		GetGroupNumber(wxUint32 num) const;
-	/// 次の空きFAT位置を返す
+	/// @brief 次の空きFAT位置を返す
 	virtual wxUint32 GetNextEmptyGroupNumber(wxUint32 curr_group);
 	//@}
 
 	/// @name check / assign FAT area
 	//@{
-	/// FATエリアをチェック
-	bool			CheckFat();
-	/// ディスクから各パラメータを取得
-	virtual int		ParseParamOnDisk(DiskD88Disk *disk);
-	/// 管理エリアのトラック番号からグループ番号を計算
+	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
+	virtual double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	/// @brief FATエリアをチェック
+	virtual double 	CheckFat(bool is_formatting);
+	/// @brief 管理エリアのトラック番号からグループ番号を計算
 	virtual wxUint32 CalcManagedStartGroup();
 	//@}
 
 	/// @name disk size
 	//@{
-	/// 使用可能なディスクサイズを得る
+	/// @brief 使用可能なディスクサイズを得る
 	virtual void	GetUsableDiskSize(int &disk_size, int &group_size) const;
-	/// 残りディスクサイズを計算
+	/// @brief 残りディスクサイズを計算
 	virtual void	CalcDiskFreeSize(bool wrote);
 	//@}
 
@@ -81,38 +81,40 @@ public:
 
 	/// @name file chain
 	//@{
-	/// グループ番号から開始セクタ番号を得る
+	/// @brief グループ番号から開始セクタ番号を得る
 	virtual int		GetStartSectorFromGroup(wxUint32 group_num);
-	/// グループ番号から最終セクタ番号を得る
+	/// @brief グループ番号から最終セクタ番号を得る
 	virtual int		GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
-	/// データ領域の開始セクタを計算
+	/// @brief データ領域の開始セクタを計算
 	virtual int		CalcDataStartSectorPos();
 	//@}
 
 	/// @name directory
 	//@{
-	/// ルートディレクトリか
+	/// @brief ルートディレクトリか
 	virtual bool	IsRootDirectory(wxUint32 group_num);
-	/// サブディレクトリを作成できるか
+	/// @brief サブディレクトリを作成できるか
 	virtual bool	CanMakeDirectory() const { return true; }
-	/// サブディレクトリを作成した後の個別処理
+	/// @brief サブディレクトリを作成する前にディレクトリ名を編集する
+	virtual bool	RenameOnMakingDirectory(wxString &dir_name);
+	/// @brief サブディレクトリを作成した後の個別処理
 	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
 	//@{
-	/// セクタデータを指定コードで埋める
+	/// @brief セクタデータを指定コードで埋める
 	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
-	/// セクタデータを埋めた後の個別処理
+	/// @brief セクタデータを埋めた後の個別処理
 	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
-	/// BIOS Parameter Block を作成
+	/// @brief BIOS Parameter Block を作成
 	bool			CreateBiosParameterBlock(const char *jmp, const char *name, wxUint8 **sec_buf = NULL);
 	//@}
 
 	/// @name save / write
 	//@{
-	/// 最後のグループ番号を計算する
-	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
+	/// @brief グループ確保時に最後のグループ番号を計算する
+	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int &size_remain);
 	//@}
 };
 

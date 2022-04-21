@@ -9,6 +9,7 @@
 #include <wx/statline.h>
 #include <wx/radiobut.h>
 #include <wx/checkbox.h>
+#include <wx/choice.h>
 #include <wx/button.h>
 #include <wx/stattext.h>
 #include <wx/menu.h>
@@ -43,7 +44,7 @@ L3DiskBinDumpTextCtrl::L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id)
 wxBEGIN_EVENT_TABLE(L3DiskBinDumpFrame, wxFrame)
 	EVT_MENU(wxID_CLOSE, L3DiskBinDumpFrame::OnClose)
 	EVT_MENU(IDM_VIEW_INVERT, L3DiskBinDumpFrame::OnViewInvert)
-	EVT_MENU_RANGE(IDM_VIEW_CHAR_ASCII, IDM_VIEW_CHAR_SJIS, L3DiskBinDumpFrame::OnViewChar)
+	EVT_MENU_RANGE(IDM_VIEW_CHAR_0, IDM_VIEW_CHAR_0 + 30, L3DiskBinDumpFrame::OnViewChar)
 	EVT_MENU_RANGE(IDM_VIEW_TEXT, IDM_VIEW_BINARY, L3DiskBinDumpFrame::OnViewTextBinary)
 	EVT_MENU(IDM_VIEW_FONT, L3DiskBinDumpFrame::OnViewFont)
 wxEND_EVENT_TABLE()
@@ -67,8 +68,15 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 	menuView->AppendRadioItem(IDM_VIEW_BINARY, _("Binary"));
 	menuView->AppendRadioItem(IDM_VIEW_TEXT, _("Text"));
 	menuView->AppendSeparator();
-	menuView->AppendRadioItem(IDM_VIEW_CHAR_ASCII, _("Ascii"));
-	menuView->AppendRadioItem(IDM_VIEW_CHAR_SJIS, _("Shift JIS"));
+		wxMenu *sm = new wxMenu();
+		const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("dump"));
+		if (choice) {
+			for(size_t i=0; i<choice->Count(); i++) {
+				const CharCodeMap *map = choice->Item(i);
+				sm->AppendRadioItem( IDM_VIEW_CHAR_0 + (int)i, map->GetDescription() );
+			}
+		}
+	menuView->AppendSubMenu(sm, _("&Charactor Code") );
 	menuView->AppendSeparator();
 	menuView->AppendCheckItem(IDM_VIEW_INVERT, _("&Invert Datas"));
 	menuView->AppendSeparator();
@@ -110,10 +118,12 @@ void L3DiskBinDumpFrame::OnViewInvert(wxCommandEvent& event)
 
 void L3DiskBinDumpFrame::OnViewChar(wxCommandEvent& event)
 {
-	int id = event.GetId();
+	int id = event.GetId() - IDM_VIEW_CHAR_0;
 	bool checked = event.IsChecked();
 	ToggleControl(id, checked);
-	panel->SetDataChar(id - IDM_VIEW_CHAR_ASCII);
+
+	wxString name = gCharCodeChoices.GetItemName(wxT("dump"), (size_t)id);
+	panel->SetDataChar(name);
 }
 
 void L3DiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
@@ -163,16 +173,18 @@ void L3DiskBinDumpFrame::SetDataInvert(bool val)
 	panel->SetDataInvert(val);
 }
 
-void L3DiskBinDumpFrame::SetDataChar(int val)
+void L3DiskBinDumpFrame::SetDataChar(int sel)
 {
-	ToggleControl(IDM_VIEW_CHAR_ASCII + val, true);
-	panel->SetDataChar(val);
+	ToggleControl(IDM_VIEW_CHAR_0 + sel, true);
+
+	wxString name = gCharCodeChoices.GetItemName(wxT("dump"), (size_t)sel);
+	panel->SetDataChar(name);
 }
 
 void L3DiskBinDumpFrame::SetDataFont(const wxFont &font)
 {
 	panel->SetDataFont(font);
-	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	L3DiskFrame *parent = (L3DiskFrame *)GetParent();
 	parent->SetIniDumpFont(font);
 }
 
@@ -278,10 +290,10 @@ void L3DiskBinDumpPanel::SetDataInvert(bool val)
 	attr->SetDataInvert(val);
 	dump->SetDataInvert(val);
 }
-void L3DiskBinDumpPanel::SetDataChar(int val)
+void L3DiskBinDumpPanel::SetDataChar(const wxString &name)
 {
-	attr->SetDataChar(val);
-	dump->SetDataChar(val);
+	attr->SetDataChar(name);
+	dump->SetDataChar(name);
 }
 void L3DiskBinDumpPanel::SetDataFont(const wxFont &font)
 {
@@ -303,8 +315,7 @@ int L3DiskBinDumpPanel::GetDataFontSize() const
 wxBEGIN_EVENT_TABLE(L3DiskBinDumpAttr, wxPanel)
 	EVT_RADIOBUTTON(IDC_RADIO_TEXT, L3DiskBinDumpAttr::OnCheckTextBinary)
 	EVT_RADIOBUTTON(IDC_RADIO_BINARY, L3DiskBinDumpAttr::OnCheckTextBinary)
-	EVT_RADIOBUTTON(IDC_RADIO_CHAR_ASCII, L3DiskBinDumpAttr::OnCheckChar)
-	EVT_RADIOBUTTON(IDC_RADIO_CHAR_SJIS, L3DiskBinDumpAttr::OnCheckChar)
+	EVT_CHOICE(IDC_COMBO_CHAR_CODE, L3DiskBinDumpAttr::OnCheckChar)
 	EVT_CHECKBOX(IDC_CHECK_INVERT, L3DiskBinDumpAttr::OnCheckInvert)
 	EVT_BUTTON(IDC_BUTTON_FONT, L3DiskBinDumpAttr::OnClickButton)
 wxEND_EVENT_TABLE()
@@ -329,22 +340,28 @@ L3DiskBinDumpAttr::L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
 
 	szrH->Add(new wxStaticText(this, wxID_ANY, _("Charactor Code")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxALL, 4));
-	radCharAscii = new wxRadioButton(this, IDC_RADIO_CHAR_ASCII, _("Ascii"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
-	szrH->Add(radCharAscii, flags);
-	radCharSJIS = new wxRadioButton(this, IDC_RADIO_CHAR_SJIS, _("Shift JIS"));
-	szrH->Add(radCharSJIS, flags);
-	
-	radCharAscii->SetValue(true);
+	comCharCode = new wxChoice(this, IDC_COMBO_CHAR_CODE, wxDefaultPosition, wxDefaultSize);
+	const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("dump"));
+	if (choice) {
+		for(size_t i=0; i<choice->Count(); i++) {
+			const CharCodeMap *map = choice->Item(i);
+			comCharCode->Append( map->GetDescription() );
+		}
+	}
+	comCharCode->SetSelection(0);
+	szrH->Add(comCharCode, flags);
 
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
 
 	chkInvert = new wxCheckBox(this, IDC_CHECK_INVERT, _("Invert Datas")); 
 	szrH->Add(chkInvert, flags);
 
+#if 0
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
 
 	btnFont = new wxButton(this, IDC_BUTTON_FONT, _("Font..."));
 	szrH->Add(btnFont, flags);
+#endif
 
 	szrAll->Add(szrH);
 
@@ -361,7 +378,8 @@ void L3DiskBinDumpAttr::OnCheckTextBinary(wxCommandEvent& event)
 }
 void L3DiskBinDumpAttr::OnCheckChar(wxCommandEvent& event)
 {
-	frame->SetDataChar(event.GetId() - IDC_RADIO_CHAR_ASCII);
+	int sel = event.GetSelection();
+	frame->SetDataChar(sel);
 }
 void L3DiskBinDumpAttr::OnCheckInvert(wxCommandEvent& event)
 {
@@ -387,16 +405,10 @@ void L3DiskBinDumpAttr::SetDataInvert(bool val)
 {
 	chkInvert->SetValue(val);
 }
-void L3DiskBinDumpAttr::SetDataChar(int val)
+void L3DiskBinDumpAttr::SetDataChar(const wxString &name)
 {
-	switch(val) {
-	case 1:
-		radCharSJIS->SetValue(true);
-		break;
-	default:
-		radCharAscii->SetValue(true);
-		break;
-	}
+	int sel = gCharCodeChoices.IndexOf(wxT("dump"), name);
+	comCharCode->SetSelection(sel);
 }
 
 //
@@ -414,7 +426,7 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	frame    = parentframe;
 
 	data_invert = false;
-	data_char = 0;
+	data_char = gCharCodeChoices.GetItemName(wxT("dump"), 0);
 
 	wxFont font;
 	frame->GetDefaultDataFont(font);
@@ -747,10 +759,10 @@ void L3DiskBinDump::SetDataInvert(bool val)
 	}
 }
 
-void L3DiskBinDump::SetDataChar(int val)
+void L3DiskBinDump::SetDataChar(const wxString &name)
 {
-	if (data_char != val) {
-		data_char = val;
+	if (data_char != name) {
+		data_char = name;
 		RefreshData();
 	}
 }

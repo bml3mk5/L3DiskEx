@@ -15,12 +15,13 @@
 #include "basicfmt.h"
 
 
-/// disk density 0: 2D, 1: 2DD, 2: 2HD
-const char *gDiskDensity[] = {
-	wxTRANSLATE("2D"),
-	wxTRANSLATE("2DD"),
-	wxTRANSLATE("2HD"),
-	NULL
+/// disk density 0: 2D, 1: 2DD, 2: 2HD, 3: 1DD(unofficial)
+const struct st_disk_density gDiskDensity[] = {
+	{ 0x00, "2D" },
+	{ 0x10, "2DD" },
+	{ 0x20, "2HD" },
+	{ 0x30, "0x30 1DD" },
+	{ 0xff, NULL }
 };
 
 //
@@ -139,24 +140,33 @@ bool DiskD88Sector::Replace(DiskD88Sector *src_sector)
 }
 
 /// セクタのデータを埋める
-bool DiskD88Sector::Fill(wxUint8 code, size_t len)
+bool DiskD88Sector::Fill(wxUint8 code, size_t len, size_t start)
 {
 	if (!header || !data) {
 		return false;
 	}
-	memset(data, code, len > header->size ? header->size : len);
+	if (start >= header->size) {
+		return false;
+	}
+
+	if ((start + len) > header->size) len = (size_t)header->size - start;
+	memset(&data[start], code, len);
 //	SetModify();
 	return true;
 }
 
 /// セクタのデータを上書き
-bool DiskD88Sector::Copy(const void *buf, size_t len)
+bool DiskD88Sector::Copy(const void *buf, size_t len, size_t start)
 {
 	if (!header || !data) {
 		return false;
 	}
-	if (len > header->size) len = header->size;
-	memcpy(data, buf, len);
+	if (start >= header->size) {
+		return false;
+	}
+
+	if ((start + len) > header->size) len = (size_t)header->size - start;
+	memcpy(&data[start], buf, len);
 //	SetModify();
 	return true;
 }
@@ -185,6 +195,15 @@ wxUint8	DiskD88Sector::Get(int pos) const
 		return 0;
 	}
 	return data[pos];
+}
+
+/// 指定位置のセクタデータを返す
+wxUint16 DiskD88Sector::Get16(int pos, bool big_endian) const
+{
+	if (!header || !data) {
+		return 0;
+	}
+	return big_endian ? ((wxUint16)data[pos] << 8 | data[pos+1]) : ((wxUint16)data[pos+1] << 8 | data[pos]);
 }
 
 /// セクタサイズを変更
@@ -671,6 +690,16 @@ void DiskD88Track::CalcInterleave()
 	SetInterleave(intl);
 }
 
+/// セクタ数を返す
+int DiskD88Track::GetSectorsPerTrack() const
+{
+	int cnt = 0;
+	if (sectors) {
+		cnt = (int)sectors->Count();
+	}
+	return cnt;
+}
+
 /// 指定セクタ番号のセクタを返す
 DiskD88Sector *DiskD88Track::GetSector(int sector_number)
 {
@@ -907,10 +936,10 @@ int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
 //
 //
 //
-DiskD88Disk::DiskD88Disk(DiskD88File *file) : DiskParam()
+DiskD88Disk::DiskD88Disk(DiskD88File *file, int n_num) : DiskParam()
 {
 	this->parent = file;
-	this->num = 0;
+	this->num = n_num;
 	this->header = new d88_header_t;
 	memset(this->header, 0, sizeof(d88_header_t));
 	this->tracks = NULL;
@@ -921,6 +950,7 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file) : DiskParam()
 //	this->max_track_num = 0;
 //	this->buffer = NULL;
 //	this->buffer_size = 0;
+	this->param_changed = false;
 
 //	this->basic_param = NULL;
 	this->basics = new DiskBasics;
@@ -943,6 +973,8 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file, const wxString &newname, int newnum,
 	this->SetDensity(param.GetParamDensity());
 	this->SetWriteProtect(write_protect);
 
+	this->param_changed = false;
+
 //	this->basic_param = NULL;
 	this->basics = new DiskBasics;
 
@@ -960,7 +992,9 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file, int n_num, d88_header_t *n_header) :
 
 	this->header_origin = *n_header;
 
-	this->density = (n_header->disk_density >> 4);
+	this->disk_density = n_header->disk_density;
+
+	this->param_changed = false;
 
 //	this->basic_param = NULL;
 	this->basics = new DiskBasics;
@@ -1355,7 +1389,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 
 	long sector_masize = 0;
 	long interleave_max = 0;
-	SingleDensities singles;
+	DiskParticulars singles;
 
 	if (tracks) {
 		for(size_t ti=0; ti<tracks->Count(); ti++) {
@@ -1383,7 +1417,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 
 			DiskD88Sector *s = t->GetSector(1);
 			if (s && s->IsSingleDensity()) {
-				SingleDensity sd(t->GetTrackNumber(), t->GetSideNumber(), s->GetSectorsPerTrack(), s->GetSectorSize());
+				DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), -1, s->GetSectorsPerTrack(), s->GetSectorSize());
 				singles.Add(sd);
 			}
 		}
@@ -1422,8 +1456,8 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 		}
 	}
 
-	// 単密度かどうかをまとめる
-	SingleDensity::Unique(track_number_max + 1, side_number_max + 1, disk_single_type, singles);
+	// 単密度の同じパラメータをまとめる
+	DiskParticular::UniqueTracks(track_number_max + 1, side_number_max + 1, disk_single_type, singles);
 
 	sides_per_disk = (int)side_number_max + 1;
 	tracks_per_side = (int)track_number_max + 1;
@@ -1446,19 +1480,39 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 		sectors_per_track = (int)(sec_num_maj[0] > sec_num_maj[1] ? sec_num_maj[0] : sec_num_maj[1]);
 	}
 
+	// セクタ数が異なるトラックを調べる
+	DiskParticulars ptracks;
+	if (tracks) {
+		for(size_t ti=0; ti<tracks->Count(); ti++) {
+			DiskD88Track *t =tracks->Item(ti);
+			if (!t) continue;
+			DiskD88Sectors *ss = t->GetSectors();
+			if (!ss) continue;
+			if ((int)ss->Count() != sectors_per_track) {
+				ptracks.Add(DiskParticular(t->GetTrackNumber(), t->GetSideNumber(), -1, (int)ss->Count(), t->GetMaxSectorSize()));
+			}
+		}
+		// 同じパラメータをまとめる
+		DiskParticular::UniqueTracks(tracks_per_side, sides_per_disk, false, ptracks);
+	}
+
 	// メディアのタイプ
-	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave, numbering_sector, singles);
+	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave, numbering_sector, singles, ptracks);
 	if (disk_param != NULL) {
-		disk_type_name = disk_param->GetDiskTypeName();
-		reversible = disk_param->IsReversible();
-		basic_types = disk_param->GetBasicTypes();
-		this->singles = singles;
-		density_name = disk_param->GetDensityName();
-		description = disk_param->GetDescription();
+		SetDiskTypeName(disk_param->GetDiskTypeName());
+		Reversible(disk_param->IsReversible());
+		SetBasicTypes(disk_param->GetBasicTypes());
+		SetSingles(singles);
+		SetParamDensity(disk_param->GetParamDensity());
+		SetDensityName(disk_param->GetDensityName());
+		SetDescription(disk_param->GetDescription());
 	}
 
 	// DISK BASIC用の領域を確保
 	AllocDiskBasics();
+
+	// パラメータを保持
+	SetOriginalParam(*this);
 
 	return disk_param;
 }
@@ -1478,25 +1532,35 @@ void DiskD88Disk::SetWriteProtect(bool val)
 /// 密度を返す
 wxString DiskD88Disk::GetDensityText() const
 {
-	wxUint8 num = (header ? (header->disk_density) >> 4 : 0);
-	if (num > 2) num = 3;
-	return wxGetTranslation(gDiskDensity[num]);
+	wxUint8 num = (header ? header->disk_density : 0);
+	int match = FindDensity(num);
+	return match >= 0 ? wxGetTranslation(gDiskDensity[match].name) : wxT("");
 }
 
 /// 密度を返す
 int DiskD88Disk::GetDensity() const
 {
-	int num = (header ? (header->disk_density) >> 4 : 0);
-	if (num > 2) num = 2;
-	return num;
+	return (header ? header->disk_density : 0);
 }
 
 /// 密度を設定
 void DiskD88Disk::SetDensity(int val)
 {
-	if (header && 0 <= val && val <= 2) {
-		header->disk_density = (val << 4);
+	header->disk_density = val;
+}
+
+/// 密度を検索
+/// @param [in] val 密度の値
+int DiskD88Disk::FindDensity(int val)
+{
+	int match = -1;
+	for(int i=0; gDiskDensity[i].name != NULL; i++) {
+		if (gDiskDensity[i].val == val) {
+			match = i;
+			break;
+		}
 	}
+	return match;
 }
 
 /// ディスクサイズ（ヘッダサイズ含む）
@@ -1706,15 +1770,27 @@ DiskBasic *DiskD88Disk::GetDiskBasic(int idx)
 	return basics->Item(idx);
 }
 
-/// キャラクターコードマップ番号設定
-void DiskD88Disk::SetCharCode(int sel)
+/// DISK BASICをクリア
+void DiskD88Disk::ClearDiskBasics()
 {
 	if (!basics) return;
 	for(size_t idx=0; idx<basics->Count(); idx++) {
 		DiskBasic *basic = GetDiskBasic((int)idx);
 		if (!basic) continue;
 
-		basic->SetCharCode(sel);
+		basic->ClearParseAndAssign();
+	}
+}
+
+/// キャラクターコードマップ番号設定
+void DiskD88Disk::SetCharCode(const wxString &name)
+{
+	if (!basics) return;
+	for(size_t idx=0; idx<basics->Count(); idx++) {
+		DiskBasic *basic = GetDiskBasic((int)idx);
+		if (!basic) continue;
+
+		basic->SetCharCode(name);
 	}
 }
 
@@ -1987,16 +2063,16 @@ void DiskD88::Close()
 }
 
 /// ストリームの内容をファイルに保存
-int DiskD88::Save(const wxString &filepath, const DiskWriteOptions &options)
+int DiskD88::Save(const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
 	DiskWriter dw(this, filepath, options, &result);
-	return dw.Save();
+	return dw.Save(file_format);
 }
 /// ストリームの内容をファイルに保存
-int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath, const DiskWriteOptions &options)
+int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
 	DiskWriter dw(this, filepath, options, &result);
-	return dw.SaveDisk(disk_number, side_number);
+	return dw.SaveDisk(disk_number, side_number, file_format);
 }
 
 /// ディスクを削除
@@ -2279,13 +2355,13 @@ void DiskD88::ClearDiskBasicParseAndAssign(int disk_number, int side_number)
 }
 
 /// キャラクターコードマップ番号設定
-void DiskD88::SetCharCode(int sel)
+void DiskD88::SetCharCode(const wxString &name)
 {
 	DiskD88Disks *disks = GetDisks();
 	if (!disks) return;
 	for(size_t i = 0; i < disks->Count(); i++) {
 		DiskD88Disk *disk = disks->Item(i);
-		disk->SetCharCode(sel);
+		disk->SetCharCode(name);
 	}
 }
 

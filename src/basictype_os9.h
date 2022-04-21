@@ -60,45 +60,45 @@ public:
 
 	/// @name access to FAT area
 	//@{
-	/// FAT位置をセット
+	/// @brief FAT位置をセット
 	void		SetGroupNumber(wxUint32 num, wxUint32 val);
-	/// FATオフセットを返す
+	/// @brief FATオフセットを返す
 	wxUint32	GetGroupNumber(wxUint32 num) const;
-	/// 使用しているグループ番号か
+	/// @brief 使用しているグループ番号か
 	bool		IsUsedGroupNumber(wxUint32 num);
-	/// 次のグループ番号を得る
+	/// @brief 次のグループ番号を得る
 	wxUint32	GetNextGroupNumber(wxUint32 num, int sector_pos);
-	/// 空きFAT位置を返す
+	/// @brief 空きFAT位置を返す
 	wxUint32	GetEmptyGroupNumber();
-	/// 次の空きFAT位置を返す 未使用
+	/// @brief 次の空きFAT位置を返す 未使用
 	wxUint32	GetNextEmptyGroupNumber(wxUint32 curr_group);
 	//@}
 
 	/// @name check / assign FAT area
 	//@{
-	/// FATエリアをチェック
-	bool		CheckFat();
-	/// ルートディレクトリをアサイン
+	/// @brief FATエリアをチェック
+	double 		CheckFat(bool is_formatting);
+	/// @brief ルートディレクトリをアサイン
 	bool		AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
-	/// ディスクから各パラメータを取得
-	int			ParseParamOnDisk(DiskD88Disk *disk);
+	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
+	double		ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
 	//@}
 
 	/// @name check / assign directory area
 	//@{
-	/// ルートディレクトリのセクタリストを計算
+	/// @brief ルートディレクトリのセクタリストを計算
 	bool		CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items);
-	/// ディレクトリが空か
+	/// @brief ディレクトリが空か
 	bool		IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items);
-	/// ディレクトリエリアのサイズに達したらアサイン終了するか
-	bool		FinishAssigningDirectory(int size) const;
+	/// @brief ディレクトリエリアのサイズに達したらアサイン終了するか
+	int			FinishAssigningDirectory(int size) const;
 	//@}
 
 	/// @name disk size
 	//@{
-	/// 使用可能なディスクサイズを得る
+	/// @brief 使用可能なディスクサイズを得る
 	void		GetUsableDiskSize(int &disk_size, int &group_size) const;
-	/// 残りディスクサイズを計算
+	/// @brief 残りディスクサイズを計算
 	void		CalcDiskFreeSize(bool wrote);
 	//@}
 
@@ -108,35 +108,39 @@ public:
 
 	/// @name file chain
 	//@{
-	/// データサイズ分のグループを確保する
-	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
+	/// @brief データサイズ分のグループを確保する
+	int			AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
 
-	/// グループ番号から開始セクタ番号を得る
+	/// @brief グループ番号から開始セクタ番号を得る
 	int			GetStartSectorFromGroup(wxUint32 group_num);
-	/// グループ番号から最終セクタ番号を得る
+	/// @brief グループ番号から最終セクタ番号を得る
 	int			GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
 
-	/// データ領域の開始セクタを計算
+	/// @brief データ領域の開始セクタを計算
 	int			CalcDataStartSectorPos();
 	//@}
 
 	/// @name directory
 	//@{
-	/// ルートディレクトリか
+	/// @brief ルートディレクトリか
 	bool		IsRootDirectory(wxUint32 group_num);
-	/// サブディレクトリを作成できるか
+	/// @brief サブディレクトリを作成できるか
 	bool		CanMakeDirectory() const { return true; }
-	/// サブディレクトリを作成する前の準備を行う
+	/// @brief ルートディレクトリのサイズを拡張できるか
+	bool		CanExpandRootDirectory() const { return true; }
+	/// @brief サブディレクトリのサイズを拡張できるか
+	bool		CanExpandDirectory() const { return true; }
+	/// @brief サブディレクトリを作成する前の準備を行う
 	bool		PrepareToMakeDirectory(DiskBasicDirItem *item);
-	/// サブディレクトリを作成した後の個別処理
+	/// @brief サブディレクトリを作成した後の個別処理
 	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
 	//@{
-	/// セクタデータを指定コードで埋める
+	/// @brief セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
-	/// セクタデータを埋めた後の個別処理
+	/// @brief セクタデータを埋めた後の個別処理
 	bool		AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
@@ -146,28 +150,25 @@ public:
 
 	/// @name save / write
 	//@{
-	/// ファイルをセーブする前の準備を行う
+	/// @brief ファイルをセーブする前の準備を行う
 	bool		PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo);
-	/// データの書き込み終了後の処理
+	/// @brief データの書き込み終了後の処理
 	void		AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
-
-//	/// ファイル名変更後の処理
-//	void		AdditionalProcessOnRenamedFile(DiskBasicDirItem *item);
 	//@}
 
 	/// @name delete
 	//@{
-	/// 指定したグループ番号のFAT領域を削除する
+	/// @brief 指定したグループ番号のFAT領域を削除する
 	void		DeleteGroupNumber(wxUint32 group_num);
-	/// ファイル削除後の処理
+	/// @brief ファイル削除後の処理
 	bool		AdditionalProcessOnDeletedFile(DiskBasicDirItem *item);
 	//@}
 
 	/// @name property
 	//@{
-	/// IPLや管理エリアの属性を得る
+	/// @brief IPLや管理エリアの属性を得る
 	void		GetIdentifiedData(DiskBasicIdentifiedData &data) const;
-	/// IPLや管理エリアの属性をセット
+	/// @brief IPLや管理エリアの属性をセット
 	void		SetIdentifiedData(const DiskBasicIdentifiedData &data);
 	//@}
 };

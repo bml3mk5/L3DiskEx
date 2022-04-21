@@ -9,6 +9,10 @@
 #include "diskplainparser.h"
 #include "diskd88parser.h"
 #include "diskdskparser.h"
+#include "diskfdiparser.h"
+#include "diskcqmparser.h"
+#include "disktd0parser.h"
+#include "diskdimparser.h"
 #include "diskd88.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -158,6 +162,26 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 			rc = ps.Parse(*stream);
 		}
 		support = true;
+	} else if (type == wxT("fdi")) {
+		// FDI形式
+		DiskFDIParser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream, disk_param);
+		support = true;
+	} else if (type == wxT("cqmimg")) {
+		// CopyQM IMG形式
+		DiskCQMParser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream, disk_param);
+		support = true;
+	} else if (type == wxT("teletd0")) {
+		// Teledisk TD0形式
+		DiskTD0Parser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream);
+		support = true;
+	} else if (type == wxT("difcdim")) {
+		// DIFC.X DIM形式
+		DiskDIMParser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream, disk_param);
+		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
 		DiskPlainParser ps(file, mod_flags, result);
@@ -190,6 +214,26 @@ int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hi
 		// CPC DSK形式
 		DiskDskParser ps(file, mod_flags, result);
 		rc = ps.Check(*stream);
+		support = true;
+	} else if (type == wxT("fdi")) {
+		// FDI形式
+		DiskFDIParser ps(file, mod_flags, result);
+		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	} else if (type == wxT("cqmimg")) {
+		// CopyQM IMG形式
+		DiskCQMParser ps(file, mod_flags, result);
+		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	} else if (type == wxT("teletd0")) {
+		// Teledisk TD0形式
+		DiskTD0Parser ps(file, mod_flags, result);
+		rc = ps.Check(*this, *stream);
+		support = true;
+	} else if (type == wxT("difcdim")) {
+		// DIFC.X DIM形式
+		DiskDIMParser ps(file, mod_flags, result);
+		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ

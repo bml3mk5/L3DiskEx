@@ -11,6 +11,7 @@
 #include "charcodes.h"
 #include <wx/datetime.h>
 #include <wx/msgdlg.h>
+#include "config.h"
 #include "utils.h"
 
 
@@ -20,11 +21,12 @@
 
 /// X1 Hu-BASIC
 const char *gTypeNameX1HU_1[] = {
-	wxTRANSLATE("Bin"),
-	wxTRANSLATE("Bas"),
-	wxTRANSLATE("Asc"),
-	wxTRANSLATE("<DIR>"),
+	"Bin",
+	"Bas",
+	wxTRANSLATE("Asc(Hu)"),
+	wxTRANSLATE("Asc(S-OS)"),
 	wxTRANSLATE("Asc(Random Access)"),
+	"<DIR>",
 	NULL
 };
 const char *gTypeNameX1HU_2[] = {
@@ -41,77 +43,66 @@ const char *gTypeNameX1HU_2[] = {
 DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
+	m_external_attr = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
 }
-DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
+	m_external_attr = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
 }
 DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
-	// x1 hu
-	Used(CheckUsed(unuse));
+	m_external_attr = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
 
-	// ファイルサイズをセット
-	file_size = wxUINT16_SWAP_ON_BE(this->data->x1hu.file_size);
+	Used(CheckUsed(unuse));
 
 	// グループ数を計算
 	CalcFileSize();
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemX1HU::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemX1HU::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
 	// X1 Hu
-	size = len = sizeof(data->x1hu.name);
-	return data->x1hu.name; 
+	if (num == 0) {
+		size = len = sizeof(m_data->x1hu.name);
+		return m_data->x1hu.name;
+	} else {
+		size = len = 0;
+		return NULL;
+	}
 }
 
 /// 拡張子を格納する位置を返す
 wxUint8 *DiskBasicDirItemX1HU::GetFileExtPos(size_t &len) const
 {
-	len = sizeof(data->x1hu.ext);
-	return data->x1hu.ext;
+	len = sizeof(m_data->x1hu.ext);
+	return m_data->x1hu.ext;
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemX1HU::GetFileNameSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->x1hu.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemX1HU::GetFileExtSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->x1hu.ext);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemX1HU::GetFileType1() const
 {
-	return basic->InvertUint8(data->x1hu.type);
+	return basic->InvertUint8(m_data->x1hu.type);
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemX1HU::GetFileType2() const
 {
-	return basic->InvertUint8(data->x1hu.password);
+	return basic->InvertUint8(m_data->x1hu.password);
 }
 
 /// 属性１を設定
 void DiskBasicDirItemX1HU::SetFileType1(int val)
 {
-	data->x1hu.type = basic->InvertUint8(val);
+	m_data->x1hu.type = basic->InvertUint8(val);
 }
 
 /// 属性２を設定
 void DiskBasicDirItemX1HU::SetFileType2(int val)
 {
-	data->x1hu.password = basic->InvertUint8(val);
+	m_data->x1hu.password = basic->InvertUint8(val);
 }
 
 /// 使用しているアイテムか
@@ -126,7 +117,7 @@ bool DiskBasicDirItemX1HU::CheckUsed(bool unuse)
 /// @return チェックOK
 bool DiskBasicDirItemX1HU::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	int type1 = GetFileType1();
 	bool valid = true;
@@ -137,24 +128,34 @@ bool DiskBasicDirItemX1HU::Check(bool &last)
 	return valid;
 }
 
+/// 属性を設定
 void DiskBasicDirItemX1HU::SetFileAttr(const DiskBasicFileType &file_type)
 {
 	int ftype = file_type.GetType();
 	if (ftype == -1) return;
 
-	int t = ConvToNativeType(ftype, GetFileType1());
-
-	t &= ~DATATYPE_X1HU_MASK;
-	t |= (ftype & FILE_TYPE_HIDDEN_MASK ? DATATYPE_X1HU_HIDDEN : 0);
-	t |= (ftype & FILE_TYPE_READWRITE_MASK ? DATATYPE_X1HU_READ_WRITE : 0);
-	t |= (ftype & FILE_TYPE_READONLY_MASK ? DATATYPE_X1HU_READ_ONLY : 0);
-	SetFileType1(t);
-
-	// password
+	int t1 = 0;
 	int passwd = DATATYPE_X1HU_PASSWORD_NONE;
-	if (ftype & FILE_TYPE_ENCRYPTED_MASK) {
-		passwd = file_type.GetOrigin();
+	if (file_type.GetFormat() == basic->GetFormatTypeNumber()) {
+		t1 = file_type.GetOrigin();
+		passwd = ((t1 >> 8) & 0xff);
+	} else {
+		t1 = ConvToNativeType(ftype, GetFileType1());
+
+		t1 &= ~DATATYPE_X1HU_MASK;
+		t1 |= (ftype & FILE_TYPE_HIDDEN_MASK ? DATATYPE_X1HU_HIDDEN : 0);
+		t1 |= (ftype & FILE_TYPE_READWRITE_MASK ? DATATYPE_X1HU_READ_WRITE : 0);
+		t1 |= (ftype & FILE_TYPE_READONLY_MASK ? DATATYPE_X1HU_READ_ONLY : 0);
+
+		// password
+		if (ftype & FILE_TYPE_ENCRYPTED_MASK) {
+			passwd = file_type.GetOrigin();
+		}
 	}
+	m_external_attr = (t1 >> 16);
+	t1 &= 0xff;
+
+	SetFileType1(t1);
 	SetFileType2(passwd);
 }
 
@@ -163,7 +164,7 @@ int DiskBasicDirItemX1HU::ConvToNativeType(int file_type, int val) const
 {
 	// X1 Hu
 	val &= ~FILETYPE_X1HU_MASK;
-	if (file_type & FILE_TYPE_BINARY_MASK) {
+	if ((file_type & (FILE_TYPE_MACHINE_MASK | FILE_TYPE_BINARY_MASK)) == (FILE_TYPE_MACHINE_MASK | FILE_TYPE_BINARY_MASK)) {
 		// bin
 		val |= FILETYPE_X1HU_BINARY;
 	} else if (file_type & FILE_TYPE_BASIC_MASK) {
@@ -172,6 +173,9 @@ int DiskBasicDirItemX1HU::ConvToNativeType(int file_type, int val) const
 	} else if (file_type & FILE_TYPE_ASCII_MASK) {
 		// asc
 		val |= FILETYPE_X1HU_ASCII;
+	} else if (file_type & FILE_TYPE_RANDOM_MASK) {
+		// random
+		val |= (FILETYPE_X1HU_ASCII | (EXTERNAL_X1_RANDOM << 16));
 	} else if (file_type & FILE_TYPE_DIRECTORY_MASK) {
 		// sub directory
 		val |= FILETYPE_X1HU_DIRECTORY;
@@ -182,26 +186,28 @@ int DiskBasicDirItemX1HU::ConvToNativeType(int file_type, int val) const
 /// ディレクトリを初期化 未使用にする
 void DiskBasicDirItemX1HU::InitialData()
 {
-	if (!data) return;
+	if (!m_data) return;
 	int c = basic->GetFillCodeOnDir();
 	size_t l;
 	l = GetDataSize();
-	memset(data, c, l);
-	if (basic->IsDataInverted()) mem_invert(data, l);
+	memset(m_data, c, l);
+	if (basic->IsDataInverted()) mem_invert(m_data, l);
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemX1HU::GetFileAttr() const
 {
-	int t = GetFileType1();
+	int t1 = GetFileType1();
 	int val = 0;
-	if (t & FILETYPE_X1HU_BINARY) {
+	if (t1 & FILETYPE_X1HU_BINARY) {
 		val = FILE_TYPE_MACHINE_MASK;	// bin
 		val |= FILE_TYPE_BINARY_MASK;
-	} else if (t & FILETYPE_X1HU_BASIC) {
+	} else if (t1 & FILETYPE_X1HU_BASIC) {
 		val = FILE_TYPE_BASIC_MASK;		// bas
-	} else if (t & FILETYPE_X1HU_ASCII) {
+		val |= FILE_TYPE_BINARY_MASK;
+	} else if (t1 & FILETYPE_X1HU_ASCII) {
 		val = FILE_TYPE_ASCII_MASK;		// asc
-	} else if (t & FILETYPE_X1HU_DIRECTORY) {
+	} else if (t1 & FILETYPE_X1HU_DIRECTORY) {
 		val = FILE_TYPE_DIRECTORY_MASK;	// sub directory
 	}
 
@@ -209,15 +215,15 @@ DiskBasicFileType DiskBasicDirItemX1HU::GetFileAttr() const
 	if (passwd != DATATYPE_X1HU_PASSWORD_NONE) {
 		val |= FILE_TYPE_ENCRYPTED_MASK;
 	}
-	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, passwd);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, m_external_attr << 16 | passwd << 8 | t1);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemX1HU::GetFileAttrStr() const
 {
-	wxString attr = wxGetTranslation(gTypeNameX1HU_1[GetFileType1Pos()]);
+	int t = (GetFileType1() | (m_external_attr << 16));
+	wxString attr = wxGetTranslation(gTypeNameX1HU_1[GetFileType1Pos(t)]);
 
-	int t = GetFileType1();
 	if (t & DATATYPE_X1HU_HIDDEN) {
 		attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_HIDDEN]);	// hidden
@@ -240,81 +246,49 @@ wxString DiskBasicDirItemX1HU::GetFileAttrStr() const
 /// ファイルサイズをセット
 void DiskBasicDirItemX1HU::SetFileSize(int val)
 {
+	m_groups.SetSize(val);
+
 	if (GetFileType1() & FILETYPE_X1HU_ASCII) {
 		// Ascファイルの場合
-		// ファイルサイズはセクタサイズで丸める
-		file_size = (((val - 1) / basic->GetSectorSize()) + 1) * basic->GetSectorSize();
+//		// ファイルサイズはセクタサイズで丸める
+//		m_groups.SetSize((((val - 1) / basic->GetSectorSize()) + 1) * basic->GetSectorSize());
 		// ディレクトリ内のファイルサイズは0
-		data->x1hu.file_size = 0;
+		m_data->x1hu.file_size = 0;
 	} else {
-		file_size = val;
-		data->x1hu.file_size = basic->InvertAndOrderUint16(val);
+		m_data->x1hu.file_size = basic->InvertAndOrderUint16(val);
+	}
+}
+
+/// ファイルサイズを返す
+int	DiskBasicDirItemX1HU::GetFileSize() const
+{
+	if (GetFileType1() & FILETYPE_X1HU_ASCII) {
+		// Ascファイルの場合
+		return (int)m_groups.GetSize();
+	} else {
+		return basic->InvertAndOrderUint16(m_data->x1hu.file_size);
 	}
 }
 
 /// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemX1HU::CalcFileSize()
+void DiskBasicDirItemX1HU::CalcFileUnitSize(int fileunit_num)
 {
 	if (!IsUsed()) return;
 
-	bool rc = true;
-	int calc_file_size = 0;
-	int calc_groups = 0; 
-	wxUint32 last_group = GetStartGroup();
-//	int last_sector = 0;
-
-	// 8bit FAT
-	wxUint32 group_num = last_group;
-	bool working = true;
-	int limit = basic->GetFatEndGroup() + 1;
-	while(working) {
-		wxUint32 next_group = type->GetGroupNumber(group_num);
-		if (next_group == group_num) {
-			// 同じポジションならエラー
-			rc = false;
-		} else if (next_group >= basic->GetGroupFinalCode() && next_group <= basic->GetGroupSystemCode()) {
-			// 最終グループ(0x80 - 0xff)
-//			last_sector = next_group;
-			calc_file_size += (basic->GetSectorSize() * (next_group - basic->GetGroupFinalCode() + 1));
-			calc_groups++;
-			working = false;
-		} else if (next_group <= (wxUint32)basic->GetFatEndGroup()) {
-			// 次グループ
-			calc_file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
-			calc_groups++;
-			last_group = group_num;
-			group_num = next_group;
-			limit--;
-		} else {
-			// グループ番号がおかしい
-			rc = false;
-		}
-		working = working && rc && (limit >= 0);
-	}
-	if (limit < 0) {
-		// too large or infinit loop
-		rc = false;
-	}
-
-	if (rc) {
-		groups = calc_groups;
-		// ファイルサイズが0のとき(Ascなど)
-		if (file_size == 0
-		|| ((file_size + basic->GetSectorSize() - 1) / basic->GetSectorSize()) != (calc_file_size / basic->GetSectorSize())) {
-			file_size = calc_file_size;
-		}
-	}
+	GetUnitGroups(fileunit_num, m_groups);
 }
 
 /// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
+/// @param [in]  fileunit_num ファイル番号
+/// @param [out] group_items  グループリスト
+void DiskBasicDirItemX1HU::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
 {
 	bool rc = true;
-//	file_size = 0;
-//	groups = 0; 
+	int calc_file_size = 0;
+	int calc_groups = 0; 
 
 	// 8bit FAT
-	wxUint32 group_num = GetStartGroup();
+	wxUint32 group_num = GetStartGroup(fileunit_num);
 	bool working = true;
 	int limit = basic->GetFatEndGroup() + 1;
 	while(working) {
@@ -325,14 +299,15 @@ void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
 		} else if (next_group >= basic->GetGroupFinalCode() && next_group <= basic->GetGroupSystemCode()) {
 			// 最終グループ(0x80 - 0xff)
 			basic->GetNumsFromGroup(group_num, next_group, basic->GetSectorSize(), 0, group_items);
-//			file_size += (sector_size * (next_group - group_final_code + 1));
-//			groups++;
+			calc_file_size += (basic->GetSectorSize() * (next_group - basic->GetGroupFinalCode() + 1));
+			calc_groups++;
+			calc_file_size = RecalcFileSize(group_items, calc_file_size);
 			working = false;
 		} else if (next_group <= (wxUint32)basic->GetFatEndGroup()) {
 			// 次グループ
 			basic->GetNumsFromGroup(group_num, next_group, basic->GetSectorSize(), 0, group_items);
-//			file_size += (sector_size * secs_per_group);
-//			groups++;
+			calc_file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
+			calc_groups++;
 			group_num = next_group;
 			limit--;
 		} else {
@@ -342,7 +317,9 @@ void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
 		working = working && rc && (limit >= 0);
 	}
 
-	group_items.SetSize(file_size);
+	group_items.SetNums(calc_groups);
+	group_items.SetSize(calc_file_size);
+	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
 
 	if (limit < 0) {
 		// too large or infinit loop
@@ -350,25 +327,48 @@ void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
 	}
 }
 
-void DiskBasicDirItemX1HU::GetFileDate(struct tm *tm) const
+/// 最終セクタのサイズを計算してファイルサイズを返す
+/// @param [in] group_items   グループリスト
+/// @param [in] occupied_size 占有しているファイルサイズ
+/// @return 計算後のファイルサイズ
+int	DiskBasicDirItemX1HU::RecalcFileSize(DiskBasicGroups &group_items, int occupied_size)
 {
-	wxUint8 date[sizeof(data->x1hu.date) + 1];
-	basic->InvertMem(data->x1hu.date, sizeof(data->x1hu.date), date);
-	tm->tm_year = ((date[0] & 0xf0) >> 4) * 10 + (date[0] & 0x0f);	// BCD
-	tm->tm_mon = ((date[1] & 0xf0) >> 4) - 1;
-	tm->tm_mday = ((date[2] & 0xf0) >> 4) * 10 + (date[2] & 0x0f);	// BCD
-	if (tm->tm_year < 80) tm->tm_year += 100;	// 2000 - 2079
+	if (group_items.Count() == 0) return occupied_size;
+
+	DiskBasicGroupItem *litem = &group_items.Last();
+	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	if (!sector) return occupied_size;
+
+	int sector_size = sector->GetSectorSize();
+	int remain_size = ((occupied_size + sector_size - 1) % sector_size) + 1;
+	remain_size = type->CalcDataSizeOnLastSector(this, NULL, NULL, sector->GetSectorBuffer(), sector_size, remain_size);
+
+	occupied_size = occupied_size - sector_size + remain_size;
+	return occupied_size;
 }
 
+/// 日付を得る
+void DiskBasicDirItemX1HU::GetFileDate(struct tm *tm) const
+{
+	wxUint8 date[sizeof(m_data->x1hu.date) + 1];
+	basic->InvertMem(m_data->x1hu.date, sizeof(m_data->x1hu.date), date);
+	tm->tm_year = (date[0] <= 0x99 ? ((date[0] & 0xf0) >> 4) * 10 + (date[0] & 0x0f) : -1);	// BCD
+	tm->tm_mon = ((date[1] & 0xf0) >> 4) - 1;
+	tm->tm_mday = (date[2] <= 0x99 ? ((date[2] & 0xf0) >> 4) * 10 + (date[2] & 0x0f) : -1);	// BCD
+	if (tm->tm_year >= 0 && tm->tm_year < 80) tm->tm_year += 100;	// 2000 - 2079
+}
+
+/// 時間を得る
 void DiskBasicDirItemX1HU::GetFileTime(struct tm *tm) const
 {
-	wxUint8 time[sizeof(data->x1hu.time) + 1];
-	basic->InvertMem(data->x1hu.time, sizeof(data->x1hu.time), time);
-	tm->tm_hour = ((time[0] & 0xf0) >> 4) * 10 + (time[0] & 0x0f);	// BCD
-	tm->tm_min = ((time[1] & 0xf0) >> 4) * 10 + (time[1] & 0x0f);	// BCD
+	wxUint8 time[sizeof(m_data->x1hu.time) + 1];
+	basic->InvertMem(m_data->x1hu.time, sizeof(m_data->x1hu.time), time);
+	tm->tm_hour = (time[0] <= 0x99 ? ((time[0] & 0xf0) >> 4) * 10 + (time[0] & 0x0f) : -1);	// BCD
+	tm->tm_min = (time[1] <= 0x99 ? ((time[1] & 0xf0) >> 4) * 10 + (time[1] & 0x0f) : -1);	// BCD
 	tm->tm_sec = 0;
 }
 
+/// 日付を文字列で返す
 wxString DiskBasicDirItemX1HU::GetFileDateStr() const
 {
 	struct tm tm;
@@ -376,6 +376,7 @@ wxString DiskBasicDirItemX1HU::GetFileDateStr() const
 	return Utils::FormatYMDStr(&tm);
 }
 
+/// 時間を文字列で返す
 wxString DiskBasicDirItemX1HU::GetFileTimeStr() const
 {
 	struct tm tm;
@@ -383,13 +384,14 @@ wxString DiskBasicDirItemX1HU::GetFileTimeStr() const
 	return Utils::FormatHMStr(&tm);
 }
 
+/// 日付を設定
 void DiskBasicDirItemX1HU::SetFileDate(const struct tm *tm)
 {
-	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
+	if (tm->tm_year < 0 || tm->tm_mon < -1 || tm->tm_mday < 0) return;
 
-	data->x1hu.date[0] = (((tm->tm_year / 10) % 10) << 4) | (tm->tm_year % 10);	// year BCD
-	data->x1hu.date[1] = (((tm->tm_mon + 1) & 0xf) << 4);	// month
-	data->x1hu.date[2] = ((tm->tm_mday / 10) << 4) | (tm->tm_mday % 10);	// day BCD
+	m_data->x1hu.date[0] = (((tm->tm_year / 10) % 10) << 4) | (tm->tm_year % 10);	// year BCD
+	m_data->x1hu.date[1] = (((tm->tm_mon + 1) & 0xf) << 4);	// month
+	m_data->x1hu.date[2] = ((tm->tm_mday / 10) << 4) | (tm->tm_mday % 10);	// day BCD
 
 	// 日付から曜日を計算
 	int wk = 0;
@@ -403,43 +405,44 @@ void DiskBasicDirItemX1HU::SetFileDate(const struct tm *tm)
 	if (dt.IsValid()) {
 		wk = (int)dt.GetWeekDay();
 	}
-	data->x1hu.date[1] |= (wk & 0xf);	// day of week
+	m_data->x1hu.date[1] |= (wk & 0xf);	// day of week
 
-	if (basic->IsDataInverted()) mem_invert(data->x1hu.date, sizeof(data->x1hu.date));
+	if (basic->IsDataInverted()) mem_invert(m_data->x1hu.date, sizeof(m_data->x1hu.date));
 }
 
+/// 時間を設定
 void DiskBasicDirItemX1HU::SetFileTime(const struct tm *tm)
 {
 	if (tm->tm_hour < 0 || tm->tm_min < 0) return;
 
-	data->x1hu.time[0] = ((tm->tm_hour / 10) << 4) | (tm->tm_hour % 10);	// hour BCD
-	data->x1hu.time[1] = ((tm->tm_min / 10) << 4) | (tm->tm_min % 10);	// minute BCD
+	m_data->x1hu.time[0] = ((tm->tm_hour / 10) << 4) | (tm->tm_hour % 10);	// hour BCD
+	m_data->x1hu.time[1] = ((tm->tm_min / 10) << 4) | (tm->tm_min % 10);	// minute BCD
 
-	if (basic->IsDataInverted()) mem_invert(data->x1hu.time, sizeof(data->x1hu.time));
+	if (basic->IsDataInverted()) mem_invert(m_data->x1hu.time, sizeof(m_data->x1hu.time));
 }
 
 /// 開始アドレスを返す
 int DiskBasicDirItemX1HU::GetStartAddress() const
 {
-	return basic->InvertAndOrderUint16(data->x1hu.load_addr);
+	return basic->InvertAndOrderUint16(m_data->x1hu.load_addr);
 }
 
 /// 実行アドレスを返す
 int DiskBasicDirItemX1HU::GetExecuteAddress() const
 {
-	return basic->InvertAndOrderUint16(data->x1hu.exec_addr);
+	return basic->InvertAndOrderUint16(m_data->x1hu.exec_addr);
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemX1HU::SetStartAddress(int val)
 {
-	data->x1hu.load_addr = basic->InvertAndOrderUint16(val);
+	m_data->x1hu.load_addr = basic->InvertAndOrderUint16(val);
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemX1HU::SetExecuteAddress(int val)
 {
-	data->x1hu.exec_addr = basic->InvertAndOrderUint16(val);
+	m_data->x1hu.exec_addr = basic->InvertAndOrderUint16(val);
 }
 
 /// ディレクトリアイテムのサイズ
@@ -449,42 +452,32 @@ size_t DiskBasicDirItemX1HU::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemX1HU::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemX1HU::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 	// X1 Hu-BASIC
-	data->x1hu.start_group_h = basic->InvertUint8((val & 0xff0000) >> 16);
-	data->x1hu.start_group_l = basic->InvertAndOrderUint16(val & 0xffff);
+	m_data->x1hu.start_group_h = basic->InvertUint8((val & 0xff0000) >> 16);
+	m_data->x1hu.start_group_l = basic->InvertAndOrderUint16(val & 0xffff);
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemX1HU::GetStartGroup() const
+wxUint32 DiskBasicDirItemX1HU::GetStartGroup(int fileunit_num) const
 {
 	// X1 Hu-BASIC
-	return (wxUint32)basic->InvertUint8(data->x1hu.start_group_h) << 16 | basic->InvertAndOrderUint16(data->x1hu.start_group_l);
+	return (wxUint32)basic->InvertUint8(m_data->x1hu.start_group_h) << 16 | basic->InvertAndOrderUint16(m_data->x1hu.start_group_l);
 }
 
 /// ファイルの終端コードをチェックする必要があるか
 bool DiskBasicDirItemX1HU::NeedCheckEofCode()
 {
 	// Asc形式のときはEOFコードが必要
-	return ((GetFileType1() & FILETYPE_X1HU_ASCII) != 0 && (external_attr == 0));
+	return ((GetFileType1() & FILETYPE_X1HU_ASCII) != 0 && (m_external_attr != EXTERNAL_X1_RANDOM));
 }
 
-#if 0
-/// データをエクスポートする前に必要な処理
-/// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemX1HU::PreExportDataFile(wxString &filename)
+/// ファイルの終端コードを返す
+wxUint8	DiskBasicDirItemX1HU::GetEofCode() const
 {
-	if ((GetFileType1() & FILETYPE_X1HU_ASCII) != 0 && (external_attr == 0)) {
-		int sts = wxMessageBox(wxString::Format(_("Is '%s' a random access file?"), filename)
-			, _("Select file type."), wxYES_NO);
-		external_attr = (sts == wxYES ? 1 : 0);
-	}
-	return true;
+	return m_external_attr != EXTERNAL_X1_SWORD ? basic->GetTextTerminateCode() : 0;
 }
-#endif
 
 /// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 int DiskBasicDirItemX1HU::RecalcFileSizeOnSave(wxInputStream *istream, int file_size)
@@ -496,6 +489,7 @@ int DiskBasicDirItemX1HU::RecalcFileSizeOnSave(wxInputStream *istream, int file_
 	return file_size;
 }
 
+#if 0
 /// 同じファイル名か
 bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) const
 {
@@ -503,6 +497,51 @@ bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) con
 	if (GetFileType1() == 0) return false;
 
 	return DiskBasicDirItem::IsSameFileName(filename);
+}
+#endif
+
+#if 0
+/// データをエクスポートする前に必要な処理
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemX1HU::PreExportDataFile(wxString &filename)
+{
+	if (!gConfig.IsAddExtensionExport()) return true;
+
+	AddExtensionByFileAttr(GetFileAttr().GetType(), 0x3f, filename, true);
+	return true;
+}
+
+/// データをインポートする前に必要な処理
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemX1HU::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		TrimExtensionByExtensionAttr(filename);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
+}
+#endif
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemX1HU::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	int t1 = 0;
+	// 拡張子で属性を設定する
+	wxFileName fn(filename);
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	if (sa) {
+		t1 = ConvToNativeType(sa->GetType(), t1);
+		t1 |= (m_external_attr << 16);
+	} else {
+		t1 = FILETYPE_X1HU_ASCII;
+	}
+
+	// パスワードなし
+	t1 |= (DATATYPE_X1HU_PASSWORD_NONE << 8);
+	return t1;
 }
 
 //
@@ -525,7 +564,7 @@ bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) con
 #define IDC_CHECK_ENCRYPT	59
 
 /// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemX1HU::ConvFileType1Pos(int native_type) const
+int DiskBasicDirItemX1HU::GetFileType1Pos(int native_type) const
 {
 	int val = 0;
 	if (native_type & FILETYPE_X1HU_BINARY) {
@@ -533,13 +572,24 @@ int DiskBasicDirItemX1HU::ConvFileType1Pos(int native_type) const
 	} else if (native_type & FILETYPE_X1HU_BASIC) {
 		val = TYPE_NAME_X1HU_BASIC;		// bas
 	} else if (native_type & FILETYPE_X1HU_ASCII) {
-		val = (external_attr == 0 ? TYPE_NAME_X1HU_ASCII : TYPE_NAME_X1HU_RANDOM);		// asc
+		switch(native_type >> 16) {
+		case EXTERNAL_X1_RANDOM:
+			val = TYPE_NAME_X1HU_RANDOM;	// asc
+			break;
+		case EXTERNAL_X1_SWORD:
+			val = TYPE_NAME_X1HU_SWORD;		// asc
+			break;
+		default:
+			val = TYPE_NAME_X1HU_ASCII;		// asc
+			break;
+		}
 	} else if (native_type & FILETYPE_X1HU_DIRECTORY) {
 		val = TYPE_NAME_X1HU_DIRECTORY;	// sub directory
 	}
 	return val;
 }
 
+#if 0
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemX1HU::GetFileType1Pos() const
 {
@@ -549,38 +599,15 @@ int DiskBasicDirItemX1HU::GetFileType1Pos() const
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemX1HU::GetFileType2Pos() const
 {
-	int t = GetFileType1();
-	int val = 0;
-	val |= (t & DATATYPE_X1HU_HIDDEN ? FILE_TYPE_HIDDEN_MASK : 0);
-	val |= (t & DATATYPE_X1HU_READ_WRITE ? FILE_TYPE_READWRITE_MASK : 0);
-	val |= (t & DATATYPE_X1HU_READ_ONLY ? FILE_TYPE_READONLY_MASK : 0);
-
-	return val;
+	return GetFileType1();
+//	int val = 0;
+//	val |= (t & DATATYPE_X1HU_HIDDEN ? FILE_TYPE_HIDDEN_MASK : 0);
+//	val |= (t & DATATYPE_X1HU_READ_WRITE ? FILE_TYPE_READWRITE_MASK : 0);
+//	val |= (t & DATATYPE_X1HU_READ_ONLY ? FILE_TYPE_READONLY_MASK : 0);
+//
+//	return val;
 }
-
-/// ダイアログ用に属性を設定する
-/// インポート時ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemX1HU::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
-		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".BAS")) {
-			file_type_1 = TYPE_NAME_X1HU_BASIC;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_X1HU_ASCII;
-		} else if (ext == wxT(".BIN")) {
-			file_type_1 = TYPE_NAME_X1HU_BINARY;
-		}
-		// パスワードなし
-		file_type_2 &= ~FILE_TYPE_ENCRYPTED_MASK;
-	}
-}
+#endif
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -590,8 +617,15 @@ void DiskBasicDirItemX1HU::SetFileTypeForAttrDialog(int show_flags, const wxStri
 /// @param [in] flags
 void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+	int t1 = (GetFileType1() | (m_external_attr << 16));
+
+	if (show_flags & INTNAME_NEW_FILE) {
+		// 外部からインポート時
+		t1 = ConvOriginalTypeFromFileName(file_path);
+	}
+
+	int file_type_1 = GetFileType1Pos(t1);
+	int file_type_2 = (t1 & 0xff);
 
 	wxChoice   *comType1;
 	wxCheckBox *chkHidden;
@@ -599,41 +633,14 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	wxCheckBox *chkReadWrite;
 	wxCheckBox *chkEncrypt;
 
-	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
-
 	wxStaticBoxSizer *staType1 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Type")), wxVERTICAL);
 
 	wxArrayString types1;
 	for(size_t i=TYPE_NAME_X1HU_BINARY; i<TYPE_NAME_X1HU_END; i++) {
 		types1.Add(wxGetTranslation(gTypeNameX1HU_1[i]));
 	}
-#if 0
-	const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
-	for(size_t i=0; i<attrs->Count(); i++) {
-		const SpecialAttribute *attr = &attrs->Item(i);
-		int t1 = ConvToNativeType(attr->GetType(), GetFileType1());
-		t1 = ConvFileType1Pos(t1);
-		wxString str;
-		str += attr->GetName();
-		str += wxString::Format(wxT(" 0x%02x"), attr->GetValue());
-		if (!attr->GetDescription().IsEmpty()) {
-			str += wxT(" (");
-			str += attr->GetDescription();
-			str += wxT(")");
-		}
-		types1.Add(str);
-	}
-#endif
 
 	comType1 = new wxChoice(parent, IDC_COMBO_TYPE1, wxDefaultPosition, wxDefaultSize, types1);
-#if 0
-	if (file_type_1 < 0) {
-		file_type_1 = basic->GetIndexByValueOfSpecialAttr(-file_type_1);
-		if (file_type_1 >= 0) {
-			file_type_1 += TYPE_NAME_X1HU_END;
-		}
-	}
-#endif
 	if (file_type_1 >= 0) {
 		comType1->SetSelection(file_type_1);
 	}
@@ -643,13 +650,13 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	wxGridSizer *szrG = new wxGridSizer(2, 2, 4);
 	chkHidden = new wxCheckBox(parent, IDC_CHECK_HIDDEN, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_HIDDEN]));
-	chkHidden->SetValue((file_type_2 & FILE_TYPE_HIDDEN_MASK) != 0);
+	chkHidden->SetValue((file_type_2 & DATATYPE_X1HU_HIDDEN) != 0);
 	szrG->Add(chkHidden);
 	chkReadWrite = new wxCheckBox(parent, IDC_CHECK_READWRITE, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_READ_WRITE]));
-	chkReadWrite->SetValue((file_type_2 & FILE_TYPE_READWRITE_MASK) != 0);
+	chkReadWrite->SetValue((file_type_2 & DATATYPE_X1HU_READ_WRITE) != 0);
 	szrG->Add(chkReadWrite);
 	chkReadOnly = new wxCheckBox(parent, IDC_CHECK_READONLY, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_READ_ONLY]));
-	chkReadOnly->SetValue((file_type_2 & FILE_TYPE_READONLY_MASK) != 0);
+	chkReadOnly->SetValue((file_type_2 & DATATYPE_X1HU_READ_ONLY) != 0);
 	szrG->Add(chkReadOnly);
 	chkEncrypt = new wxCheckBox(parent, IDC_CHECK_ENCRYPT, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_PASSWORD]));
 	// ユーザ定義データ X1ではファイルパスワード
@@ -703,7 +710,6 @@ void DiskBasicDirItemX1HU::ChangeTypeInAttrDialog(IntNameBox *parent)
 }
 
 /// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
 int DiskBasicDirItemX1HU::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
 	wxChoice *comType1 = (wxChoice *)parent->FindWindow(IDC_COMBO_TYPE1);
@@ -717,55 +723,61 @@ int DiskBasicDirItemX1HU::GetFileType2InAttrDialog(const IntNameBox *parent) con
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkReadWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READWRITE);
 
-	int val = chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
-	val |= chkReadWrite->GetValue() ? FILE_TYPE_READWRITE_MASK : 0;
-	val |= chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
+	int val = chkHidden->GetValue() ? DATATYPE_X1HU_HIDDEN : 0;
+	val |= chkReadWrite->GetValue() ? DATATYPE_X1HU_READ_WRITE : 0;
+	val |= chkReadOnly->GetValue() ? DATATYPE_X1HU_READ_ONLY : 0;
 	return val;
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemX1HU::CalcFileTypeFromPos(int pos)
+int	DiskBasicDirItemX1HU::CalcFileTypeFromPos(int pos) const
 {
 	int val = 0;
+	int ext = 0;
 	switch(pos) {
 	case TYPE_NAME_X1HU_BINARY:
-		val = FILE_TYPE_BINARY_MASK;
+		val = FILETYPE_X1HU_BINARY;
 		break;
 	case TYPE_NAME_X1HU_BASIC:
-		val = FILE_TYPE_BASIC_MASK;
+		val = FILETYPE_X1HU_BASIC;
 		break;
 	case TYPE_NAME_X1HU_ASCII:
-		external_attr = 0;
-		val = FILE_TYPE_ASCII_MASK;
+		ext = EXTERNAL_X1_DEFAULT;
+		val = FILETYPE_X1HU_ASCII;
 		break;
 	case TYPE_NAME_X1HU_DIRECTORY:
-		val = FILE_TYPE_DIRECTORY_MASK;
+		val = FILETYPE_X1HU_DIRECTORY;
 		break;
 	case TYPE_NAME_X1HU_RANDOM:
-		external_attr = 1;
-		val = FILE_TYPE_ASCII_MASK;
+		ext = EXTERNAL_X1_RANDOM;
+		val = FILETYPE_X1HU_ASCII;
+		break;
+	case TYPE_NAME_X1HU_SWORD:
+		ext = EXTERNAL_X1_SWORD;
+		val = FILETYPE_X1HU_ASCII;
 		break;
 	}
-	return val;
+	return (ext << 16 | val);
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemX1HU::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemX1HU::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
-	int val = CalcFileTypeFromPos(GetFileType1InAttrDialog(parent));
-	val |= GetFileType2InAttrDialog(parent);
+	int t1 = CalcFileTypeFromPos(GetFileType1InAttrDialog(parent));
+	t1 |= GetFileType2InAttrDialog(parent);
 
 	// ユーザ定義データ X1ではファイルパスワード
 	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
 	int passwd = DATATYPE_X1HU_PASSWORD_NONE;
 	if (chkEncrypt->GetValue()) {
-		val |= FILE_TYPE_ENCRYPTED_MASK;
+//		val |= FILE_TYPE_ENCRYPTED_MASK;
 		passwd = parent->GetUserData();
 	}
 
-	DiskBasicDirItem::SetFileAttr(val, passwd);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), 0, passwd << 8 | t1);
 
 	return true;
 }

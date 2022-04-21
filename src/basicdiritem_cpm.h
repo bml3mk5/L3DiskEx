@@ -20,152 +20,151 @@ enum en_type_name_cpm {
 	TYPE_NAME_CPM_SYSTEM = 1,
 	TYPE_NAME_CPM_ARCHIVE = 2,
 };
-//#define FILETYPE_CPM_USERID_MASK 0x0f00000
-//#define FILETYPE_CPM_USERID_POS  20
-
 
 class DiskBasicDirItemCPM;
 
-/// ディレクトリ１アイテム CP/M
+/** @class DiskBasicDirItemCPM
+
+@brief ディレクトリ１アイテム CP/M
+
+@li m_external_attr : バイナリ属性の時:FILE_TYPE_BINARY_MASK  アスキー属性の時:0
+
+*/
 class DiskBasicDirItemCPM : public DiskBasicDirItem
 {
-private:
+protected:
 	DiskBasicDirItemCPM() : DiskBasicDirItem() {}
 	DiskBasicDirItemCPM(const DiskBasicDirItemCPM &src) : DiskBasicDirItem(src) {}
 
-	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-	/// 拡張子を格納する位置を返す
-	wxUint8 *GetFileExtPos(size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	int		GetFileNameSize(bool *invert = NULL) const;
-//	/// 拡張子を格納するバッファサイズを返す
-//	int		GetFileExtSize(bool *invert = NULL) const;
-	/// 属性１を返す
-	int		GetFileType1() const;
-	/// 属性２を返す
-	int		GetFileType2() const;
-	/// 属性１のセット
-	void	SetFileType1(int val);
-	/// 属性２のセット
-	void	SetFileType2(int val);
-	/// 使用しているアイテムか
+	/// @brief ファイル名を格納する位置を返す
+	virtual wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 拡張子を格納する位置を返す
+	virtual wxUint8 *GetFileExtPos(size_t &len) const;
+	/// @brief 属性１を返す
+	virtual int		GetFileType1() const;
+	/// @brief 属性２を返す
+	virtual int		GetFileType2() const;
+	/// @brief 属性１のセット
+	virtual void	SetFileType1(int val);
+	/// @brief 属性２のセット
+	virtual void	SetFileType2(int val);
+	/// @brief 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType1Pos() const;
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType2Pos() const;
-	/// インポート時ダイアログ表示前にファイルの属性を設定
+	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
-	/// ファイル名を得る
-	void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
-	/// 拡張子を返す
+	/// @brief ファイル名を得る
+	void	GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
+	/// @brief 拡張子を返す
 	wxString GetFileExtPlainStr() const;
-	/// ファイル名を設定
-	void	SetFileName(const wxUint8 *filename, size_t length);
-	/// 拡張子を設定
-	void	SetFileExt(const wxUint8 *fileext, size_t length);
+	/// @brief ファイル名を設定
+	virtual void	SetNativeName(wxUint8 *filename, size_t size, size_t length);
+	/// @brief 拡張子を設定
+	virtual void	SetNativeExt(wxUint8 *fileext, size_t size, size_t length);
 
 	int group_width;	///< グループ番号の幅(1 = 8ビット, 2 = 16ビット)
 	int group_entries;	///< グループ番号のエントリ数(8 or 16)
 
 	DiskBasicDirItemCPM *next_item;	///< 次のエクステントがある場合
 
-	/// 拡張子からバイナリかどうかを判断する
-	int		GetFileTypeByExt(int val, const wxString &ext) const;
+	/// @brief 拡張子からバイナリかどうかを判断する
+	virtual int	GetFileTypeByExt(int val, const wxString &ext) const;
+
+	/// @brief 最終セクタのサイズを計算してファイルサイズを返す
+	virtual int	RecalcFileSize(DiskBasicGroups &group_items, int occupied_size);
 
 public:
 	DiskBasicDirItemCPM(DiskBasic *basic);
-	DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemCPM(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ディレクトリアイテムのチェック
-	bool			Check(bool &last);
+	/// @brief ディレクトリアイテムのチェック
+	virtual bool	Check(bool &last);
 
-	/// 削除
-	bool			Delete(wxUint8 code);
+	/// @brief 削除
+	virtual bool	Delete(wxUint8 code);
 
-	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		GetDefaultInvalidateChars() const;
-	/// ダイアログ入力前のファイル名を変換 大文字にする
-	void			ConvertToFileNameStr(wxString &filename) const;
-	/// ダイアログ入力後のファイル名文字列を変換 大文字にする
-	void			ConvertFromFileNameStr(wxString &filename) const;
-	/// ファイル名は必須（空文字不可）か
-	bool			IsFileNameRequired() const { return true; }
+	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
+	virtual void	ConvertToFileNameStr(wxString &filename) const;
+	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
+	virtual void	ConvertFromFileNameStr(wxString &filename) const;
+//	/// @brief ファイル名に設定できない文字を文字列にして返す
+//	virtual wxString GetDefaultInvalidateChars() const;
+	/// @brief ファイル名は必須（空文字不可）か
+	virtual bool	IsFileNameRequired() const { return true; }
 
-	/// 属性を設定
-	void			SetFileAttr(const DiskBasicFileType &file_type);
-	/// 属性を返す
-	DiskBasicFileType GetFileAttr() const;
+	/// @brief 属性を設定
+	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
+	/// @brief 属性を返す
+	virtual DiskBasicFileType GetFileAttr() const;
 
-//	/// リストの位置から属性を返す(プロパティダイアログ用)
-//	int				CalcFileTypeFromPos(int pos1, int pos2);
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr() const;
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
+	virtual wxString GetFileAttrStr() const;
 
-	/// ファイルサイズをセット
-	void			SetFileSize(int val);
-	/// ファイルサイズとグループ数を計算する
-	void			CalcFileSize();
-	/// 指定ディレクトリのすべてのグループを取得
-	void			GetAllGroups(DiskBasicGroups &group_items);
+	/// @brief ファイルサイズをセット
+	virtual void	SetFileSize(int val);
+	/// @brief ファイルサイズとグループ数を計算する
+	virtual void	CalcFileUnitSize(int fileunit_num);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	virtual void	GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
 
-	/// 最初のグループ番号をセット
-	void			SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	wxUint32		GetStartGroup() const;
+	/// @brief 最初のグループ番号をセット
+	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	virtual wxUint32 GetStartGroup(int fileunit_num) const;
 
-	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize() const;
+	/// @brief ディレクトリアイテムのサイズ
+	virtual size_t	GetDataSize() const;
 
-	/// ファイルの終端コードをチェックする必要があるか
-	bool			NeedCheckEofCode();
-	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
-	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
+	/// @brief ファイルの終端コードをチェックする必要があるか
+	virtual bool	NeedCheckEofCode();
+	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
+	virtual int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 
-	/// アイテムを削除できるか
-	bool			IsDeletable() const;
-//	/// ファイル名を編集できるか
-//	bool			IsFileNameEditable() const;
+	/// @brief アイテムを削除できるか
+	virtual bool	IsDeletable() const;
 
-	
-	/// グループ番号の幅をセット
+	/// @brief グループ番号の幅をセット
 	void		SetGroupWidth(int val) { group_width = val; }
-	/// グループ番号の幅を返す(1 = 8ビット, 2 = 16ビット)
+	/// @brief グループ番号の幅を返す(1 = 8ビット, 2 = 16ビット)
 	int			GetGroupWidth() const { return group_width; }
-	/// グループ番号のエントリ数を返す
+	/// @brief グループ番号のエントリ数を返す
 	int			GetGroupEntries() const { return group_entries; }
-	/// グループ番号をセット
+	/// @brief グループ番号をセット
 	void		SetGroup(int pos, wxUint32 val);
-	/// グループ番号を返す
+	/// @brief グループ番号を返す
 	wxUint32	GetGroup(int pos) const;
-	/// エクステント番号を返す
+	/// @brief エクステント番号を返す
 	wxUint8		GetExtentNumber() const;
-	/// レコード番号を返す
+	/// @brief レコード番号を返す
 	wxUint8		GetRecordNumber() const;
-	/// ファイルサイズからエクステント番号とレコード番号をセット
+	/// @brief ファイルサイズからエクステント番号とレコード番号をセット
 	void		CalcExtentAndRecordNumber(int val);
-	/// 次のアイテムをセット
+	/// @brief 次のアイテムをセット
 	void		SetNextItem(DiskBasicDirItem *val) { next_item = (DiskBasicDirItemCPM *)val; }
-	/// 次のアイテムを返す
+	/// @brief 次のアイテムを返す
 	DiskBasicDirItemCPM *GetNextItem() { return next_item; }
-	/// アイテムソート用
-	static int  Compare(DiskBasicDirItem **item1, DiskBasicDirItem **item2); 
-	/// 名前比較
-	static int  CompareName(DiskBasicDirItem **item1, DiskBasicDirItem **item2); 
+	/// @brief アイテムソート用
+	static int  Compare(DiskBasicDirItem **item1, DiskBasicDirItem **item2);
+	/// @brief 名前比較
+	static int  CompareName(DiskBasicDirItem **item1, DiskBasicDirItem **item2);
 
+	/// @brief ファイル名から属性を決定する
+	int			ConvFileTypeFromFileName(const wxString &filename) const;
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ内の属性部分のレイアウトを作成
-	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// 属性を変更した際に呼ばれるコールバック
-	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// 機種依存の属性を設定する
-	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
+	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// @brief 属性を変更した際に呼ばれるコールバック
+	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
+	/// @brief 機種依存の属性を設定する
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 	//@}
 };
 

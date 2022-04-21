@@ -36,7 +36,7 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 	comBasic = new wxListBox(this, IDC_LIST_BASIC, wxDefaultPosition, wxDefaultSize);
 	szrAll->Add(comBasic, flags);
 
-	wxArrayString types = disk->GetBasicTypes();
+	DiskParamNames types = disk->GetBasicTypes();
 	wxString category = disk->GetFile()->GetBasicTypeHint();
 
 	gDiskBasicTemplates.FindParams(types, params);

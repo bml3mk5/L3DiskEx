@@ -71,6 +71,9 @@ L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
 /// @param [in] font フォント
 void L3DiskRPanel::SetListFont(const wxFont &font)
 {
+	L3DiskDiskAttr *dattr = GetDiskAttrPanel();
+	if (dattr) dattr->SetListFont(font);
+
 	L3DiskFileList *flist = GetFileListPanel(true);
 	if (flist) flist->SetListFont(font);
 
@@ -156,6 +159,8 @@ void L3DiskRBPanel::ChangePanel(int num)
 //			SplitVertically(rawpanel, proppanel, 640);
 			rawpanel->Show();
 			filelist->Hide();
+			filelist->ClearAttr();
+			filelist->ClearFiles();
 		}
 #else
 		rawpanel->Show();
@@ -169,6 +174,8 @@ void L3DiskRBPanel::ChangePanel(int num)
 //			Unsplit(proppanel);
 			filelist->Show();
 			rawpanel->Hide();
+			rawpanel->ClearTrackListData();
+			rawpanel->ClearSectorListData();
 		}
 #else
 		filelist->Show();

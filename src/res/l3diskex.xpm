@@ -1,5 +1,5 @@
 /* XPM */
-const static char * l3diskex_xpm[] = {
+const char * l3diskex_xpm[] = {
 "48 48 114 2",
 "  	c None",
 ". 	c #9C9595",

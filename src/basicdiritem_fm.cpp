@@ -17,8 +17,8 @@ DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic)
 	: DiskBasicDirItemFAT8F(basic)
 {
 }
-DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemFAT8F(basic, sector, data)
+DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemFAT8F(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -26,8 +26,10 @@ DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, int num, int track, int
 {
 }
 
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemFM::GetDefaultInvalidateChars() const
 {
 	return wxT("\":()");
 }
+#endif

@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+#include "config.h"
 #include "utils.h"
 
 
@@ -19,10 +20,10 @@
 /// 属性名
 const char *gTypeNameCDOS[] = {
 	"???",
-	wxTRANSLATE("OBJ"),
-	wxTRANSLATE("TEX"),
-	wxTRANSLATE("CMD"),
-	wxTRANSLATE("REL"),
+	"OBJ",
+	"TEX",
+	"CMD",
+	"REL",
 	NULL
 };
 
@@ -38,8 +39,8 @@ DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic)
 	: DiskBasicDirItemMZBase(basic)
 {
 }
-DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemMZBase(basic, sector, data)
+DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemMZBase(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -55,47 +56,52 @@ DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemCDOS::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemCDOS::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
-	size = sizeof(data->cdos.name);
-	len = size - 1;
-	return data->cdos.name; 
+	if (num == 0) {
+		size = sizeof(m_data->cdos.name);
+		len = size - 1;
+		return m_data->cdos.name; 
+	} else {
+		size = len = 0;
+		return NULL; 
+	}
 }
 
 /// 属性１を返す
 int	DiskBasicDirItemCDOS::GetFileType1() const
 {
-	return basic->InvertUint8(data->cdos.type);	// invert;
+	return basic->InvertUint8(m_data->cdos.type);	// invert;
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemCDOS::GetFileType2() const
 {
-	return basic->InvertUint8(data->cdos.type2);	// invert;
+	return basic->InvertUint8(m_data->cdos.type2);	// invert;
 }
 
 /// 属性３を返す
 int	DiskBasicDirItemCDOS::GetFileType3() const
 {
-	return basic->InvertUint8(data->cdos.byte_order);	// invert;
+	return basic->InvertUint8(m_data->cdos.byte_order);	// invert;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemCDOS::SetFileType1(int val)
 {
-	data->cdos.type = basic->InvertUint8(val);	// invert
+	m_data->cdos.type = basic->InvertUint8(val);	// invert
 }
 
 /// 属性２を設定
 void DiskBasicDirItemCDOS::SetFileType2(int val)
 {
-	data->cdos.type2 = basic->InvertUint8(val);	// invert
+	m_data->cdos.type2 = basic->InvertUint8(val);	// invert
 }
 
 /// 属性３を設定
 void DiskBasicDirItemCDOS::SetFileType3(int val)
 {
-	data->cdos.byte_order = basic->InvertUint8(val);	// invert
+	m_data->cdos.byte_order = basic->InvertUint8(val);	// invert
 }
 
 /// 使用しているアイテムか
@@ -109,11 +115,11 @@ bool DiskBasicDirItemCDOS::CheckUsed(bool unuse)
 /// @return チェックOK
 bool DiskBasicDirItemCDOS::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
 	wxUint8 t = GetFileType1();
-	if (num != 0 && (t & 0x70) != 0 && basic->FindSpecialAttr(t) == NULL) {
+	if (m_num != 0 && (t & 0x70) != 0 && basic->GetSpecialAttributes().FindValue(t) == NULL) {
 		valid = false;
 	}
 	return valid;
@@ -128,9 +134,11 @@ void DiskBasicDirItemCDOS::SetFileAttr(const DiskBasicFileType &file_type)
 	int t1 = 0;
 	int t2 = 0;
 	if (file_type.GetFormat() == basic->GetFormatTypeNumber()) {
+		// 同じフォーマット
 		t1 = file_type.GetOrigin() & 0xff;
 		t2 = (file_type.GetOrigin() >> 8) & 0xff;
 	} else {
+		// 異なるフォーマット
 		t1 = ConvToNativeType(ftype);
 		if (ftype & FILE_TYPE_READONLY_MASK) {
 			t2 |= DATATYPE_CDOS_READ_ONLY;
@@ -160,10 +168,10 @@ int DiskBasicDirItemCDOS::ConvToNativeType(int file_type) const
 /// ディレクトリをクリア ファイル新規作成時
 void DiskBasicDirItemCDOS::ClearData()
 {
-	if (!data) return;
-	memset(data, 0, sizeof(directory_cdos_t));
-	memset(data->cdos.name, 0x0d, sizeof(data->cdos.name));
-	basic->InvertMem(data, sizeof(directory_cdos_t));	// invert
+	if (!m_data) return;
+	memset(m_data, 0, sizeof(directory_cdos_t));
+	memset(m_data->cdos.name, 0x0d, sizeof(m_data->cdos.name));
+	basic->InvertMem(m_data, sizeof(directory_cdos_t));	// invert
 }
 
 DiskBasicFileType DiskBasicDirItemCDOS::GetFileAttr() const
@@ -188,7 +196,7 @@ DiskBasicFileType DiskBasicDirItemCDOS::GetFileAttr() const
 
 		break;
 	default:
-		val = basic->GetTypeByValueOfSpecialAttr(t1);
+		val = basic->GetSpecialAttributes().GetTypeByValue(t1);
 		break;
 	}
 	int t2 = GetFileType2();
@@ -203,11 +211,8 @@ DiskBasicFileType DiskBasicDirItemCDOS::GetFileAttr() const
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemCDOS::GetFileAttrStr() const
 {
-	wxString attr = GetFileAttrStrSub(basic,
-		ConvFileType1Pos(GetFileType1()),
-		gTypeNameCDOS,
-		TYPE_NAME_CDOS_UNKNOWN
-	);
+	wxString attr; 
+	GetFileAttrName(ConvFileType1Pos(GetFileType1()), gTypeNameCDOS, TYPE_NAME_CDOS_UNKNOWN, attr);
 
 	int t2 = GetFileType2();
 	if (t2 & DATATYPE_CDOS_READ_ONLY) {
@@ -222,21 +227,21 @@ wxString DiskBasicDirItemCDOS::GetFileAttrStr() const
 /// データ内にファイルサイズをセット
 void DiskBasicDirItemCDOS::SetFileSizeBase(int val)
 {
-	data->cdos.file_size = basic->InvertAndOrderUint16(val);	// invert
+	m_data->cdos.file_size = basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// データ内のファイルサイズを返す
 int DiskBasicDirItemCDOS::GetFileSizeBase() const
 {
-	return basic->InvertAndOrderUint16(data->cdos.file_size);	// invert
+	return basic->InvertAndOrderUint16(m_data->cdos.file_size);	// invert
 }
 
 void DiskBasicDirItemCDOS::GetFileDate(struct tm *tm) const
 {
 	Utils::ConvYYMMDDToTm(
-		basic->InvertUint8(data->cdos.yy),
-		basic->InvertUint8(data->cdos.mm),
-		basic->InvertUint8(data->cdos.dd),
+		basic->InvertUint8(m_data->cdos.yy),
+		basic->InvertUint8(m_data->cdos.mm),
+		basic->InvertUint8(m_data->cdos.dd),
 		tm);
 }
 
@@ -253,33 +258,33 @@ void DiskBasicDirItemCDOS::SetFileDate(const struct tm *tm)
 
 	wxUint8 yy, mm, dd;
 	Utils::ConvTmToYYMMDD(tm, yy, mm, dd);
-	data->cdos.yy = basic->InvertUint8(yy & 0xff);
-	data->cdos.mm = basic->InvertUint8(mm & 0xff);
-	data->cdos.dd = basic->InvertUint8(dd & 0xff);
+	m_data->cdos.yy = basic->InvertUint8(yy & 0xff);
+	m_data->cdos.mm = basic->InvertUint8(mm & 0xff);
+	m_data->cdos.dd = basic->InvertUint8(dd & 0xff);
 }
 
 // 開始アドレスを返す
 int DiskBasicDirItemCDOS::GetStartAddress() const
 {
-	return basic->InvertAndOrderUint16(data->cdos.load_addr);	// invert and byte order
+	return basic->InvertAndOrderUint16(m_data->cdos.load_addr);	// invert and byte order
 }
 
 // 実行アドレスを返す
 int DiskBasicDirItemCDOS::GetExecuteAddress() const
 {
-	return basic->InvertAndOrderUint16(data->cdos.exec_addr);	// invert and byte order
+	return basic->InvertAndOrderUint16(m_data->cdos.exec_addr);	// invert and byte order
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemCDOS::SetStartAddress(int val)
 {
-	data->cdos.load_addr = basic->InvertAndOrderUint16(val);	// invert and byte order
+	m_data->cdos.load_addr = basic->InvertAndOrderUint16(val);	// invert and byte order
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemCDOS::SetExecuteAddress(int val)
 {
-	data->cdos.exec_addr = basic->InvertAndOrderUint16(val);	// invert and byte order
+	m_data->cdos.exec_addr = basic->InvertAndOrderUint16(val);	// invert and byte order
 }
 
 /// ディレクトリアイテムのサイズ
@@ -289,27 +294,57 @@ size_t DiskBasicDirItemCDOS::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemCDOS::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemCDOS::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 	wxUint32 trk = val / basic->GetSectorsPerTrackOnBasic();
 	wxUint32 sec = val % basic->GetSectorsPerTrackOnBasic();
-	data->cdos.track  = basic->InvertUint8(trk);
-	data->cdos.sector = basic->InvertUint8(sec + 1);
+	m_data->cdos.track  = basic->InvertUint8(trk);
+	m_data->cdos.sector = basic->InvertUint8(sec + 1);
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemCDOS::GetStartGroup() const
+wxUint32 DiskBasicDirItemCDOS::GetStartGroup(int fileunit_num) const
 {
-	wxUint32 val = basic->InvertUint8(data->cdos.track);
+	wxUint32 val = basic->InvertUint8(m_data->cdos.track);
 	val *= basic->GetSectorsPerTrackOnBasic();
-	val += basic->InvertUint8(data->cdos.sector) - 1;
+	val += basic->InvertUint8(m_data->cdos.sector) - 1;
 	return val;
 }
 
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemCDOS::GetDefaultInvalidateChars() const
+/// データをエクスポートする前に必要な処理
+bool DiskBasicDirItemCDOS::PreExportDataFile(wxString &filename)
 {
-	return wxT("\"\\:*?");
+	if (!gConfig.IsAddExtensionExport()) return true;
+
+	wxString ext;
+	if (GetFileAttrName(ConvFileType1Pos(GetFileType1()), gTypeNameCDOS, TYPE_NAME_CDOS_UNKNOWN, ext)) {
+		filename += wxT(".");
+		if (Utils::IsUpperString(filename)) {
+			filename += ext.Upper();
+		} else {
+			filename += ext.Lower();
+		}
+	}
+	return true;
+}
+
+/// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
+bool DiskBasicDirItemCDOS::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		IsContainAttrByExtension(filename, gTypeNameCDOS, TYPE_NAME_CDOS_OBJ, TYPE_NAME_CDOS_SYS, &filename, NULL);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemCDOS::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	// 拡張子で属性を設定する
+	int t1 = TYPE_NAME_CDOS_TEX;
+	IsContainAttrByExtension(filename, gTypeNameCDOS, TYPE_NAME_CDOS_OBJ, TYPE_NAME_CDOS_SYS, NULL, &t1);
+	return t1;
 }
 
 //
@@ -371,19 +406,9 @@ int DiskBasicDirItemCDOS::ConvFileType2Pos(int native_type) const
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemCDOS::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
 {
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".CMD") || ext == wxT(".COM") || ext == wxT(".EXE")) {
-			file_type_1 = TYPE_NAME_CDOS_CMD;
-		} else if (ext == wxT(".BIN") || ext == wxT(".OBJ")) {
-			file_type_1 = TYPE_NAME_CDOS_OBJ;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_CDOS_TEX;
-		} else {
-			file_type_1 = TYPE_NAME_CDOS_TEX;
-		}
+		file_type_1 = ConvOriginalTypeFromFileName(name);
 	}
 }
 
@@ -439,7 +464,7 @@ int DiskBasicDirItemCDOS::GetFileType1InAttrDialog(const IntNameBox *parent) con
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemCDOS::CalcFileTypeFromPos(int pos)
+int	DiskBasicDirItemCDOS::CalcFileTypeFromPos(int pos) const
 {
 	int val = 0;
 	switch(pos) {
@@ -456,16 +481,17 @@ int	DiskBasicDirItemCDOS::CalcFileTypeFromPos(int pos)
 		val = FILETYPE_CDOS_SYS;
 		break;
 	default:
-		val = CalcSpecialFileTypeFromPos(basic, pos, TYPE_NAME_CDOS_END);
+		val = CalcSpecialOriginalTypeFromPos(basic, pos, TYPE_NAME_CDOS_END);
 		break;
 	}
 	return val;
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemCDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemCDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 
@@ -476,7 +502,7 @@ bool DiskBasicDirItemCDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 	int t2 = 0;
 	t2 |= chkReadOnly->GetValue() ? DATATYPE_CDOS_READ_ONLY : 0;
 
-	DiskBasicDirItem::SetFileAttr(0, t2 << 8 | t1);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), 0, t2 << 8 | t1);
 
 	return true;
 }

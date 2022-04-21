@@ -9,6 +9,7 @@
 #define _COMMON_H_
 
 #include <wx/defs.h>
+#include <wx/datetime.h>
 #include "version.h"
 
 
@@ -23,6 +24,7 @@ size_t str_length(const void *, size_t, char);
 void mem_invert(void *, size_t);
 size_t str_shrink(void *, size_t);
 void mem_copy(const void *src, size_t slen, char fill, void *dst, size_t dlen);
+int mem_rchr(const void *, size_t, int);
 
 #if defined(__WXMSW__)
 
@@ -44,5 +46,18 @@ int _wsystem(const wchar_t *);
 
 #endif
 #endif
+
+class TM
+{
+private:
+	struct tm tm;
+public:
+	TM();
+	~TM();
+	void Clear();
+	struct tm *Get() { return &tm; }
+	void Set(const struct tm *val) { tm = *val; }
+	TM &operator=(const TM &src);
+};
 
 #endif /* _COMMON_H_ */

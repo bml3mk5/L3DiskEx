@@ -16,11 +16,13 @@ extern const char *gTypeNameMS[];
 extern const char *gTypeNameMS_l[];
 enum en_type_name_ms {
 	TYPE_NAME_MS_READ_ONLY = 0,
-	TYPE_NAME_MS_HIDDEN = 1,
-	TYPE_NAME_MS_SYSTEM = 2,
-	TYPE_NAME_MS_VOLUME = 3,
-	TYPE_NAME_MS_DIRECTORY = 4,
-	TYPE_NAME_MS_ARCHIVE = 5
+	TYPE_NAME_MS_HIDDEN,
+	TYPE_NAME_MS_SYSTEM,
+	TYPE_NAME_MS_VOLUME,
+	TYPE_NAME_MS_DIRECTORY,
+	TYPE_NAME_MS_ARCHIVE,
+	TYPE_NAME_MS_LFN,
+	TYPE_NAME_MS_END
 };
 enum en_file_type_mask_ms {
 	FILETYPE_MASK_MS_READ_ONLY = 0x01,
@@ -32,6 +34,8 @@ enum en_file_type_mask_ms {
 	FILETYPE_MASK_MS_LFN = 0x0f	// long file name
 };
 
+class wxStaticBoxSizer;
+
 /// ディレクトリ１アイテム MS-DOS
 class DiskBasicDirItemMSDOS : public DiskBasicDirItem
 {
@@ -39,121 +43,191 @@ protected:
 	DiskBasicDirItemMSDOS() : DiskBasicDirItem() {}
 	DiskBasicDirItemMSDOS(const DiskBasicDirItemMSDOS &src) : DiskBasicDirItem(src) {}
 
-	/// ファイル名を格納する位置を返す
-	virtual wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-	/// 拡張子を格納する位置を返す
+	/// @brief ファイル名を格納する位置を返す
+	virtual wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 拡張子を格納する位置を返す
 	virtual wxUint8 *GetFileExtPos(size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	virtual int 	GetFileNameSize(bool *invert = NULL) const;
-//	/// 拡張子を格納するバッファサイズを返す
-//	virtual int 	GetFileExtSize(bool *invert = NULL) const;
-	/// 属性１を返す
+	/// @brief 属性１を返す
 	virtual int		GetFileType1() const;
-	/// 属性１のセット
+	/// @brief 属性１のセット
 	virtual void	SetFileType1(int val);
-	/// 使用しているアイテムか
+	/// @brief 使用しているアイテムか
 	virtual bool	CheckUsed(bool unuse);
-	/// ファイル名を設定
-	virtual void	SetFileName(const wxUint8 *filename, size_t length);
-	/// ファイル名と拡張子を得る
-	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
+	/// @brief ファイル名を設定
+	virtual void	SetNativeName(wxUint8 *filename, size_t size, size_t length);
+	/// @brief ファイル名を得る
+	virtual void	GetNativeName(wxUint8 *filename, size_t size, size_t &length) const;
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
+	void			GetFileAttrStrSub(int ftype, wxString &attr) const;
 
-	/// 日付を変換
-	void			ConvDateToTm(wxUint16 date, struct tm *tm) const;
-	/// 時間を変換
-	void			ConvTimeToTm(wxUint16 time, struct tm *tm) const;
-	/// 日付に変換
-	wxUint16		ConvTmToDate(const struct tm *tm) const;
-	/// 時間に変換
-	wxUint16		ConvTmToTime(const struct tm *tm) const;
+	/// @brief 日付を変換
+	static void		ConvDateToTm(wxUint16 date, struct tm *tm);
+	/// @brief 時間を変換
+	static void		ConvTimeToTm(wxUint16 time, struct tm *tm);
+	/// @brief 日付に変換
+	static wxUint16	ConvTmToDate(const struct tm *tm);
+	/// @brief 時間に変換
+	static wxUint16	ConvTmToTime(const struct tm *tm);
 
-	/// ダイアログ表示前にファイルの属性を設定
+	/// @brief ダイアログ表示前にファイルの属性を設定
 	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
+	wxStaticBoxSizer *CreateControlsSubForAttrDialog(IntNameBox *parent, int show_flags, wxBoxSizer *sizer, wxSizerFlags &flags, int file_type_1);
+	/// @brief 属性を設定する
+	void			SetAttrSubInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr) const;
 
 public:
 	DiskBasicDirItemMSDOS(DiskBasic *basic);
-	DiskBasicDirItemMSDOS(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemMSDOS(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemMSDOS(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ディレクトリアイテムのチェック
+	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
-	/// アイテムを削除できるか
+	/// @brief アイテムを削除できるか
 	virtual bool	IsDeletable() const;
-	/// ファイル名を編集できるか
+	/// @brief ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
-	/// ファイル名に設定できない文字を文字列にして返す
-	virtual wxString GetDefaultInvalidateChars() const;
-	/// ファイル名は必須（空文字不可）か
+	/// @brief ファイル名は必須（空文字不可）か
 	virtual bool	IsFileNameRequired() const { return true; }
-	/// 属性を設定
+	/// @brief アイテムをロード・エクスポートできるか
+	virtual bool	IsLoadable() const;
+	/// @brief アイテムをコピー(内部でDnD)できるか
+	virtual bool	IsCopyable() const;
+	/// @brief アイテムを上書きできるか
+	virtual bool	IsOverWritable() const;
+	/// @brief 属性を設定
 	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
 
-	/// 属性を返す
+	/// @brief 属性を返す
 	virtual DiskBasicFileType GetFileAttr() const;
 
-//	/// リストの位置から属性を返す(プロパティダイアログ用)
-//	virtual int		CalcFileTypeFromPos(int pos1, int pos2);
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	virtual wxString GetFileAttrStr() const;
-	/// ファイルサイズをセット
+	/// @brief ファイルサイズをセット
 	virtual void	SetFileSize(int val);
-	/// ファイルサイズとグループ数を計算する
-	virtual void	CalcFileSize();
+	/// @brief ファイルサイズを返す
+	virtual int		GetFileSize() const;
+	/// @brief ファイルサイズとグループ数を計算する
+	virtual void	CalcFileUnitSize(int fileunit_num);
 
-	/// 指定ディレクトリのすべてのグループを取得
-	virtual void	GetAllGroups(DiskBasicGroups &group_items);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	virtual void	GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
 
-	/// 最初のグループ番号をセット
-	virtual void	SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	virtual wxUint32 GetStartGroup() const;
+	/// @brief 最初のグループ番号をセット
+	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	virtual wxUint32 GetStartGroup(int fileunit_num) const;
 
-	/// アイテムが日時を持っているか
+	/// @brief アイテムが日時を持っているか
 	virtual bool 	HasDateTime() const { return true; }
 	virtual bool 	HasDate() const { return true; }
 	virtual bool 	HasTime() const { return true; }
-	/// 日付を返す
+	/// @brief 日付を返す
 	virtual void	GetFileDate(struct tm *tm) const;
-	/// 時間を返す
+	/// @brief 時間を返す
 	virtual void	GetFileTime(struct tm *tm) const;
-	/// 日付を返す
+	/// @brief 日付を返す
 	virtual wxString GetFileDateStr() const;
-	/// 時間を返す
+	/// @brief 時間を返す
 	virtual wxString GetFileTimeStr() const;
-	/// 日付をセット
+	/// @brief 日付をセット
 	virtual void	SetFileDate(const struct tm *tm);
-	/// 時間をセット
+	/// @brief 時間をセット
 	virtual void	SetFileTime(const struct tm *tm);
-	/// 日付のタイトル名（ダイアログ用）
+	/// @brief 日付のタイトル名（ダイアログ用）
 	virtual wxString GetFileDateTimeTitle() const;
-	/// 日付を返す
-	wxString		GetCDateStr() const;
-	/// 時間を返す
-	wxString		GetCTimeStr() const;
-	/// 日付を返す
-	wxString		GetADateStr() const;
-	/// 日付をセット
-	void			SetCDate(const struct tm *tm);
-	/// 時間をセット
-	void			SetCTime(const struct tm *tm);
-	/// 日付をセット
-	void			SetADate(const struct tm *tm);
 
-	/// ディレクトリアイテムのサイズ
+	/// @brief ディレクトリアイテムのサイズ
 	virtual size_t	GetDataSize() const;
 
-	/// ダイアログ入力前のファイル名を変換 大文字にする
+	/// @brief ファイル名から属性を決定する
+	virtual int		ConvFileTypeFromFileName(const wxString &filename) const;
+
+	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
 	virtual void	ConvertToFileNameStr(wxString &filename) const;
-	/// ダイアログ入力後のファイル名文字列を変換 大文字にする
+	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
 	virtual void	ConvertFromFileNameStr(wxString &filename) const;
 
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ内の属性部分のレイアウトを作成
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// 機種依存の属性を設定する
-	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// @brief 機種依存の属性を設定する
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
+	/// @brief ダイアログ入力後のファイル名チェック
+	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
+	//@}
+};
+
+/// ディレクトリ１アイテム MS-DOS VFAT
+class DiskBasicDirItemVFAT : public DiskBasicDirItemMSDOS
+{
+protected:
+	DiskBasicDirItemVFAT() : DiskBasicDirItemMSDOS() {}
+	DiskBasicDirItemVFAT(const DiskBasicDirItemVFAT &src) : DiskBasicDirItemMSDOS(src) {}
+
+	/// @brief ファイル名を格納する位置を返す
+	virtual wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief ファイル名を設定
+	virtual void	SetNativeName(wxUint8 *filename, size_t size, size_t length);
+	/// @brief ファイル名を得る
+	virtual void	GetNativeName(wxUint8 *filename, size_t size, size_t &length) const;
+
+public:
+	DiskBasicDirItemVFAT(DiskBasic *basic);
+	DiskBasicDirItemVFAT(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
+	DiskBasicDirItemVFAT(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
+
+	/// @brief ディレクトリアイテムのチェック
+	virtual bool	Check(bool &last);
+	/// @brief アイテムを削除できるか
+	virtual bool	IsDeletable() const;
+	/// @brief ファイル名を編集できるか
+	virtual bool	IsFileNameEditable() const;
+
+	/// @brief 属性を設定
+	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
+
+	/// @brief 属性を返す
+	virtual DiskBasicFileType GetFileAttr() const;
+
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
+	virtual wxString GetFileAttrStr() const;
+
+	/// @brief 最初のグループ番号をセット
+	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	virtual wxUint32 GetStartGroup(int fileunit_num) const;
+
+	/// @brief 日付を返す
+	wxString		GetCDateStr() const;
+	/// @brief 時間を返す
+	wxString		GetCTimeStr() const;
+	/// @brief 日付を返す
+	wxString		GetADateStr() const;
+	/// @brief 日付をセット
+	void			SetCDate(const struct tm *tm);
+	/// @brief 時間をセット
+	void			SetCTime(const struct tm *tm);
+	/// @brief 日付をセット
+	void			SetADate(const struct tm *tm);
+
+	/// @brief 文字列をバイト列に変換 文字コードは機種依存
+	virtual int		ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len) const;
+	/// @brief バイト列を文字列に変換 文字コードは機種依存
+	virtual void	ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst) const;
+
+	/// @brief その他の属性値を設定する
+	virtual void	SetAttr(DiskBasicDirItemAttr &attr);
+
+	/// @name プロパティダイアログ用
+	//@{
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
+	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// @brief 機種依存の属性を設定する
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 	//@}
 };
 

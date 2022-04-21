@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basicdiritem.h"
 #include "logging.h"
+#include "charcodes.h"
 
 
 #pragma pack(1)
@@ -44,9 +45,13 @@ DiskBasicTypeTFDOS::DiskBasicTypeTFDOS(DiskBasic *basic, DiskBasicFat *fat, Disk
 }
 
 /// FATエリアをチェック
-bool DiskBasicTypeTFDOS::CheckFat()
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeTFDOS::CheckFat(bool is_formatting)
 {
-	bool valid = true;
+	double valid_ratio = 1.0;
 
 	// グループサイズをトラックごとに調整
 	basic->SetSectorsPerGroup(basic->GetSectorsPerTrack());
@@ -58,43 +63,30 @@ bool DiskBasicTypeTFDOS::CheckFat()
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	if (!fatbuf) {
-		return false;
+		return -1.0;
 	}
 	// ファイル管理番号
 	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->GetBuffer();
 	if (basic->InvertUint8(f->ident_number) != 1) {
-		return false;
+		return -1.0;
 	}
 	// ボリューム名
 	wxUint8 volume_name[12];
 	basic->InvertMem(f->volume_name, sizeof(f->volume_name), volume_name);
 	if (memcmp(volume_name, "TF-DOS", 6) != 0) {
-		return false;
+		return -1.0;
 	}
 
 	// 0 か 0xff 以外は無効
 	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup() && gnum < (wxUint32)fatbuf->GetSize(); gnum++) {
 		wxUint8 buf = basic->InvertUint8(fatbuf->Get(gnum));	// invert
 		if (buf != basic->GetGroupUnusedCode() && buf != basic->GetGroupSystemCode()) {
-			valid = false;
+			valid_ratio = -1.0;
 			break;
 		}
 	}
 
-#if 0
-	if (valid) {
-		// MZのIPLをチェック
-		if (!basic->GetIPLString().IsEmpty()) {
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetSectorsPerTrackOnBasic());
-			if (sector) {
-				if (sector->Get(0) != 0xfe) {
-					valid = false;
-				}
-			}
-		}
-	}
-#endif
-	return valid;
+	return valid_ratio;
 }
 
 /// FAT位置をセット
@@ -159,12 +151,13 @@ wxUint32 DiskBasicTypeTFDOS::GetEmptyGroupNumber()
 }
 
 /// データサイズ分のグループを確保する
-/// @param [in]  item        ディレクトリアイテム
-/// @param [in]  data_size   確保するデータサイズ（バイト）
-/// @param [in]  flags       新規か追加か
-/// @param [out] group_items 確保したセクタリスト
+/// @param [in]  fileunit_num ファイル番号
+/// @param [in]  item         ディレクトリアイテム
+/// @param [in]  data_size    確保するデータサイズ（バイト）
+/// @param [in]  flags        新規か追加か
+/// @param [out] group_items  確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeTFDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
+int DiskBasicTypeTFDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int file_size = 0;
 	int groups = 0;
@@ -187,7 +180,7 @@ int DiskBasicTypeTFDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, Al
 	}
 
 	// 開始グループ決定
-	item->SetStartGroup(group_start);
+	item->SetStartGroup(fileunit_num, group_start);
 
 	// 領域を確保する
 	rc = AllocateGroupsSub(item, group_start, remain, sec_size, group_items, file_size, groups);
@@ -195,22 +188,8 @@ int DiskBasicTypeTFDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, Al
 	return rc;
 }
 
-#if 0
-/// データの読み込み/比較の前処理
-/// @param [in] item            ディレクトリアイテム
-/// @param [in,out] istream     入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
-/// @param [in,out] ostream     出力先         データ読み出し時に使用 ベリファイ時はNULL
-/// @param [in,out] file_size   ファイルサイズ
-/// @param [in,out] group_items 確保したセクタリスト
-/// @param [in,out] errinfo     エラー情報
-/// @return true/false エラー
-bool DiskBasicTypeTFDOS::PrepareToAccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo)
-{
-	return true;
-}
-#endif
-
 /// データの読み込み/比較処理
+/// @param [in] fileunit_num  ファイル番号
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
 /// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
@@ -220,7 +199,7 @@ bool DiskBasicTypeTFDOS::PrepareToAccessFile(DiskBasicDirItem *item, wxInputStre
 /// @param [in] sector_num    セクタ番号
 /// @param [in] sector_end    最終セクタ番号
 /// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
-int DiskBasicTypeTFDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
+int DiskBasicTypeTFDOS::AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
 	int size = (remain_size < sector_size ? remain_size : sector_size);
 
@@ -340,7 +319,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 		st_ipl_tfdos *d_ipl = (st_ipl_tfdos *)sector->GetSectorBuffer();
 		if (d_ipl) {
 			// IPL文字列を設定
-			wxCharBuffer s_ipl = basic->GetIDString().To8BitData();
+			wxCharBuffer s_ipl = basic->GetVariousStringParam(wxT("IDString")).To8BitData();
 			size_t len = s_ipl.length();
 			if (len > 0) {
 				if (len > sizeof(d_ipl->ipl)) len = sizeof(d_ipl->ipl);
@@ -357,7 +336,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	sector = basic->GetSectorFromSectorPos(basic->GetSectorsPerTrackOnBasic());
 	if (sector) {
 		// IPL文字列を設定
-		wxCharBuffer s_ipl = basic->GetIPLString().To8BitData();
+		wxCharBuffer s_ipl = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
 		size_t len = s_ipl.length();
 		if (len > 0) {
 			if (len > (size_t)sector->GetSectorBufferSize()) len = (size_t)sector->GetSectorBufferSize();
@@ -395,7 +374,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	if (!data.GetVolumeName().IsEmpty()) {
 		vol_name = data.GetVolumeName().To8BitData();
 	} else {
-		vol_name = basic->GetVolumeString().To8BitData();
+		vol_name = basic->GetVariousStringParam(wxT("VolumeString")).To8BitData();
 	}
 	mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
 	basic->InvertMem(f->volume_name, sizeof(f->volume_name));
@@ -403,7 +382,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	// DIRエリア
 	int trk_num, sid_num, sec_num;
 	for (int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {
-		basic->GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
+		GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
 		sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (sector) {
 			sector->Fill(basic->InvertUint8(basic->GetFillCodeOnDir()));
@@ -425,19 +404,6 @@ bool DiskBasicTypeTFDOS::ConvertDataForSave(DiskBasicDirItem *item, wxInputStrea
 	// 処理はベリファイと同じ
 	return ConvertDataForVerify(item, istream, ostream);
 }
-
-#if 0
-/// ファイルをセーブする前の準備を行う
-/// @param [in]     istream   ストリームバッファ
-/// @param [in,out] file_size 出力サイズ
-/// @param [in]     pitem     ファイル名、属性を持っているディレクトリアイテム
-/// @param [in]     nitem     確保したディレクトリアイテム
-/// @param [in,out] errinfo   エラー情報
-bool DiskBasicTypeTFDOS::PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
-{
-	return true;
-}
-#endif
 
 /// データの書き込み処理
 /// @param [in]	 item			ディレクトリアイテム
@@ -506,9 +472,12 @@ void DiskBasicTypeTFDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 	if (!f) return;
 
 	// volume label
-	wxUint8  vol_name[16];
+	wxUint8  vol_name[sizeof(f->volume_name) + 1];
+	memset(vol_name, 0, sizeof(vol_name));
 	basic->InvertMem(f->volume_name, sizeof(f->volume_name), vol_name);
-	data.SetVolumeName(wxString((const char *)vol_name, sizeof(f->volume_name)));
+	wxString dst;
+	basic->GetCharCodes().ConvToString(vol_name, sizeof(vol_name), dst, 0);
+	data.SetVolumeName(dst);
 	// volume number
 	data.SetVolumeNumber(basic->InvertUint8(f->volume_num));
 }
@@ -525,9 +494,13 @@ void DiskBasicTypeTFDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 
 	// volume label
 	if (fmt->HasVolumeName()) {
-		wxCharBuffer vol_name = data.GetVolumeName().To8BitData();
-		mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
-		basic->InvertMem(f->volume_name, sizeof(f->volume_name));
+		wxUint8 dst[sizeof(f->volume_name) + 1];
+		memset(dst, 0, sizeof(dst));
+		int l = basic->GetCharCodes().ConvToChars(data.GetVolumeName(), dst, sizeof(dst));
+		if (l > 0) {
+			memcpy(f->volume_name, dst, sizeof(f->volume_name));
+			basic->InvertMem(f->volume_name, sizeof(f->volume_name));
+		}
 	}
 	// volume number
 	if (fmt->HasVolumeNumber()) {

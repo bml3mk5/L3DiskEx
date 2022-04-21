@@ -12,6 +12,7 @@
 #include "logging.h"
 
 
+#pragma pack(1)
 /// MZ 使用状況セクタ
 struct st_fat_mz {
 	wxUint8 volume;		// ボリューム番号
@@ -21,6 +22,7 @@ struct st_fat_mz {
 	wxUint8 bits[0xf9];	// 使用状況
 	wxUint8 mag;		// １クラスタのセクタ数-1
 };
+#pragma pack()
 
 //
 //
@@ -31,31 +33,35 @@ DiskBasicTypeMZ::DiskBasicTypeMZ(DiskBasic *basic, DiskBasicFat *fat, DiskBasicD
 }
 
 /// FATエリアをチェック
-bool DiskBasicTypeMZ::CheckFat()
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeMZ::CheckFat(bool is_formatting)
 {
-	bool valid = true;
+	double valid_ratio = 1.0;
 
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	if (!fatbuf) {
-		return false;
+		return -1.0;
 	}
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
 	wxUint8 offset = basic->InvertUint8(b->offset);
 	wxUint8 mag = basic->InvertUint8(b->mag);
 	// オフセット(1バイト目)が16未満ならエラー
 	if (offset < 16) {	// invert
-		valid = false;
+		valid_ratio = -1.0;
 	}
-	if (valid) {
+	if (valid_ratio >= 0.0) {
 		data_start_group = offset;
 	}
 
 	// クラスタ倍率(255バイト目)が16以上ならエラー
 	if (mag >= 16) {	// invert
-		valid = false;
+		valid_ratio = -1.0;
 	}
-	if (valid) {
+	if (valid_ratio >= 0.0) {
 		// セクタ数/クラスタ
 		basic->SetSectorsPerGroup(mag + 1);
 		// クラスタ数
@@ -73,7 +79,7 @@ bool DiskBasicTypeMZ::CheckFat()
 		basic->SetFatEndGroup(trks * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() - 1);
 	}
 
-	return valid;
+	return valid_ratio;
 }
 
 /// ルートディレクトリをアサイン
@@ -89,7 +95,7 @@ bool DiskBasicTypeMZ::AssignRootDirectory(int start_sector, int end_sector, Disk
 	// 開始グループ
 	int sec_pos = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + start_sector - 1;
 	sec_pos /= basic->GetSectorsPerGroup();
-	dir_item->SetStartGroup(sec_pos);
+	dir_item->SetStartGroup(0, sec_pos);
 
 	return sts;
 }
@@ -130,7 +136,27 @@ void DiskBasicTypeMZ::CalcDiskFreeSize(bool wrote)
 		fat_availability.Add(fsts);
 	}
 
+	// ディレクトリエントリのグループ
+	const DiskBasicDirItems *items = dir->GetCurrentItems();
+	if (items) {
+		for(size_t idx = 0; idx < items->Count(); idx++) {
+			DiskBasicDirItem *item = items->Item(idx);
+			if (!item || !item->IsUsed()) continue;
+
+			// グループ番号のマップを調べる
+			size_t gcnt = item->GetGroupCount();
+			if (gcnt > 0) {
+				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
+				wxUint32 gnum = gitem->group;
+				if (gnum <= basic->GetFatEndGroup()) {
+					fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;
+				}
+			}
+		}
+	}
+
 	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
+
 	// 使用済みクラスタ数を更新
 	if (wrote && used_groups != used) {
 		b->used = basic->InvertAndOrderUint16(used);	// invert
@@ -239,12 +265,13 @@ wxUint32 DiskBasicTypeMZ::GetEmptyGroupNumber()
 }
 
 /// データサイズ分のグループを確保する
-/// @param [in]  item        ディレクトリアイテム
-/// @param [in]  data_size   確保するデータサイズ（バイト）
-/// @param [in]  flags       新規か追加か
-/// @param [out] group_items 確保したセクタリスト
+/// @param [in]  fileunit_num ファイル番号
+/// @param [in]  item         ディレクトリアイテム
+/// @param [in]  data_size    確保するデータサイズ（バイト）
+/// @param [in]  flags        新規か追加か
+/// @param [out] group_items  確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
+int DiskBasicTypeMZ::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int file_size = 0;
 	int groups = 0;
@@ -275,7 +302,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, Alloc
 	}
 
 	// 開始グループ決定
-	item->SetStartGroup(group_start);
+	item->SetStartGroup(fileunit_num, group_start);
 
 	if (is_brd) {
 		// BRD ランダムアクセス
@@ -376,6 +403,7 @@ int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_st
 }
 
 /// データの読み込み/比較処理
+/// @param [in] fileunit_num  ファイル番号
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
 /// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
@@ -385,7 +413,7 @@ int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_st
 /// @param [in] sector_num    セクタ番号
 /// @param [in] sector_end    最終セクタ番号
 /// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
-int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
+int DiskBasicTypeMZ::AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
 	bool need_chain = item->NeedChainInData();
 
@@ -423,6 +451,16 @@ bool DiskBasicTypeMZ::IsRootDirectory(wxUint32 group_num)
 	return ((wxUint32)(basic->InvertUint8(fat->Get(1))) > group_num);	// invert
 }
 
+/// サブディレクトリを作成する前にディレクトリ名を編集する
+bool DiskBasicTypeMZ::RenameOnMakingDirectory(wxString &dir_name)
+{
+	// 空や"."で始まるディレクトリは作成不可
+	if (dir_name.IsEmpty() || dir_name.Left(1) == wxT(".")) {
+		return false;
+	}
+	return true;
+}
+
 /// サブディレクトリを作成した後の個別処理
 void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item)
 {
@@ -434,11 +472,11 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
-	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, buf);
+	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
 
 	// ボリューム番号
 	newitem->CopyData(item->GetData());
-	newitem->SetFileAttr(FILE_TYPE_VOLUME_MASK | FILE_TYPE_READONLY_MASK);
+	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_VOLUME_MASK | FILE_TYPE_READONLY_MASK);
 
 	buf += newitem->GetDataSize();
 	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
@@ -446,7 +484,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	// カレント
 	newitem->CopyData(item->GetData());
 	newitem->SetFileNamePlain(wxT("."));
-	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
+	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
 
 	buf += newitem->GetDataSize();
 	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
@@ -458,10 +496,10 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	} else {
 		// 親がルート
 		newitem->CopyData(item->GetData());
-		newitem->SetStartGroup(0);
+		newitem->SetStartGroup(0, 0);
 	}
 	newitem->SetFileNamePlain(wxT(".."));
-	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
+	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
 
 	delete newitem;
 
@@ -477,7 +515,7 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		wxUint8 *buf = sector->GetSectorBuffer();
 		if (buf) {
-			wxCharBuffer ipl = basic->GetIPLString().To8BitData();
+			wxCharBuffer ipl = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
 			size_t len = ipl.length();
 			if (len > 0) {
 				if (len > 32) len = 32;
@@ -487,7 +525,7 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 	}
 
 	wxUint8 volume_number = 1;
-	wxString volume_string = basic->GetVolumeString();
+	wxString volume_string = basic->GetVariousStringParam(wxT("VolumeString"));
 	int volume_length = (int)volume_string.Length();
 	if (volume_length > 0) {
 		volume_number = volume_string[0];
@@ -506,7 +544,7 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 
 		fdat->volume = volume_number;
 		// トラック1 サイド1 から
-		fdat->offset = basic->GetSectorPosFromNum(1, 1, 1) / basic->GetSectorsPerGroup();
+		fdat->offset = GetSectorPosFromNum(1, 1, 1) / basic->GetSectorsPerGroup();
 		// 使用クラスタ数
 		fdat->used = fdat->offset;
 		// 最大クラスタ数
@@ -533,7 +571,7 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 	int trk_num, sid_num, sec_num;
 	int index = 0;
 	for (int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {
-		basic->GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
+		GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
 		sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (sector) {
 			wxUint8 *buf = sector->GetSectorBuffer();
@@ -617,13 +655,13 @@ void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 	if (!item || !item->GetFileAttr().IsDirectory()) return;
 
 	// ディレクトリの場合は、下位にあるボリューム名も変更する
-	DiskD88Sector *sector = basic->GetSectorFromGroup(item->GetStartGroup());
+	DiskD88Sector *sector = basic->GetSectorFromGroup(item->GetStartGroup(0));
 
 	wxUint8 *buf = sector->GetSectorBuffer();
-	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, buf);
+	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
 
 	// ボリューム名をコピー
-	if (!newitem->IsSameFileName(*item)) {
+	if (!newitem->IsSameFileName(item)) {
 		newitem->CopyFileName(*item);
 	}
 

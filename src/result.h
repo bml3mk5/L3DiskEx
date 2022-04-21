@@ -23,6 +23,8 @@ protected:
 
 public:
 	ResultInfo();
+	ResultInfo(const ResultInfo &src);
+	ResultInfo &operator=(const ResultInfo &src);
 	virtual ~ResultInfo() {}
 
 	virtual void Clear();
@@ -30,6 +32,9 @@ public:
 	virtual void SetError(int error_number, ...);
 	virtual void SetWarn(int error_number, ...);
 	virtual void SetInfo(int error_number, ...);
+	virtual void SetError(int error_number, va_list ap);
+	virtual void SetWarn(int error_number, va_list ap);
+	virtual void SetInfo(int error_number, va_list ap);
 	virtual void SetMessage(int error_number, va_list ap) = 0;
 	virtual void GetMessages(wxArrayString &arr);
 	virtual const wxArrayString &GetMessages(int maxrow = 20);

@@ -20,11 +20,11 @@ private:
 
 public:
 	DiskBasicDirItemFM(DiskBasic *basic);
-	DiskBasicDirItemFM(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemFM(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemFM(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ファイル名に設定できない文字を文字列にして返す
-	wxString	GetDefaultInvalidateChars() const;
+//	/// @brief ファイル名に設定できない文字を文字列にして返す
+//	wxString	GetDefaultInvalidateChars() const;
 };
 
 #endif /* _BASICDIRITEM_FM_H_ */

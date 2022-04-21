@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+#include "config.h"
 #include "utils.h"
 
 
@@ -19,11 +20,11 @@
 /// MZ属性名
 const char *gTypeNameMZ[] = {
 	"???",
-	wxTRANSLATE("OBJ"),
-	wxTRANSLATE("BTX"),
-	wxTRANSLATE("BSD"),
-	wxTRANSLATE("BRD"),
-	wxTRANSLATE("<DIR>"),
+	"OBJ",
+	"BTX",
+	"BSD",
+	"BRD",
+	"DIR",
 	wxTRANSLATE("<VOL>"),
 	wxTRANSLATE("<VOL> SWAP"),
 	NULL
@@ -42,8 +43,8 @@ DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic)
 	: DiskBasicDirItemMZBase(basic)
 {
 }
-DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemMZBase(basic, sector, data)
+DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemMZBase(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -53,55 +54,48 @@ DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int num, int track, int
 	Used(CheckUsed(unuse));
 
 	CalcFileSize();
+
+	// カレント or 親ディレクトリはツリーに表示しない
+	wxString name = GetFileNamePlainStr();
+	VisibleOnTree(!(IsDirectory() && (name == wxT(".") || name == wxT(".."))));
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemMZ::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemMZ::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
 	// MZ
-	size = sizeof(data->mz.name);
-	len = size - 1;
-	return data->mz.name; 
+	if (num == 0) {
+		size = sizeof(m_data->mz.name);
+		len = size - 1;
+		return m_data->mz.name;
+	} else {
+		size = len = 0;
+		return NULL;
+	}
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemMZ::GetFileNameSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->mz.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemMZ::GetFileExtSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return 0;
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemMZ::GetFileType1() const
 {
-	return basic->InvertUint8(data->mz.type);	// invert;
+	return basic->InvertUint8(m_data->mz.type);	// invert;
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemMZ::GetFileType2() const
 {
-	return basic->InvertUint8(data->mz.type2);	// invert;
+	return basic->InvertUint8(m_data->mz.type2);	// invert;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemMZ::SetFileType1(int val)
 {
-	data->mz.type = basic->InvertUint8(val);	// invert
+	m_data->mz.type = basic->InvertUint8(val);	// invert
 }
 
 /// 属性２を設定
 void DiskBasicDirItemMZ::SetFileType2(int val)
 {
-	data->mz.type2 = basic->InvertUint8(val);	// invert
+	m_data->mz.type2 = basic->InvertUint8(val);	// invert
 }
 
 /// 使用しているアイテムか
@@ -115,16 +109,17 @@ bool DiskBasicDirItemMZ::CheckUsed(bool unuse)
 /// @return チェックOK
 bool DiskBasicDirItemMZ::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
 	wxUint8 t = GetFileType1();
-	if ((t & 0x70) != 0 && basic->FindSpecialAttr(t) == NULL) {
+	if ((t & 0x70) != 0 && basic->GetSpecialAttributes().FindValue(t) == NULL) {
 		valid = false;
 	}
 	return valid;
 }
 
+/// 属性を設定
 void DiskBasicDirItemMZ::SetFileAttr(const DiskBasicFileType &file_type)
 {
 	int ftype = file_type.GetType();
@@ -174,12 +169,13 @@ int DiskBasicDirItemMZ::ConvToNativeType(int file_type) const
 /// ディレクトリをクリア ファイル新規作成時
 void DiskBasicDirItemMZ::ClearData()
 {
-	if (!data) return;
-	memset(data, 0, sizeof(directory_mz_t));
-	memset(data->mz.name, 0x0d, sizeof(data->mz.name));
-	basic->InvertMem(data, sizeof(directory_mz_t));	// invert
+	if (!m_data) return;
+	memset(m_data, 0, sizeof(directory_mz_t));
+	memset(m_data->mz.name, 0x0d, sizeof(m_data->mz.name));
+	basic->InvertMem(m_data, sizeof(directory_mz_t));	// invert
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemMZ::GetFileAttr() const
 {
 	int t1 = GetFileType1();
@@ -213,7 +209,7 @@ DiskBasicFileType DiskBasicDirItemMZ::GetFileAttr() const
 		val |= FILE_TYPE_TEMPORARY_MASK;	// temporary
 		break;
 	default:
-		val = basic->GetTypeByValueOfSpecialAttr(t1);
+		val = basic->GetSpecialAttributes().GetTypeByValue(t1);
 		break;
 	}
 	int t2 = GetFileType2();
@@ -229,11 +225,8 @@ DiskBasicFileType DiskBasicDirItemMZ::GetFileAttr() const
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemMZ::GetFileAttrStr() const
 {
-	wxString attr = GetFileAttrStrSub(basic,
-		ConvFileType1Pos(GetFileType1()),
-		gTypeNameMZ,
-		TYPE_NAME_MZ_UNKNOWN
-	);
+	wxString attr;
+	GetFileAttrName(ConvFileType1Pos(GetFileType1()), gTypeNameMZ, TYPE_NAME_MZ_UNKNOWN, attr);
 
 	int t2 = GetFileType2();
 	if (t2 & DATATYPE_MZ_READ_ONLY) {
@@ -253,13 +246,13 @@ wxString DiskBasicDirItemMZ::GetFileAttrStr() const
 /// データ内にファイルサイズをセット
 void DiskBasicDirItemMZ::SetFileSizeBase(int val)
 {
-	data->mz.file_size = basic->InvertAndOrderUint16(val);	// invert
+	m_data->mz.file_size = basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// ファイルサイズをセット
 void DiskBasicDirItemMZ::SetFileSize(int val)
 {
-	file_size = val;
+	m_groups.SetSize(val);
 	if (GetFileType1() == FILETYPE_MZ_BRD) {
 		// BRD file
 		val = ((val + 31) / 32);
@@ -270,7 +263,12 @@ void DiskBasicDirItemMZ::SetFileSize(int val)
 /// データ内のファイルサイズを返す
 int DiskBasicDirItemMZ::GetFileSizeBase() const
 {
-	return basic->InvertAndOrderUint16(data->mz.file_size);
+	int val = basic->InvertAndOrderUint16(m_data->mz.file_size);
+	if (GetFileType1() == FILETYPE_MZ_BRD) {
+		// BRD file
+		val *= 32;
+	}
+	return val;
 }
 
 struct st_brd_params {
@@ -282,10 +280,10 @@ struct st_brd_params {
 /// ファイルサイズとグループ数を計算する前処理
 void DiskBasicDirItemMZ::PreCalcFileSize()
 {
-	if (GetFileType1() == FILETYPE_MZ_BRD) {
-		// BRD file
-		file_size *= 32;
-	}
+//	if (GetFileType1() == FILETYPE_MZ_BRD) {
+//		// BRD file
+//		m_file_size *= 32;
+//	}
 }
 
 /// グループ取得計算前処理
@@ -362,7 +360,7 @@ void DiskBasicDirItemMZ::PostCalcAllGroups(void *user_data)
 void DiskBasicDirItemMZ::GetFileDate(struct tm *tm) const
 {
 	int ymd; 
-	ymd = data->mz.date_time[0] << 16 | data->mz.date_time[1] << 8 | data->mz.date_time[2];
+	ymd = m_data->mz.date_time[0] << 16 | m_data->mz.date_time[1] << 8 | m_data->mz.date_time[2];
 	ymd = basic->InvertUint32(ymd);	// invert
 	tm->tm_year = ((ymd >> 20) & 0x0f) * 10 + ((ymd >> 16) & 0x0f);	// BCD
 	tm->tm_mon = ((ymd >> 15) & 1) * 10 + ((ymd >> 11) & 0x0f) - 1;
@@ -373,7 +371,7 @@ void DiskBasicDirItemMZ::GetFileDate(struct tm *tm) const
 void DiskBasicDirItemMZ::GetFileTime(struct tm *tm) const
 {
 	int hms;
-	hms = data->mz.date_time[2] << 8 | data->mz.date_time[3];
+	hms = m_data->mz.date_time[2] << 8 | m_data->mz.date_time[3];
 	hms = basic->InvertUint32(hms);	// invert
 	tm->tm_hour = ((hms >> 11) & 3) * 10 + ((hms >> 7) & 0x0f);
 	tm->tm_min = ((hms >> 4) & 0x7) * 10 + (hms & 0x0f);	// BCD
@@ -398,54 +396,54 @@ void DiskBasicDirItemMZ::SetFileDate(const struct tm *tm)
 {
 	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
 
-	int tmp = data->mz.date_time[0] << 16 | data->mz.date_time[1] << 8 | data->mz.date_time[2];
+	int tmp = m_data->mz.date_time[0] << 16 | m_data->mz.date_time[1] << 8 | m_data->mz.date_time[2];
 	tmp = basic->InvertUint32(tmp);	// invert
 	tmp &= 0x1f;
 	tmp |= (((tm->tm_year / 10) % 10) << 20) | ((tm->tm_year % 10) << 16);	// BCD
 	tmp |= ((((tm->tm_mon + 1) / 10) & 1) << 15) | (((tm->tm_mon + 1) % 10) << 11);
 	tmp |= (((tm->tm_mday / 10) & 3) << 9) | ((tm->tm_mday % 10) << 5);
 	tmp = basic->InvertUint32(tmp);	// invert
-	data->mz.date_time[0] = (tmp >> 16);
-	data->mz.date_time[1] = (tmp >> 8);
-	data->mz.date_time[2] = (tmp & 0xff);
+	m_data->mz.date_time[0] = (tmp >> 16);
+	m_data->mz.date_time[1] = (tmp >> 8);
+	m_data->mz.date_time[2] = (tmp & 0xff);
 }
 
 void DiskBasicDirItemMZ::SetFileTime(const struct tm *tm)
 {
 	if (tm->tm_hour < 0 || tm->tm_min < 0) return;
 
-	int tmp = data->mz.date_time[2] << 8 | data->mz.date_time[3];
+	int tmp = m_data->mz.date_time[2] << 8 | m_data->mz.date_time[3];
 	tmp = basic->InvertUint32(tmp);	// invert
 	tmp &= ~0x1fff;
 	tmp |= (((tm->tm_hour / 10) & 3) << 11) | ((tm->tm_hour % 10) << 7);
 	tmp |= (((tm->tm_min / 10) & 7) << 4) | (tm->tm_min % 10);
 	tmp = basic->InvertUint32(tmp);	// invert
-	data->mz.date_time[2] = (tmp >> 8);
-	data->mz.date_time[3] = (tmp & 0xff);
+	m_data->mz.date_time[2] = (tmp >> 8);
+	m_data->mz.date_time[3] = (tmp & 0xff);
 }
 
 // 開始アドレスを返す
 int DiskBasicDirItemMZ::GetStartAddress() const
 {
-	return basic->InvertAndOrderUint16(data->mz.load_addr);	// invert
+	return basic->InvertAndOrderUint16(m_data->mz.load_addr);	// invert
 }
 
 // 実行アドレスを返す
 int DiskBasicDirItemMZ::GetExecuteAddress() const
 {
-	return basic->InvertAndOrderUint16(data->mz.exec_addr);	// invert
+	return basic->InvertAndOrderUint16(m_data->mz.exec_addr);	// invert
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemMZ::SetStartAddress(int val)
 {
-	data->mz.load_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
+	m_data->mz.load_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemMZ::SetExecuteAddress(int val)
 {
-	data->mz.exec_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
+	m_data->mz.exec_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// ディレクトリアイテムのサイズ
@@ -455,19 +453,19 @@ size_t DiskBasicDirItemMZ::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemMZ::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemMZ::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 	// mz
 	wxUint16 sval = (wxUint16)(val * basic->GetSectorsPerGroup());
 	sval = basic->InvertAndOrderUint16(sval);	// invert
-	data->mz.start_sector = sval;
+	m_data->mz.start_sector = sval;
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemMZ::GetStartGroup() const
+wxUint32 DiskBasicDirItemMZ::GetStartGroup(int fileunit_num) const
 {
 	// MZ
-	wxUint16 sval = basic->InvertAndOrderUint16(data->mz.start_sector);	// invert
+	wxUint16 sval = basic->InvertAndOrderUint16(m_data->mz.start_sector);	// invert
 	return (sval / basic->GetSectorsPerGroup());
 }
 
@@ -477,40 +475,86 @@ wxUint32 DiskBasicDirItemMZ::GetExtraGroup() const
 	wxUint32 val = INVALID_GROUP_NUMBER;
 	// BRDのときのみ、始めのセクタを返す
 	if (GetFileType1() == FILETYPE_MZ_BRD) {
-		val = GetStartGroup();
+		val = GetStartGroup(0);
 	}
 	return val;
 }
 
-#if 0
-/// ファイルパスから内部ファイル名を生成する
-wxString DiskBasicDirItemMZ::RemakeFileNameStr(const wxString &filepath) const
+/// 追加のグループ番号を得る(機種依存)
+void DiskBasicDirItemMZ::GetExtraGroups(wxArrayInt &arr) const
 {
-	wxString newname;
-	wxFileName fn(filepath);
-	newname = fn.GetFullName().Left(GetFileNameSize());
-	return newname;
-}
-#endif
-
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMZ::GetDefaultInvalidateChars() const
-{
-	return wxT("\"\\/:*?");
+	// BRDのときのみ、始めのセクタを返す
+	if (GetFileType1() == FILETYPE_MZ_BRD) {
+		arr.Add((int)GetStartGroup(0));
+	}
 }
 
 /// 同じファイル名か
 bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicFileName &filename) const
 {
-	// 属性が0以外
-	if (GetFileType1() == 0) return false;
+	// 属性が0とボリューム番号は除く
+	int t1 = GetFileType1();
+	if (t1 == 0 || t1 == FILETYPE_MZ_VOL) return false;
 
 	return DiskBasicDirItem::IsSameFileName(filename);
 }
+
+/// 同じファイル名か
+bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicDirItem *src) const
+{
+	// 属性が0とボリューム番号は除く
+	int t1 = GetFileType1();
+	if (t1 == 0 || t1 == FILETYPE_MZ_VOL) return false;
+
+	return DiskBasicDirItem::IsSameFileName(src);
+}
+
 /// データ内部にチェインデータが必要か
 bool DiskBasicDirItemMZ::NeedChainInData()
 {
 	return (GetFileAttr().MatchType(FILE_TYPE_ASCII_MASK, FILE_TYPE_ASCII_MASK));
+}
+
+/// データをエクスポートする前に必要な処理
+/// 属性に応じて拡張子を付加する
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemMZ::PreExportDataFile(wxString &filename)
+{
+	if (!gConfig.IsAddExtensionExport()) return true;
+
+	/// 属性から拡張子を付加する
+	if (!IsDirectory()) {
+		wxString ext;
+		if (GetFileAttrName(ConvFileType1Pos(GetFileType1()), gTypeNameMZ, TYPE_NAME_MZ_VOL, ext)) {
+			filename += wxT(".");
+			if (Utils::IsUpperString(filename)) {
+				filename += ext.Upper();
+			} else {
+				filename += ext.Lower();
+			}
+		}
+	}
+	return true;
+}
+
+/// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
+bool DiskBasicDirItemMZ::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		IsContainAttrByExtension(filename, gTypeNameMZ, TYPE_NAME_MZ_OBJ, TYPE_NAME_MZ_DIR, &filename, NULL);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemMZ::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	int t1 = TYPE_NAME_MZ_BSD;
+	// 拡張子で属性を設定する
+	IsContainAttrByExtension(filename, gTypeNameMZ, TYPE_NAME_MZ_OBJ, TYPE_NAME_MZ_DIR, NULL, &t1);
+	return t1;
 }
 
 //
@@ -584,19 +628,9 @@ int DiskBasicDirItemMZ::ConvFileType2Pos(int native_type) const
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemMZ::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
 {
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".BAS")) {
-			file_type_1 = TYPE_NAME_MZ_BTX;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_MZ_BSD;
-		} else if (ext == wxT(".BIN")) {
-			file_type_1 = TYPE_NAME_MZ_OBJ;
-		} else {
-			file_type_1 = TYPE_NAME_MZ_BSD;
-		}
+		file_type_1 = ConvOriginalTypeFromFileName(name);
 	}
 }
 
@@ -671,6 +705,10 @@ void DiskBasicDirItemMZ::ChangeTypeInAttrDialog(IntNameBox *parent)
 	}
 
 	bool enable = (selected_idx == TYPE_NAME_MZ_OBJ);
+	if (selected_idx >= TYPE_NAME_MZ_END) {
+		int t = CalcSpecialFileTypeFromPos(basic, selected_idx, TYPE_NAME_MZ_END);
+		enable = ((t & FILE_TYPE_MACHINE_MASK) != 0);
+	}
 	if (txtStartAddr) {
 		txtStartAddr->Enable(enable);
 	}
@@ -689,7 +727,7 @@ int DiskBasicDirItemMZ::GetFileType1InAttrDialog(const IntNameBox *parent) const
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos)
+int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos) const
 {
 	int val = -1;
 	switch(pos) {
@@ -715,16 +753,17 @@ int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos)
 		val = FILETYPE_MZ_VOLSWAP;
 		break;
 	default:
-		val = CalcSpecialFileTypeFromPos(basic, pos, TYPE_NAME_MZ_END);
+		val = CalcSpecialOriginalTypeFromPos(basic, pos, TYPE_NAME_MZ_END);
 		break;
 	}
 	return val;
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemMZ::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemMZ::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkSeamless = (wxCheckBox *)parent->FindWindow(IDC_CHECK_SEAMLESS);
@@ -737,7 +776,7 @@ bool DiskBasicDirItemMZ::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasic
 	t2 |= chkReadOnly->GetValue() ? DATATYPE_MZ_READ_ONLY : 0;
 	t2 |= chkSeamless->GetValue() ? DATATYPE_MZ_SEAMLESS : 0;
 
-	DiskBasicDirItem::SetFileAttr(0, t2 << 8 | t1);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), 0, t2 << 8 | t1);
 
 	return true;
 }

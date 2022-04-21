@@ -12,6 +12,7 @@
 #include <wx/msgdlg.h>
 #include <wx/dataobj.h>
 #include <wx/clipbrd.h>
+#include <wx/utils.h>
 #include "main.h"
 #include "rawtrackbox.h"
 #include "rawsectorbox.h"
@@ -20,6 +21,31 @@
 #include "utils.h"
 
 
+//////////////////////////////////////////////////////////////////////
+
+const struct st_list_columns gL3DiskRawTrackColumnDefs[] = {
+	{ "Num",		wxTRANSLATE("Num"),				false,	42,	wxALIGN_RIGHT,	true },
+	{ "Track",		wxTRANSLATE("Track"),			false,	32,	wxALIGN_RIGHT,	false },
+	{ "Side",		wxTRANSLATE("Side"),			false,	32,	wxALIGN_RIGHT,	false },
+	{ "Sectors",	wxTRANSLATE("NumOfSectors"),	false,	40,	wxALIGN_RIGHT,	false },
+	{ "Offset",		wxTRANSLATE("Offset"),			false,	60,	wxALIGN_RIGHT,	true },
+	{ NULL,			NULL,							false,	 0,	wxALIGN_LEFT,	false }
+};
+
+const struct st_list_columns gL3DiskRawSectorColumnDefs[] = {
+	{ "Num",		wxTRANSLATE("Num"),				false,	40,	wxALIGN_RIGHT,	true },
+	{ "IDC",		wxTRANSLATE("C"),				false,	40,	wxALIGN_RIGHT,	false },
+	{ "IDH",		wxTRANSLATE("H"),				false,	40,	wxALIGN_RIGHT,	false },
+	{ "IDR",		wxTRANSLATE("R"),				false,	40,	wxALIGN_RIGHT,	true },
+	{ "IDN",		wxTRANSLATE("N"),				false,	40,	wxALIGN_RIGHT,	false },
+	{ "Deleted",	wxTRANSLATE("Deleted"),			false,	36,	wxALIGN_CENTER,	false },
+	{ "Single",		wxTRANSLATE("SingleDensity"),	false,	36,	wxALIGN_CENTER,	false },
+	{ "Sectors",	wxTRANSLATE("NumOfSectors"),	false,	72,	wxALIGN_RIGHT,	false },
+	{ "Size",		wxTRANSLATE("Size"),			false,	72,	wxALIGN_RIGHT,	false },
+	{ NULL,			NULL,							false,	 0,	wxALIGN_LEFT,	false }
+};
+
+//////////////////////////////////////////////////////////////////////
 //
 // 分割ウィンドウ
 //
@@ -49,7 +75,7 @@ L3DiskRawPanel::L3DiskRawPanel(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	// control panel
 	lpanel = new L3DiskRawTrack(frame, this);
 	rpanel = new L3DiskRawSector(frame, this);
-	SplitVertically(lpanel, rpanel, 200);
+	SplitVertically(lpanel, rpanel, 236);
 
 	SetMinimumPaneSize(10);
 }
@@ -83,7 +109,7 @@ bool L3DiskRawPanel::TrackListExists() const
 /// トラックリストの選択行を返す
 int L3DiskRawPanel::GetTrackListSelectedRow() const
 {
-	return (int)lpanel->GetFirstSelected();
+	return (int)lpanel->GetListSelectedRow();
 }
 
 /// セクタリストにデータを設定する
@@ -113,22 +139,53 @@ void L3DiskRawPanel::RefreshAllData()
 	rpanel->RefreshSectors();
 }
 
+/// クリップボードヘコピー
+bool L3DiskRawPanel::CopyToClipboard()
+{
+	wxWindow *fwin = wxWindow::FindFocus();
+	if (fwin == lpanel) {
+		return lpanel->CopyToClipboard();
+	} else if (fwin == rpanel) {
+		return rpanel->CopyToClipboard();
+	}
+	return true;
+}
+
 /// クリップボードからペースト
 bool L3DiskRawPanel::PasteFromClipboard()
 {
+	// トラック側
 	return lpanel->PasteFromClipboard();
 }
 
-/// トラックからエクスポートダイアログ表示
-bool L3DiskRawPanel::ShowExportTrackDialog()
+/// エクスポートダイアログ表示
+bool L3DiskRawPanel::ShowExportDataDialog()
 {
-	return lpanel->ShowExportTrackDialog();
+	wxWindow *fwin = wxWindow::FindFocus();
+	if (fwin == lpanel) {
+		return lpanel->ShowExportTrackDialog();
+	} else if (fwin == rpanel) {
+		return rpanel->ShowExportDataFileDialog();
+	}
+	return true;
 }
 
-/// トラックへインポートダイアログ表示
-bool L3DiskRawPanel::ShowImportTrackDialog()
+/// インポートダイアログ表示
+bool L3DiskRawPanel::ShowImportDataDialog()
 {
+	// トラック側のダイアログを表示
 	return lpanel->ShowImportTrackDialog();
+}
+
+/// データを削除ダイアログ表示
+bool L3DiskRawPanel::ShowDeleteDataDialog()
+{
+	wxWindow *fwin = wxWindow::FindFocus();
+	if (fwin == lpanel) {
+	} else if (fwin == rpanel) {
+		rpanel->DeleteSector();
+	}
+	return true;
 }
 
 /// トラックへインポートダイアログ（トラックの範囲指定）表示
@@ -217,19 +274,199 @@ void L3DiskRawPanel::SetListFont(const wxFont &font)
 	rpanel->Refresh();
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+#ifndef USE_LIST_CTRL_ON_TRACK_LIST
+L3DiskRawTrackListStoreModel::L3DiskRawTrackListStoreModel(wxWindow *parent)
+	: wxDataViewListStore()
+{
+	ctrl = (L3DiskRawTrack *)parent;
+}
+
+/// トラックリストのソート
+int L3DiskRawTrackListStoreModel::Compare(const wxDataViewItem &item1, const wxDataViewItem &item2, unsigned int col, bool ascending) const
+{
+	DiskD88Disk *disk = ctrl->GetDisk();
+	if (!disk) return 0;
+
+	int idx = -1;
+	if (!ctrl->FindColumn(col, &idx)) return 0;
+
+	int cmp = 0;
+	int i1 = (int)GetItemData(item1);
+	int i2 = (int)GetItemData(item2);
+	switch(idx) {
+	case TRACKCOL_OFFSET:
+		cmp = L3DiskRawTrackListCtrl::CompareOffset(disk, i1, i2, ascending ? 1 : -1);
+		break;
+	case TRACKCOL_NUM:
+		cmp = L3DiskRawTrackListCtrl::CompareNum(disk, i1, i2, ascending ? 1 : -1);
+		break;
+	default:
+		break;
+	}
+	return cmp;
+}
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+// トラックリストコントロール
+//
+L3DiskRawTrackListCtrl::L3DiskRawTrackListCtrl(L3DiskFrame *parentframe, wxWindow *parent, L3DiskRawTrack *sub, wxWindowID id)
+#ifndef USE_LIST_CTRL_ON_TRACK_LIST
+	: L3CDListCtrl(
+		parentframe, parent, id,
+		gL3DiskRawTrackColumnDefs,
+		NULL,
+		wxDV_SINGLE,
+		new L3DiskRawTrackListStoreModel(sub)
+	)
+#else
+	: L3CListCtrl(
+		parentframe, parent, id,
+		gL3DiskRawTrackColumnDefs,
+		-1, -1,
+		NULL,
+		wxLC_SINGLE_SEL
+	)
+#endif
+{
+#if 0
+	AssignListIcons(icons_for_seclist);
+#endif
+}
+
+/// リストデータを設定
+void L3DiskRawTrackListCtrl::SetListData(DiskD88Disk *disk, int pos, int row, int idx, L3RawTrackListValue *values)
+{
+	wxUint32 offset = disk->GetOffset(pos);
+	DiskD88Track *trk = disk->GetTrackByOffset(offset);
+	int trk_num = -1;
+	int sid_num = -1;
+	int sec_trk = -1;
+	if (trk) {
+		trk_num = trk->GetTrackNumber();
+		sid_num = trk->GetSideNumber();
+		sec_trk = trk->GetSectorsPerTrack();
+	}
+
+	values[TRACKCOL_NUM].Set(row, wxString::Format(wxT("%d"), idx));
+	values[TRACKCOL_TRACK].Set(row, trk_num >= 0 ? wxString::Format(wxT("%d"), trk_num) : wxT("--"));
+	values[TRACKCOL_SIDE].Set(row, sid_num >= 0 ? wxString::Format(wxT("%d"), sid_num) : wxT("--"));
+	values[TRACKCOL_SECS].Set(row, sec_trk >= 0 ? wxString::Format(wxT("%d"), sec_trk) : wxT("--"));
+	values[TRACKCOL_OFFSET].Set(row, wxString::Format(wxT("%x"), offset));
+}
+
+/// リストにデータを挿入
+void L3DiskRawTrackListCtrl::InsertListData(DiskD88Disk *disk, int pos, int row, int idx)
+{
+	L3RawTrackListValue values[TRACKCOL_END];
+
+	SetListData(disk, pos, row, idx, values);
+
+	InsertListItem(row, values, TRACKCOL_END, (wxUIntPtr)idx);
+}
+
+/// リストデータを更新
+void L3DiskRawTrackListCtrl::UpdateListData(DiskD88Disk *disk, int pos, int row, int idx)
+{
+	L3RawTrackListValue values[TRACKCOL_END];
+
+	SetListData(disk, pos, row, idx, values);
+
+	UpdateListItem(row, values, TRACKCOL_END, (wxUIntPtr)idx);
+}
+
+#ifdef USE_LIST_CTRL_ON_TRACK_LIST
+//
+//
+//
+
+/// ソート用アイテム
+struct st_track_list_sort_exp {
+	DiskD88Disk *disk;
+	int (*cmpfunc)(DiskD88Disk *disk, int i1, int i2, int dir);
+	int dir;
+};
+
+/// アイテムをソート
+void L3DiskRawTrackListCtrl::SortDataItems(DiskD88Disk *disk, int side_number, int col)
+{
+	struct st_track_list_sort_exp exp;
+
+	// ソート対象か
+	int idx;
+	bool match_col;
+	exp.dir = SelectColumnSortDir(col, idx, match_col);
+
+	// 番号かID Rの時のみソート
+	if (col >= 0 && match_col) {
+		if (disk) {
+			// ソート
+			exp.disk = disk;
+			switch(idx) {
+			case TRACKCOL_OFFSET:
+				exp.cmpfunc = &CompareOffset;
+				break;
+			case TRACKCOL_NUM:
+				exp.cmpfunc = &CompareNum;
+				break;
+			default:
+				exp.cmpfunc = NULL;
+				break;
+			}
+			SortItems(&Compare, (wxIntPtr)&exp);
+		}
+
+		SetColumnSortIcon(idx);
+	}
+}
+
+/// ソート用コールバック
+int wxCALLBACK L3DiskRawTrackListCtrl::Compare(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortdata)
+{
+	struct st_track_list_sort_exp *exp = (struct st_track_list_sort_exp *)sortdata;
+
+	int cmp = exp->cmpfunc != NULL ? exp->cmpfunc(exp->disk, (int)item1, (int)item2, exp->dir) : 0;
+	if (cmp == 0) cmp = ((int)item1 - (int)item2);
+	return cmp;
+}
+#endif
+
+int L3DiskRawTrackListCtrl::CompareOffset(DiskD88Disk *disk, int i1, int i2, int dir)
+{
+	return (disk->GetOffset(i1) - disk->GetOffset(i2)) * dir;
+}
+int L3DiskRawTrackListCtrl::CompareNum(DiskD88Disk *disk, int i1, int i2, int dir)
+{
+	return (i1 - i2) * dir;
+}
+
+//////////////////////////////////////////////////////////////////////
 //
 // 左パネルのトラックリスト
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
+wxBEGIN_EVENT_TABLE(L3DiskRawTrack, L3DiskRawTrackListCtrl)
+#ifndef USE_LIST_CTRL_ON_TRACK_LIST
+	EVT_DATAVIEW_ITEM_ACTIVATED(wxID_ANY, L3DiskRawTrack::OnListActivated)
+	EVT_DATAVIEW_SELECTION_CHANGED(wxID_ANY, L3DiskRawTrack::OnListItemSelected)
+	EVT_DATAVIEW_ITEM_BEGIN_DRAG(wxID_ANY, L3DiskRawTrack::OnBeginDrag)
+
+	EVT_DATAVIEW_ITEM_CONTEXT_MENU(wxID_ANY, L3DiskRawTrack::OnListContextMenu)
+#else
 	EVT_LIST_ITEM_SELECTED(wxID_ANY, L3DiskRawTrack::OnListItemSelected)
 	EVT_LIST_ITEM_ACTIVATED(wxID_ANY, L3DiskRawTrack::OnListActivated)
+	EVT_LIST_COL_CLICK(wxID_ANY, L3DiskRawTrack::OnColumnClick)
 
 	EVT_LIST_BEGIN_DRAG(wxID_ANY, L3DiskRawTrack::OnBeginDrag)
 
-	EVT_CHAR(L3DiskRawTrack::OnChar)
-
 	EVT_CONTEXT_MENU(L3DiskRawTrack::OnContextMenu)
+#endif
+	EVT_CHAR(L3DiskRawTrack::OnChar)
 
 	EVT_MENU(IDM_EXPORT_TRACK, L3DiskRawTrack::OnExportTrack)
 	EVT_MENU(IDM_IMPORT_TRACK, L3DiskRawTrack::OnImportTrack)
@@ -248,24 +485,20 @@ wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
 	EVT_MENU(IDM_MODIFY_SECTORS_TRACK, L3DiskRawTrack::OnModifySectorsOnTrack)
 	EVT_MENU(IDM_MODIFY_SIZE_TRACK, L3DiskRawTrack::OnModifySectorSizeOnTrack)
 
+	EVT_MENU(IDM_APPEND_TRACK, L3DiskRawTrack::OnAppendTrack)
 	EVT_MENU(IDM_DELETE_TRACKS_BELOW, L3DiskRawTrack::OnDeleteTracksBelow)
 
 	EVT_MENU(IDM_PROPERTY_TRACK, L3DiskRawTrack::OnPropertyTrack)
 wxEND_EVENT_TABLE()
 
 L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow)
-       : wxListView(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL)
+       : L3DiskRawTrackListCtrl(parentframe, parentwindow, this, wxID_ANY)
 {
 	parent   = parentwindow;
 	frame    = parentframe;
 
 	disk = NULL;
 	side_number = -1;
-
-	AppendColumn(_("Num"), wxLIST_FORMAT_RIGHT, 42);
-	AppendColumn(_("Track"), wxLIST_FORMAT_RIGHT, 32);
-	AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, 32);
-	AppendColumn(_("Offset"), wxLIST_FORMAT_RIGHT, 60);
 
 	wxFont font;
 	frame->GetDefaultListFont(font);
@@ -292,6 +525,7 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 	menuPopup->Append(IDM_MODIFY_SECTORS_TRACK, _("Modify All Num Of Sectors On This Track"));
 	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
 	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_APPEND_TRACK, _("Append New Track"));
 	menuPopup->Append(IDM_DELETE_TRACKS_BELOW, _("Delete All Tracks Below Current Track"));
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY_TRACK, _("&Property"));
@@ -303,24 +537,38 @@ L3DiskRawTrack::~L3DiskRawTrack()
 }
 
 /// トラックリストを選択
-void L3DiskRawTrack::OnListItemSelected(wxListEvent& event)
+void L3DiskRawTrack::OnListItemSelected(L3RawTrackListEvent& event)
 {
 	if (!disk) return;
 
-	int row = (int)event.GetIndex();
-	SelectData(row);
+	SelectData();
 }
 
 /// トラックリストをダブルクリック
-void L3DiskRawTrack::OnListActivated(wxListEvent &event)
+void L3DiskRawTrack::OnListActivated(L3RawTrackListEvent &event)
 {
 	ShowTrackAttr();
+}
+
+/// トラックリスト右クリック
+void L3DiskRawTrack::OnListContextMenu(L3RawTrackListEvent& event)
+{
+	ShowPopupMenu();
 }
 
 /// トラックリスト右クリック
 void L3DiskRawTrack::OnContextMenu(wxContextMenuEvent& event)
 {
 	ShowPopupMenu();
+}
+
+/// カラムをクリック
+void L3DiskRawTrack::OnColumnClick(L3RawTrackListEvent &event)
+{
+	int col = event.GetColumn();
+#ifdef USE_LIST_CTRL_ON_TRACK_LIST
+	SortDataItems(disk, side_number, col);
+#endif
 }
 
 /// トラックをエクスポート選択
@@ -348,7 +596,7 @@ void L3DiskRawTrack::OnChangeReverseSide(wxCommandEvent& event)
 }
 
 /// セクタリストからドラッグ開始
-void L3DiskRawTrack::OnBeginDrag(wxListEvent& event)
+void L3DiskRawTrack::OnBeginDrag(L3RawTrackListEvent& event)
 {
 	DragDataSourceForExternal();
 }
@@ -389,6 +637,12 @@ void L3DiskRawTrack::OnModifySectorSizeOnTrack(wxCommandEvent& event)
 	parent->ModifySectorSizeOnTrack();
 }
 
+/// 新規トラックを追加選択
+void L3DiskRawTrack::OnAppendTrack(wxCommandEvent& event)
+{
+	AppendTrack();
+}
+
 /// 現在のトラック以下を削除選択
 void L3DiskRawTrack::OnDeleteTracksBelow(wxCommandEvent& event)
 {
@@ -424,9 +678,9 @@ void L3DiskRawTrack::OnChar(wxKeyEvent& event)
 }
 
 /// 選択
-void L3DiskRawTrack::SelectData(int row)
+void L3DiskRawTrack::SelectData()
 {
-	int num = (int)GetItemData(row);
+	int num = GetListSelectedNum();
 	wxUint32 offset = disk->GetOffset(num);
 	if (offset > 0) {
 		parent->SetSectorListData(disk->GetTrackByOffset(offset));
@@ -446,52 +700,66 @@ void L3DiskRawTrack::SetTracks(DiskD88Disk *newdisk, int newsidenum)
 	SetTracks();
 
 	// セクタリストはクリア
+	UnselectListItem(GetListSelection());
 	parent->ClearSectorListData();
 }
 
 /// トラックリストを再セット
 void L3DiskRawTrack::RefreshTracks()
 {
-	long sel_pos = GetFirstSelected();
-	long foc_pos = GetFocusedItem();
+	L3RawTrackListItem sel_pos = GetListSelection();
+	L3RawTrackListItem foc_pos = GetListFocusedItem();
 	SetTracks();
-	if (foc_pos >= 0) Focus(foc_pos);
-	if (sel_pos >= 0) Select(sel_pos);
+	if (foc_pos >= 0) FocusListItem(foc_pos);
+	if (sel_pos >= 0) SelectListItem(sel_pos);
 }
 
 /// トラックリストを再セット
 void L3DiskRawTrack::SetTracks()
 {
-	DeleteAllItems();
-
 	if (!disk) return;
 
 	int sides = disk->GetSidesPerDisk();
-	for(int pos=(side_number >= 0 ? side_number : 0), row=0; pos < DISKD88_MAX_TRACKS; pos+=(side_number >= 0 ? sides : 1)) {
-		wxUint32 offset = disk->GetOffset(pos);
-		DiskD88Track *trk = disk->GetTrackByOffset(offset);
-		int trk_num = -1;
-		int sid_num = -1;
-//		if (newsidenum >= 0) {
-//			if (!trk || newsidenum != trk->GetSideNumber()) continue;
-//		}
-		if (trk) {
-			trk_num = trk->GetTrackNumber();
-			sid_num = trk->GetSideNumber();
+	int row = 0;
+	int row_count = (int)GetItemCount();
+
+	for(int pos=(side_number >= 0 ? side_number : 0); pos < DISKD88_MAX_TRACKS; pos+=(side_number >= 0 ? sides : 1)) {
+		if (row < row_count) {
+			UpdateListData(disk, pos, row, pos);
+		} else {
+			InsertListData(disk, pos, row, pos);
 		}
-		InsertItem(row, wxString::Format(wxT("%d"), pos));
-		SetItem(row, 1, trk_num >= 0 ? wxString::Format(wxT("%d"), trk_num) : wxT("--"));
-		SetItem(row, 2, sid_num >= 0 ? wxString::Format(wxT("%d"), sid_num) : wxT("--"));
-		SetItem(row, 3, wxString::Format(wxT("%x"), offset));
-		SetItemData(row, pos);
 		row++;
 	}
+#ifndef USE_LIST_CTRL_ON_TRACK_LIST
+	// 余分な行は消す
+	for(int idx = row; idx < row_count; idx++) {
+		DeleteItem((unsigned)row);
+	}
+#else
+#ifndef USE_VIRTUAL_ON_LIST_CTRL
+	// 余分な行は消す
+	for(int idx = row; idx < row_count; idx++) {
+		DeleteItem(row);
+	}
+#else
+	SetItemCount(row);
+#endif
+#endif
+
+#ifdef USE_LIST_CTRL_ON_TRACK_LIST
+#ifdef USE_VIRTUAL_ON_LIST_CTRL
+	SetItemCount(row);
+#endif
+	// ソート
+	SortDataItems(disk, side_number, -1);
+#endif
 }
 
 /// トラックリストをクリア
 void L3DiskRawTrack::ClearTracks()
 {
-	DeleteAllItems();
+	DeleteAllListItems();
 
 	disk = NULL;
 	side_number = -1;
@@ -504,7 +772,6 @@ void L3DiskRawTrack::ClearTracks()
 void L3DiskRawTrack::ShowPopupMenu()
 {
 	if (!menuPopup) return;
-	int row = 0;
 	int num = 0;
 	wxUint32 offset = 0;
 
@@ -519,11 +786,12 @@ void L3DiskRawTrack::ShowPopupMenu()
 	menuPopup->Enable(IDM_MODIFY_ID_N_DISK, opened);
 	menuPopup->Enable(IDM_MODIFY_DENSITY_DISK, opened);
 
+	menuPopup->Enable(IDM_APPEND_TRACK, opened);
+
 	menuPopup->Enable(IDM_PROPERTY_TRACK, opened);
 
 	if (opened) {
-		row = (int)GetFirstSelected();
-		num = (int)GetItemData(row);
+		num = GetListSelectedNum();
 		offset = disk->GetOffset(num);
 	}
 
@@ -554,10 +822,10 @@ bool L3DiskRawTrack::DragDataSourceForExternal()
 #endif
 		dragSource.DoDragDrop();
 
-#ifdef __WXMSW__
-		// macでは別プロセスで動くようなのでここで削除しない。
-		ReleaseFileObject(tmp_dir_name);
-#endif
+//#ifdef __WXMSW__
+//		// macでは別プロセスで動くようなのでここで削除しない。
+//		ReleaseFileObject(tmp_dir_name);
+//#endif
 	}
 	return sts;
 }
@@ -584,7 +852,7 @@ bool L3DiskRawTrack::CopyToClipboard()
 /// ファイルをテンポラリディレクトリにエクスポートしファイルリストを作成する（DnD, クリップボード用）
 bool L3DiskRawTrack::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &file_object)
 {
-	int selected_count = GetSelectedItemCount();
+	int selected_count = GetListSelectedItemCount();
 	if (selected_count <= 0) return false;
 
 	L3DiskApp *app = &wxGetApp();
@@ -595,9 +863,10 @@ bool L3DiskRawTrack::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &
 	}
 
 	int cnt = 0;
-	long row = GetFirstSelected();
-	do {
-		DiskD88Track *track = GetTrack(row);
+	L3RawTrackListItems sels;
+	GetListSelections(sels);
+	for(size_t row = 0; row < sels.Count(); row++) {
+		DiskD88Track *track = GetTrack(sels[row]);
 		if (!track) continue;
 
 		int st_sec, ed_sec;
@@ -621,7 +890,7 @@ bool L3DiskRawTrack::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &
 			file_object.AddFile(file_path.GetFullPath());
 			cnt++;
 		}
-	} while((row = GetNextSelected(row)) != wxNOT_FOUND);
+	}
 
 	return (cnt > 0);
 }
@@ -718,6 +987,7 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 /// @return true:成功 / false:エラー
 bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side)
 {
+	// エクスポート元パスを覚えておく
 	frame->SetIniExportFilePath(path);
 
 	if (!disk) return false;
@@ -872,6 +1142,7 @@ bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk
 /// @return true:成功 / false:エラー
 bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side)
 {
+	// エクスポート元パスを覚えておく
 	frame->SetIniExportFilePath(path);
 
 	if (!disk) return false;
@@ -1029,14 +1300,32 @@ void L3DiskRawTrack::ShowTrackAttr()
 {
 	if (!disk) return;
 
-	int row = (int)GetFirstSelected();
-	if (row < 0) return;
-	int num = (int)GetItemData(row);
+	int num = GetListSelectedNum();
+	if (num < 0) return;
 
 	wxUint32 offset = disk->GetOffset(num);
 
-	RawTrackBox dlg(this, wxID_ANY, row, offset, disk);
+	RawTrackBox dlg(this, wxID_ANY, num, offset, disk);
 	dlg.ShowModal();
+}
+
+/// トラックを追加
+void L3DiskRawTrack::AppendTrack()
+{
+	if (!disk) return;
+
+	int disk_number = -1;
+	int side_number = -1;
+
+	if (disk->IsReversible()) {
+		// AB面ありで選択位置がA,B面どちらか
+		frame->GetDiskListSelectedPos(disk_number, side_number);
+	}
+
+	disk->AddNewTrack(side_number);
+
+	// 画面更新
+	parent->RefreshAllData();
 }
 
 /// トラックを削除
@@ -1046,9 +1335,8 @@ void L3DiskRawTrack::DeleteTracks()
 
 	int disk_number = -1;
 	int side_number = -1;
-	int row = (int)GetFirstSelected();
-	if (row < 0) return;
-	int num = (int)GetItemData(row);
+	int num = GetListSelectedNum();
+	if (num < 0) return;
 
 	if (disk->IsReversible()) {
 		// AB面ありで選択位置がA,B面どちらか
@@ -1069,16 +1357,20 @@ void L3DiskRawTrack::DeleteTracks()
 /// 選択行のトラックを返す
 DiskD88Track *L3DiskRawTrack::GetSelectedTrack()
 {
-	return GetTrack(GetFirstSelected());
+	return GetTrack(GetListSelection());
 }
 
 /// 指定行のトラックを返す
-DiskD88Track *L3DiskRawTrack::GetTrack(long row)
+DiskD88Track *L3DiskRawTrack::GetTrack(const L3RawTrackListItem &row)
 {
 	if (!disk) return NULL;
 
 	DiskD88Track *track = NULL;
+#ifndef USE_LIST_CTRL_ON_TRACK_LIST
+	if (!row.IsOk()) return NULL;
+#else
 	if (row == wxNOT_FOUND) return NULL;
+#endif
 	int num = (int)GetItemData(row);
 	wxUint32 offset = disk->GetOffset(num);
 	if (offset > 0) {
@@ -1130,45 +1422,195 @@ bool L3DiskRawTrack::GetFirstAndLastSectorNumOnTrack(const DiskD88Track *track, 
 	return true;
 }
 
-//
-//
-//
-L3DiskRawSectorItem::L3DiskRawSectorItem(const wxString &newname, const wxString &newattr, int newsize, int newgrps)
-{
-	filename = newname;
-	attribute = newattr;
-	size = newsize;
-	groups = newgrps;
-}
-
-#include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(L3DiskRawSectorItems);
-
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
 #ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-bool L3DiskRawListStoreDerivedModel::IsEnabledByRow(unsigned int row, unsigned int col) const
+L3DiskRawSectorListStoreModel::L3DiskRawSectorListStoreModel(wxWindow *parent)
+{
+	ctrl = (L3DiskRawSector *)parent;
+}
+
+bool L3DiskRawSectorListStoreModel::IsEnabledByRow(unsigned int row, unsigned int col) const
 {
     return true;
 }
+
+int L3DiskRawSectorListStoreModel::Compare(const wxDataViewItem &item1, const wxDataViewItem &item2, unsigned int col, bool ascending) const
+{
+	DiskD88Sectors *sectors = ctrl->GetSectors();
+	if (!sectors) return 0;
+
+	int idx = -1;
+	if (!ctrl->FindColumn(col, &idx)) return 0;
+
+	int cmp = 0;
+	int i1 = (int)GetItemData(item1);
+	int i2 = (int)GetItemData(item2);
+	switch(idx) {
+	case SECTORCOL_ID_R:
+		cmp = L3DiskRawSectorListCtrl::CompareIDR(sectors, i1, i2, ascending ? 1 : -1);
+		break;
+	case SECTORCOL_NUM:
+		cmp = L3DiskRawSectorListCtrl::CompareNum(sectors, i1, i2, ascending ? 1 : -1);
+		break;
+	default:
+		break;
+	}
+	return cmp;
+}
 #endif
 
+//////////////////////////////////////////////////////////////////////
+//
+// セクタリストコントロール
+//
+L3DiskRawSectorListCtrl::L3DiskRawSectorListCtrl(L3DiskFrame *parentframe, wxWindow *parent, L3DiskRawSector *sub, wxWindowID id)
+#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
+	: L3CDListCtrl(
+		parentframe, parent, id,
+		gL3DiskRawSectorColumnDefs,
+		NULL,
+		wxDV_MULTIPLE,
+		new L3DiskRawSectorListStoreModel(sub)
+	)
+#else
+	: L3CListCtrl(
+		parentframe, parent, id,
+		gL3DiskRawSectorColumnDefs,
+		-1, -1,
+		NULL,
+		0
+	)
+#endif
+{
+#if 0
+	AssignListIcons(icons_for_seclist);
+#endif
+}
+
+/// リストデータを設定
+void L3DiskRawSectorListCtrl::SetListData(DiskD88Sector *sector, int row, L3RawSectorListValue *values)
+{
+	values[SECTORCOL_NUM].Set(row, wxString::Format(wxT("%d"), row));
+	values[SECTORCOL_ID_C].Set(row, wxString::Format(wxT("%d"), (int)sector->GetIDC()));
+	values[SECTORCOL_ID_H].Set(row, wxString::Format(wxT("%d"), (int)sector->GetIDH()));
+	values[SECTORCOL_ID_R].Set(row, wxString::Format(wxT("%d"), (int)sector->GetIDR()));
+	values[SECTORCOL_ID_N].Set(row, wxString::Format(wxT("%d"), (int)sector->GetIDN()));
+	values[SECTORCOL_DELETED].Set(row, sector->IsDeleted() ? wxT("*") : wxEmptyString);
+	values[SECTORCOL_SINGLE].Set(row, sector->IsSingleDensity() ? wxT("*") : wxEmptyString);
+	values[SECTORCOL_SECTORS].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorsPerTrack()));
+	values[SECTORCOL_SIZE].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorBufferSize()));
+}
+
+/// リストにデータを挿入
+void L3DiskRawSectorListCtrl::InsertListData(DiskD88Sector *sector, int row, int idx)
+{
+	L3RawSectorListValue values[SECTORCOL_END];
+
+	SetListData(sector, row, values);
+
+	InsertListItem(row, values, SECTORCOL_END, (wxUIntPtr)idx);
+}
+
+/// リストデータを更新
+void L3DiskRawSectorListCtrl::UpdateListData(DiskD88Sector *sector, int row, int idx)
+{
+	L3RawSectorListValue values[SECTORCOL_END];
+
+	SetListData(sector, row, values);
+
+	UpdateListItem(row, values, SECTORCOL_END, (wxUIntPtr)idx);
+}
+
+#ifdef USE_LIST_CTRL_ON_SECTOR_LIST
+//
+//
+//
+
+/// ソート用アイテム
+struct st_sector_list_sort_exp {
+	DiskD88Sectors *sectors;
+	int (*cmpfunc)(DiskD88Sectors *sectors, int i1, int i2, int dir);
+	int dir;
+};
+
+/// アイテムをソート
+void L3DiskRawSectorListCtrl::SortDataItems(DiskD88Track *track, int col)
+{
+	struct st_sector_list_sort_exp exp;
+
+	// ソート対象か
+	int idx;
+	bool match_col;
+	exp.dir = SelectColumnSortDir(col, idx, match_col);
+
+	DiskD88Sectors *sectors = NULL;
+	if (track) {
+		sectors = track->GetSectors();
+	}
+
+	// 番号かID Rの時のみソート
+	if (col >= 0 && match_col) {
+		if (sectors) {
+			// ソート
+			exp.sectors = sectors;
+			switch(idx) {
+			case SECTORCOL_ID_R:
+				exp.cmpfunc = &CompareIDR;
+				break;
+			case SECTORCOL_NUM:
+				exp.cmpfunc = &CompareNum;
+				break;
+			default:
+				exp.cmpfunc = NULL;
+				break;
+			}
+			SortItems(&Compare, (wxIntPtr)&exp);
+		}
+
+		SetColumnSortIcon(idx);
+	}
+}
+
+/// ソート用コールバック
+int wxCALLBACK L3DiskRawSectorListCtrl::Compare(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortdata)
+{
+	struct st_sector_list_sort_exp *exp = (struct st_sector_list_sort_exp *)sortdata;
+
+	int cmp = exp->cmpfunc != NULL ? exp->cmpfunc(exp->sectors, (int)item1, (int)item2, exp->dir) : 0;
+	if (cmp == 0) cmp = ((int)item1 - (int)item2);
+	return cmp;
+}
+#endif
+
+/// ID Rでソート
+int L3DiskRawSectorListCtrl::CompareIDR(DiskD88Sectors *sectors, int i1, int i2, int dir)
+{
+	return (sectors->Item(i1)->GetIDR() - sectors->Item(i2)->GetIDR()) * dir;
+}
+int L3DiskRawSectorListCtrl::CompareNum(DiskD88Sectors *sectors, int i1, int i2, int dir)
+{
+	return (i1 - i2) * dir;
+}
+
+//////////////////////////////////////////////////////////////////////
 //
 // 右パネルのセクタリスト
 //
 // Attach Event
+wxBEGIN_EVENT_TABLE(L3DiskRawSector, L3DiskRawSectorListCtrl)
 #ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-wxBEGIN_EVENT_TABLE(L3DiskRawSector, wxDataViewListCtrl)
 	EVT_DATAVIEW_ITEM_CONTEXT_MENU(wxID_ANY, L3DiskRawSector::OnItemContextMenu)
 	EVT_DATAVIEW_ITEM_ACTIVATED(wxID_ANY, L3DiskRawSector::OnItemActivated)
 	EVT_DATAVIEW_SELECTION_CHANGED(wxID_ANY, L3DiskRawSector::OnSelectionChanged)
 	EVT_DATAVIEW_ITEM_BEGIN_DRAG(wxID_ANY, L3DiskRawSector::OnBeginDrag)
 #else
-wxBEGIN_EVENT_TABLE(L3DiskRawSector, wxListCtrl)
 	EVT_CONTEXT_MENU(L3DiskRawSector::OnContextMenu)
 	EVT_LIST_ITEM_ACTIVATED(wxID_ANY, L3DiskRawSector::OnItemActivated)
 	EVT_LIST_ITEM_SELECTED(wxID_ANY, L3DiskRawSector::OnSelectionChanged)
+	EVT_LIST_COL_CLICK(wxID_ANY, L3DiskRawSector::OnColumnClick)
 	EVT_LIST_BEGIN_DRAG(wxID_ANY, L3DiskRawSector::OnBeginDrag)
 #endif
 	EVT_CHAR(L3DiskRawSector::OnChar)
@@ -1187,50 +1629,19 @@ wxBEGIN_EVENT_TABLE(L3DiskRawSector, wxListCtrl)
 	EVT_MENU(IDM_APPEND_SECTOR, L3DiskRawSector::OnAppendSector)
 	EVT_MENU(IDM_DELETE_SECTOR, L3DiskRawSector::OnDeleteSector)
 	EVT_MENU(IDM_DELETE_SECTORS_BELOW, L3DiskRawSector::OnDeleteSectorsOnTrack)
+	EVT_MENU(IDM_EDIT_SECTOR, L3DiskRawSector::OnEditSector)
 
 	EVT_MENU(IDM_PROPERTY_SECTOR, L3DiskRawSector::OnPropertySector)
 wxEND_EVENT_TABLE()
 
 L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow)
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	: wxDataViewListCtrl(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_MULTIPLE)
-#else
-	: wxListCtrl(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT)
-#endif
+	: L3DiskRawSectorListCtrl(parentframe, parentwindow, this, wxID_ANY)
 {
 	initialized = false;
 	parent   = parentwindow;
 	frame    = parentframe;
 
 	track = NULL;
-
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	L3DiskRawListStoreDerivedModel *model = new L3DiskRawListStoreDerivedModel();
-	AssociateModel(model);
-	model->DecRef();
-
-	AppendTextColumn(_("C"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
-	AppendTextColumn(_("H"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
-	AppendTextColumn(_("R"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
-	AppendTextColumn(_("N"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
-//	AppendToggleColumn(_("Deleted"), wxDATAVIEW_CELL_ACTIVATABLE, 32);
-//	AppendToggleColumn(_("SingleDensity"), wxDATAVIEW_CELL_ACTIVATABLE, 32);
-	AppendTextColumn(_("Deleted"), wxDATAVIEW_CELL_INERT, 36, wxALIGN_CENTER);
-	AppendTextColumn(_("SingleDensity"), wxDATAVIEW_CELL_INERT, 36, wxALIGN_CENTER);
-	AppendTextColumn(_("NumOfSectors"), wxDATAVIEW_CELL_INERT, 72, wxALIGN_RIGHT);
-	AppendTextColumn(_("Size"), wxDATAVIEW_CELL_INERT, 72, wxALIGN_RIGHT);
-	AppendTextColumn(wxT(""), wxDATAVIEW_CELL_INERT, 4);
-#else
-	AppendColumn(_("Num"), wxLIST_FORMAT_RIGHT, 40);
-	AppendColumn(_("C"), wxLIST_FORMAT_RIGHT, 40);
-	AppendColumn(_("H"), wxLIST_FORMAT_RIGHT, 40);
-	AppendColumn(_("R"), wxLIST_FORMAT_RIGHT, 40);
-	AppendColumn(_("N"), wxLIST_FORMAT_RIGHT, 40);
-	AppendColumn(_("Deleted"), wxLIST_FORMAT_CENTER, 36);
-	AppendColumn(_("SingleDensity"), wxLIST_FORMAT_CENTER, 36);
-	AppendColumn(_("NumOfSectors"), wxLIST_FORMAT_RIGHT, 72);
-	AppendColumn(_("Size"), wxLIST_FORMAT_RIGHT, 72);
-#endif
 
 	wxFont font;
 	frame->GetDefaultListFont(font);
@@ -1257,6 +1668,8 @@ L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *paren
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_DELETE_SECTORS_BELOW, _("Delete Sectors More Than Current Sector Number"));
 	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_EDIT_SECTOR, _("Edit Current Sector"));
+	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY_SECTOR, _("&Property"));
 
 	initialized = true;
@@ -1269,24 +1682,11 @@ L3DiskRawSector::~L3DiskRawSector()
 
 
 /// セクタリスト選択
-void L3DiskRawSector::OnSelectionChanged(L3SectorListEvent& event)
+void L3DiskRawSector::OnSelectionChanged(L3RawSectorListEvent& event)
 {
 	if (!initialized) return;
 
-	if (GetListSelectedRow() == wxNOT_FOUND || !track) {
-		// 非選択
-		UnselectItem();
-		return;
-	}
-
-	DiskD88Sectors *sectors = track->GetSectors();
-	if (!sectors) {
-		// 非選択
-		UnselectItem();
-		return;
-	}
-
-	DiskD88Sector *sector = sectors->Item(GetListSelectedRow());
+	DiskD88Sector *sector = GetSelectedSector();
 	if (!sector) {
 		// 非選択
 		UnselectItem();
@@ -1298,13 +1698,13 @@ void L3DiskRawSector::OnSelectionChanged(L3SectorListEvent& event)
 }
 
 /// セクタリストからドラッグ開始
-void L3DiskRawSector::OnBeginDrag(L3SectorListEvent& event)
+void L3DiskRawSector::OnBeginDrag(L3RawSectorListEvent& event)
 {
 	DragDataSourceForExternal();
 }
 
 /// セクタリスト右クリック
-void L3DiskRawSector::OnItemContextMenu(L3SectorListEvent& event)
+void L3DiskRawSector::OnItemContextMenu(L3RawSectorListEvent& event)
 {
 	ShowPopupMenu();
 }
@@ -1316,9 +1716,18 @@ void L3DiskRawSector::OnContextMenu(wxContextMenuEvent& event)
 }
 
 /// セクタリスト ダブルクリック
-void L3DiskRawSector::OnItemActivated(L3SectorListEvent& event)
+void L3DiskRawSector::OnItemActivated(L3RawSectorListEvent& event)
 {
 	ShowSectorAttr();
+}
+
+/// セクタリスト カラムをクリック
+void L3DiskRawSector::OnColumnClick(L3RawSectorListEvent& event)
+{
+	int col = event.GetColumn();
+#ifdef USE_LIST_CTRL_ON_SECTOR_LIST
+	SortDataItems(track, col);
+#endif
 }
 
 /// セクタリスト エクスポート選択
@@ -1381,6 +1790,12 @@ void L3DiskRawSector::OnDeleteSectorsOnTrack(wxCommandEvent& event)
 	DeleteSectorsOnTrack();
 }
 
+/// セクタ編集選択
+void L3DiskRawSector::OnEditSector(wxCommandEvent& event)
+{
+	EditSector();
+}
+
 /// セクタプロパティ選択
 void L3DiskRawSector::OnPropertySector(wxCommandEvent& event)
 {
@@ -1426,7 +1841,7 @@ void L3DiskRawSector::ShowPopupMenu()
 	menuPopup->Enable(IDM_MODIFY_SIZE_TRACK, opened);
 	menuPopup->Enable(IDM_APPEND_SECTOR, opened);
 
-	int cnt = GetListSelectedCount();
+	int cnt = GetListSelectedItemCount();
 	opened = (opened && (cnt > 0));
 	menuPopup->Enable(IDM_EXPORT_FILE, opened);
 	menuPopup->Enable(IDM_DELETE_SECTOR, opened && (cnt == 1));
@@ -1465,54 +1880,59 @@ void L3DiskRawSector::SetSectors(DiskD88Track *newtrack)
 	RefreshSectors();
 }
 
+/// セクタリストを返す
+DiskD88Sectors *L3DiskRawSector::GetSectors() const
+{
+	if (track) {
+		return track->GetSectors();
+	} else {
+		return NULL;
+	}
+}
+
 /// セクタリストをリフレッシュ
 void L3DiskRawSector::RefreshSectors()
 {
-	DeleteAllItems();
-
 	if (!track) return;
 
 	DiskD88Sectors *sectors = track->GetSectors();
 	if (!sectors) return;
 
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	wxVector<wxVariant> data;
-#else
-	long row = 0;
-#endif
+	int row = 0;
+	int row_count = (int)GetItemCount();
+
 	for (size_t i=0; i<sectors->Count(); i++) {
 		DiskD88Sector *sector = sectors->Item(i);
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-		data.clear();
-		data.push_back(wxString::Format(wxT("%d"),sector->GetIDC()));
-		data.push_back(wxString::Format(wxT("%d"),sector->GetIDH()));
-		data.push_back(wxString::Format(wxT("%d"),sector->GetIDR()));
-		data.push_back(wxString::Format(wxT("%d"),sector->GetIDN()));
-//		data.push_back(sector->GetDeletedMark());
-//		data.push_back(sector->IsSingleDensity());
-		data.push_back(sector->IsDeleted() ? wxT("*") : wxEmptyString);
-		data.push_back(sector->IsSingleDensity() ? wxT("*") : wxEmptyString);
-		data.push_back(wxString::Format(wxT("%d"),sector->GetSectorsPerTrack()));
-		data.push_back(wxString::Format(wxT("%d"),sector->GetSectorBufferSize()));
-		data.push_back(wxT(""));
-
-		AppendItem( data );
-#else
-		int col = 1;
-		InsertItem(row, wxString::Format(wxT("%d"), (int)row));
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetIDC()));
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetIDH()));
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetIDR()));
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetIDN()));
-		SetItem(row, col++, sector->IsDeleted() ? wxT("*") : wxEmptyString);
-		SetItem(row, col++, sector->IsSingleDensity() ? wxT("*") : wxEmptyString);
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetSectorsPerTrack()));
-		SetItem(row, col++, wxString::Format(wxT("%d"),sector->GetSectorBufferSize()));
-		SetItemPtrData(row, (wxUIntPtr)i);
-
+		if (row < row_count) {
+			UpdateListData(sector, row, (int)i);
+		} else {
+			InsertListData(sector, row, (int)i);
+		}
 		row++;
-#endif
 	}
+#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
+	// 余分な行は消す
+	for(int idx = row; idx < row_count; idx++) {
+		DeleteItem((unsigned)row);
+	}
+#else
+#ifndef USE_VIRTUAL_ON_LIST_CTRL
+	// 余分な行は消す
+	for(int idx = row; idx < row_count; idx++) {
+		DeleteItem(row);
+	}
+#else
+	SetItemCount(row);
+#endif
+#endif
+
+#ifdef USE_LIST_CTRL_ON_SECTOR_LIST
+#ifdef USE_VIRTUAL_ON_LIST_CTRL
+	SetItemCount(row);
+#endif
+	// ソート
+	SortDataItems(track, -1);
+#endif
 
 	// ダンプリストをクリア
 	frame->ClearBinDumpData();
@@ -1524,7 +1944,7 @@ void L3DiskRawSector::RefreshSectors()
 /// セクタリストをクリア
 void L3DiskRawSector::ClearSectors()
 {
-	DeleteAllItems();
+	DeleteAllListItems();
 
 	track = NULL;
 
@@ -1540,17 +1960,17 @@ DiskD88Sector *L3DiskRawSector::GetSelectedSector(int *pos)
 {
 	if (!track) return NULL;
 
-	int row = GetListSelectedRow();
-	if (row == wxNOT_FOUND) return NULL;
+	int idx = GetListSelectedNum();
+	if (idx == wxNOT_FOUND) return NULL;
 
-	if (pos) *pos = row;
+	if (pos) *pos = idx;
 
-	DiskD88Sector *sector = track->GetSectorByIndex(row);
+	DiskD88Sector *sector = track->GetSectorByIndex(idx);
 	return sector;
 }
 
 /// セクタを返す
-DiskD88Sector *L3DiskRawSector::GetSector(const L3SectorListItem &item)
+DiskD88Sector *L3DiskRawSector::GetSector(const L3RawSectorListItem &item)
 {
 	if (!track) return NULL;
 
@@ -1610,7 +2030,7 @@ bool L3DiskRawSector::CopyToClipboard()
 /// ファイルをテンポラリディレクトリにエクスポートしファイルリストを作成する（DnD, クリップボード用）
 bool L3DiskRawSector::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &file_object)
 {
-	L3SectorListItems selected_items;
+	L3RawSectorListItems selected_items;
 	int selected_count = GetListSelections(selected_items);
 	if (selected_count <= 0) return false;
 
@@ -1660,7 +2080,7 @@ bool L3DiskRawSector::PasteFromClipboard()
 /// エクスポートダイアログ表示
 bool L3DiskRawSector::ShowExportDataFileDialog()
 {
-	L3SectorListItems selected_items;
+	L3RawSectorListItems selected_items;
 	int selected_count = GetListSelections(selected_items);
 
 	bool sts = true;
@@ -1714,6 +2134,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 /// 指定したファイルにセクタのデータをエクスポート
 bool L3DiskRawSector::ExportDataFile(const wxString &path, DiskD88Sector *sector)
 {
+	// エクスポート元パスを覚えておく
 	frame->SetIniExportFilePath(path);
 
 	if (!sector) return false;
@@ -1961,6 +2382,76 @@ void L3DiskRawSector::DeleteSector()
 	}
 }
 
+/// セクタを編集
+void L3DiskRawSector::EditSector()
+{
+	int pos = 0;
+	DiskD88Sector *sector = GetSelectedSector(&pos);
+	if (!sector) return;
+
+	wxString binary_editer = gConfig.GetBinaryEditer();
+	if (binary_editer.IsEmpty()) return;
+
+	size_t bufsize = sector->GetSectorBufferSize();
+	wxUint8 *buf = sector->GetSectorBuffer();
+	if (buf == NULL || bufsize <= 0) return;
+
+	// データを反転して出力するか
+	bool inverted = false;
+//	int sts = wxMessageBox(_("Do you want to invert data?"), _("Output Sector Data"), wxYES | wxNO | wxNO_DEFAULT);
+//	if (sts == wxYES) {
+//		inverted = true;
+//	}
+	inverted = parent->InvertData();
+
+	L3DiskApp *app = &wxGetApp();
+
+	// テンポラリディレクトリを作成
+	wxString tmp_dir_name;
+	if (!app->MakeTempDir(tmp_dir_name)) {
+		return;
+	}
+
+	// セクタデータを出力
+	int trk = sector->GetIDC();
+	int sid = sector->GetIDH();
+	int sec = sector->GetIDR();
+	wxString tmp_file_name;
+	tmp_file_name = wxString::Format(wxT("sector_%d_%d_%d.dat"), trk, sid, sec);
+
+	wxFileName tmp_path(tmp_dir_name, tmp_file_name);
+
+	wxFile outfile(tmp_path.GetFullPath(), wxFile::write);
+	if (!outfile.IsOpened()) return;
+	if (inverted) mem_invert(buf, bufsize);
+	outfile.Write((const void *)buf, bufsize);
+	outfile.Close();
+	if (inverted) mem_invert(buf, bufsize);
+
+	// エディタを起動
+	binary_editer += wxT(" \"");
+	binary_editer += tmp_path.GetFullPath();
+	binary_editer += wxT("\"");
+
+	wxProcess *process = NULL;
+	long psts = wxExecute(binary_editer, wxEXEC_SYNC, process);
+	// エディタ終了
+	if (psts < 0) {
+		// コマンド起動失敗
+		return;
+	}
+
+	// ファイルを読み込む
+	wxFile infile(tmp_path.GetFullPath(), wxFile::read);
+	if (!infile.IsOpened()) return;
+	if (inverted) mem_invert(buf, bufsize);
+	infile.Read((void *)buf, bufsize);
+	infile.Close();
+	if (inverted) mem_invert(buf, bufsize);
+
+//	wxRemove(tmp_path.GetFullPath());
+}
+
 /// トラック上のセクタを一括削除
 void L3DiskRawSector::DeleteSectorsOnTrack()
 {
@@ -1976,39 +2467,4 @@ void L3DiskRawSector::DeleteSectorsOnTrack()
 		// 画面更新
 		parent->RefreshAllData();
 	}
-}
-
-/// 選択行を返す
-int L3DiskRawSector::GetListSelectedRow() const
-{
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	return GetSelectedRow();
-#else
-	int row = GetSelectedItemCount();
-	return row == 1 ? (int)GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED) : wxNOT_FOUND;
-#endif
-}
-
-/// 選択行数を返す
-int L3DiskRawSector::GetListSelectedCount() const
-{
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	return GetSelectedItemsCount();
-#else
-	return GetSelectedItemCount();
-#endif
-}
-
-/// 選択行を配列で返す
-int L3DiskRawSector::GetListSelections(L3SectorListItems &arr) const
-{
-#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-	return GetSelections(arr);
-#else
-	long item = -1;
-	while((item = GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED)) >= 0) {
-		arr.Add(item);
-	}
-	return (int)arr.Count();
-#endif
 }

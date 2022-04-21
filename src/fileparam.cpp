@@ -12,6 +12,10 @@
 
 FileTypes gFileTypes;
 
+static const char *cFileFormatTypeNamesForSave[] = {
+	"", "d88", "plain", NULL
+};
+
 //
 //
 //
@@ -177,67 +181,81 @@ bool FileTypes::Load(const wxString &data_path, const wxString &locale_name)
 
 void FileTypes::MakeWildcard()
 {
-	wxString d88s, exts;
+	wxString desc[3];
+	for(size_t i=0; i<formats.Count(); i++) {
+		const FileFormat *format = &formats.Item(i);
+		for(int n=0; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+			if (format->GetName() == cFileFormatTypeNamesForSave[n]) {
+				desc[n] = format->GetDescription();
+				break;
+			}
+		}
+	}
+
+	wxArrayString exts[3];
 	for(size_t i=0; i<types.Count(); i++) {
 		const FileParam *param = &types.Item(i);
 		const FileParamFormats *formats = &param->GetFormats();
 		for(size_t j=0; j<formats->Count(); j++) {
 			const FileParamFormat *format = &formats->Item(j);
-			if (format->GetType() == wxT("d88")) {
-				if (!d88s.IsEmpty()) d88s += wxT(";");
-				d88s += wxT("*.");
-				d88s += param->GetExt().Lower();
+			for(int n=0; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+				if (n == 0 || format->GetType() == cFileFormatTypeNamesForSave[n]) {
+					wxString ext = wxT("*.");
+					ext += param->GetExt().Lower();
+					if (exts[n].Index(ext) == wxNOT_FOUND) {
+						exts[n].Add(ext);
 #if !defined(__WXMSW__)
-				if (!d88s.IsEmpty()) d88s += wxT(";");
-				d88s += wxT("*.");
-				d88s += param->GetExt().Upper();
+						ext = wxT("*.");
+						ext += param->GetExt().Upper();
+						exts[n].Add(ext);
 #endif
+					}
+				}
 			}
 		}
-		if (!exts.IsEmpty()) exts += wxT(";");
-		exts += wxT("*.");
-		exts += param->GetExt().Lower();
-#if !defined(__WXMSW__)
-		if (!exts.IsEmpty()) exts += wxT(";");
-		exts += wxT("*.");
-		exts += param->GetExt().Upper();
-#endif
 	}
 	wcard_for_load = _("Supported files");
 	wcard_for_load += wxT(" (");
-	wcard_for_load += exts;
+	wcard_for_load += wxJoin(exts[0], ';');
 	wcard_for_load += wxT(")|");
-	wcard_for_load += exts;
+	wcard_for_load += wxJoin(exts[0], ';');
 	wcard_for_load += wxT("|");
 	wcard_for_load += _("All files");
 	wcard_for_load += wxT(" (*.*)|*.*");
 
-	wcard_for_save = _("Supported files");
-	wcard_for_save += wxT(" (");
-	wcard_for_save += d88s;
-	wcard_for_save += wxT(")|");
-	wcard_for_save += d88s;
-	wcard_for_save += wxT("|");
-	for(size_t i=0; i<types.Count(); i++) {
-		const FileParam *param = &types.Item(i);
-		const FileParamFormats *formats = &param->GetFormats();
-		for(size_t j=0; j<formats->Count(); j++) {
-			const FileParamFormat *format = &formats->Item(j);
-			if (format->GetType() == wxT("d88") || format->GetType() == wxT("plain")) {
-				wcard_for_save += param->GetDescription();
-				wcard_for_save += wxT(" (*.");
-				wcard_for_save += param->GetExt().Lower();
-				wcard_for_save += wxT(")|*.");
-				wcard_for_save += param->GetExt().Lower();
-				wcard_for_save += wxT("|");
-			}
+	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+		if (n > 1) wcard_for_save += wxT("|");
+		wcard_for_save += desc[n];
+		wcard_for_save += wxT(" (");
+		wcard_for_save += wxJoin(exts[n], ';');
+		wcard_for_save += wxT(")|");
+		wcard_for_save += wxJoin(exts[n], ';');
+	}
+	int dir = 1;
+#if !defined(__WXMSW__)
+	dir = 2;
+#endif
+	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+		for(size_t i=0; i<exts[n].Count(); i+=dir) {
+			wcard_for_save += wxT("|");
+			wcard_for_save += desc[n];
+			wcard_for_save += wxT(" (");
+			wcard_for_save += exts[n].Item(i);
+#if !defined(__WXMSW__)
+			wcard_for_save += wxT(";");
+			wcard_for_save += exts[n].Item(i+1);
+#endif
+			wcard_for_save += wxT(")|");
+			wcard_for_save += exts[n].Item(i);
+#if !defined(__WXMSW__)
+			wcard_for_save += wxT(";");
+			wcard_for_save += exts[n].Item(i+1);
+#endif
 		}
 	}
-	wcard_for_save += _("All files");
-	wcard_for_save += wxT(" (*.*)|*.*");
-
 }
 
+/// 拡張子をさがす
 FileParam *FileTypes::FindExt(const wxString &n_ext)
 {
 	FileParam *match = NULL;
@@ -246,6 +264,33 @@ FileParam *FileTypes::FindExt(const wxString &n_ext)
 		FileParam *item = &types[i];
 		if (ext == item->GetExt()) {
 			match = item;
+			break;
+		}
+	}
+	return match;
+}
+
+/// ディスクイメージフォーマット形式をさがす
+FileFormat *FileTypes::FindFormat(const wxString &n_name)
+{
+	FileFormat *match = NULL;
+	for(size_t i=0; i<formats.Count(); i++) {
+		FileFormat *item = &formats[i];
+		if (n_name == item->GetName()) {
+			match = item;
+			break;
+		}
+	}
+	return match;
+}
+
+/// ファイル保存時の保存形式のフォーマットを返す
+FileFormat *FileTypes::GetFilterForSave(int index)
+{
+	FileFormat *match = NULL;
+	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+		if (index + 1 == n) {
+			match = FindFormat(cFileFormatTypeNamesForSave[n]);
 			break;
 		}
 	}

@@ -30,6 +30,14 @@ DiskD88Creator::~DiskD88Creator()
 /// セクタデータの作成
 wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, bool single_density, DiskD88Track *track)
 {
+	// 特殊なセクタにするか
+	const wxUint8 *sector_id = NULL;
+	if (param->FindParticularSector(track_number, side_number, sector_number, sector_size, &sector_id)) {
+		if (sector_id[2] > 0) {
+			sector_number = sector_id[2];
+		}
+	}
+
 	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sectors_per_track, single_density);
 	track->Add(sector);
 
@@ -40,10 +48,15 @@ wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sec
 /// トラックデータの作成
 wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
 {
+	// トラック作成
 	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, param->GetInterleave());
 
 	int sector_max = param->GetSectorsPerTrack();
 	int sector_size = param->GetSectorSize();
+
+	// 特殊なトラックにするか
+	param->FindParticularTrack(track_number, side_number, sector_max, sector_size);
+	// 単密度にするか
 	bool single_density = param->FindSingleDensity(track_number, side_number, &sector_max, &sector_size);
 
 	int *sector_nums = new int[sector_max + 1];

@@ -1,34 +1,38 @@
 #
-# for Windows + MinGW + MSYS
+# for Windows + MSYS2 + MinGW
 #
 CC=g++
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
 
+
 #ARCH=-m32
 #ARCH=-m64
 
 WXDIR=/D/Devel/sources/wxWidgets-3.1.0
-WXCONFIG_SH=$(WXDIR)/build_release_shared_unicode_i686/wx-config
-WXCONFIG_ST=$(WXDIR)/build_release_static_unicode_i686/wx-config
-WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode_i686/wx-config
+WXCONFIG_SH=wx-config
+WXCONFIG_ST=wx-config
+# WXCONFIG_ST=$(WXDIR)/build_release_static_unicode/wx-config
+WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode/wx-config
 
-SH_CFLAGS=$(ARCH) -Wall -O2 $(shell $(WXCONFIG_SH) --cppflags)
-ST_CFLAGS=$(ARCH) -Wall -O2 $(shell $(WXCONFIG_ST) --cppflags)
-DBG_CFLAGS=$(ARCH) -g -Wall -O0 $(shell $(WXCONFIG_DBG) --cppflags)
+SH_INCLUDES=$(shell $(WXCONFIG_SH) --cppflags)
+ST_INCLUDES=$(shell $(WXCONFIG_ST) --cppflags)
+DBG_INCLUDES=$(shell $(WXCONFIG_DBG) --cppflags)
+
+SH_CFLAGS=$(ARCH) -Wall -O2 $(SH_INCLUDES)
+ST_CFLAGS=$(ARCH) -Wall -O2 $(ST_INCLUDES)
+DBG_CFLAGS=$(ARCH) -g -Wall -O0 $(DBG_INCLUDES)
 
 LD=g++
 
-LOCALLIBDIR=/usr/local/lib
-
 SH_LDFLAGS=$(shell $(WXCONFIG_SH) --libs)
-ST_LDFLAGS=-static $(shell $(WXCONFIG_ST) --libs)
-DBG_LDFLAGS=-static $(shell $(WXCONFIG_DBG) --libs)
+ST_LDFLAGS=-static $(shell $(WXCONFIG_ST) --libs --static)
+DBG_LDFLAGS=-static $(shell $(WXCONFIG_DBG) --libs --static)
 
 EXEFILE=l3diskex.exe
 
-BUILDDIR=./build
+BUILDDIR=./build_msys2
 SH_BUILDDIR=$(BUILDDIR)/shared
 ST_BUILDDIR=$(BUILDDIR)/static
 DBG_BUILDDIR=$(BUILDDIR)/debug
@@ -66,6 +70,16 @@ OBJS=	utils.o \
 	basictype_cpm.o \
 	basictype_tfdos.o \
 	basictype_cdos.o \
+	basictype_mz_fdos.o \
+	basictype_pa.o \
+	basictype_fp.o \
+	basictype_dos80.o \
+	basictype_frost.o \
+	basictype_magical.o \
+	basictype_sdos.o \
+	basictype_smc.o \
+	basictype_xdos.o \
+	basictype_hu68k.o \
 	basicfat.o \
 	basicdiritem_fat8.o \
 	basicdiritem_fm.o \
@@ -82,6 +96,15 @@ OBJS=	utils.o \
 	basicdiritem_cpm.o \
 	basicdiritem_tfdos.o \
 	basicdiritem_cdos.o \
+	basicdiritem_mz_fdos.o \
+	basicdiritem_fp.o \
+	basicdiritem_dos80.o \
+	basicdiritem_frost.o \
+	basicdiritem_magical.o \
+	basicdiritem_sdos.o \
+	basicdiritem_xdos.o \
+	basicdiritem_hu68k.o \
+	basicdiritem_losa.o \
 	basicdiritem.o \
 	basicdir.o \
 	basicfmt.o \
@@ -89,11 +112,16 @@ OBJS=	utils.o \
 	basicparambox.o \
 	charcodes.o \
 	config.o \
+	configbox.o \
 	diskd88.o \
 	diskd88creator.o \
 	diskplainparser.o \
 	diskd88parser.o \
 	diskdskparser.o \
+	diskfdiparser.o \
+	diskcqmparser.o \
+	disktd0parser.o \
+	diskdimparser.o \
 	diskparser.o \
 	diskd88writer.o \
 	diskplainwriter.o \
@@ -113,6 +141,10 @@ OBJS=	utils.o \
 	rawtrackbox.o \
 	result.o \
 	uibindump.o \
+	uiclistctrl.o \
+	uicdlistctrl.o \
+	uictreectrl.o \
+	uicdtreectrl.o \
 	uidiskattr.o \
 	uidisklist.o \
 	uifilelist.o \
@@ -177,13 +209,13 @@ $(DBG_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
 #	sed '1 s/^...//' $< > $@
 
 $(SH_BUILDDIR)/%.res: $(SRCDIR)/%.rc
-	$(WINDRES) $< -I$(WXDIR)/include -O coff -o $@
+	$(WINDRES) $< $(SH_INCLUDES) -O coff -o $@
 
 $(ST_BUILDDIR)/%.res: $(SRCDIR)/%.rc
-	$(WINDRES) $< -I$(WXDIR)/include -O coff -o $@
+	$(WINDRES) $< $(ST_INCLUDES) -O coff -o $@
 
 $(DBG_BUILDDIR)/%.res: $(SRCDIR)/%.rc
-	$(WINDRES) $< -I$(WXDIR)/include -O coff -o $@
+	$(WINDRES) $< $(DBG_INCLUDES) -O coff -o $@
 
 install: sh_install
 

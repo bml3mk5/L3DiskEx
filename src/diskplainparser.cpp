@@ -85,7 +85,7 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 /// ディスクデータの解析
 wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file);
+	DiskD88Disk *disk = new DiskD88Disk(file, disk_number);
 
 	// パラメータの計算値がディスクサイズの２倍なら
 	// 表面にのみデータをセットする
@@ -292,6 +292,6 @@ void DiskPlainParser::CalcParamFromSize(int disk_size, DiskParam &disk_param)
 		sec_size_hints[desided_sec_size_idx],
 		0,
 		1,
-		SingleDensities()
+		DiskParticulars()
 	);
 }

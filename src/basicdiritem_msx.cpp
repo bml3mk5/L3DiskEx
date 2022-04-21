@@ -17,8 +17,8 @@ DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
 }
-DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemMSDOS(basic, sector, data)
+DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemMSDOS(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -26,11 +26,13 @@ DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int num, int track, i
 {
 }
 
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemMSX::GetDefaultInvalidateChars() const
 {
 	return wxT(" \"\\/:;*?+,=[]");
 }
+#endif
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemMSX::GetFileAttrStr() const
@@ -99,13 +101,16 @@ void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 }
 
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
 
 	int val = chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
 
-	DiskBasicDirItem::SetFileAttr(val);
+	attr.SetFileAttr(FORMAT_TYPE_UNKNOWN, val);
 
 	return true;
 }

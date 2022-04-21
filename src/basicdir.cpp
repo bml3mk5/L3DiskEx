@@ -18,7 +18,16 @@
 #include "basicdiritem_os9.h"
 #include "basicdiritem_cpm.h"
 #include "basicdiritem_tfdos.h"
+#include "basicdiritem_dos80.h"
+#include "basicdiritem_frost.h"
+#include "basicdiritem_magical.h"
+#include "basicdiritem_sdos.h"
+#include "basicdiritem_fp.h"
+#include "basicdiritem_xdos.h"
 #include "basicdiritem_cdos.h"
+#include "basicdiritem_mz_fdos.h"
+#include "basicdiritem_hu68k.h"
+#include "basicdiritem_losa.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
@@ -46,7 +55,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 {
 	DiskBasicDirItem *item = NULL;
 
-	int num = FORMAT_TYPE_NONE;
+	int num = FORMAT_TYPE_UNKNOWN;
 	if (format_type) num = format_type->GetTypeNumber();
 
 	switch(num) {
@@ -60,7 +69,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 		item = new DiskBasicDirItemFM(basic);
 		break;
 	case FORMAT_TYPE_MSDOS:
-		item = new DiskBasicDirItemMSDOS(basic);
+		item = new DiskBasicDirItemVFAT(basic);
 		break;
 	case FORMAT_TYPE_MSX:
 		item = new DiskBasicDirItemMSX(basic);
@@ -83,67 +92,143 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	case FORMAT_TYPE_CPM:
 		item = new DiskBasicDirItemCPM(basic);
 		break;
+	case FORMAT_TYPE_PA:
+		item = new DiskBasicDirItemN88(basic);
+		break;
+	case FORMAT_TYPE_SMC:
+		item = new DiskBasicDirItemCPM(basic);
+		break;
+	case FORMAT_TYPE_FP:
+		item = new DiskBasicDirItemFP(basic);
+		break;
+	case FORMAT_TYPE_DOS80:
+		item = new DiskBasicDirItemDOS80(basic);
+		break;
+	case FORMAT_TYPE_FROST:
+		item = new DiskBasicDirItemFROST(basic);
+		break;
+	case FORMAT_TYPE_MAGICAL:
+		item = new DiskBasicDirItemMAGICAL(basic);
+		break;
+	case FORMAT_TYPE_SDOS:
+		item = new DiskBasicDirItemSDOS(basic);
+		break;
+	case FORMAT_TYPE_XDOS:
+		item = new DiskBasicDirItemXDOS(basic);
+		break;
 	case FORMAT_TYPE_TFDOS:
 		item = new DiskBasicDirItemTFDOS(basic);
 		break;
 	case FORMAT_TYPE_CDOS:
 		item = new DiskBasicDirItemCDOS(basic);
 		break;
+	case FORMAT_TYPE_MZ_FDOS:
+		item = new DiskBasicDirItemMZFDOS(basic);
+		break;
+	case FORMAT_TYPE_HU68K:
+		item = new DiskBasicDirItemHU68K(basic);
+		break;
+	case FORMAT_TYPE_LOSA:
+		item = new DiskBasicDirItemLOSA(basic);
+		break;
+	case FORMAT_TYPE_CDOS2:
+		item = new DiskBasicDirItemMSDOS(basic);
+		break;
 //	default:
 //		item = new DiskBasicDirItem(basic);
 //		break;
+	}
+	if (item) {
+		item->ClearData();
 	}
 	return item;
 }
 /// ディレクトリアイテムを新規に作成してアサインする
 /// @param [in] newsec  セクタ
+/// @param [in] newpos  セクタ内の位置
 /// @param [in] newdata セクタ内のバッファ
-DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
+DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, int newpos, wxUint8 *newdata)
 {
 	DiskBasicDirItem *item = NULL;
 
-	int num = FORMAT_TYPE_NONE;
+	int num = FORMAT_TYPE_UNKNOWN;
 	if (format_type) num = format_type->GetTypeNumber();
 
 	switch(num) {
 	case FORMAT_TYPE_L3_1S:
-		item = new DiskBasicDirItemL31S(basic, newsec, newdata);
+		item = new DiskBasicDirItemL31S(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_L3S1_2D:
-		item = new DiskBasicDirItemL32D(basic, newsec, newdata);
+		item = new DiskBasicDirItemL32D(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_FM:
-		item = new DiskBasicDirItemFM(basic, newsec, newdata);
+		item = new DiskBasicDirItemFM(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_MSDOS:
-		item = new DiskBasicDirItemMSDOS(basic, newsec, newdata);
+		item = new DiskBasicDirItemVFAT(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_MSX:
-		item = new DiskBasicDirItemMSX(basic, newsec, newdata);
+		item = new DiskBasicDirItemMSX(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_N88:
-		item = new DiskBasicDirItemN88(basic, newsec, newdata);
+		item = new DiskBasicDirItemN88(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_X1HU:
-		item = new DiskBasicDirItemX1HU(basic, newsec, newdata);
+		item = new DiskBasicDirItemX1HU(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_MZ:
-		item = new DiskBasicDirItemMZ(basic, newsec, newdata);
+		item = new DiskBasicDirItemMZ(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_FLEX:
-		item = new DiskBasicDirItemFLEX(basic, newsec, newdata);
+		item = new DiskBasicDirItemFLEX(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_OS9:
-		item = new DiskBasicDirItemOS9(basic, newsec, newdata);
+		item = new DiskBasicDirItemOS9(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_CPM:
-		item = new DiskBasicDirItemCPM(basic, newsec, newdata);
+		item = new DiskBasicDirItemCPM(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_PA:
+		item = new DiskBasicDirItemN88(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_SMC:
+		item = new DiskBasicDirItemCPM(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_FP:
+		item = new DiskBasicDirItemFP(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_DOS80:
+		item = new DiskBasicDirItemDOS80(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_FROST:
+		item = new DiskBasicDirItemFROST(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_MAGICAL:
+		item = new DiskBasicDirItemMAGICAL(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_SDOS:
+		item = new DiskBasicDirItemSDOS(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_XDOS:
+		item = new DiskBasicDirItemXDOS(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_TFDOS:
-		item = new DiskBasicDirItemTFDOS(basic, newsec, newdata);
+		item = new DiskBasicDirItemTFDOS(basic, newsec, newpos, newdata);
 		break;
 	case FORMAT_TYPE_CDOS:
-		item = new DiskBasicDirItemCDOS(basic, newsec, newdata);
+		item = new DiskBasicDirItemCDOS(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_MZ_FDOS:
+		item = new DiskBasicDirItemMZFDOS(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_HU68K:
+		item = new DiskBasicDirItemHU68K(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_LOSA:
+		item = new DiskBasicDirItemLOSA(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_CDOS2:
+		item = new DiskBasicDirItemMSDOS(basic, newsec, newpos, newdata);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newsec, newdata);
@@ -163,7 +248,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 {
 	DiskBasicDirItem *item = NULL;
 
-	int num = FORMAT_TYPE_NONE;
+	int num = FORMAT_TYPE_UNKNOWN;
 	if (format_type) num = format_type->GetTypeNumber();
 
 	switch(num) {
@@ -177,7 +262,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 		item = new DiskBasicDirItemFM(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 	case FORMAT_TYPE_MSDOS:
-		item = new DiskBasicDirItemMSDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		item = new DiskBasicDirItemVFAT(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 	case FORMAT_TYPE_MSX:
 		item = new DiskBasicDirItemMSX(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
@@ -200,11 +285,47 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 	case FORMAT_TYPE_CPM:
 		item = new DiskBasicDirItemCPM(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
+	case FORMAT_TYPE_PA:
+		item = new DiskBasicDirItemN88(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_SMC:
+		item = new DiskBasicDirItemCPM(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_FP:
+		item = new DiskBasicDirItemFP(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_DOS80:
+		item = new DiskBasicDirItemDOS80(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_FROST:
+		item = new DiskBasicDirItemFROST(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_MAGICAL:
+		item = new DiskBasicDirItemMAGICAL(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_SDOS:
+		item = new DiskBasicDirItemSDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_XDOS:
+		item = new DiskBasicDirItemXDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
 	case FORMAT_TYPE_TFDOS:
 		item = new DiskBasicDirItemTFDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 	case FORMAT_TYPE_CDOS:
 		item = new DiskBasicDirItemCDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_MZ_FDOS:
+		item = new DiskBasicDirItemMZFDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_HU68K:
+		item = new DiskBasicDirItemHU68K(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_LOSA:
+		item = new DiskBasicDirItemLOSA(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_CDOS2:
+		item = new DiskBasicDirItemMSDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
@@ -276,13 +397,29 @@ DiskBasicDirItem *DiskBasicDir::ItemPtr(size_t idx)
 	if (!items || idx >= items->Count()) return NULL;
 	return items->Item(idx);
 }
-/// 未使用のディレクトリアイテムを返す
+/// カレントディレクトリ内で未使用のディレクトリアイテムを返す
 /// @param [out] next_item 未使用アイテムの次位置にあるアイテム
 /// @return NULL:空きなし
-DiskBasicDirItem *DiskBasicDir::GetEmptyItemPtr(DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::GetEmptyItemOnCurrent(DiskBasicDirItem **next_item)
+{
+	return GetEmptyItem(GetCurrentItems(), next_item);
+}
+
+/// ルートディレクトリ内で未使用のディレクトリアイテムを返す
+/// @param [out] next_item 未使用アイテムの次位置にあるアイテム
+/// @return NULL:空きなし
+DiskBasicDirItem *DiskBasicDir::GetEmptyItemOnRoot(DiskBasicDirItem **next_item)
+{
+	return GetEmptyItem(GetRootItems(), next_item);
+}
+
+/// 未使用のディレクトリアイテムを返す
+/// @param [in]  items     ディレクトリ
+/// @param [out] next_item 未使用アイテムの次位置にあるアイテム
+/// @return NULL:空きなし
+DiskBasicDirItem *DiskBasicDir::GetEmptyItem(const DiskBasicDirItems *items, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *match_item = NULL;
-	DiskBasicDirItems *items = GetCurrentItems();
 	if (items) {
 		for(size_t i=0; i < items->Count(); i++) {
 			DiskBasicDirItem *item = items->Item(i);
@@ -378,7 +515,7 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	return FindFile(GetCurrentItem(), target_item, exclude_item, next_item);
 }
@@ -389,7 +526,7 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem &target_item, Di
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *match_item = NULL;
 	const DiskBasicDirItems *items = dir_item->GetChildren();
@@ -505,7 +642,7 @@ DiskBasicDirItem *DiskBasicDir::FindFileByAttr(const DiskBasicDirItem *dir_item,
 /// @param [in] start_sector  開始セクタ番号
 /// @param [in] end_sector    終了セクタ番号
 /// @param [in] is_formatting フォーマット中か
-bool DiskBasicDir::CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting)
+double DiskBasicDir::CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting)
 {
 	return type->CheckRootDirectory(start_sector, end_sector, root_groups, is_formatting);
 }
@@ -548,7 +685,8 @@ bool DiskBasicDir::AssignRoot(DiskBasicType *type)
 /// ディレクトリのチェック
 /// @param [in] type        DISK BASIC 種類
 /// @param [in] group_items グループのリスト
-bool DiskBasicDir::Check(DiskBasicType *type, DiskBasicGroups &group_items)
+/// @return <0.0 エラー
+double DiskBasicDir::Check(DiskBasicType *type, DiskBasicGroups &group_items)
 {
 	return type->CheckDirectory(false, group_items);
 }
@@ -581,13 +719,13 @@ bool DiskBasicDir::Assign(DiskBasicDirItem *dir_item)
 	bool valid = true;
 	DiskBasicType *type = basic->GetType();
 
-	if (!type->IsRootDirectory(dir_item->GetStartGroup())) {
+	if (!type->IsRootDirectory(dir_item->GetStartGroup(0))) {
 		// サブディレクトリのアイテムをアサイン
 		if (dir_item->GetChildren() == NULL) {
 			DiskBasicGroups groups;
 			dir_item->GetAllGroups(groups);
 
-			if (!Check(type, groups)) {
+			if (Check(type, groups) < 0.0) {
 				return false;
 			}
 			valid = Assign(type, groups, dir_item);
@@ -623,7 +761,7 @@ bool DiskBasicDir::Change(DiskBasicDirItem * &dst_item)
 {
 	DiskBasicType *type = basic->GetType();
 
-	if (type->IsRootDirectory(dst_item->GetStartGroup())) {
+	if (type->IsRootDirectory(dst_item->GetStartGroup(0))) {
 		// ルートディレクトリに移動
 		dst_item = root;
 		current_item = root;
@@ -634,7 +772,7 @@ bool DiskBasicDir::Change(DiskBasicDirItem * &dst_item)
 			DiskBasicGroups groups;
 			dst_item->GetAllGroups(groups);
 
-			if (!Check(type, groups)) {
+			if (Check(type, groups) < 0.0) {
 				return false;
 			}
 			Assign(type, groups, dst_item);
@@ -646,7 +784,7 @@ bool DiskBasicDir::Change(DiskBasicDirItem * &dst_item)
 			pitem = pitem->GetParent();
 			if (!pitem) break;
 
-			if (dst_item->GetStartGroup() == pitem->GetStartGroup()) {
+			if (dst_item->GetStartGroup(0) == pitem->GetStartGroup(0)) {
 				dst_item = pitem;
 				break;
 			} 
@@ -654,6 +792,34 @@ bool DiskBasicDir::Change(DiskBasicDirItem * &dst_item)
 		current_item = dst_item;
 	}
 	return true;
+}
+
+/// ディレクトリの拡張ができるか
+bool DiskBasicDir::CanExpand()
+{
+	DiskBasicType *type = basic->GetType();
+	return GetParentItem() != NULL ? type->CanExpandDirectory() : type->CanExpandRootDirectory();
+}
+
+/// ディレクトリを拡張する
+bool DiskBasicDir::Expand()
+{
+	DiskBasicType *type = basic->GetType();
+
+	bool valid = false;
+	if (current_item != NULL) {
+		valid = basic->ExpandDirectory(current_item);
+		if (valid) {
+			// ディレクトリエリアを読み直す
+			EmptyCurrent();
+			if (GetParentItem() != NULL) {
+				Assign(type, current_item);
+			} else {
+				AssignRoot(type, basic->GetDirStartSector(), basic->GetDirEndSector());
+			}
+		}
+	}
+	return valid;
 }
 
 /// ディレクトリの占有サイズを計算する

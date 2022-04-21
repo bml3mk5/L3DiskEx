@@ -50,6 +50,8 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Format process is unsupported."),
 	//	ERR_DELETE_UNSUPPORTED
 	wxTRANSLATE("Delete process is unsupported."),
+	//	ERR_CANNOT_IMPORT_DIRECTORY
+	wxTRANSLATE("Cannot import directory."),
 	//	ERR_CANNOT_MAKE_DIRECTORY
 	wxTRANSLATE("Cannot make directory."),
 	//	ERR_MAKING_DIRECTORY
@@ -60,10 +62,16 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Invalid structure exists in directory area."),
 	//	ERR_IN_PARAMETER_AREA
 	wxTRANSLATE("Invalid structure exists in parameter area."),
+	//	ERR_INVALID_IN_PARAMETER_AREA
+	wxTRANSLATE("Invalid value exists in parameter area. Use default settings."),
 	//	ERR_FILENAME_EMPTY
 	wxTRANSLATE("File name is required."),
+	//	ERR_FILEEXT_EMPTY
+	wxTRANSLATE("File extension is required."),
 	//  ERR_END_ADDR_TOO_SMALL
 	wxTRANSLATE("End address is smaller than load address."),
+	//	ERR_PATH_TOO_DEEP
+	wxTRANSLATE("Path is too deep."),
 
 	//	ERRV_START v:1
 	wxTRANSLATE("Unknown error. code:%d"),
@@ -85,8 +93,12 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("No sector exists in track. track:%d side:%d sector:%d"),
 	//	ERRV_INVALID_VALUE_IN  v:1
 	wxTRANSLATE("Invalid value in %ls."),
-	// ERRV_CANNOT_EDIT_ENAME  v:1
-	wxTRANSLATE("Cannot edit the name of '%ls'."),
+	//  ERRV_CANNOT_EDIT_NAME  v:1
+	wxTRANSLATE("Cannot edit the name '%ls'."),
+	//  ERRV_CANNOT_SET_NAME v:1
+	wxTRANSLATE("Cannot set the name '%ls'."),
+	//	ERRV_CANNOT_EXPORT v:1
+	wxTRANSLATE("Cannot export '%ls'."),
 	//	ERRV_CANNOT_DELETE v:1
 	wxTRANSLATE("Cannot delete '%ls'."),
 	//	ERRV_CANNOT_DELETE_DIRECTORY v:1

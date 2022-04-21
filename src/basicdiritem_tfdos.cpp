@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+#include "config.h"
 #include "utils.h"
 
 
@@ -18,13 +19,14 @@
 
 /// TF-DOS属性名
 const char *gTypeNameTFDOS[] = {
-	wxTRANSLATE("OBJ"),
-	wxTRANSLATE("TEX"),
-	wxTRANSLATE("CMD"),
-	wxTRANSLATE("SYS"),
-	wxTRANSLATE("DAT"),
-	wxTRANSLATE("GRA"),
-	wxTRANSLATE("DBB"),
+	"???",
+	"OBJ",
+	"TEX",
+	"CMD",
+	"SYS",
+	"DAT",
+	"GRA",
+	"DBB",
 	wxTRANSLATE("Write Protected"),
 	wxTRANSLATE("Hidden"),
 	NULL
@@ -36,17 +38,17 @@ const char *gTypeNameTFDOS[] = {
 DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic)
 	: DiskBasicDirItemMZBase(basic)
 {
-	external_attr = 2;	// TXTの時、BASE互換かを自動判定
+	m_external_attr = 2;	// TXTの時、BASE互換かを自動判定
 }
-DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemMZBase(basic, sector, data)
+DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemMZBase(basic, sector, secpos, data)
 {
-	external_attr = 2;	// TXTの時、BASE互換かを自動判定
+	m_external_attr = 2;	// TXTの時、BASE互換かを自動判定
 }
 DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItemMZBase(basic, num, track, side, sector, secpos, data, unuse)
 {
-	external_attr = 2;	// TXTの時、BASE互換かを自動判定
+	m_external_attr = 2;	// TXTの時、BASE互換かを自動判定
 
 	Used(CheckUsed(unuse));
 
@@ -54,38 +56,27 @@ DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, int num, int trac
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemTFDOS::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemTFDOS::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
-	size = len = sizeof(data->tfdos.name);
-	return data->tfdos.name; 
+	if (num == 0) {
+		size = len = sizeof(m_data->tfdos.name);
+		return m_data->tfdos.name;
+	} else {
+		size = len = 0;
+		return NULL;
+	}
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemTFDOS::GetFileNameSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->tfdos.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemTFDOS::GetFileExtSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return 0;
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemTFDOS::GetFileType1() const
 {
-	return basic->InvertUint8(data->tfdos.type);	// invert;
+	return basic->InvertUint8(m_data->tfdos.type);	// invert;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemTFDOS::SetFileType1(int val)
 {
-	data->tfdos.type = basic->InvertUint8(val);	// invert
+	m_data->tfdos.type = basic->InvertUint8(val);	// invert
 }
 
 /// 使用しているアイテムか
@@ -99,7 +90,7 @@ bool DiskBasicDirItemTFDOS::CheckUsed(bool unuse)
 /// @return チェックOK
 bool DiskBasicDirItemTFDOS::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
 	wxUint8 t = GetFileType1();
@@ -115,10 +106,11 @@ void DiskBasicDirItemTFDOS::SetFileAttr(const DiskBasicFileType &file_type)
 	int ftype = file_type.GetType();
 	if (ftype == -1) return;
 
+	int t1 = file_type.GetOrigin();
 	int val = 0;
 	if (file_type.GetFormat() == basic->GetFormatTypeNumber()) {
 		// 同じOSの場合は元の属性をそのままセット
-		val = file_type.GetOrigin();
+		val = t1;
 	} else {
 		// 別OSからの場合、近い属性をセット
 		if (ftype & FILE_TYPE_BINARY_MASK) {
@@ -128,7 +120,7 @@ void DiskBasicDirItemTFDOS::SetFileAttr(const DiskBasicFileType &file_type)
 		} else if (ftype & FILE_TYPE_DATA_MASK) {
 			val = FILETYPE_TFDOS_DAT;
 		} else if (ftype & FILE_TYPE_ASCII_MASK) {
-			val = FILETYPE_TFDOS_TXT;
+			val = FILETYPE_TFDOS_TEX;
 		}
 
 		if (ftype & FILE_TYPE_READONLY_MASK) {
@@ -138,19 +130,20 @@ void DiskBasicDirItemTFDOS::SetFileAttr(const DiskBasicFileType &file_type)
 			val |= DATATYPE_TFDOS_HIDDEN;
 		}
 	}
+	m_external_attr = (val >> 16);
 	SetFileType1(val);
 }
 
 /// ディレクトリをクリア ファイル新規作成時
 void DiskBasicDirItemTFDOS::ClearData()
 {
-	if (!data) return;
-	memset(data, 0, sizeof(directory_tfdos_t));
-	memset(data->tfdos.name, 0x0d, sizeof(data->tfdos.name));
-	basic->InvertMem(data, sizeof(directory_tfdos_t));	// invert
+	if (!m_data) return;
+	memset(m_data, 0, sizeof(directory_tfdos_t));
+	memset(m_data->tfdos.name, 0x0d, sizeof(m_data->tfdos.name));
+	basic->InvertMem(m_data, sizeof(directory_tfdos_t));	// invert
 }
 
-// 属性を返す
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemTFDOS::GetFileAttr() const
 {
 	int t1 = GetFileType1();
@@ -159,7 +152,7 @@ DiskBasicFileType DiskBasicDirItemTFDOS::GetFileAttr() const
 	case FILETYPE_TFDOS_OBJ:
 		val = FILE_TYPE_BINARY_MASK;	// binary
 		break;
-	case FILETYPE_TFDOS_TXT:
+	case FILETYPE_TFDOS_TEX:
 		val = FILE_TYPE_ASCII_MASK;		// ascii
 		break;
 	case FILETYPE_TFDOS_CMD:
@@ -186,9 +179,9 @@ DiskBasicFileType DiskBasicDirItemTFDOS::GetFileAttr() const
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemTFDOS::GetFileAttrStr() const
 {
-	wxString attr = wxGetTranslation(gTypeNameTFDOS[GetFileType1Pos()]);
-
 	int t1 = GetFileType1();
+	wxString attr = wxGetTranslation(gTypeNameTFDOS[ConvFileType1Pos(t1)]);
+
 	if (t1 & DATATYPE_TFDOS_READ_ONLY) {
 		// write protect
 		attr += wxT(", ");
@@ -205,37 +198,37 @@ wxString DiskBasicDirItemTFDOS::GetFileAttrStr() const
 /// データ内にファイルサイズをセット
 void DiskBasicDirItemTFDOS::SetFileSizeBase(int val)
 {
-	data->tfdos.file_size = basic->InvertAndOrderUint16(val);	// invert
+	m_data->tfdos.file_size = basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// データ内のファイルサイズを返す
 int DiskBasicDirItemTFDOS::GetFileSizeBase() const
 {
-	return basic->InvertAndOrderUint16(data->tfdos.file_size);	// invert
+	return basic->InvertAndOrderUint16(m_data->tfdos.file_size);	// invert
 }
 
 // 開始アドレスを返す
 int DiskBasicDirItemTFDOS::GetStartAddress() const
 {
-	return basic->InvertAndOrderUint16(data->tfdos.load_addr);	// invert
+	return basic->InvertAndOrderUint16(m_data->tfdos.load_addr);	// invert
 }
 
 // 実行アドレスを返す
 int DiskBasicDirItemTFDOS::GetExecuteAddress() const
 {
-	return basic->InvertAndOrderUint16(data->tfdos.exec_addr);	// invert
+	return basic->InvertAndOrderUint16(m_data->tfdos.exec_addr);	// invert
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemTFDOS::SetStartAddress(int val)
 {
-	data->tfdos.load_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
+	m_data->tfdos.load_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemTFDOS::SetExecuteAddress(int val)
 {
-	data->tfdos.exec_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
+	m_data->tfdos.exec_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// ディレクトリアイテムのサイズ
@@ -245,28 +238,16 @@ size_t DiskBasicDirItemTFDOS::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemTFDOS::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemTFDOS::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
-	data->tfdos.track = basic->InvertUint8(val & 0xff);	// invert
+	m_data->tfdos.track = basic->InvertUint8(val & 0xff);	// invert
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemTFDOS::GetStartGroup() const
+wxUint32 DiskBasicDirItemTFDOS::GetStartGroup(int fileunit_num) const
 {
-	return basic->InvertUint8(data->tfdos.track);	// invert
+	return basic->InvertUint8(m_data->tfdos.track);	// invert
 }
-
-#if 0
-/// ファイルパスから内部ファイル名を生成する
-wxString DiskBasicDirItemTFDOS::RemakeFileNameStr(const wxString &filepath) const
-{
-	wxString newname;
-	wxFileName fn(filepath);
-	newname = fn.GetFullName().Left(GetFileNameSize());
-	ConvertToFileNameStr(newname);
-	return newname;
-}
-#endif
 
 /// ダイアログ入力前のファイル名を変換 大文字にするなど
 void DiskBasicDirItemTFDOS::ConvertToFileNameStr(wxString &filename) const
@@ -274,10 +255,40 @@ void DiskBasicDirItemTFDOS::ConvertToFileNameStr(wxString &filename) const
 	filename = filename.Upper();
 }
 
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemTFDOS::GetDefaultInvalidateChars() const
+/// データをエクスポートする前に必要な処理
+bool DiskBasicDirItemTFDOS::PreExportDataFile(wxString &filename)
 {
-	return wxT("\"\\/:*?");
+	if (!gConfig.IsAddExtensionExport()) return true;
+
+	wxString ext;
+	if (GetFileAttrName(ConvFileType1Pos(GetFileType1()), gTypeNameTFDOS, TYPE_NAME_TFDOS_READ_ONLY, ext)) {
+		filename += wxT(".");
+		if (Utils::IsUpperString(filename)) {
+			filename += ext.Upper();
+		} else {
+			filename += ext.Lower();
+		}
+	}
+	return true;
+}
+
+/// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
+bool DiskBasicDirItemTFDOS::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		IsContainAttrByExtension(filename, gTypeNameTFDOS, TYPE_NAME_TFDOS_OBJ, TYPE_NAME_TFDOS_DBB, &filename, NULL);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemTFDOS::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	// 拡張子で属性を設定する
+	int t1 = TYPE_NAME_TFDOS_TEX;
+	IsContainAttrByExtension(filename, gTypeNameTFDOS, TYPE_NAME_TFDOS_OBJ, TYPE_NAME_TFDOS_DBB, NULL, &t1);
+	return t1;
 }
 
 //
@@ -297,61 +308,29 @@ wxString DiskBasicDirItemTFDOS::GetDefaultInvalidateChars() const
 #define IDC_CHECK_HIDDEN   54
 
 /// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemTFDOS::GetFileType1Pos() const
+int DiskBasicDirItemTFDOS::ConvFileType1Pos(int t1) const
 {
-	int ftype = GetFileType1();
 	int val = 0;
-	int t1 = (ftype & 0x3f);
+	t1 = (t1 & 0x3f);
 	if (FILETYPE_TFDOS_OBJ <= t1 && t1 <= FILETYPE_TFDOS_DBB) {
-		val = t1 - FILETYPE_TFDOS_OBJ;
+		val = t1;
 	}
 	return val;
 }
 
 /// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemTFDOS::GetFileType2Pos() const
+int DiskBasicDirItemTFDOS::ConvFileType2Pos(int t1) const
 {
-	int ftype = GetFileType1();
 	int val = 0;
-	if (ftype & DATATYPE_TFDOS_READ_ONLY) {
+	if (t1 & DATATYPE_TFDOS_READ_ONLY) {
 		// write protect
 		val |= FILE_TYPE_READONLY_MASK;
 	}
-	if (ftype & DATATYPE_TFDOS_HIDDEN) {
+	if (t1 & DATATYPE_TFDOS_HIDDEN) {
 		// hidden
 		val |= FILE_TYPE_HIDDEN_MASK;
 	}
 	return val;
-}
-
-/// ダイアログ用に属性を設定する
-/// ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemTFDOS::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
-		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".OBJ") || ext == wxT(".BIN")) {
-			file_type_1 = TYPE_NAME_TFDOS_OBJ;
-		} else if (ext == wxT(".TXT") || ext == wxT(".DOC")) {
-			file_type_1 = TYPE_NAME_TFDOS_TXT;
-		} else if (ext == wxT(".CMD") || ext == wxT(".COM") || ext == wxT(".EXE")) {
-			file_type_1 = TYPE_NAME_TFDOS_CMD;
-		} else if (ext == wxT(".SYS")) {
-			file_type_1 = TYPE_NAME_TFDOS_SYS;
-		} else if (ext == wxT(".DAT")) {
-			file_type_1 = TYPE_NAME_TFDOS_DAT;
-		} else if (ext == wxT(".GRA")) {
-			file_type_1 = TYPE_NAME_TFDOS_GRA;
-		} else if (ext == wxT(".DBB")) {
-			file_type_1 = TYPE_NAME_TFDOS_DBB;
-		}
-	}
 }
 
 /// ダイアログ内の属性部分のレイアウトを作成
@@ -362,22 +341,25 @@ void DiskBasicDirItemTFDOS::SetFileTypeForAttrDialog(int show_flags, const wxStr
 /// @param [in] flags
 void DiskBasicDirItemTFDOS::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+	int t1 = GetFileType1();
+	if (show_flags & INTNAME_NEW_FILE) {
+		// 外部からインポート時
+		t1 = ConvOriginalTypeFromFileName(file_path);
+	}
+
+	int file_type_1 = ConvFileType1Pos(t1);
+	int file_type_2 = ConvFileType2Pos(t1);
 	wxChoice   *comType1;
 	wxCheckBox *chkBaseComp;
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkHidden;
 
 	m_show_flags = show_flags;
-	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType1 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Type")), wxVERTICAL);
 	
 	wxArrayString types1;
-	for(int i=TYPE_NAME_TFDOS_OBJ; i<=TYPE_NAME_TFDOS_DBB; i++) {
-		types1.Add(wxGetTranslation(gTypeNameTFDOS[i]));
-	}
+	CreateChoiceForAttrDialog(basic, gTypeNameTFDOS, TYPE_NAME_TFDOS_READ_ONLY, types1);
 	comType1 = new wxChoice(parent, IDC_COMBO_TYPE1, wxDefaultPosition, wxDefaultSize, types1);
 	comType1->SetSelection(file_type_1);
 	staType1->Add(comType1, flags);
@@ -385,17 +367,17 @@ void DiskBasicDirItemTFDOS::CreateControlsForAttrDialog(IntNameBox *parent, int 
 	int chk_style = wxCHK_3STATE;
 	if (show_flags & INTNAME_IMPORT_INTERNAL) {
 		// 内部コピー
-		external_attr = 0;
-	} else if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+		m_external_attr = 0;
+	} else if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート
-		external_attr = 0;
+		m_external_attr = 1;
 	} else {
 		// プロパティ
 		chk_style |= wxCHK_ALLOW_3RD_STATE_FOR_USER;
 	}
 	chkBaseComp = new wxCheckBox(parent, IDC_CHECK_BASECOMP, _("Treat as BASE compatible text."), wxDefaultPosition, wxDefaultSize, chk_style);
-	chkBaseComp->Enable(file_type_1 == TYPE_NAME_TFDOS_TXT);
-	chkBaseComp->Set3StateValue((wxCheckBoxState)external_attr);
+	chkBaseComp->Enable(file_type_1 == TYPE_NAME_TFDOS_TEX);
+	chkBaseComp->Set3StateValue((wxCheckBoxState)m_external_attr);
 	staType1->Add(chkBaseComp, flags);
 	
 	sizer->Add(staType1, flags);
@@ -420,7 +402,7 @@ void DiskBasicDirItemTFDOS::ChangeTypeInAttrDialog(IntNameBox *parent)
 	wxCheckBox *chkBaseComp = (wxCheckBox *)parent->FindWindow(IDC_CHECK_BASECOMP);
 	if (comType1 && chkBaseComp) {
 		int sel = comType1->GetSelection();
-		chkBaseComp->Enable(sel == TYPE_NAME_TFDOS_TXT && (m_show_flags & INTNAME_IMPORT_INTERNAL) == 0);
+		chkBaseComp->Enable(sel == TYPE_NAME_TFDOS_TEX && (m_show_flags & INTNAME_IMPORT_INTERNAL) == 0);
 	}
 }
 
@@ -434,36 +416,36 @@ int DiskBasicDirItemTFDOS::GetFileType1InAttrDialog(const IntNameBox *parent) co
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemTFDOS::CalcFileTypeFromPos(int pos)
+int	DiskBasicDirItemTFDOS::CalcFileTypeFromPos(int pos) const
 {
 	int val = pos;
-	if (val < 0 || val > TYPE_NAME_TFDOS_DBB) {
-		val = TYPE_NAME_TFDOS_TXT;
-	} else {
-		val++;
+	if (val < TYPE_NAME_TFDOS_UNKNOWN || val > TYPE_NAME_TFDOS_DBB) {
+		val = TYPE_NAME_TFDOS_TEX;
 	}
 	return val;
 }
 
 /// 機種依存の属性を設定する
 /// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemTFDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemTFDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkBaseComp = (wxCheckBox *)parent->FindWindow(IDC_CHECK_BASECOMP);
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkHidden   = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
 
 	int sel = GetFileType1InAttrDialog(parent);
-	if (sel == TYPE_NAME_TFDOS_TXT) {
-		external_attr = (int)chkBaseComp->Get3StateValue();
+	int ext = 0;
+	if (sel == TYPE_NAME_TFDOS_TEX) {
+		ext = (int)chkBaseComp->Get3StateValue();
 	}
 
 	int origin = CalcFileTypeFromPos(sel);
 	origin |= chkReadOnly->GetValue() ? DATATYPE_TFDOS_READ_ONLY : 0;
 	origin |= chkHidden->GetValue() ? DATATYPE_TFDOS_HIDDEN : 0;
 
-	DiskBasicDirItem::SetFileAttr(0, origin);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), 0, ext << 16 | origin);
 
 	return true;
 }

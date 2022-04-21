@@ -9,6 +9,7 @@
 #include <wx/choice.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
+#include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/numformatter.h>
 #include "basicfmt.h"
@@ -48,7 +49,7 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 
 	if (show_flags & BASIC_SELECTABLE) {
 		// 選択可能
-		wxArrayString types = disk->GetBasicTypes();
+		DiskParamNames types = disk->GetBasicTypes();
 		wxString category = disk->GetFile()->GetBasicTypeHint();
 
 		gDiskBasicTemplates.FindParams(types, params);
@@ -104,7 +105,12 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	grid->Add(lbl, flagsr);
 
 	int dsk_siz, grp_siz;
+	int fdsk_siz, fgrp_siz;
+	int udsk_siz, ugrp_siz;
 	type->GetUsableDiskSize(dsk_siz, grp_siz);
+	type->GetFreeDiskSize(fdsk_siz, fgrp_siz);
+	udsk_siz = dsk_siz - fdsk_siz;
+	ugrp_siz = grp_siz - fgrp_siz;
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Usable Size :"));
 	grid->Add(lbl);
@@ -119,29 +125,52 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
+	lbl = new wxStaticText(this, wxID_ANY, _("Used Size :"));
+	grid->Add(lbl);
+	str = wxNumberFormatter::ToString((long)udsk_siz);
+	str += _("bytes");
+	lbl = new wxStaticText(this, wxID_ANY, str);
+	grid->Add(lbl, flagsr);
+
+	lbl = new wxStaticText(this, wxID_ANY, _("Used Groups :"));
+	grid->Add(lbl);
+	str = wxNumberFormatter::ToString((long)ugrp_siz);
+	lbl = new wxStaticText(this, wxID_ANY, str);
+	grid->Add(lbl, flagsr);
+
 	lbl = new wxStaticText(this, wxID_ANY, _("Free Size :"));
 	grid->Add(lbl);
-	str = wxNumberFormatter::ToString((long)type->GetFreeDiskSize());
+	str = wxNumberFormatter::ToString((long)fdsk_siz);
 	str += _("bytes");
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Free Groups :"));
 	grid->Add(lbl);
-	str = wxNumberFormatter::ToString((long)type->GetFreeGroupSize());
+	str = wxNumberFormatter::ToString((long)fgrp_siz);
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
-	lbl = new wxStaticText(this, wxID_ANY, _("Sector Size / Group :"));
+	int sizg, sgse, sggr;
+	if (basic->GetGroupsPerSector() > 1) {
+		sizg = basic->GetSectorSize() / basic->GetGroupsPerSector();
+		sgse = 1;
+		sggr = basic->GetGroupsPerSector();
+	} else {
+		sizg = basic->GetSectorsPerGroup() * basic->GetSectorSize();
+		sgse = basic->GetSectorsPerGroup();
+		sggr = 1;
+	}
+	lbl = new wxStaticText(this, wxID_ANY, _("Group Size :"));
 	grid->Add(lbl);
-	str = wxString::Format(wxT("%d"), basic->GetSectorsPerGroup() * basic->GetSectorSize());
+	str = wxString::Format(wxT("%d"), sizg);
 	str += _("bytes");
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
-	lbl = new wxStaticText(this, wxID_ANY, _("Sectors / Group :"));
+	lbl = new wxStaticText(this, wxID_ANY, _("Sector / Group :"));
 	grid->Add(lbl);
-	str = wxString::Format(wxT("%d"), basic->GetSectorsPerGroup());
+	str = wxString::Format(wxT("%d / %d"), sgse, sggr);
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
@@ -183,7 +212,11 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Sectors / FAT :"));
 	grid->Add(lbl);
-	str = trk >= 0 ? wxString::Format(wxT("%d"), basic->GetSectorsPerFat()) : wxT("---");
+	int spf = basic->GetSectorsPerFat();
+	if (basic->GetGroupsPerSector() > 1) {
+		spf /= basic->GetGroupsPerSector();
+	}
+	str = trk >= 0 ? wxString::Format(wxT("%d"), spf) : wxT("---");
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
@@ -226,7 +259,8 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	lblVolDate->Enable(enable);
 	txtVolDate->Enable(enable);
 
-	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
+	int btn_flgs = wxOK | wxCANCEL;
+	wxSizer *szrButtons = CreateButtonSizer(btn_flgs);
 	szrAll->Add(szrButtons, flags);
 
 	SetSizerAndFit(szrAll);

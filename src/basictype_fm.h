@@ -17,7 +17,7 @@
 
 @brief F-BASICの処理
 
-DiskBasicParam
+DiskBasicParam 固有パラメータ
 @li IDSectorPosition : IDセクタの論理セクタ番号
 @li IDString         : IDセクタの最初の文字列
 
@@ -32,14 +32,18 @@ public:
 
 	/// @name check / assign FAT area
 	//@{
+	/// ディスクから各パラメータを取得＆必要なパラメータを計算
+	double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
 	/// FATエリアをチェック
-	bool	CheckFat();
+	double 	CheckFat(bool is_formatting);
 	//@}
 
 	/// @name file chain
 	//@{
 	/// データ領域の開始セクタを計算
 	int		CalcDataStartSectorPos();
+	/// スキップするトラック番号
+	int		CalcSkippedTrack();
 	//@}
 
 	/// @name format

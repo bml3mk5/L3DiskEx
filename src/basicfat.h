@@ -15,57 +15,13 @@
 #include "diskd88.h"
 
 
-class DiskBasicGroupItem;
-
 //////////////////////////////////////////////////////////////////////
 
-/// グループ番号に対応するパラメータを保持
-class DiskBasicGroupItem
+/// 使用状況テーブル
+class DiskBasicAvailabillity : public wxArrayInt
 {
 public:
-	wxUint32 group;
-	wxUint32 next;
-	int track;
-	int side;
-	int sector_start;
-	int sector_end;
-public:
-	DiskBasicGroupItem();
-	DiskBasicGroupItem(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
-	~DiskBasicGroupItem() {}
-	void Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
-	static int Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2);
-};
-
-WX_DECLARE_OBJARRAY(DiskBasicGroupItem, DiskBasicGroupItems);
-
-//////////////////////////////////////////////////////////////////////
-
-/// グループ番号のリストを保持
-class DiskBasicGroups
-{
-private:
-	DiskBasicGroupItems	items;	///< グループ番号のリスト
-	size_t				size;	///< グループ内の占有サイズ
-
-public:
-	DiskBasicGroups();
-	~DiskBasicGroups() {}
-
-	void Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
-	void Add(const DiskBasicGroupItem &item);
-	void Add(const DiskBasicGroups &n_items);
-	void Empty();
-	size_t Count() const;
-	DiskBasicGroupItem &Last() const;
-	DiskBasicGroupItem &Item(size_t idx) const;
-	DiskBasicGroupItem *ItemPtr(size_t idx) const;
-
-	const DiskBasicGroupItems &GetItems() const { return items; }
-	void SetSize(size_t val) { size = val; }
-	size_t GetSize() const { return size; }
-	/// グループ番号でソート
-	void SortItems();
+	DiskBasicAvailabillity();
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -83,12 +39,16 @@ public:
 	~DiskBasicFatBuffer() {}
 	wxUint8 *GetBuffer() const { return buffer; }
 	size_t   GetSize() const { return size; }
-	void Fill(wxUint8 code);
-	void Copy(const wxUint8 *buf, size_t len);
+	void	 Fill(wxUint8 code);
+	void	 Copy(const wxUint8 *buf, size_t len);
 	wxUint32 Get(size_t pos) const;
-	void Set(size_t pos, wxUint32 val);
-	bool Bit(wxUint32 pos, wxUint8 mask, bool val, bool invert);
-	bool BitTest(wxUint32 pos, wxUint8 mask, bool invert);
+	void	 Set(size_t pos, wxUint32 val);
+	bool	 Bit(wxUint32 pos, wxUint8 mask, bool val, bool invert);
+	bool	 BitTest(wxUint32 pos, wxUint8 mask, bool invert);
+	wxUint32 Get16LE(size_t pos) const;
+	void	 Set16LE(size_t pos, wxUint32 val);
+	wxUint32 Get16BE(size_t pos) const;
+	void	 Set16BE(size_t pos, wxUint32 val);
 };
 
 WX_DECLARE_OBJARRAY(DiskBasicFatBuffer, ArrayDiskBasicFatBuffer);
@@ -107,6 +67,12 @@ public:
 
 	wxUint32 GetData12LE(wxUint32 pos) const;
 	void     SetData12LE(wxUint32 pos, wxUint32 val);
+
+	wxUint32 GetData16LE(wxUint32 pos) const;
+	void     SetData16LE(wxUint32 pos, wxUint32 val);
+
+	wxUint32 GetData16BE(wxUint32 pos) const;
+	void     SetData16BE(wxUint32 pos, wxUint32 val);
 };
 
 /// FATの個数分（多重）
@@ -117,7 +83,20 @@ WX_DECLARE_OBJARRAY(DiskBasicFatBuffers, ArrayArrayDiskBasicFatBuffer);
 /// FATバッファ
 class DiskBasicFatArea : public ArrayArrayDiskBasicFatBuffer
 {
+private:
+	size_t	valid_count;
+
 public:
+	DiskBasicFatArea();
+	DiskBasicFatArea(const DiskBasicFatArea &src);
+	DiskBasicFatArea &operator=(const DiskBasicFatArea &src);
+
+	void	Empty();
+	void	Add(const DiskBasicFatBuffers &lItem, size_t nInsert = 1);
+
+	void	SetValidCount(size_t val) { valid_count = val; }
+	size_t	GetValidCount() const { return valid_count; }
+
 	wxUint32 GetData8(size_t idx, wxUint32 pos) const;
 	void     SetData8(wxUint32 pos, wxUint32 val);
 	void     SetData8(size_t idx, wxUint32 pos, wxUint32 val);
@@ -129,6 +108,14 @@ public:
 	wxUint32 GetData12LE(size_t idx, wxUint32 pos) const;
 	void     SetData12LE(wxUint32 pos, wxUint32 val);
 	void     SetData12LE(size_t idx, wxUint32 pos, wxUint32 val);
+
+	wxUint32 GetData16LE(size_t idx, wxUint32 pos) const;
+	void     SetData16LE(wxUint32 pos, wxUint32 val);
+	void     SetData16LE(size_t idx, wxUint32 pos, wxUint32 val);
+
+	wxUint32 GetData16BE(size_t idx, wxUint32 pos) const;
+	void     SetData16BE(wxUint32 pos, wxUint32 val);
+	void     SetData16BE(size_t idx, wxUint32 pos, wxUint32 val);
 };
 
 class DiskBasic;
@@ -143,6 +130,7 @@ private:
 	DiskBasic			*basic;
 	DiskBasicType		*type;
 	int count;			///< FATの数
+	int vcount;			///< 使用しているFATの数
 	int size;			///< FATサイズ(セクタ数)
 	int start;			///< 開始セクタ番号
 	int start_pos;		///< 開始位置
@@ -155,8 +143,11 @@ public:
 	DiskBasicFat(DiskBasic *basic);
 	~DiskBasicFat();
 
-	bool Assign();
+	/// FAT領域をアサイン
+	double Assign(bool is_formatting);
+	/// FAT領域をクリア
 	void Clear();
+	/// FAT領域をクリア
 	void Empty();
 
 	/// FAT領域の最初のセクタの指定位置のデータを取得

@@ -14,6 +14,15 @@
 #include "logging.h"
 
 
+#pragma pack(1)
+/// FLEX FSM
+struct st_flex_fsm {
+	wxUint8 track;
+	wxUint8 sector;
+	wxUint8 count;
+};
+#pragma pack()
+
 //
 //
 //
@@ -24,36 +33,37 @@ DiskBasicTypeFLEX::DiskBasicTypeFLEX(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 }
 
 /// エリアをチェック
-bool DiskBasicTypeFLEX::CheckFat()
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFLEX::CheckFat(bool is_formatting)
 {
-	bool valid = true;
-
 	// SIR area
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(0, 0, 3);
 	if (!sector) {
-		return false;
+		return -1.0;
 	}
 	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
 	if (!flex) {
-		return false;
+		return -1.0;
 	}
 
 	for(size_t i=0; i<sizeof(flex->reserved0); i++) {
 		if (flex->reserved0[i]) {
-			valid = false;
-			break;
+			return -1.0;
 		}
 	}
 	if (flex->max_track == 0 || flex->max_sector == 0) {
-		valid = false;
+		return -1.0;
 	}
-
-	if (!valid) return valid;
 
 	// 最終グループ番号
 	basic->SetFatEndGroup((flex->max_track + 1) * flex->max_sector - 1);
 
 	flex_sir = flex;
+
+	double valid_ratio = 1.0;
 
 	// DIRエリアのチェインをチェック
 	int dir_cnt = 0;
@@ -62,7 +72,7 @@ bool DiskBasicTypeFLEX::CheckFat()
 	sector = basic->GetSectorFromSectorPos(dir_sta_sec);
 	for(int sec_pos = dir_sta_sec; sec_pos <= dir_end_sec; sec_pos++) {
 		if (!sector) {
-			valid = false;
+			valid_ratio = -1.0;
 			break;
 		}
 
@@ -78,13 +88,17 @@ bool DiskBasicTypeFLEX::CheckFat()
 	int dir_end = basic->GetDirStartSector() + dir_cnt - 1;
 	basic->SetDirEndSector(dir_end);
 
-	return valid;
+	return valid_ratio;
 }
 
-/// ディスクから各パラメータを取得
-/// @retval  0 正常
-int DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk)
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+/// @param [in] disk          ディスク
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0 正常
+double DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
+	if (is_formatting) return 0;
+
 	if (!flex_sir) {
 		DiskD88Sector *sector = disk->GetSector(0, 0, 3);
 		flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
@@ -98,7 +112,7 @@ int DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk)
 		basic->SetSectorsPerTrackOnBasic(flex_sir->max_sector / basic->GetSidesPerDiskOnBasic());
 	}
 
-	return 0;
+	return 1.0;
 }
 
 /// ルートディレクトリのセクタリストを計算
@@ -169,7 +183,7 @@ bool DiskBasicTypeFLEX::CalcGroupsOnRootDirectory(int start_sector, int end_sect
 		group_items.Add(0, 0, trk_num, sid_num, sta_sec_num, end_sec_num);
 
 		// 最終セクタ番号を更新
-		int sec_pos = basic->GetSectorPosFromNum(trk_num, sid_num, end_sec_num);
+		int sec_pos = GetSectorPosFromNum(trk_num, sid_num, end_sec_num);
 		sec_pos -= (basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic());
 		basic->SetDirEndSector(sec_pos + 1);
 	}
@@ -214,7 +228,7 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 			// error
 			break;
 		}
-		int sector_pos = basic->GetSectorPosFromNum(track_num, sector_num);
+		int sector_pos = GetSectorPosFromNumS(track_num, sector_num);
 		if (sector_pos < (int)fat_availability.Count()) {
 			if (fat_availability.Item(sector_pos) == FAT_AVAIL_FREE) {
 				// 既に空きエリアにしているのに同じセクタにきている
@@ -234,6 +248,24 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 		track_num = p->next_track;
 		sector_num = p->next_sector;
 		limit--;
+	}
+
+	// ディレクトリエントリのグループ
+	const DiskBasicDirItems *items = dir->GetCurrentItems();
+	if (items) {
+		for(size_t idx = 0; idx < items->Count(); idx++) {
+			DiskBasicDirItem *item = items->Item(idx);
+			if (!item || !item->IsUsed()) continue;
+
+			// 最後のグループ
+			size_t gcnt = item->GetGroupCount();
+			if (gcnt > 0) {
+				wxUint32 gnum = item->GetGroup(gcnt-1)->group;
+				if (gnum <= basic->GetFatEndGroup()) {
+					fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;
+				}
+			}
+		}
 	}
 
 	free_disk_size = (int)fsize;
@@ -295,7 +327,7 @@ wxUint32 DiskBasicTypeFLEX::GetEmptyGroupNumber()
 		// no free space ?
 		return INVALID_GROUP_NUMBER;
 	}
-	group_num = basic->GetSectorPosFromNum(sta_track_num, sta_sector_num);
+	group_num = GetSectorPosFromNumS(sta_track_num, sta_sector_num);
 
 	// 次のポインタをフリーセクタポインタに設定
 	flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
@@ -324,7 +356,7 @@ wxUint32 DiskBasicTypeFLEX::GetEmptyGroupNumber()
 	return group_num;
 }
 
-/// 次の空き位置を返す 未使用
+/// 次の空き位置を返す
 /// @return INVALID_GROUP_NUMBER: 空きなし
 wxUint32 DiskBasicTypeFLEX::GetNextEmptyGroupNumber(wxUint32 curr_group)
 {
@@ -342,12 +374,13 @@ wxUint32 DiskBasicTypeFLEX::GetNextEmptyGroupNumber(wxUint32 curr_group)
 }
 
 /// データサイズ分のグループを確保する
+/// @param [in]  fileunit_num ファイル番号
 /// @param [in]  item         ディレクトリアイテム
 /// @param [in]  data_size    データサイズ RecalcFileSizeOnSave()で計算した値
 /// @param [in]  flags        新規か追加か
 /// @param [out] group_items  グループ数
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
+int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 //	myLog.SetDebug("DiskBasicTypeFLEX::AllocateGroups {");
 
@@ -358,9 +391,35 @@ int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 	int  rc = 0;
 	bool first_group = (flags == ALLOCATE_GROUPS_NEW);
 	wxUint32 group_num = (flags == ALLOCATE_GROUPS_NEW ? INVALID_GROUP_NUMBER : item->GetLastGroup());
-	int sizeremain = data_size;
+
 	// 1セクタ当たり4バイトはチェイン用のリンクポインタになるので減算
 	int bytes_per_group = basic->GetSectorsPerGroup() * (basic->GetSectorSize() - 4);
+	// ランダムアクセスファイルか
+	int random_file = item->GetFileAttr().GetOrigin();
+	if (flags == ALLOCATE_GROUPS_NEW && random_file > 0) {
+		// ランダムアクセスファイル
+		// インデックス(FSM)セクタを確保
+		for(int idx = 0; idx < random_file; idx++) {
+			group_num = first_group ? GetEmptyGroupNumber() : GetNextEmptyGroupNumber(group_num);
+			if (group_num == INVALID_GROUP_NUMBER) {
+				// 空きなし
+				rc = first_group ? -1 : -2;
+				break;
+			}
+			// セクタをクリア
+			DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+			if (sector) {
+				sector->Fill(0);
+			}
+			// グループ番号の書き込み
+			if (first_group) {
+				item->SetStartGroup(fileunit_num, group_num);
+				first_group = false;
+			}
+		}
+	}
+
+	int sizeremain = data_size;
 	int limit = basic->GetFatEndGroup() + 1;
 	while(rc >= 0 && limit >= 0 && sizeremain > 0) {
 		group_num = first_group ? GetEmptyGroupNumber() : GetNextEmptyGroupNumber(group_num);
@@ -371,7 +430,7 @@ int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 		}
 		// グループ番号の書き込み
 		if (first_group) {
-			item->SetStartGroup(group_num);
+			item->SetStartGroup(fileunit_num, group_num);
 			first_group = false;
 		}
 
@@ -394,7 +453,67 @@ int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 	if (rc == 0) {
 		// 最終グループ番号
 		item->SetLastGroup(group_num);
+
+		// ランダムアクセスファイルの場合は、インデックスを作成する
+		if (random_file > 0) {
+			DiskBasicGroups random_groups;
+			int prev_trk = -1;
+			wxUint32 prev_grp = 0xfffffff;
+			wxUint32 idx_count = 0;
+			wxUint32 idx_start = 0;
+			for(size_t i = 0; i < group_items.Count(); i++) {
+				DiskBasicGroupItem *gitm = group_items.ItemPtr(i);
+				if (prev_grp == gitm->group) {
+					// 同じならスキップ
+					continue;
+				}
+				if (prev_trk == gitm->track && prev_grp + 1 == gitm->group) {
+					// グループ番号が連続している
+					idx_count++;
+				} else {
+					// グループ番号が連続していない
+					if (idx_count > 0) {
+						random_groups.Add(idx_start, idx_count, 0, 0, 0, 0);
+					}
+					idx_start = gitm->group;
+					idx_count = 1;
+				}
+				prev_trk = gitm->track;
+				prev_grp = gitm->group;
+			}
+			if (idx_count > 0) {
+				random_groups.Add(idx_start, idx_count, 0, 0, 0, 0);
+			}
+			// インデックス(FSM)セクタに書き込む
+			DiskD88Sector *isector = NULL;
+			idx_start = item->GetStartGroup(fileunit_num);
+			size_t idx = 0;
+			bool finished = false;
+			for(int sec = 0; sec < random_file && !finished; sec++) {
+				isector = basic->GetSectorFromGroup(idx_start);
+				if (!isector) break;
+				wxUint8 *buf = isector->GetSectorBuffer();
+				if (!buf) break;
+				for(int pos = 4; pos < isector->GetSectorSize(); pos += (int)sizeof(struct st_flex_fsm)) {
+					DiskBasicGroupItem *ritem = random_groups.ItemPtr(idx);
+					int trk_num, sec_num;
+					GetNumFromSectorPosS(ritem->group, trk_num, sec_num);
+					struct st_flex_fsm *fsm = (struct st_flex_fsm *)&buf[pos];
+					fsm->track = (wxUint8)trk_num;
+					fsm->sector = (wxUint8)sec_num;
+					fsm->count = (wxUint8)(ritem->next);
+					idx++;
+					if (idx >= random_groups.Count()) {
+						finished = true;
+						break;
+					}
+				}
+				flex_ptr_t *p = (flex_ptr_t *)buf;
+				idx_start = GetSectorPosFromNumS(p->next_track, p->next_sector);
+			}
+		}
 	} else {
+		// エラー時
 		// 確保した領域を削除
 		DeleteGroups(group_items);
 		// 空き領域をチェインする
@@ -438,7 +557,7 @@ int DiskBasicTypeFLEX::ChainGroups(wxUint32 group_num, wxUint32 append_group_num
 	}
 	int next_track_num = 0;
 	int next_sector_num = 0;
-	basic->GetNumFromSectorPos(append_group_num, next_track_num, next_sector_num);
+	GetNumFromSectorPosS(append_group_num, next_track_num, next_sector_num);
 	p->next_track = (wxUint8)next_track_num;
 	p->next_sector = (wxUint8)next_sector_num;
 
@@ -446,6 +565,7 @@ int DiskBasicTypeFLEX::ChainGroups(wxUint32 group_num, wxUint32 append_group_num
 }
 
 /// データの読み込み/比較処理
+/// @param [in] fileunit_num  ファイル番号
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
 /// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
@@ -455,7 +575,7 @@ int DiskBasicTypeFLEX::ChainGroups(wxUint32 group_num, wxUint32 append_group_num
 /// @param [in] sector_num    セクタ番号
 /// @param [in] sector_end    最終セクタ番号
 /// @return >=0 : 処理したサイズ  -1:比較不一致
-int DiskBasicTypeFLEX::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
+int DiskBasicTypeFLEX::AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
 	const wxUint8 *buf = &sector_buffer[4];
 	int size = (sector_size - 4) < remain_size ? (sector_size - 4) : remain_size;
@@ -622,7 +742,7 @@ int DiskBasicTypeFLEX::WriteFile(DiskBasicDirItem *item, wxInputStream &istream,
 		if (need_eof_code) {
 			// 最終は終端コード
 			if (remain > 1) istream.Read((void *)buffer, remain - 1);
-			if (remain > 0) buffer[remain - 1]=0x1a;
+			if (remain > 0) buffer[remain - 1]=basic->GetTextTerminateCode();
 		} else {
 			if (remain > 0) istream.Read((void *)buffer, remain);
 		}
@@ -642,18 +762,6 @@ int DiskBasicTypeFLEX::WriteFile(DiskBasicDirItem *item, wxInputStream &istream,
 
 	return len;
 }
-
-#if 0
-/// データの書き込み終了後の処理
-void DiskBasicTypeFLEX::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
-{
-}
-
-/// ファイル名変更後の処理
-void DiskBasicTypeFLEX::AdditionalProcessOnRenamedFile(DiskBasicDirItem *item)
-{
-}
-#endif
 
 /// FAT領域を削除する
 void DiskBasicTypeFLEX::DeleteGroupNumber(wxUint32 group_num)
@@ -713,7 +821,7 @@ void DiskBasicTypeFLEX::RemakeChainOnFreeArea()
 	int free_sector_num = flex_sir->free_start_sector;
 	DiskBasicGroups group_items;
 	while(free_track_num != 0 && free_sector_num != 0) {
-		wxUint32 free_group_num = basic->GetSectorPosFromNum(free_track_num, free_sector_num);
+		wxUint32 free_group_num = GetSectorPosFromNumS(free_track_num, free_sector_num);
 		group_items.Add(free_group_num, 0, free_track_num, 0, free_sector_num, 0);
 
 		sector = basic->GetSector(free_track_num, free_sector_num);

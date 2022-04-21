@@ -28,6 +28,7 @@
 #include <wx/fontdlg.h>
 #include <wx/splitter.h>
 #include <wx/ffile.h>
+#include <wx/timer.h>
 #include "diskd88.h"
 #include "config.h"
 
@@ -67,7 +68,6 @@ private:
 	wxString ini_path;
 	wxString res_path;
 	wxLocale mLocale;
-	Config   mConfig;
 
 	L3DiskFrame *frame;
 	wxString in_file;
@@ -109,12 +109,12 @@ public:
 	const wxString &GetIniPath();
 	/// リソースファイルのあるパスを返す
 	const wxString &GetResPath();
-	/// 設定データへのポインタを返す
-	Config *GetConfig();
 	/// テンポラリディレクトリを作成する
 	bool	MakeTempDir(wxString &tmp_dir_path);
 	/// テンポラリディレクトリを削除する
 	void	RemoveTempDir(const wxString &tmp_dir_path);
+	/// テンポラリディレクトリを削除する
+	void	RemoveTempDir(const wxString &tmp_dir_path, int depth);
 	/// テンポラリディレクトリをすべて削除する
 	void	RemoveTempDirs();
 
@@ -125,6 +125,59 @@ wxDECLARE_APP(L3DiskApp);
 
 //////////////////////////////////////////////////////////////////////
 
+/// ステータスカウンター
+class StatusCounter
+{
+private:
+	int m_current;
+	int m_count;
+	int m_using;
+	wxString m_message;
+public:
+	StatusCounter();
+	~StatusCounter();
+
+	void Clear();
+	void Start(int count, const wxString &message);
+	void Append(int count);
+	void Increase();
+	void Finish(const wxString &message);
+	int Current() const { return m_current; }
+	int Count() const { return m_count; }
+	bool IsIdle() const { return (m_using == 0); }
+	bool IsFinished() const { return (m_using == 3); }
+	wxString GetCurrentMessage() const;
+};
+
+class StatusCounters
+{
+private:
+	enum {
+		StatusCountersMax = 3
+	};
+	StatusCounter	m_sc[StatusCountersMax];
+	wxTimer			m_delay;
+public:
+	StatusCounters();
+	~StatusCounters();
+	StatusCounter &Item(int idx);
+
+	void Clear();
+	int  Start(int count, const wxString &message);
+	void Append(int idx, int count);
+	void Increase(int idx);
+	void Finish(int idx, const wxString &message, wxEvtHandler *owner);
+	int Current(int idx) const;
+	int Count(int idx) const;
+	wxString GetCurrentMessage(int idx) const;
+
+	enum {
+		IDT_STATUS_COUNTER = 555
+	};
+};
+
+//////////////////////////////////////////////////////////////////////
+
 /// メインFrame
 class L3DiskFrame: public wxFrame
 {
@@ -132,21 +185,21 @@ private:
 	// gui
 	wxMenu *menuFile;
 	wxMenu *menuRecentFiles;
-	wxMenu *menuDisk;
+	wxMenu *menuData;
 	wxMenu *menuMode;
-	wxMenu *menuWindow;
+	wxMenu *menuView;
 	wxMenu *menuHelp;
 
 	L3DiskPanel *panel;
 	L3DiskBinDumpFrame *bindump_frame;
 	L3DiskFatAreaFrame *fatarea_frame;
 
-	Config *ini;
-
 	/// DISKイメージ
 	DiskD88 d88;
 
 	int unique_number;
+
+	StatusCounters stat_counters;
 
 	/// パネル全体を返す
 	L3DiskPanel *GetPanel() { return panel; }
@@ -160,6 +213,9 @@ private:
 	void RecreateToolbar();
 	/// ツールバーの構築
 	void PopulateToolbar(wxToolBar* toolBar);
+
+	/// ステータスバーの再生成
+	void RecreateStatusbar();
 
 public:
 
@@ -206,18 +262,29 @@ public:
 	/// メニュー ディスク名を変更選択
 	void OnRenameDisk(wxCommandEvent& event);
 
-	/// メニュー エクスポート選択
-	void OnExportFileFromDisk(wxCommandEvent& event);
-	/// メニュー インポート選択
-	void OnImportFileToDisk(wxCommandEvent& event);
-	/// メニュー 削除選択
-	void OnDeleteFileFromDisk(wxCommandEvent& event);
-	/// メニュー リネーム選択
-	void OnRenameFileOnDisk(wxCommandEvent& event);
 	/// メニュー 初期化選択
 	void OnInitializeDisk(wxCommandEvent& event);
 	/// メニュー フォーマット選択
 	void OnFormatDisk(wxCommandEvent& event);
+
+	/// メニュー エクスポート選択
+	void OnExportDataFromDisk(wxCommandEvent& event);
+	/// メニュー インポート選択
+	void OnImportDataToDisk(wxCommandEvent& event);
+	/// メニュー 削除選択
+	void OnDeleteDataFromDisk(wxCommandEvent& event);
+	/// メニュー リネーム選択
+	void OnRenameDataOnDisk(wxCommandEvent& event);
+#ifdef USE_CUSTOMDATA_FOR_DND
+	/// メニュー 複製選択
+	void OnDuplicateDataOnDisk(wxCommandEvent& event);
+#endif
+	/// メニュー コピー選択
+	void OnCopyDataFromDisk(wxCommandEvent& event);
+	/// メニュー ペースト選択
+	void OnPasteDataToDisk(wxCommandEvent& event);
+	/// メニュー ディレクトリ作成選択
+	void OnMakeDirectoryOnDisk(wxCommandEvent& event);
 	/// メニュー プロパティ選択
 	void OnPropertyOnDisk(wxCommandEvent& event);
 
@@ -236,11 +303,16 @@ public:
 	void OnOpenBinDump(wxCommandEvent& event);
 	/// 使用状況ウィンドウ選択
 	void OnOpenFatArea(wxCommandEvent& event);
+	/// ファイルリストの列選択
+	void OnChangeColumnsOfFileList(wxCommandEvent& event);
 	/// フォント変更選択
 	void OnChangeFont(wxCommandEvent& event);
 
 	/// メニュー 設定ダイアログ選択
 	void OnConfigure(wxCommandEvent& event);
+
+	/// ステータスカウンター終了タイマー
+	void OnTimerStatusCounter(wxTimerEvent& event);
 
 #ifdef USE_MENU_OPEN
 	void OnMenuOpen(wxMenuEvent& event);
@@ -294,10 +366,10 @@ public:
 	void UpdateFilePathOnWindow(const wxString &path);
 
 	/// キャラクターコード選択
-	void ChangeCharCode(int sel);
-	/// キャラクターコード番号を返す
-	int  GetCharCode() const;
-	// キャラクターコード番号設定
+	void ChangeCharCode(const wxString &name);
+	/// キャラクターコードを返す
+	const wxString &GetCharCode() const;
+	// キャラクターコード設定
 	void SetDefaultCharCode();
 	/// フォント変更ダイアログ
 	void ShowListFontDialog();
@@ -305,6 +377,9 @@ public:
 	void SetListFont(const wxFont &font);
 	/// リストウィンドウのデフォルトフォントを得る
 	void GetDefaultListFont(wxFont &font);
+
+	/// ファイルリストの列を変更
+	void ChangeColumnsOfFileList();
 
 	/// 選択しているModeメニュー BASICかRAW DISKか
 	int GetSelectedMode();
@@ -355,11 +430,11 @@ public:
 	/// 保存ダイアログ
 	void ShowSaveFileDialog();
 	/// 指定したファイルに保存
-	void SaveDataFile(const wxString &path);
+	void SaveDataFile(const wxString &path, const wxString &file_format);
 	/// ディスクをファイルに保存ダイアログ（指定ディスク）
 	void ShowSaveDiskDialog(int disk_number, int side_number, bool each_sides);
 	/// 指定したファイルに保存（指定ディスク）
-	void SaveDataDisk(int disk_number, int side_number, const wxString &path);
+	void SaveDataDisk(int disk_number, int side_number, const wxString &path, const wxString &file_format);
 	/// ディスクイメージ置換ダイアログ
 	void ShowReplaceDiskDialog(int disk_number, int side_number, const wxString &subcaption);
 	/// 拡張子でファイル種別を判別する 置換時
@@ -372,14 +447,24 @@ public:
 	void RenameDisk();
 	/// ディスクパラメータを表示/変更
 	void ShowDiskAttr();
-	/// ディスクからファイルをエクスポート
-	void ExportFileFromDisk();
-	/// ディスクにファイルをインポート
-	void ImportFileToDisk();
-	/// ディスクからファイルを削除
-	void DeleteFileFromDisk();
-	/// ディスクのファイル名を変更
-	void RenameFileOnDisk();
+	/// ディスクからデータをエクスポート
+	void ExportDataFromDisk();
+	/// ディスクにデータをインポート
+	void ImportDataToDisk();
+	/// ディスクからデータを削除
+	void DeleteDataFromDisk();
+	/// ディスクのデータファイル名を変更
+	void RenameDataOnDisk();
+#ifdef USE_CUSTOMDATA_FOR_DND
+	/// ディスク上のデータを複製
+	void DuplicateDataOnDisk();
+#endif
+	/// ディスクのデータをコピー
+	void CopyDataFromDisk();
+	/// ディスクにデータをペースト
+	void PasteDataToDisk();
+	/// ディスクにディレクトリを作成
+	void MakeDirectoryOnDisk();
 	/// ファイルのプロパティ
 	void PropertyOnDisk();
 	/// ディスクを初期化
@@ -419,6 +504,20 @@ public:
 	void GetDiskListSelectedPos(int &disk_number, int &side_number);
 	/// 左パネルのディスクツリーを選択
 	void SetDiskListPos(int disk_number, int side_number);
+	/// 左パネルのディスクツリーにルートディレクトリを設定
+	void RefreshRootDirectoryNodeOnDiskList(DiskD88Disk *disk, int side_number);
+	/// 左パネルのディスクツリーにディレクトリを設定
+	void RefreshDirectoryNodeOnDiskList(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	/// 左パネルの全てのディレクトリツリーを更新
+	void RefreshAllDirectoryNodesOnDiskList(DiskD88Disk *disk, int side_number);
+	/// 左パネルのディスクツリーのディレクトリを選択
+	void SelectDirectoryNodeOnDiskList(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	/// 左パネルのディスクツリーのディレクトリノードを削除
+	void DeleteDirectoryNodeOnDiskList(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	/// 左パネルのディスクツリーのディレクトリを一括削除
+	void DeleteDirectoryNodesOnDiskList(DiskD88Disk *disk, DiskBasicDirItems &dir_items);
+	/// 左パネルのディスクツリーのディレクトリ名を再設定
+	void RefreshDiskListDirectoryName(DiskD88Disk *disk);
 	/// 左パネルのディスクツリーにファイルパスを設定
 	void SetDiskListFilePath(const wxString &path);
 	/// 左パネルのディスクツリーにディスク名を設定
@@ -488,11 +587,11 @@ public:
 	/// ダンプウィンドウを返す
 	L3DiskBinDumpFrame *GetBinDumpFrame() const { return bindump_frame; }
 	/// ダンプウィンドウにデータを設定する
-	void SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert);
+	void SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, const wxString &char_code, bool invert);
 	/// ダンプウィンドウにデータを設定する
 	void SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	/// ダンプウィンドウにデータを追記する
-	void AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert);
+	void AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, const wxString &char_code, bool invert);
 	/// ダンプウィンドウにデータを追記する
 	void AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	/// ダンプウィンドウをクリア
@@ -519,7 +618,9 @@ public:
 	/// 使用状況ウィンドウにフォーカスさせるグループ番号を設定する
 	void SetFatAreaGroup(wxUint32 group_num);
 	/// 使用状況ウィンドウにフォーカスさせるグループ番号を設定する
-	void SetFatAreaGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num);
+	void SetFatAreaGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
+	/// 使用状況ウィンドウにフォーカスをはずすグループ番号を設定する
+	void UnsetFatAreaGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
 	/// 使用状況ウィンドウでフォーカスしているグループ番号をクリア
 	void ClearFatAreaGroup();
 
@@ -533,8 +634,6 @@ public:
 
 	/// @name 設定ファイル
 	//@{
-	/// 設定ファイルを返す
-	Config *GetConfig() { return ini; }
 	/// 最近使用したパスを取得
 	const wxString &GetIniRecentPath() const;
 	/// 最近使用したパスを取得(エクスポート用)
@@ -544,13 +643,25 @@ public:
 	/// 最近使用したパスを更新
 	void SetIniFilePath(const wxString &path);
 	/// 最近使用したパスを更新(エクスポート用)
-	void SetIniExportFilePath(const wxString &path);
+	void SetIniExportFilePath(const wxString &path, bool is_dir = false);
 	/// ダンプフォントを更新
 	void SetIniDumpFont(const wxFont &font);
 	/// ダンプフォント名を返す
 	const wxString &GetIniDumpFontName() const;
 	/// ダンプフォントサイズを返す
 	int GetIniDumpFontSize() const;
+
+	/// 設定ダイアログ表示
+	void ShowConfigureDialog();
+	//@}
+
+	/// @name ステータスカウンター
+	//@{
+	int  StartStatusCounter(int count, const wxString &message);
+	void AppendStatusCounter(int idx, int count);
+	void IncreaseStatusCounter(int idx);
+	void FinishStatusCounter(int idx, const wxString &message);
+	void ClearStatusCounter();
 	//@}
 
 	/// @name property
@@ -583,24 +694,27 @@ public:
 		IDM_DELETE_DISK_FROM_FILE,
 		IDM_RENAME_DISK,
 
-		IDM_EXPORT_DISK,
-		IDM_IMPORT_DISK,
-		IDM_DELETE_DISK,
-		IDM_RENAME_FILE_ON_DISK,
-		IDM_MAKE_DIRECTORY_ON_DISK,
 		IDM_INITIALIZE_DISK,
 		IDM_FORMAT_DISK,
-		IDM_PROPERTY_DISK,
+
+		IDM_EXPORT_DATA,
+		IDM_IMPORT_DATA,
+		IDM_DELETE_DATA,
+		IDM_RENAME_DATA_ON_DISK,
+		IDM_DUPLICATE_DATA,
+		IDM_COPY_DATA,
+		IDM_PASTE_DATA,
+		IDM_MAKE_DIRECTORY_ON_DISK,
+		IDM_PROPERTY_DATA,
 
 		IDM_BASIC_MODE,
 		IDM_RAWDISK_MODE,
-		IDM_CHAR_ASCII,
-		IDM_CHAR_SJIS,
 		IDM_TRIM_DATA,
 		IDM_SHOW_DELFILE,
 
 		IDM_WINDOW_BINDUMP,
 		IDM_WINDOW_FATAREA,
+		IDM_FILELIST_COLUMN,
 		IDM_CHANGE_FONT,
 
 		IDM_CONFIGURE,
@@ -608,6 +722,8 @@ public:
 		IDD_CONFIGBOX,
 		IDD_CHARTYPEBOX,
 		IDD_INTNAMEBOX,
+
+		IDM_CHAR_0 = 50,
 
 		IDM_RECENT_FILE_0 = 80,
 	};
@@ -635,8 +751,10 @@ public:
 	L3DiskList *GetLPanel() { return lpanel; }
 	L3DiskRPanel *GetRPanel() { return rpanel; }
 
-	bool ProcessDroppedFile(wxCoord x, wxCoord y, const wxString &filename);
+//	bool ProcessDroppedFile(wxCoord x, wxCoord y, const wxString &filename);
+#ifdef USE_CUSTOMDATA_FOR_DND
 	bool ProcessDroppedFile(wxCoord x, wxCoord y, const wxUint8 *buffer, size_t buflen);
+#endif
 	bool ProcessDroppedFiles(wxCoord x, wxCoord y, const wxArrayString &filenames);
 
 	wxDECLARE_EVENT_TABLE();
@@ -645,8 +763,10 @@ public:
 
 //////////////////////////////////////////////////////////////////////
 
+#ifdef USE_CUSTOMDATA_FOR_DND
 // ドラッグアンドドロップ時のフォーマットID
 extern wxDataFormat *L3DiskPanelDataFormat;
+#endif
 
 /// ドラッグ＆ドロップ
 class L3DiskPanelDropTarget : public wxDropTarget

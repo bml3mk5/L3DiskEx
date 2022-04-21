@@ -138,20 +138,20 @@ int DiskWriter::SaveDisk(int disk_number, int side_number, const wxString &file_
 }
 
 // 拡張子で保存形式を判定
-int DiskWriter::SelectSaveDisk(const wxString &type, int disk_number, int side_number, bool &support)
+int DiskWriter::SelectSaveDisk(const wxString &file_format, int disk_number, int side_number, bool &support)
 {
 	int rc = -1;
-	if (type == wxT("d88")) {
+	if (file_format == wxT("d88")) {
 		// d88形式
 		DiskD88Writer wr(this, result);
 		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
 		support = true;
-//	} else if (type == wxT("cpcdsk")) {
+//	} else if (file_format == wxT("cpcdsk")) {
 //		// CPC DSK形式
 //		DiskDskWriter wr(result);
 //		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
 //		support = true;
-	} else if (type == wxT("plain")) {
+	} else if (file_format == wxT("plain")) {
 		// ベタ
 		DiskPlainWriter wr(this, result);
 		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);

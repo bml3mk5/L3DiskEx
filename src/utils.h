@@ -47,8 +47,8 @@ public:
 	~Dump() {}
 
 	int Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert);
-	int Ascii(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert);
-	int Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert);
+	int Ascii(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert);
+	int Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert);
 };
 
 void	ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time);
@@ -65,10 +65,19 @@ wxString FormatHMStr(const struct tm *tm);
 int		ToInt(const wxString &val);
 bool	ToBool(const wxString &val);
 
-wxString Escape(const wxString &src);
+void	 DecodeEscape(const wxString &src, wxString &dst);
+void	 DecodeEscape(const wxString &src, wxUint8 *dst, size_t len);
+wxString EncodeEscape(const wxUint8 *src, size_t len);
+
+wxString EncodeFileName(const wxString &src);
+wxString DecodeFileName(const wxString &src);
 
 wxString GetSideNumStr(int side_number, bool each_sides);
 wxString GetSideStr(int side_number, bool each_sides);
+
+int		IndexOf(const char *list[], const wxString &substr);
+
+bool	IsUpperString(const wxString &str);
 
 }; /* namespace L3DiskUtils */
 

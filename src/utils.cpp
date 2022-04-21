@@ -38,7 +38,7 @@ void TempData::SetSize(size_t val)
 		data = new wxUint8[alloc_size];
 		memset(data, 0, alloc_size);
 	}
-	size = val; 
+	size = val;
 }
 
 void TempData::SetData(const wxUint8 *data, size_t len, bool invert)
@@ -107,18 +107,11 @@ int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool inve
 	return rows;
 }
 
-int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert)
+int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert)
 {
 	wxUint16 inv = invert ? 0xff : 0;
 
-	switch(char_code) {
-	case 1:
-		codes.SetMap(wxT("sjis"));
-		break;
-	default:
-		codes.SetMap(wxT("hankaku"));
-		break;
-	}
+	codes.SetMap(char_code);
 
 	for(size_t col = 0; col < 16; col++) {
 		str += wxString::Format(wxT("%x"), (int)col);
@@ -153,18 +146,11 @@ int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &
 	return 0;
 }
 
-int Dump::Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert)
+int Dump::Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert)
 {
 	wxUint16 inv = invert ? 0xff : 0;
 
-	switch(char_code) {
-	case 1:
-		codes.SetMap(wxT("sjis"));
-		break;
-	default:
-		codes.SetMap(wxT("hankaku"));
-		break;
-	}
+	codes.SetMap(char_code);
 
 	int col = 0;
 	int row = 1;
@@ -340,29 +326,33 @@ void ConvTmToYYMMDD(const struct tm *tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
 /// 日付を文字列で返す
 wxString FormatYMDStr(const struct tm *tm)
 {
-	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
-		return wxString::Format(wxT("%04d/%02d/%02d"), tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
-	} else {
-		return wxT("----/--/--");
-	}
+	wxString str;
+	str = (tm->tm_year >= 0 ? wxString::Format(wxT("%04d"), tm->tm_year + 1900) : wxT("----"));
+	str += wxT("/");
+	str += (tm->tm_mon >= -1 ? wxString::Format(wxT("%02d"), tm->tm_mon + 1) : wxT("--"));
+	str += wxT("/");
+	str += (tm->tm_mday >= 0 ? wxString::Format(wxT("%02d"), tm->tm_mday) : wxT("--"));
+	return str;
 }
 /// 時分秒を文字列で返す
 wxString FormatHMSStr(const struct tm *tm)
 {
-	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
-		return wxString::Format(wxT("%02d:%02d:%02d"), tm->tm_hour, tm->tm_min, tm->tm_sec);
-	} else {
-		return wxT("--:--:--");
-	}
+	wxString str;
+	str = (tm->tm_hour >= 0 ? wxString::Format(wxT("%02d"), tm->tm_hour) : wxT("--"));
+	str += wxT(":");
+	str += (tm->tm_min >= 0 ? wxString::Format(wxT("%02d"), tm->tm_min) : wxT("--"));
+	str += wxT(":");
+	str += (tm->tm_sec >= 0 ? wxString::Format(wxT("%02d"), tm->tm_sec) : wxT("--"));
+	return str;
 }
 /// 時分を文字列で返す
 wxString FormatHMStr(const struct tm *tm)
 {
-	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
-		return wxString::Format(wxT("%02d:%02d"), tm->tm_hour, tm->tm_min);
-	} else {
-		return wxT("--:--");
-	}
+	wxString str;
+	str = (tm->tm_hour >= 0 ? wxString::Format(wxT("%02d"), tm->tm_hour) : wxT("--"));
+	str += wxT(":");
+	str += (tm->tm_min >= 0 ? wxString::Format(wxT("%02d"), tm->tm_min) : wxT("--"));
+	return str;
 }
 
 int ToInt(const wxString &val)
@@ -391,26 +381,120 @@ bool ToBool(const wxString &val)
 /// エスケープ文字を展開
 /// @note \\\\                \\ そのもの
 /// @note \\x[0-9a-f][0-9a-f] 16進数で指定
-wxString Escape(const wxString &src)
+void DecodeEscape(const wxString &src, wxString &dst)
 {
 	wxString str = src;
-	wxString rstr;
 
 	while (str.Length() > 0) {
-		if (str.Left(2) == wxT("\\\\")) {
-			rstr += wxT("\\");
-			str = str.Mid(2);
-		} else if (str.Left(2) == wxT("\\x")) {
-			long v;
-			str.Mid(2,2).ToLong(&v, 16);
-			rstr += wxString((char)v, 1);
-			str = str.Mid(4);
+		if (str.Left(1) == wxT("\\")) {
+			str = str.Mid(1);
+			if (str.Left(1) == wxT("x")) {
+				long v;
+				str.Mid(1,2).ToLong(&v, 16);
+				dst += wxString(wxUniChar(v), 1);
+				str = str.Mid(3);
+			} else {
+				dst += str.Left(1);
+				str = str.Mid(1);
+			}
 		} else {
-			rstr += str.Left(1);
+			dst += str.Left(1);
 			str = str.Mid(1);
 		}
 	}
+}
+
+/// エスケープ文字を展開
+/// @note \\\\                \\ そのもの
+/// @note \\x[0-9a-f][0-9a-f] 16進数で指定
+void DecodeEscape(const wxString &src, wxUint8 *dst, size_t len)
+{
+	wxString str = src;
+
+	size_t pos = 0;
+	while (str.Length() > 0 && len > pos) {
+		if (str.Left(1) == wxT("\\")) {
+			str = str.Mid(1);
+			if (str.Left(1) == wxT("x")) {
+				long v;
+				str.Mid(1,2).ToLong(&v, 16);
+				dst[pos] = (v & 0xff);
+				str = str.Mid(3);
+				pos++;
+			} else {
+				dst[pos] = str.at(0);
+				str = str.Mid(1);
+				pos++;
+			}
+		} else {
+			dst[pos] = str.at(0);
+			str = str.Mid(1);
+			pos++;
+		}
+	}
+}
+
+/// 文字をエスケープ
+wxString EncodeEscape(const wxUint8 *src, size_t len)
+{
+	wxString rstr;
+
+	for(size_t i=0; i<len; i++) {
+		if (src[i] == 0) {
+			break;
+		} else if ((src[i] >= 0x00 && src[i] <= 0x1f)
+		 || (src[i] == 0x60)
+		 || (src[i] >= 0x7f && src[i] <= 0xff)) {
+			rstr += wxString::Format(wxT("\\x%02x"), (int)src[i]);
+		} else {
+			rstr += wxString(1, (char)src[i]);
+		}
+	}
 	return rstr;
+}
+
+const wxString gSystemInvalidChars = wxT("%\\/:*?\"<>|");
+
+/// ファイル名を展開
+/// %xxを実際の文字に変換
+wxString DecodeFileName(const wxString &src)
+{
+	wxString dst;
+	size_t pos = 0;
+
+	while (pos < src.Length()) {
+		bool dec = false;
+		if (src.Mid(pos, 1) == wxT("%")) {
+			wxString sval = src.Mid(pos + 1, 2);
+			long lval = 0;
+			if (sval.ToLong(&lval, 16)) {
+				dst += wxUniChar(lval);
+				dec = true;
+				pos += 3;
+			}
+		}
+		if (!dec) {
+			dst += src.Mid(pos, 1);
+			pos++;
+		}
+	}
+	return dst;
+}
+
+/// ファイル名をエスケープ
+/// %\/:*?"<>| を %xxに変換する
+wxString EncodeFileName(const wxString &src)
+{
+	wxString str;
+	for(size_t i=0; i<src.Length(); i++) {
+		wxUniChar c = src.at(i);
+		if (gSystemInvalidChars.Find(c) >= 0) {
+			str += wxString::Format(wxT("%%%02x"), (int)c);
+		} else {
+			str += c;
+		}
+	}
+	return str;
 }
 
 wxString GetSideNumStr(int side_number, bool each_sides)
@@ -437,6 +521,34 @@ wxString GetSideStr(int side_number, bool each_sides)
 		}
 	}
 	return str;
+}
+
+int IndexOf(const char *list[], const wxString &substr)
+{
+	int match = -1;
+	for(int i=0; list[i] != NULL; i++) {
+		if (substr == list[i]) {
+			match = i;
+			break;
+		}
+	}
+	return match;
+}
+
+bool IsUpperString(const wxString &str)
+{
+	size_t len = str.Length();
+	int u = 0;
+	int l = 0;
+	for(size_t i=0; i<len; i++) {
+		wxUniChar c = str[i];
+		if (c >= 0x41 && c < 0x5b) {
+			u++;
+		} else if (c >= 0x51 && c < 0x7b) {
+			l++;
+		}
+	}
+	return (u > l); 
 }
 
 }; /* namespace L3DiskUtils */

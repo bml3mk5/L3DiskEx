@@ -5,6 +5,7 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
+#include "common.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -88,4 +89,47 @@ void mem_copy(const void *src, size_t slen, char fill, void *dst, size_t dlen)
 	if (l > dlen) l = dlen;
 	memset(dst, fill, dlen);
 	memcpy(dst, src, l);
+}
+
+/// バッファ末尾から一致する文字をさがす
+int mem_rchr(const void *buf, size_t len, int ch)
+{
+	const char *p = (const char *)buf;
+	int match = -1;
+	for(int i=(int)len-1; i>=0; i--) {
+		if (p[i] == (char)ch) {
+			match = i;
+			break;
+		}
+	}
+	return match;
+}
+
+//
+//
+//
+
+TM::TM()
+{
+	Clear();
+}
+TM::~TM()
+{
+}
+void TM::Clear()
+{
+	tm.tm_year = -1;
+	tm.tm_mon = -2;
+	tm.tm_mday = -1;
+	tm.tm_hour = -1;
+	tm.tm_min = -1;
+	tm.tm_sec = -1;
+	tm.tm_isdst = 0;
+	tm.tm_wday = 0;
+	tm.tm_yday = 0;
+}
+TM &TM::operator=(const TM &src)
+{
+	tm = src.tm;
+	return *this;
 }

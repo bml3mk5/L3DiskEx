@@ -10,21 +10,33 @@
 #include <wx/fileconf.h>
 
 
+Config gConfig;
+
 Params::Params()
 {
 	// default value
 	mFilePath = wxT("");
 	mExportFilePath = wxT("");
 	mRecentFiles.Empty();
-	mCharCode = 0;
+	mCharCode.Empty();
 	mListFontName.Empty();
 	mListFontSize = 0;
 	mDumpFontName.Empty();
 	mDumpFontSize = 0;
 	mTrimUnusedData = true;
 	mShowDeletedFile = false;
+	mAddExtExport = true;
+	mDecideAttrImport = true;
+	mSkipImportDialog = false;
+	mIgnoreDateTime = false;
 	mWindowWidth = 1000;
 	mWindowHeight = 600;
+	mTemporaryFolder.Empty();
+	mBinaryEditer.Empty();
+	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
+		mListColumnWidth[id]=-1;
+		mListColumnPos[id]=id;
+	}
 }
 
 void Params::SetFilePath(const wxString &val)
@@ -32,9 +44,13 @@ void Params::SetFilePath(const wxString &val)
 	mFilePath = wxFileName::FileName(val).GetPath();
 }
 
-void Params::SetExportFilePath(const wxString &val)
+void Params::SetExportFilePath(const wxString &val, bool is_dir)
 {
-	mExportFilePath = wxFileName::FileName(val).GetPath();
+	if (is_dir) {
+		mExportFilePath = wxFileName::FileName(val).GetFullPath();
+	} else {
+		mExportFilePath = wxFileName::FileName(val).GetPath();
+	}
 }
 
 const wxString &Params::GetExportFilePath() const
@@ -74,6 +90,16 @@ const wxArrayString &Params::GetRecentFiles() const
 	return mRecentFiles;
 }
 
+void Params::SetTemporaryFolder(const wxString &val)
+{
+	mTemporaryFolder = wxFileName::FileName(val).GetFullPath();
+}
+
+void Params::SetBinaryEditer(const wxString &val)
+{
+	mBinaryEditer = wxFileName::FileName(val).GetFullPath();
+}
+
 //
 //
 //
@@ -111,7 +137,7 @@ void Config::Load()
 			mRecentFiles.Add(sval);
 		}
 	}
-	// キャラクターコードマップ番号
+	// キャラクターコードマップ名
 	ini->Read(wxT("CharCode"), &mCharCode);
 	// リストウィンドウのフォント名
 	ini->Read(wxT("ListFontName"), &mListFontName);
@@ -125,10 +151,34 @@ void Config::Load()
 	ini->Read(wxT("TrimUnusedData"), &mTrimUnusedData);
 	// 削除したファイルを表示するか
 	ini->Read(wxT("ShowDeletedFile"), &mShowDeletedFile);
+	// エクスポート時に属性から拡張子を追加するか
+	ini->Read(wxT("AddExtensionWhenExport"), &mAddExtExport);
+	// インポート時に拡張子で属性を決定したら拡張子を削除するか
+	ini->Read(wxT("DeleteExtensionWhenImport"), &mDecideAttrImport);
+	// インポートやプロパティ変更時に日時を無視するか
+	ini->Read(wxT("IgnoreDateTime"), &mIgnoreDateTime);
 	// ウィンドウ幅
 	ini->Read(wxT("WindowWidth"), &mWindowWidth);
 	// ウィンドウ高さ
 	ini->Read(wxT("WindowHeight"), &mWindowHeight);
+	// テンポラリフォルダのパス
+	ini->Read(wxT("TemporaryFolder"), &mTemporaryFolder);
+	// バイナリエディタのパス
+	ini->Read(wxT("BinaryEditer"), &mBinaryEditer);
+	// リストのカラム幅
+	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
+		wxString key = wxT("ListColumn");
+		key += gL3DiskFileListColumnDefs[id].name;
+		key += wxT("Width");
+		ini->Read(key, &mListColumnWidth[id]);
+	}
+	// リストのカラム位置
+	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
+		wxString key = wxT("ListColumn");
+		key += gL3DiskFileListColumnDefs[id].name;
+		key += wxT("Pos");
+		ini->Read(key, &mListColumnPos[id]);
+	}
 
 	delete ini;
 }
@@ -157,7 +207,7 @@ void Config::Save()
 		ini->Write(wxString::Format(wxT("Recent%d"), row), sval);
 		row++;
 	}
-	// キャラクターコードマップ番号
+	// キャラクターコードマップ名
 	ini->Write(wxT("CharCode"), mCharCode);
 	// リストウィンドウのフォント名
 	ini->Write(wxT("ListFontName"), mListFontName);
@@ -171,10 +221,34 @@ void Config::Save()
 	ini->Write(wxT("TrimUnusedData"), mTrimUnusedData);
 	// 削除したファイルを表示するか
 	ini->Write(wxT("ShowDeletedFile"), mShowDeletedFile);
+	// エクスポート時に属性から拡張子を追加するか
+	ini->Write(wxT("AddExtensionWhenExport"), mAddExtExport);
+	// インポート時に拡張子で属性を決定したら拡張子を削除するか
+	ini->Write(wxT("DeleteExtensionWhenImport"), mDecideAttrImport);
+	// インポートやプロパティ変更時に日時を無視するか
+	ini->Write(wxT("IgnoreDateTime"), mIgnoreDateTime);
 	// ウィンドウ幅
 	ini->Write(wxT("WindowWidth"), mWindowWidth);
 	// ウィンドウ高さ
 	ini->Write(wxT("WindowHeight"), mWindowHeight);
+	// テンポラリフォルダのパス
+	ini->Write(wxT("TemporaryFolder"), mTemporaryFolder);
+	// バイナリエディタのパス
+	ini->Write(wxT("BinaryEditer"), mBinaryEditer);
+	// リストのカラム幅
+	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
+		wxString key = wxT("ListColumn");
+		key += gL3DiskFileListColumnDefs[id].name;
+		key += wxT("Width");
+		ini->Write(key, mListColumnWidth[id]);
+	}
+	// リストのカラム位置
+	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
+		wxString key = wxT("ListColumn");
+		key += gL3DiskFileListColumnDefs[id].name;
+		key += wxT("Pos");
+		ini->Write(key, mListColumnPos[id]);
+	}
 
 	// write
 	delete ini;

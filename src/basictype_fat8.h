@@ -35,6 +35,12 @@ public:
 	virtual wxUint32 GetGroupNumber(wxUint32 num) const;
 	//@}
 
+	/// @name check / assign FAT area
+	//@{
+	/// FATエリアをチェック
+	virtual double 	CheckFat(bool is_formatting);
+	//@}
+
 	/// @name file size
 	//@{
 	//@}
@@ -53,8 +59,8 @@ public:
 
 	/// @name save / write
 	//@{
-	/// 最後のグループ番号を計算する
-	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
+	/// グループ確保時に最後のグループ番号を計算する
+	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int &size_remain);
 	//@}
 };
 

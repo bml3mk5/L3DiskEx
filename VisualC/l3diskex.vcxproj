@@ -43,19 +43,28 @@
     <ClCompile Include="..\src\basicdiritem.cpp" />
     <ClCompile Include="..\src\basicdiritem_cdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_cpm.cpp" />
+    <ClCompile Include="..\src\basicdiritem_dos80.cpp" />
     <ClCompile Include="..\src\basicdiritem_fat8.cpp" />
     <ClCompile Include="..\src\basicdiritem_flex.cpp" />
     <ClCompile Include="..\src\basicdiritem_fm.cpp" />
+    <ClCompile Include="..\src\basicdiritem_fp.cpp" />
+    <ClCompile Include="..\src\basicdiritem_frost.cpp" />
+    <ClCompile Include="..\src\basicdiritem_hu68k.cpp" />
     <ClCompile Include="..\src\basicdiritem_l31s.cpp" />
     <ClCompile Include="..\src\basicdiritem_l32d.cpp" />
+    <ClCompile Include="..\src\basicdiritem_losa.cpp" />
+    <ClCompile Include="..\src\basicdiritem_magical.cpp" />
     <ClCompile Include="..\src\basicdiritem_msdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_msx.cpp" />
     <ClCompile Include="..\src\basicdiritem_mz.cpp" />
     <ClCompile Include="..\src\basicdiritem_mz_base.cpp" />
+    <ClCompile Include="..\src\basicdiritem_mz_fdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_n88.cpp" />
     <ClCompile Include="..\src\basicdiritem_os9.cpp" />
+    <ClCompile Include="..\src\basicdiritem_sdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_tfdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_x1hu.cpp" />
+    <ClCompile Include="..\src\basicdiritem_xdos.cpp" />
     <ClCompile Include="..\src\basicerror.cpp" />
     <ClCompile Include="..\src\basicfat.cpp" />
     <ClCompile Include="..\src\basicparam.cpp" />
@@ -64,29 +73,43 @@
     <ClCompile Include="..\src\basictype.cpp" />
     <ClCompile Include="..\src\basictype_cdos.cpp" />
     <ClCompile Include="..\src\basictype_cpm.cpp" />
+    <ClCompile Include="..\src\basictype_dos80.cpp" />
     <ClCompile Include="..\src\basictype_fat12.cpp" />
     <ClCompile Include="..\src\basictype_fat8.cpp" />
     <ClCompile Include="..\src\basictype_flex.cpp" />
     <ClCompile Include="..\src\basictype_fm.cpp" />
+    <ClCompile Include="..\src\basictype_fp.cpp" />
+    <ClCompile Include="..\src\basictype_frost.cpp" />
+    <ClCompile Include="..\src\basictype_hu68k.cpp" />
     <ClCompile Include="..\src\basictype_l31s.cpp" />
     <ClCompile Include="..\src\basictype_l32d.cpp" />
+    <ClCompile Include="..\src\basictype_magical.cpp" />
     <ClCompile Include="..\src\basictype_msdos.cpp" />
     <ClCompile Include="..\src\basictype_msx.cpp" />
     <ClCompile Include="..\src\basictype_mz.cpp" />
     <ClCompile Include="..\src\basictype_mz_base.cpp" />
+    <ClCompile Include="..\src\basictype_mz_fdos.cpp" />
     <ClCompile Include="..\src\basictype_n88.cpp" />
     <ClCompile Include="..\src\basictype_os9.cpp" />
+    <ClCompile Include="..\src\basictype_pa.cpp" />
+    <ClCompile Include="..\src\basictype_sdos.cpp" />
+    <ClCompile Include="..\src\basictype_smc.cpp" />
     <ClCompile Include="..\src\basictype_tfdos.cpp" />
     <ClCompile Include="..\src\basictype_x1hu.cpp" />
+    <ClCompile Include="..\src\basictype_xdos.cpp" />
     <ClCompile Include="..\src\charcodes.cpp" />
     <ClCompile Include="..\src\common.cpp" />
     <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\basicfmt.cpp" />
+    <ClCompile Include="..\src\configbox.cpp" />
+    <ClCompile Include="..\src\diskcqmparser.cpp" />
     <ClCompile Include="..\src\diskd88.cpp" />
     <ClCompile Include="..\src\diskd88creator.cpp" />
     <ClCompile Include="..\src\diskd88parser.cpp" />
     <ClCompile Include="..\src\diskd88writer.cpp" />
+    <ClCompile Include="..\src\diskdimparser.cpp" />
     <ClCompile Include="..\src\diskdskparser.cpp" />
+    <ClCompile Include="..\src\diskfdiparser.cpp" />
     <ClCompile Include="..\src\diskparam.cpp" />
     <ClCompile Include="..\src\diskparambox.cpp" />
     <ClCompile Include="..\src\diskparser.cpp" />
@@ -94,6 +117,7 @@
     <ClCompile Include="..\src\diskplainwriter.cpp" />
     <ClCompile Include="..\src\diskreplacebox.cpp" />
     <ClCompile Include="..\src\diskresult.cpp" />
+    <ClCompile Include="..\src\disktd0parser.cpp" />
     <ClCompile Include="..\src\diskwriter.cpp" />
     <ClCompile Include="..\src\fileparam.cpp" />
     <ClCompile Include="..\src\fileselbox.cpp" />
@@ -107,6 +131,10 @@
     <ClCompile Include="..\src\rawtrackbox.cpp" />
     <ClCompile Include="..\src\result.cpp" />
     <ClCompile Include="..\src\uibindump.cpp" />
+    <ClCompile Include="..\src\uicdlistctrl.cpp" />
+    <ClCompile Include="..\src\uicdtreectrl.cpp" />
+    <ClCompile Include="..\src\uiclistctrl.cpp" />
+    <ClCompile Include="..\src\uictreectrl.cpp" />
     <ClCompile Include="..\src\uidiskattr.cpp" />
     <ClCompile Include="..\src\uidisklist.cpp" />
     <ClCompile Include="..\src\uifatarea.cpp" />
@@ -121,19 +149,28 @@
     <ClInclude Include="..\src\basicdiritem.h" />
     <ClInclude Include="..\src\basicdiritem_cdos.h" />
     <ClInclude Include="..\src\basicdiritem_cpm.h" />
+    <ClInclude Include="..\src\basicdiritem_dos80.h" />
     <ClInclude Include="..\src\basicdiritem_fat8.h" />
     <ClInclude Include="..\src\basicdiritem_flex.h" />
     <ClInclude Include="..\src\basicdiritem_fm.h" />
+    <ClInclude Include="..\src\basicdiritem_fp.h" />
+    <ClInclude Include="..\src\basicdiritem_frost.h" />
+    <ClInclude Include="..\src\basicdiritem_hu68k.h" />
     <ClInclude Include="..\src\basicdiritem_l31s.h" />
     <ClInclude Include="..\src\basicdiritem_l32d.h" />
+    <ClInclude Include="..\src\basicdiritem_losa.h" />
+    <ClInclude Include="..\src\basicdiritem_magical.h" />
     <ClInclude Include="..\src\basicdiritem_msdos.h" />
     <ClInclude Include="..\src\basicdiritem_msx.h" />
     <ClInclude Include="..\src\basicdiritem_mz.h" />
     <ClInclude Include="..\src\basicdiritem_mz_base.h" />
+    <ClInclude Include="..\src\basicdiritem_mz_fdos.h" />
     <ClInclude Include="..\src\basicdiritem_n88.h" />
     <ClInclude Include="..\src\basicdiritem_os9.h" />
+    <ClInclude Include="..\src\basicdiritem_sdos.h" />
     <ClInclude Include="..\src\basicdiritem_tfdos.h" />
     <ClInclude Include="..\src\basicdiritem_x1hu.h" />
+    <ClInclude Include="..\src\basicdiritem_xdos.h" />
     <ClInclude Include="..\src\basicerror.h" />
     <ClInclude Include="..\src\basicfat.h" />
     <ClInclude Include="..\src\basicparam.h" />
@@ -142,29 +179,43 @@
     <ClInclude Include="..\src\basictype.h" />
     <ClInclude Include="..\src\basictype_cdos.h" />
     <ClInclude Include="..\src\basictype_cpm.h" />
+    <ClInclude Include="..\src\basictype_dos80.h" />
     <ClInclude Include="..\src\basictype_fat12.h" />
     <ClInclude Include="..\src\basictype_fat8.h" />
     <ClInclude Include="..\src\basictype_flex.h" />
     <ClInclude Include="..\src\basictype_fm.h" />
+    <ClInclude Include="..\src\basictype_fp.h" />
+    <ClInclude Include="..\src\basictype_frost.h" />
+    <ClInclude Include="..\src\basictype_hu68k.h" />
     <ClInclude Include="..\src\basictype_l31s.h" />
     <ClInclude Include="..\src\basictype_l32d.h" />
+    <ClInclude Include="..\src\basictype_magical.h" />
     <ClInclude Include="..\src\basictype_msdos.h" />
     <ClInclude Include="..\src\basictype_msx.h" />
     <ClInclude Include="..\src\basictype_mz.h" />
     <ClInclude Include="..\src\basictype_mz_base.h" />
+    <ClInclude Include="..\src\basictype_mz_fdos.h" />
     <ClInclude Include="..\src\basictype_n88.h" />
     <ClInclude Include="..\src\basictype_os9.h" />
+    <ClInclude Include="..\src\basictype_pa.h" />
+    <ClInclude Include="..\src\basictype_sdos.h" />
+    <ClInclude Include="..\src\basictype_smc.h" />
     <ClInclude Include="..\src\basictype_tfdos.h" />
     <ClInclude Include="..\src\basictype_x1hu.h" />
+    <ClInclude Include="..\src\basictype_xdos.h" />
     <ClInclude Include="..\src\charcodes.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\basicfmt.h" />
+    <ClInclude Include="..\src\configbox.h" />
+    <ClInclude Include="..\src\diskcqmparser.h" />
     <ClInclude Include="..\src\diskd88.h" />
     <ClInclude Include="..\src\diskd88creator.h" />
     <ClInclude Include="..\src\diskd88parser.h" />
     <ClInclude Include="..\src\diskd88writer.h" />
+    <ClInclude Include="..\src\diskdimparser.h" />
     <ClInclude Include="..\src\diskdskparser.h" />
+    <ClInclude Include="..\src\diskfdiparser.h" />
     <ClInclude Include="..\src\diskparam.h" />
     <ClInclude Include="..\src\diskparambox.h" />
     <ClInclude Include="..\src\diskparser.h" />
@@ -172,6 +223,7 @@
     <ClInclude Include="..\src\diskplainwriter.h" />
     <ClInclude Include="..\src\diskreplacebox.h" />
     <ClInclude Include="..\src\diskresult.h" />
+    <ClInclude Include="..\src\disktd0parser.h" />
     <ClInclude Include="..\src\diskwriter.h" />
     <ClInclude Include="..\src\fileparam.h" />
     <ClInclude Include="..\src\fileselbox.h" />
@@ -185,6 +237,11 @@
     <ClInclude Include="..\src\rawtrackbox.h" />
     <ClInclude Include="..\src\result.h" />
     <ClInclude Include="..\src\uibindump.h" />
+    <ClInclude Include="..\src\uicdlistctrl.h" />
+    <ClInclude Include="..\src\uicdtreectrl.h" />
+    <ClInclude Include="..\src\uiclistctrl.h" />
+    <ClInclude Include="..\src\uicommon.h" />
+    <ClInclude Include="..\src\uictreectrl.h" />
     <ClInclude Include="..\src\uidiskattr.h" />
     <ClInclude Include="..\src\uidisklist.h" />
     <ClInclude Include="..\src\uifatarea.h" />
@@ -195,7 +252,9 @@
     <ClInclude Include="..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\data\basic_types.xml" />
+    <None Include="..\data\basic_types.xml">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="..\data\char_codes.xml" />
     <None Include="..\data\disk_types.xml" />
     <None Include="..\data\file_types.xml" />
@@ -350,6 +409,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -374,6 +435,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -398,6 +461,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -422,6 +487,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -450,6 +517,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -478,6 +547,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -506,6 +577,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>
@@ -534,6 +607,8 @@
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
     </PostBuildEvent>
     <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
       <EnableDPIAwareness>true</EnableDPIAwareness>
     </Manifest>
   </ItemDefinitionGroup>

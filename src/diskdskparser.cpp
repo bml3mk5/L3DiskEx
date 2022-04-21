@@ -76,7 +76,7 @@ wxUint32 DiskDskParser::ParseSector(wxInputStream &istream, int sector_nums, voi
 
 	if (sector_size > 7) {
 		// セクタサイズが大きすぎる
-		result->SetError(DiskResult::ERRV_SECTOR_SIZE, 0, track_number, side_number, sector_number, sector_size, id->data_length);
+		result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, 0, track_number, side_number, sector_number, sector_size, id->data_length);
 		return 0;
 	}
 
@@ -154,7 +154,7 @@ wxUint32 DiskDskParser::ParseTrack(wxInputStream &istream, int track_size, int o
 /// ディスクの解析
 wxUint32 DiskDskParser::ParseDisk(wxInputStream &istream)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file);
+	DiskD88Disk *disk = new DiskD88Disk(file, 0);
 
 	cpc_dsk_header_t header;
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();

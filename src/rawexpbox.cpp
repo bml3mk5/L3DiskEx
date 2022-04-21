@@ -20,13 +20,13 @@ BEGIN_EVENT_TABLE(RawExpBox, wxDialog)
 	EVT_BUTTON(wxID_OK, RawExpBox::OnOK)
 END_EVENT_TABLE()
 
-RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, const DiskParam *param, int sel_side_num
+RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, int sel_side_num
 	, int start_track_num, int start_side_num, int start_sector_num
 	, int end_track_num, int end_side_num, int end_sector_num
 	, bool invert_data, bool reverse_side
 )	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	this->param = param;
+	this->disk = disk;
 	this->sel_side_num = sel_side_num;
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -56,7 +56,7 @@ RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, c
 		hbox->Add(new wxStaticText(this, wxID_ANY, _("Sector")), flags);
 		txtSector[i] = new wxTextCtrl(this, IDC_TEXT_TRACK_ST + i, wxEmptyString, wxDefaultPosition, size, style, validate);
 		txtSector[i]->SetMaxLength(2);
-		txtSector[i]->SetValue(wxString::Format(wxT("%d"), i == 0 ? start_sector_num : (end_sector_num > 0 ? end_sector_num : param->GetSectorsPerTrack())));
+		txtSector[i]->SetValue(wxString::Format(wxT("%d"), i == 0 ? start_sector_num : (end_sector_num > 0 ? end_sector_num : disk->GetSectorsPerTrack())));
 		hbox->Add(txtSector[i], 0);
 
 		szrAll->Add(hbox, flags);
@@ -93,32 +93,33 @@ void RawExpBox::OnOK(wxCommandEvent& event)
 
 bool RawExpBox::ValidateParam()
 {
-	int val;
 	bool valid = true;
 	wxString msg;
 	for(int i=0; i<2; i++) {
 		wxString smsg = (i == 0 ? _("Start") : _("End"));
-		val = GetTrackNumber(i);
-		if (val < 0 || val >= param->GetTracksPerSide()) {
+		int trk = GetTrackNumber(i);
+		if (trk < 0 || trk >= disk->GetTracksPerSide()) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("track"));
 			valid = false;
 			break;
 		}
-		val = GetSideNumber(i);
-		if (val < 0 || val >= param->GetSidesPerDisk() || (sel_side_num >= 0 && val != sel_side_num)) {
+		int sid = GetSideNumber(i);
+		DiskD88Track *track = disk->GetTrack(trk, sid);
+		if (track == NULL || (sel_side_num >= 0 && sid != sel_side_num)) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("side"));
 			valid = false;
 			break;
 		}
-		val = GetSectorNumber(i);
-		if (val < 1 || val > param->GetSectorsPerTrack()) {
+		int sec = GetSectorNumber(i);
+		DiskD88Sector *sector = disk->GetSector(trk, sid, sec);
+		if (sector == NULL || sec < 1) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("sector"));
 			valid = false;
 			break;
 		}
 	}
-	int st = GetTrackNumber(0) * 10000 + GetSideNumberWithRev(0) * 100 + GetSectorNumber(0);
-	int ed = GetTrackNumber(1) * 10000 + GetSideNumberWithRev(1) * 100 + GetSectorNumber(1);
+	int st = GetSideNumber(0) * 10000 + GetTrackNumber(0) * 100 + GetSectorNumber(0);
+	int ed = GetSideNumber(1) * 10000 + GetTrackNumber(1) * 100 + GetSectorNumber(1);
 
 	if (valid && st > ed) {
 		msg = _("Need set end sector greater equal start sector.");
@@ -162,9 +163,4 @@ bool RawExpBox::InvertData() const
 bool RawExpBox::ReverseSide() const
 {
 	return chkRevSide->GetValue();
-}
-
-int RawExpBox::GetSideNumberWithRev(int num) const
-{
-	return ReverseSide() ? param->GetSidesPerDisk() - GetSideNumber(num) - 1 : GetSideNumber(num);
 }

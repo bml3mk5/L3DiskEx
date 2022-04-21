@@ -31,19 +31,19 @@ public:
 
 	/// @name check / assign FAT area
 	//@{
-	/// ディスクから各パラメータを取得
-	int		ParseParamOnDisk(DiskD88Disk *disk);
+	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
+	double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
 	//@}
 
 	/// @name directory
 	//@{
-	/// サブディレクトリを作成できるか
+	/// @brief サブディレクトリを作成できるか
 	bool	CanMakeDirectory() const { return false; }
 	//@}
 
 	/// @name format
 	//@{
-	/// セクタデータを埋めた後の個別処理
+	/// @brief セクタデータを埋めた後の個別処理
 	bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 };

@@ -31,7 +31,7 @@ private:
 	// 拡張子をさがす
 	int SaveDiskByExt(int disk_number, int side_number, bool &support);
 	// 拡張子で保存形式を判定
-	int SelectSaveDisk(const wxString &type, int disk_number, int side_number, bool &support);
+	int SelectSaveDisk(const wxString &file_format, int disk_number, int side_number, bool &support);
 
 public:
 	DiskWriter(DiskD88 *image, const wxString &path, const DiskWriteOptions &options, DiskResult *result);
@@ -43,9 +43,9 @@ public:
 	bool IsOk() const;
 
 	/// ディスクイメージの保存
-	int Save(const wxString &file_format = wxEmptyString);
+	int Save(const wxString &file_format);
 	/// ストリームの内容をファイルに保存
-	int SaveDisk(int disk_number, int side_number, const wxString &file_format = wxEmptyString);
+	int SaveDisk(int disk_number, int side_number, const wxString &file_format);
 };
 
 #endif /* _DISK_WRITER_H_ */

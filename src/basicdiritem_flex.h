@@ -36,126 +36,124 @@ private:
 	DiskBasicDirItemFLEX() : DiskBasicDirItem() {}
 	DiskBasicDirItemFLEX(const DiskBasicDirItemFLEX &src) : DiskBasicDirItem(src) {}
 
-	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	int		GetFileNameSize(bool *invert = NULL) const;
-	/// 拡張子を格納する位置を返す
+	/// @brief ランダムアクセスファイルのインデックス(FSM)のグループ番号
+	wxArrayInt m_random_group_nums;
+
+	/// @brief ファイル名を格納する位置を返す
+	wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 拡張子を格納する位置を返す
 	wxUint8 *GetFileExtPos(size_t &len) const;
-//	/// 拡張子を格納するバッファサイズを返す
-//	int		GetFileExtSize(bool *invert = NULL) const;
-	/// 属性１を返す
+	/// @brief 属性１を返す
 	int		GetFileType1() const;
-	/// 属性１のセット
+	/// @brief 属性１のセット
 	void	SetFileType1(int val);
-	/// 属性２を返す
+	/// @brief 属性２を返す
 	int		GetFileType2() const;
-	/// 属性２のセット
+	/// @brief 属性２のセット
 	void	SetFileType2(int val);
-	/// 使用しているアイテムか
+	/// @brief 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
-	/// インポート時ダイアログ表示前にファイルの属性を設定
+	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 public:
 	DiskBasicDirItemFLEX(DiskBasic *basic);
-	DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemFLEX(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ディレクトリアイテムのチェック
+	/// @brief ディレクトリアイテムのチェック
 	bool			Check(bool &last);
 
-	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		GetDefaultInvalidateChars() const;
-	/// ダイアログ入力前のファイル名を変換 大文字にする
+//	/// @brief ファイル名に設定できない文字を文字列にして返す
+//	wxString		GetDefaultInvalidateChars() const;
+	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
 	void			ConvertToFileNameStr(wxString &filename) const;
-	/// ダイアログ入力後のファイル名文字列を変換 大文字にする
+	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
 	void			ConvertFromFileNameStr(wxString &filename) const;
-	/// ファイル名は必須（空文字不可）か
+	/// @brief ファイル名は必須（空文字不可）か
 	bool			IsFileNameRequired() const { return true; }
 
-	/// 削除
+	/// @brief 削除
 	bool			Delete(wxUint8 code);
 
-	/// 属性を設定
+	/// @brief 属性を設定
 	void			SetFileAttr(const DiskBasicFileType &file_type);
-	/// 属性を返す
+	/// @brief 属性を返す
 	DiskBasicFileType GetFileAttr() const;
 
-//	/// リストの位置から属性を返す(プロパティダイアログ用)
-//	int				CalcFileTypeFromPos(int pos1, int pos2);
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	wxString		GetFileAttrStr() const;
 
-	/// ファイルサイズをセット
+	/// @brief ファイルサイズをセット
 	void			SetFileSize(int val);
-	/// ファイルサイズとグループ数を計算する
-	void			CalcFileSize();
-	/// 指定ディレクトリのすべてのグループを取得
-	void			GetAllGroups(DiskBasicGroups &group_items);
+	/// @brief ファイルサイズとグループ数を計算する
+	void			CalcFileUnitSize(int fileunit_num);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	void			GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
 
-	/// 最初のグループ番号をセット
-	void			SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	wxUint32		GetStartGroup() const;
-	/// 最後のグループ番号をセット(機種依存)
+	/// @brief 最初のグループ番号をセット
+	void			SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	wxUint32		GetStartGroup(int fileunit_num) const;
+	/// @brief 最後のグループ番号をセット(機種依存)
 	void			SetLastGroup(wxUint32 val);
-	/// 最後のグループ番号を返す(機種依存)
+	/// @brief 最後のグループ番号を返す(機種依存)
 	wxUint32		GetLastGroup() const;
+	/// @brief 追加のグループ番号を得る(機種依存)
+	void			GetExtraGroups(wxArrayInt &arr) const;
 
-	/// アイテムが日時を持っているか
+	/// @brief アイテムが日時を持っているか
 	bool			HasDateTime() const { return true; }
 	bool			HasDate() const { return true; }
 	bool			HasTime() const { return false; }
-	/// 日付を返す
+	/// @brief 日付を返す
 	void			GetFileDate(struct tm *tm) const;
-	/// 時間を返す
+	/// @brief 時間を返す
 	void			GetFileTime(struct tm *tm) const;
-	/// 日付を返す
+	/// @brief 日付を返す
 	wxString		GetFileDateStr() const;
-	/// 時間を返す
+	/// @brief 時間を返す
 	wxString		GetFileTimeStr() const;
-	/// 日付をセット
+	/// @brief 日付をセット
 	void			SetFileDate(const struct tm *tm);
-	/// 時間をセット
+	/// @brief 時間をセット
 	void			SetFileTime(const struct tm *tm);
 
-	/// ディレクトリアイテムのサイズ
+	/// @brief ディレクトリアイテムのサイズ
 	size_t			GetDataSize() const;
 
-	/// アイテムを削除できるか
+	/// @brief アイテムを削除できるか
 	bool			IsDeletable() const;
-//	/// ファイル名を編集できるか
-//	bool			IsFileNameEditable() const;
 
-
-	/// 最初のトラック番号をセット
+	/// @brief 最初のトラック番号をセット
 	void			SetStartTrack(wxUint8 val);
-	/// 最初のセクタ番号をセット
+	/// @brief 最初のセクタ番号をセット
 	void			SetStartSector(wxUint8 val);
-	/// 最初のトラック番号を返す
+	/// @brief 最初のトラック番号を返す
 	wxUint8			GetStartTrack() const;
-	/// 最初のセクタ番号を返す
+	/// @brief 最初のセクタ番号を返す
 	wxUint8			GetStartSector() const;
-	/// 最後のトラック番号をセット
+	/// @brief 最後のトラック番号をセット
 	void			SetLastTrack(wxUint8 val);
-	/// 最後のセクタ番号をセット
+	/// @brief 最後のセクタ番号をセット
 	void			SetLastSector(wxUint8 val);
-	/// 最後のトラック番号を返す
+	/// @brief 最後のトラック番号を返す
 	wxUint8			GetLastTrack() const;
-	/// 最後のセクタ番号を返す
+	/// @brief 最後のセクタ番号を返す
 	wxUint8			GetLastSector() const;
 
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ内の属性部分のレイアウトを作成
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// 属性を変更した際に呼ばれるコールバック
+	/// @brief 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// 機種依存の属性を設定する
-	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// @brief 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
+	/// @brief ダイアログ入力後のファイル名チェック
+	bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	//@}
 };
 

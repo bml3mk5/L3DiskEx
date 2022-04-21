@@ -20,91 +20,53 @@ DiskBasicTypeFAT12::DiskBasicTypeFAT12(DiskBasic *basic, DiskBasicFat *fat, Disk
 {
 }
 
-/// FATエリアをチェック
-bool DiskBasicTypeFAT12::CheckFat()
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+/// @param [in] disk          ディスク
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0>      正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
-	bool valid = true;
+	if (is_formatting) return 1.0;
 
-	wxUint32 end = basic->GetFatEndGroup() < 0x1ff ? basic->GetFatEndGroup() : 0x1ff;
-	wxUint8 *tbl = new wxUint8[end + 1];
-	memset(tbl, 0, end + 1);
-
-	// 同じグループ番号が重複しているか
-	for(wxUint32 pos = 0; pos <= end; pos++) {
-		wxUint32 gnum = GetGroupNumber(pos);
-		if (gnum > 1 && gnum <= end) {
-			tbl[gnum]++;
-		}
-	}
-	// 同じグループ番号が重複している場合エラー
-	for(wxUint32 pos = 0; pos <= end; pos++) {
-		if (tbl[pos] > 4) {
-			valid = false;
-			break;
-		}
-	}
-	delete [] tbl;
-
-	// FATエリアの先頭がメディアIDであること
-	int match = 0;
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	match = bufs->MatchData8(0, basic->GetMediaId());
-#if 0
-	for(size_t j=0; j<bufs->Count(); j++) {
-		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
-		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
-		if (fatbuf->Get(0) == basic->GetMediaId()) {
-			match++;
-		}
-	}
-#endif
-	if (match != basic->GetNumberOfFats()) {
-		valid = false;
-	}
-
-	// 最終グループ番号を計算
-	int max_grp_on_fat = basic->GetSectorsPerFat() * basic->GetSectorSize() * 2 / 3;
-	int max_grp_on_prm = (basic->GetSidesPerDiskOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
-
-	basic->SetFatEndGroup(max_grp_on_fat > max_grp_on_prm ? max_grp_on_prm : max_grp_on_fat);
-
-	return valid;
-}
-
-/// ディスク上のパラメータを読む
-/// @retval  1 警告あり
-/// @retval  0 正常
-/// @retval -1 エラー
-int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
-{
-	int valid = 0;
+	int nums = 0;
+	int valids = 0;
 
 	// MS-DOS ディスク上のパラメータを読む
 	DiskD88Sector *sector = disk->GetSector(0, 0, 1);
+	if (!sector) return -1.0;
 	wxUint8 *datas = sector->GetSectorBuffer();
+	if (!datas) return -1.0;
 	fat_bpb_t *bpb = (fat_bpb_t *)datas;
-	if (bpb->BPB_SecPerClus == 0) {
-		// クラスタサイズがおかしい
-		valid = 1;
+
+	nums++;
+	if (bpb->BPB_SecPerClus != 0) {
+		// クラスタサイズ
+		valids++;
 	}
-	if (disk->GetSectorSize() != wxUINT16_SWAP_ON_BE(bpb->BPB_BytsPerSec)) {
-		// セクタサイズが違う
-		valid = 1;
+	nums++;
+	if (disk->GetSectorSize() == wxUINT16_SWAP_ON_BE(bpb->BPB_BytsPerSec)) {
+		// セクタサイズ
+		valids++;
 	}
-	if (disk->GetSidesPerDisk() < wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
-		// サイド数が少ない
-		valid = 1;
+	nums++;
+	if (disk->GetSidesPerDisk() >= wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
+		// サイド数
+		valids++;
 	}
-	if (basic->GetSidesPerDiskOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
-		// BASICテンプレートのサイド数が異なる
-		valid = 1;
+	nums++;
+	if (basic->GetSidesPerDiskOnBasic() == wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
+		// BASICテンプレートのサイド数
+		valids++;
 	}
-	if (basic->GetSectorsPerTrackOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_SecPerTrk)) {
-		// BASICテンプレートのセクタ数が異なる
-		valid = 1;
+	nums++;
+	if (basic->GetSectorsPerTrackOnBasic() == wxUINT16_SWAP_ON_BE(bpb->BPB_SecPerTrk)) {
+		// BASICテンプレートのセクタ数
+		valids++;
 	}
 
-	if (valid == 0) {
+	if (nums == valids) {
 		basic->SetSidesPerDiskOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads));
 		basic->SetSectorsPerGroup(bpb->BPB_SecPerClus);
 		basic->SetReservedSectors(wxUINT16_SWAP_ON_BE(bpb->BPB_RsvdSecCnt));
@@ -141,7 +103,58 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 		basic->SetBasicDescription(param->GetBasicDescription());
 	}
 
-	return valid;
+	double valid_ratio = 0.0;
+	if (nums > 0) {
+		valid_ratio = (double)valids/nums;
+	}
+	return valid_ratio;
+}
+
+/// FATエリアをチェック
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0  正常
+/// @retval <1.0 警告あり
+/// @retval <0.0 エラーあり
+double DiskBasicTypeFAT12::CheckFat(bool is_formatting)
+{
+	wxUint32 end = basic->GetFatEndGroup() < 0x1ff ? basic->GetFatEndGroup() : 0x1ff;
+	wxUint8 *tbl = new wxUint8[end + 1];
+	memset(tbl, 0, end + 1);
+
+	// 同じグループ番号が重複しているか
+	for(wxUint32 pos = 0; pos <= end; pos++) {
+		wxUint32 gnum = GetGroupNumber(pos);
+		if (gnum > 1 && gnum <= end) {
+			tbl[gnum]++;
+		}
+	}
+	// 同じグループ番号が重複している場合エラー
+	double valid_ratio = 1.0;
+	for(wxUint32 pos = 0; pos <= end; pos++) {
+		if (tbl[pos] > 4) {
+			valid_ratio = -1.0;
+			break;
+		}
+	}
+	delete [] tbl;
+
+	if (valid_ratio < 0.0) return valid_ratio;
+
+	// FATエリアの先頭がメディアIDであること
+	int match = 0;
+	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
+	match = bufs->MatchData8(0, basic->GetMediaId());
+	if (match != (basic->GetValidNumberOfFats() > 0 ? basic->GetValidNumberOfFats() : basic->GetNumberOfFats())) {
+		valid_ratio -= 0.8;
+	}
+
+	// 最終グループ番号を計算
+	int max_grp_on_fat = basic->GetSectorsPerFat() * basic->GetSectorSize() * 2 / 3;
+	int max_grp_on_prm = (basic->GetSidesPerDiskOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
+
+	basic->SetFatEndGroup(max_grp_on_fat > max_grp_on_prm ? max_grp_on_prm : max_grp_on_fat);
+
+	return valid_ratio;
 }
 
 /// 管理エリアのトラック番号からグループ番号を計算
@@ -181,6 +194,7 @@ void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
 		fat_availability.Add(fsts);
 //		myLog.SetDebug("DiskBasicTypeFAT12::CalcDiskFreeSize: pos:%d gnum:%d size:%d grps:%d", pos, gnum, fsize, grps);
 	}
+
 	free_disk_size = (int)fsize;
 	free_groups = (int)grps;
 }
@@ -190,89 +204,14 @@ void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
 /// @param [in] val 値
 void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
-#if 0
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	for(size_t j=0; j<bufs->Count(); j++) {
-		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
-		// 12bit FAT
-		wxUint32 pos = ((num >> 1) * 3 + (num & 1));
-		int next = 0;
-		for(size_t i=0; i<fatbufs->Count(); i++) {
-			DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-			if (next == 0 && pos < (wxUint32)fatbuf->GetSize()) {
-				wxUint8 dat = (wxUint8)fatbuf->Get(pos);
-				if (num & 1) {
-					// odd
-					dat = (dat & 0x0f) | ((val & 0x0f) << 4);
-				} else {
-					// even
-					dat = val & 0xff;
-				}
-				fatbuf->Set(pos, dat);
-				pos++;
-				next = 1;
-			}
-			if (next == 1 && pos < (wxUint32)fatbuf->GetSize()) {
-				wxUint8 dat = (wxUint8)fatbuf->Get(pos);
-				if (num & 1) {
-					// odd
-					dat = ((val >> 4) & 0xff);
-				} else {
-					// even
-					dat = (dat & 0xf0) | ((val >> 8) & 0x0f);
-				}
-				fatbuf->Set(pos, dat);
-				break;
-			}
-			pos -= (wxUint32)fatbuf->GetSize();
-		}
-	}
-#else
 	fat->GetDiskBasicFatArea()->SetData12LE(num, val);
-#endif
 }
 
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
 wxUint32 DiskBasicTypeFAT12::GetGroupNumber(wxUint32 num) const
 {
-#if 0
-	wxUint32 new_num = 0;
-	DiskBasicFatBuffers *fatbufs = fat->GetDiskBasicFatBuffers(0);
-	if (!fatbufs) {
-		return INVALID_GROUP_NUMBER;
-	}
-	// 12bit FAT
-	wxUint32 pos = ((num >> 1) * 3 + (num & 1));
-	int next = 0;
-	for(size_t i=0; i<fatbufs->Count(); i++) {
-		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-		if (next == 0 && pos < (wxUint32)fatbuf->GetSize()) {
-			if (num & 1) {
-				// odd
-				new_num = ((fatbuf->Get(pos) & 0xf0) >> 4);
-			} else {
-				// even
-				new_num = fatbuf->Get(pos);
-			}
-			pos++;
-			next = 1;
-		}
-		if (next == 1 && pos < (wxUint32)fatbuf->GetSize()) {
-			if (num & 1) {
-				// odd
-				new_num |= ((wxUint32)fatbuf->Get(pos) << 4);
-			} else {
-				// even
-				new_num |= ((fatbuf->Get(pos) & 0x0f) << 8);
-			}
-			break;
-		}
-		pos -= (wxUint32)fatbuf->GetSize();
-	}
-#else
 	wxUint32 new_num = fat->GetDiskBasicFatArea()->GetData12LE(0, num);
-#endif
 	return new_num;
 }
 
@@ -366,18 +305,28 @@ bool DiskBasicTypeFAT12::CreateBiosParameterBlock(const char *jmp, const char *n
 
 	size_t len;
 
+	wxCharBuffer s_jmp = basic->GetVariousStringParam(wxT("JumpBoot")).To8BitData();
+	if (s_jmp.length() > 0) {
+		jmp = s_jmp.data();
+	}
 	len = strlen(jmp) < sizeof(hed->BS_JmpBoot) ? strlen(jmp) : sizeof(hed->BS_JmpBoot);
 	memcpy(hed->BS_JmpBoot, jmp, len);
-
-	len = strlen(name) < sizeof(hed->BS_OEMName) ? strlen(name) : sizeof(hed->BS_OEMName);
-	memset(hed->BS_OEMName, 0x20, sizeof(hed->BS_OEMName));
-	memcpy(hed->BS_OEMName, name, len);
 
 	hed->BPB_BytsPerSec = wxUINT16_SWAP_ON_BE(basic->GetSectorSize());
 	hed->BPB_SecPerClus = basic->GetSectorsPerGroup();
 	hed->BPB_RsvdSecCnt = wxUINT16_SWAP_ON_BE(basic->GetReservedSectors());
 	hed->BPB_NumFATs = basic->GetNumberOfFats();
 	hed->BPB_RootEntCnt = wxUINT16_SWAP_ON_BE(basic->GetDirEntryCount());
+
+	wxCharBuffer s_name = basic->GetVariousStringParam(wxT("OEMName")).To8BitData();
+	if (s_name.length() > 0) {
+		name = s_name.data();
+	}
+	// 上記パラメータ領域をまたがって設定可能にする
+	len = strlen(name) < 16 ? strlen(name) : 16;
+	memset(hed->BS_OEMName, 0x20, sizeof(hed->BS_OEMName));
+	memcpy(hed->BS_OEMName, name, len);
+
 	len = basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 	hed->BPB_TotSec16 = wxUINT16_SWAP_ON_BE(len);
 	hed->BPB_Media = basic->GetMediaId();
@@ -392,8 +341,11 @@ bool DiskBasicTypeFAT12::CreateBiosParameterBlock(const char *jmp, const char *n
 	return true;
 }
 
-/// 最後のグループ番号を計算する
-wxUint32 DiskBasicTypeFAT12::CalcLastGroupNumber(wxUint32 group_num, int size_remain)
+/// グループ確保時に最後のグループ番号を計算する
+/// @param [in]     group_num	現在のグループ番号
+/// @param [in,out] size_remain	残りのデータサイズ
+/// @return 最後のグループ番号
+wxUint32 DiskBasicTypeFAT12::CalcLastGroupNumber(wxUint32 group_num, int &size_remain)
 {
 	return (group_num != INVALID_GROUP_NUMBER ? basic->GetGroupFinalCode() : group_num);
 }
@@ -405,10 +357,23 @@ bool DiskBasicTypeFAT12::IsRootDirectory(wxUint32 group_num)
 	return (group_num <= 1);
 }
 
+/// サブディレクトリを作成する前にディレクトリ名を編集する
+bool DiskBasicTypeFAT12::RenameOnMakingDirectory(wxString &dir_name)
+{
+	// 空や"."で始まるディレクトリは作成不可
+	if (dir_name.IsEmpty() || dir_name.Left(1) == wxT(".")) {
+		return false;
+	}
+	return true;
+}
+
 /// サブディレクトリを作成した後の個別処理
 void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item)
 {
 	if (group_items.Count() <= 0) return;
+
+	// ファイルサイズをクリア
+	item->SetFileSize(0);
 
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
@@ -416,27 +381,29 @@ void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
-	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, buf);
+	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
 
 	// カレント
 	newitem->CopyData(item->GetData());
 	newitem->SetFileNamePlain(wxT("."));
-	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
-
-	buf += newitem->GetDataSize();
-	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
+	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK);
 
 	// 親
+	buf += newitem->GetDataSize();
+	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
 	if (parent_item) {
 		// 親がサブディレクトリ
 		newitem->CopyData(parent_item->GetData());
 	} else {
 		// 親がルート
 		newitem->CopyData(item->GetData());
-		newitem->SetStartGroup(0);
+		newitem->SetStartGroup(0, 0);
 	}
+	struct tm tm;
+	item->GetFileDateTime(&tm);
+	newitem->SetFileDateTime(&tm);
 	newitem->SetFileNamePlain(wxT(".."));
-	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
+	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK);
 
 	delete newitem;
 }

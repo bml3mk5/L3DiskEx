@@ -11,14 +11,20 @@
 #include "common.h"
 #include <wx/string.h>
 #include <wx/dynarray.h>
+#include <wx/variant.h>
+#include <wx/hashmap.h>
 #include "basiccommon.h"
 #include "diskd88.h"
 
 
 //////////////////////////////////////////////////////////////////////
 
-/// 特別な属性
-class SpecialAttribute
+WX_DECLARE_STRING_HASH_MAP(wxVariant, VariantHash);
+
+//////////////////////////////////////////////////////////////////////
+
+/// 特別な属性などを保持する
+class L3Attribute
 {
 private:
 	int idx;
@@ -29,7 +35,8 @@ private:
 	wxString desc;
 
 public:
-	SpecialAttribute(int n_idx, int n_type, int n_value, int n_mask, const wxString &n_name, const wxString &n_desc);
+	L3Attribute();
+	L3Attribute(int n_idx, int n_type, int n_value, int n_mask, const wxString &n_name, const wxString &n_desc);
 
 	int GetIndex() const { return idx; }
 	int GetType() const { return type; }
@@ -39,17 +46,31 @@ public:
 	const wxString &GetDescription() const { return desc; }
 };
 
-WX_DECLARE_OBJARRAY(SpecialAttribute, ArrayOfSpecialAttribute);
+WX_DECLARE_OBJARRAY(L3Attribute, ArrayOfL3Attribute);
 
 /// 特別な属性のリスト
-class SpecialAttributes : public ArrayOfSpecialAttribute
+class L3Attributes : public ArrayOfL3Attribute
 {
 public:
-	SpecialAttributes();
+	L3Attributes();
 	/// 属性タイプと値に一致するアイテムを返す
-	const SpecialAttribute *Find(int type, int value) const;
+	const L3Attribute *Find(int type, int value) const;
+	/// 属性タイプと値に一致するアイテムを返す
+	const L3Attribute *Find(int type, int mask, int value) const;
+	/// 属性タイプに一致するアイテムを返す
+	const L3Attribute *FindType(int type, int mask) const;
 	/// 属性値に一致するアイテムを返す
-	const SpecialAttribute *Find(int value) const;
+	const L3Attribute *FindValue(int value) const;
+	/// 属性名に一致するアイテムを返す
+	const L3Attribute *Find(int type, const wxString &name) const;
+	/// 属性名に一致するアイテムを返す
+	const L3Attribute *Find(const wxString &name) const;
+	/// 属性名に一致するアイテムを返す 大文字でマッチング
+	const L3Attribute *FindUpperCase(const wxString &name) const;
+	/// 属性名と属性タイプに一致するアイテムを返す 大文字でマッチング
+	const L3Attribute *FindUpperCase(const wxString &name, int type, int mask) const;
+	/// 属性名、属性タイプ、属性値に一致するアイテムを返す 大文字でマッチング
+	const L3Attribute *FindUpperCase(const wxString &name, int type, int mask, int value) const;
 	/// 属性値に一致するアイテムの位置を返す
 	int					GetIndexByValue(int value) const;
 	/// 属性値に一致するアイテムの属性値を返す
@@ -77,26 +98,24 @@ private:
 	wxUint32 group_unused_code;			///< 未使用のコード(0xff)
 	wxUint8 dir_terminate_code;			///< ディレクトリ名の終端コード
 	wxUint8 dir_space_code;				///< ディレクトリ名の空白コード
-	int dir_start_pos;					///< ディレクトリの開始位置（バイト）
+	wxUint8 dir_trimming_code;			///< ディレクトリ名の空白コード（とり除くコード）
+	int dir_start_pos;					///< サブディレクトリの開始位置（バイト）
 	int dir_start_pos_on_root;			///< ルートディレクトリの開始位置（バイト）
 	int dir_start_pos_on_sec;			///< ディレクトリのセクタ毎の開始位置
-	SpecialAttributes special_attrs;	///< 特別な属性
+	L3Attributes special_attrs;			///< 特別な属性
+	L3Attributes attrs_by_extension;	///< 拡張子と属性の関係
 	wxUint8 fillcode_on_format;			///< フォーマット時に埋めるコード
 	wxUint8 fillcode_on_fat;			///< フォーマット時にFAT領域を埋めるコード
 	wxUint8 fillcode_on_dir;			///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
+	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxString valid_chars;				///< ファイル名に設定できる文字
+	wxString invalid_chars;				///< ファイル名に設定できない文字
+	wxString deduplicate_chars;			///< ファイル名に重複指定できない文字
+	bool big_endian;					///< バイトオーダ ビッグエンディアンか
 
 public:
 	DiskBasicFormat();
-#if 0
-	DiskBasicFormat(
-		int	 n_type_number,
-		bool n_has_volume_name,
-		bool n_has_volume_number,
-		bool n_has_volume_date,
-		const SpecialAttributes &n_special_attrs
-	);
-#endif
 	~DiskBasicFormat() {}
 
 	/// フォーマットタイプ番号
@@ -119,6 +138,8 @@ public:
 	wxUint8			GetDirTerminateCode() const	{ return dir_terminate_code; }
 	/// ディレクトリ名の空白コード
 	wxUint8			GetDirSpaceCode() const		{ return dir_space_code; }
+	/// ディレクトリ名の空白コード（とり除くコード）
+	wxUint8			GetDirTrimmingCode() const		{ return dir_trimming_code; }
 	/// ディレクトリの開始位置（バイト）
 	int					GetDirStartPos() const		{ return dir_start_pos; }
 	/// ルートディレクトリの開始位置（バイト）
@@ -126,7 +147,9 @@ public:
 	/// ディレクトリのセクタ毎の開始位置
 	int					GetDirStartPosOnSector() const	{ return dir_start_pos_on_sec; }
 	/// 特別な属性
-	const SpecialAttributes& GetSpecialAttributes() const { return special_attrs; }
+	const L3Attributes& GetSpecialAttributes() const { return special_attrs; }
+	/// 拡張子と属性の関係
+	const L3Attributes& GetAttributesByExtension() const { return attrs_by_extension; }
 	/// フォーマット時に埋めるコード
 	wxUint8				GetFillCodeOnFormat() const	{ return fillcode_on_format; }
 	/// フォーマット時にFAT領域を埋めるコード
@@ -135,11 +158,24 @@ public:
 	wxUint8				GetFillCodeOnDir() const	{ return fillcode_on_dir; }
 	/// ファイル削除時にセットするコード
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
+	/// テキストの終端コード
+	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// ファイル名に設定できる文字
+	const wxString&		GetValidChars() const	{ return valid_chars; }
+	/// ファイル名に設定できない文字
+	const wxString&		GetInvalidChars() const	{ return invalid_chars; }
+	/// ファイル名に重複指定できない文字
+	const wxString&		GetDeduplicateChars() const	{ return deduplicate_chars; }
+	/// バイトオーダ ビッグエンディアンか
+	bool				IsBigEndian() const			{ return big_endian; }
 
+#if 0
 	/// 属性が一致するか
-	const SpecialAttribute *FindSpecialAttr(int type, int value) const;
+	const L3Attribute *FindSpecialAttr(int type, int value) const;
 	/// 属性が一致するか
-	const SpecialAttribute *FindSpecialAttr(int value) const;
+	const L3Attribute *FindSpecialAttr(int value) const;
+	/// 属性名が一致するか
+	const L3Attribute *FindSpecialAttr(const wxString &name) const;
 	/// 特別な属性の位置
 	int				GetIndexByValueOfSpecialAttr(int value) const;
 	/// 特別な属性の属性値を返す
@@ -148,6 +184,7 @@ public:
 	int				GetTypeByIndexOfSpecialAttr(int value) const;
 	/// 特別な属性の属性値を返す
 	int				GetValueByIndexOfSpecialAttr(int idx) const;
+#endif
 
 	/// フォーマットタイプ番号
 	void			SetTypeNumber(DiskBasicFormatType val)	{ type_number = val; }
@@ -169,6 +206,8 @@ public:
 	void			SetDirTerminateCode(wxUint8 val)	{ dir_terminate_code = val; }
 	/// ディレクトリ名の空白コード
 	void			SetDirSpaceCode(wxUint8 val)		{ dir_space_code = val; }
+	/// ディレクトリ名の空白コード（とり除くコード）
+	void			SetDirTrimmingCode(wxUint8 val)		{ dir_trimming_code = val; }
 	/// ディレクトリの開始位置（バイト）
 	void			SetDirStartPos(int val)				{ dir_start_pos = val; }
 	/// ルートディレクトリの開始位置（バイト）
@@ -176,7 +215,9 @@ public:
 	/// ディレクトリのセクタ毎の開始位置
 	void			SetDirStartPosOnSector(int val)		{ dir_start_pos_on_sec = val; }
 	/// 特別な属性
-	void			SetSpecialAttributes(const SpecialAttributes& arr) { special_attrs = arr; }
+	void			SetSpecialAttributes(const L3Attributes& arr) { special_attrs = arr; }
+	/// 拡張子と属性の関係
+	void			SetAttributesByExtension(const L3Attributes& arr) { attrs_by_extension = arr; }
 	/// フォーマット時に埋めるコード
 	void			SetFillCodeOnFormat(wxUint8 val) { fillcode_on_format = val; }
 	/// フォーマット時にFAT領域を埋めるコード
@@ -185,6 +226,16 @@ public:
 	void			SetFillCodeOnDir(wxUint8 val)	{ fillcode_on_dir = val; }
 	/// ファイル削除時にセットするコード
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
+	/// テキストの終端コード
+	void			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// ファイル名に設定できる文字
+	void			SetValidChars(const wxString &str)	{ valid_chars = str; }
+	/// ファイル名に設定できない文字
+	void			SetInvalidChars(const wxString &str)	{ invalid_chars = str; }
+	/// ファイル名に重複指定できない文字
+	void			SetDeduplicateChars(const wxString &str)	{ deduplicate_chars = str; }
+	/// バイトオーダ ビッグエンディアンか
+	void			BigEndian(bool val)				{ big_endian = val; }
 };
 
 WX_DECLARE_OBJARRAY(DiskBasicFormat, DiskBasicFormats);
@@ -199,13 +250,17 @@ private:
 	wxString basic_category_name;				///< BASICカテゴリ名
 	const DiskBasicFormat *format_type;			///< フォーマット種類
 
+	int format_subtype_number;			///< フォーマットサブタイプ番号
 	int sectors_per_group;				///< グループ(クラスタ)サイズ
 	int sides_on_basic;					///< BASICが使用するサイド数
 	int sectors_on_basic;				///< BASICで使用するセクタ数/トラック
 	int tracks_on_basic;				///< BASICで使用するトラック数/サイド
 	int managed_track_number;			///< ファイル管理エリア
+	int groups_per_track;				///< トラック当たりのグループ数
+	int groups_per_sector;				///< セクタ当たりのグループ数
 	int reserved_sectors;				///< 予約済みセクタ数
 	int number_of_fats;					///< ファイル管理エリアの数
+	int valid_number_of_fats;			///< 有効・使用しているファイル管理エリアの数
 	int sectors_per_fat;				///< FAT領域のセクタ数
 	int fat_start_pos;					///< FAT開始位置（バイト）
 	wxUint32 fat_end_group;				///< FAT最大グループ番号
@@ -220,78 +275,33 @@ private:
 	int subdir_group_size;				///< サブディレクトリの初期グループ数
 	wxUint8 dir_terminate_code;			///< ディレクトリ名の終端コード
 	wxUint8 dir_space_code;				///< ディレクトリ名の空白コード
-	int dir_start_pos;					///< ディレクトリの開始位置（バイト）
+	wxUint8 dir_trimming_code;			///< ディレクトリ名の空白コード（とり除くコード）
+	int dir_start_pos;					///< サブディレクトリの開始位置（バイト）
 	int dir_start_pos_on_root;			///< ルートディレクトリの開始位置（バイト）
 	int dir_start_pos_on_sec;			///< ディレクトリのセクタ毎の開始位置
-	int groups_per_dir_entry;			///< １ディレクトリエントリで指定できるグループ数 
-	int id_sector_pos;					///< ID領域のセクタ位置(0 - )
-	wxString id_string;					///< ID領域の先頭コード
-	wxString ipl_string;				///< IPL領域の先頭コード
-	wxString volume_string;				///< ボリューム名
-	SpecialAttributes special_attrs;	///< 特別な属性
+	int group_width;					///< グループ幅（バイト）
+	int groups_per_dir_entry;			///< １ディレクトリエントリで指定できるグループ数
+	L3Attributes special_attrs;			///< 特別な属性
+	L3Attributes attrs_by_extension;	///< 拡張子と属性の関係
 	wxUint8 fillcode_on_format;			///< フォーマット時に埋めるコード
 	wxUint8 fillcode_on_fat;			///< フォーマット時にFAT領域を埋めるコード
 	wxUint8 fillcode_on_dir;			///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
 	wxUint8 media_id;					///< メディアID
-	wxString invalidate_chars;			///< ファイル名に設定できない文字
+	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxString valid_chars;				///< ファイル名に設定できる文字
+	wxString invalid_chars;				///< ファイル名に設定できない文字
+	wxString deduplicate_chars;			///< ファイル名に重複指定できない文字
 	bool data_inverted;					///< データビットが反転してるか
 	bool side_reversed;					///< サイドが反転してるか
 	bool big_endian;					///< バイトオーダ ビッグエンディアンか
 	bool mount_each_sides;				///< 片面のみ使用するOSで各面ごとに独立してアクセスできるか
+	VariantHash various_params;			///< その他固有のパラメータ
 	wxString basic_description;			///< 説明
 
 public:
 	DiskBasicParam();
 	DiskBasicParam(const DiskBasicParam &src);
-#if 0
-	DiskBasicParam(
-		const wxString &	n_basic_type_name,
-		const wxString &	n_basic_category_name,
-		const DiskBasicFormat *n_format_type,
-		int					n_sectors_per_group,
-		int					n_sides_on_basic,
-		int					n_sectors_on_basic,
-		int					n_tracks_on_basic,
-		int					n_managed_track_number,
-		int					n_reserved_sectors,
-		int					n_number_of_fats,
-		int					n_sectors_per_fat,
-		int					n_fat_start_pos,
-		wxUint32			n_fat_end_group,
-		int					n_fat_side_number,
-		const wxArrayInt &	n_reserved_groups,
-		wxUint32			n_group_final_code,
-		wxUint32			n_group_system_code,
-		wxUint32			n_group_unused_code,
-		int					n_dir_start_sector,
-		int					n_dir_end_sector,
-		int					n_dir_entry_count,
-		int					n_subdir_group_size,
-		wxUint8				n_dir_terminate_code,
-		wxUint8				n_dir_space_code,
-		int					n_dir_start_pos,
-		int					n_dir_start_pos_on_root,
-		int					n_dir_start_pos_on_sec,
-		int					n_groups_per_dir_entry,
-		int					n_id_sector_pos,
-		const wxString &	n_id_string,
-		const wxString &	n_ipl_string,
-		const wxString &	n_volume_string,
-		const SpecialAttributes & n_special_attrs,
-		wxUint8				n_fillcode_on_format,
-		wxUint8				n_fillcode_on_fat,
-		wxUint8				n_fillcode_on_dir,
-		wxUint8				n_delete_code,
-		wxUint8				n_media_id,
-		const wxString &	n_invalidate_chars,
-		bool				n_data_inverted,
-		bool				n_side_reversed,
-		bool				n_big_endian,
-		bool				n_mount_each_sides,
-		const wxString &	n_basic_description
-	);
-#endif
 	virtual ~DiskBasicParam() {}
 
 	virtual void		ClearBasicParam();
@@ -306,6 +316,8 @@ public:
 	const wxString&		GetBasicCategoryName() const	{ return basic_category_name; }
 	/// BASIC種類
 	const DiskBasicFormat *GetFormatType() const		{ return format_type; }
+	/// サブタイプ番号
+	int					GetFormatSubTypeNumber() const	{ return format_subtype_number; }
 	/// グループ(クラスタ)サイズ
 	int					GetSectorsPerGroup() const	{ return sectors_per_group; }
 	/// BASICが使用するサイド数
@@ -316,10 +328,16 @@ public:
 	int					GetTracksPerSideOnBasic() const	{ return tracks_on_basic; }
 	/// ファイル管理エリアのあるトラック番号
 	int					GetManagedTrackNumber() const	{ return managed_track_number; }
+	/// トラック当たりのグループ数
+	int					GetGroupsPerTrack() const	{ return groups_per_track; }
+	/// セクタ当たりのグループ数
+	int					GetGroupsPerSector() const	{ return groups_per_sector; }
 	/// 予約済みセクタ数
 	int					GetReservedSectors() const	{ return reserved_sectors; }
 	/// ファイル管理エリアの数
 	int					GetNumberOfFats() const		{ return number_of_fats; }
+	/// 有効・使用しているファイル管理エリアの数
+	int					GetValidNumberOfFats() const	{ return valid_number_of_fats; }
 	/// FAT領域のセクタ数
 	int					GetSectorsPerFat() const	{ return sectors_per_fat; }
 	/// FAT開始セクタ
@@ -350,24 +368,22 @@ public:
 	wxUint8				GetDirTerminateCode() const	{ return dir_terminate_code; }
 	/// ディレクトリ名の空白コード
 	wxUint8				GetDirSpaceCode() const		{ return dir_space_code; }
+	/// ディレクトリ名の空白コード（とり除くコード）
+	wxUint8				GetDirTrimmingCode() const	{ return dir_trimming_code; }
 	/// ディレクトリの開始位置（バイト）
 	int					GetDirStartPos() const		{ return dir_start_pos; }
 	/// ルートディレクトリの開始位置（バイト）
 	int					GetDirStartPosOnRoot() const	{ return dir_start_pos_on_root; }
 	/// ディレクトリのセクタ毎の開始位置
 	int					GetDirStartPosOnSector() const	{ return dir_start_pos_on_sec; }
+	/// グループ幅（バイト） 
+	int					GetGroupWidth() const		{ return group_width; }
 	/// １ディレクトリエントリで指定できるグループ数 
 	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
-	/// ID領域のセクタ位置
-	int					GetIdSectorPos() const		{ return id_sector_pos; }
-	/// ID領域の先頭コード
-	const wxString&		GetIDString() const			{ return id_string; }
-	/// IPL領域の先頭コード
-	const wxString&		GetIPLString() const		{ return ipl_string; }
-	/// ボリューム名
-	const wxString&		GetVolumeString() const		{ return volume_string; }
 	/// 特別な属性
-	const SpecialAttributes& GetSpecialAttributes() const { return special_attrs; }
+	const L3Attributes& GetSpecialAttributes() const { return special_attrs; }
+	/// 拡張子と属性の関係
+	const L3Attributes& GetAttributesByExtension() const { return attrs_by_extension; }
 	/// フォーマット時に埋めるコード
 	wxUint8				GetFillCodeOnFormat() const	{ return fillcode_on_format; }
 	/// フォーマット時にFAT領域を埋めるコード
@@ -378,8 +394,14 @@ public:
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
 	/// メディアID
 	wxUint8				GetMediaId() const			{ return media_id; }
+	/// テキストの終端コード
+	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// ファイル名に設定できる文字
+	const wxString&		GetValidChars() const	{ return valid_chars; }
 	/// ファイル名に設定できない文字
-	const wxString&		GetInvalidateChars() const	{ return invalidate_chars; }
+	const wxString&		GetInvalidChars() const	{ return invalid_chars; }
+	/// ファイル名に重複指定できない文字
+	const wxString&		GetDeduplicateChars() const	{ return deduplicate_chars; }
 	/// データビットが反転してるか
 	bool				IsDataInverted() const		{ return data_inverted; }
 	/// サイドが反転してるか
@@ -392,19 +414,29 @@ public:
 	bool				CanMountEachSides() const;
 	/// 説明
 	const wxString&		GetBasicDescription() const	{ return basic_description; }
+	/// 固有のパラメータ
+	int					GetVariousIntegerParam(const wxString &key) const;
+	/// 固有のパラメータ
+	bool				GetVariousBoolParam(const wxString &key) const;
+	/// 固有のパラメータ
+	wxString			GetVariousStringParam(const wxString &key) const;
 
+#if 0
 	/// 属性が一致するか
-	const SpecialAttribute *FindSpecialAttr(int type, int value) const;
+	const L3Attribute *FindSpecialAttribute(int type, int value) const;
 	/// 属性が一致するか
-	const SpecialAttribute *FindSpecialAttr(int value) const;
+	const L3Attribute *FindSpecialAttribute(int value) const;
+	/// 属性名が一致するか
+	const L3Attribute *FindSpecialAttribute(int type, const wxString &name) const;
 	/// 特別な属性の位置
-	int					GetIndexByValueOfSpecialAttr(int value) const;
+	int					GetIndexByValueOfSpecialAttribute(int value) const;
 	/// 特別な属性の属性値を返す
-	int					GetTypeByValueOfSpecialAttr(int value) const;
+	int					GetTypeByValueOfSpecialAttribute(int value) const;
 	/// 特別な属性の属性タイプを返す
-	int					GetTypeByIndexOfSpecialAttr(int idx) const;
+	int					GetTypeByIndexOfSpecialAttribute(int idx) const;
 	/// 特別な属性の属性値を返す
-	int					GetValueByIndexOfSpecialAttr(int idx) const;
+	int					GetValueByIndexOfSpecialAttribute(int idx) const;
+#endif
 
 	/// BASIC種類名
 	void			SetBasicTypeName(const wxString &str)	{ basic_type_name = str; }
@@ -412,6 +444,8 @@ public:
 	void			SetBasicCategoryName(const wxString &str)	{ basic_category_name = str; }
 	/// BASIC種類
 	void			SetFormatType(const DiskBasicFormat *val)	{ format_type = val; }
+	/// サブタイプ番号
+	void			SetFormatSubTypeNumber(int val)	{ format_subtype_number = val; }
 	/// グループ(クラスタ)サイズ
 	void			SetSectorsPerGroup(int val)		{ sectors_per_group = val; }
 	/// BASICが使用するサイド数
@@ -422,10 +456,16 @@ public:
 	void			SetTracksPerSideOnBasic(int val)		{ tracks_on_basic = val; }
 	/// ファイル管理エリアのあるトラック番号
 	void			SetManagedTrackNumber(int val)	{ managed_track_number = val; }
+	/// トラック当たりのグループ数
+	void			SetGroupsPerTrack(int val)		{ groups_per_track = val; }
+	/// セクタ当たりのグループ数
+	void			SetGroupsPerSector(int val)		{ groups_per_sector = val; }
 	/// 予約済みセクタ数
 	void			SetReservedSectors(int val)		{ reserved_sectors = val; }
 	/// ファイル管理エリアの数
 	void			SetNumberOfFats(int val)		{ number_of_fats = val; }
+	/// 有効・使用しているファイル管理エリアの数
+	void			SetValidNumberOfFats(int val)	{ valid_number_of_fats = val; }
 	/// FAT領域のセクタ数
 	void			SetSectorsPerFat(int val)		{ sectors_per_fat = val; }
 	/// FAT開始位置（バイト）
@@ -442,18 +482,14 @@ public:
 	void			SetGroupSystemCode(wxUint32 val) { group_system_code = val; }
 	/// 未使用のコード
 	void			SetGroupUnusedCode(wxUint32 val) { group_unused_code = val; }
-	/// ID領域のセクタ位置
-	void			SetIDSectorPos(int val)			{ id_sector_pos = val; }
-	/// ID領域の先頭コード
-	void			SetIDString(const wxString &str)		{ id_string = str; }
-	/// IPL領域の先頭コード
-	void			SetIPLString(const wxString &str)		{ ipl_string = str; }
-	/// ボリューム名
-	void			SetVolumeString(const wxString &str)	{ volume_string = str; }
 	/// 特別な属性
-	void			SetSpecialAttributes(const SpecialAttributes &arr) { special_attrs = arr; }
+	void			SetSpecialAttributes(const L3Attributes &arr) { special_attrs = arr; }
+	/// 拡張子と属性の関係
+	void			SetAttributesByExtension(const L3Attributes& arr) { attrs_by_extension = arr; }
 	/// ルートディレクトリ開始セクタ
 	void			SetDirStartSector(int val)		{ dir_start_sector = val; }
+	/// グループ幅（バイト） 
+	void			SetGroupWidth(int val)			{ group_width = val; }
 	/// １ディレクトリエントリで指定できるグループ数 
 	void			SetGroupsPerDirEntry(int val)	{ groups_per_dir_entry = val; }
 	/// ルートディレクトリ終了セクタ
@@ -466,6 +502,8 @@ public:
 	void			SetDirTerminateCode(wxUint8 val)	{ dir_terminate_code = val; }
 	/// ディレクトリ名の空白コード
 	void			SetDirSpaceCode(wxUint8 val)	{ dir_space_code = val; }
+	/// ディレクトリ名の空白コード（とり除くコード）
+	void			SetDirTrimmingCode(wxUint8 val)		{ dir_trimming_code = val; }
 	/// ディレクトリの開始位置（バイト）
 	void			SetDirStartPos(int val)			{ dir_start_pos = val; }
 	/// ルートディレクトリの開始位置（バイト）
@@ -482,8 +520,14 @@ public:
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
 	/// メディアID
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
+	/// テキストの終端コード
+	void 			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// ファイル名に設定できる文字
+	void			SetValidChars(const wxString &str)	{ valid_chars = str; }
 	/// ファイル名に設定できない文字
-	void			SetInvalidateChars(const wxString &str)	{ invalidate_chars = str; }
+	void			SetInvalidChars(const wxString &str)	{ invalid_chars = str; }
+	/// ファイル名に重複指定できない文字
+	void			SetDeduplicateChars(const wxString &str)	{ deduplicate_chars = str; }
 	/// データビットが反転してるか
 	void			DataInverted(bool val)			{ data_inverted = val; }
 	/// サイドが反転してるか
@@ -494,6 +538,8 @@ public:
 	void			MountEachSides(bool val)		{ mount_each_sides = val; }
 	/// 説明
 	void			SetBasicDescription(const wxString &str) { basic_description = str; }
+	/// 固有のパラメータ
+	void			SetVariousParam(const wxString &key, const wxVariant &val);
 
 	/// 説明文でソート
 	static int		SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2);
@@ -546,8 +592,12 @@ private:
 	bool LoadDescription(const wxXmlNode *node, const wxString &locale_name, wxString &desc, wxString &desc_locale);
 
 	bool LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, wxArrayInt &reserved_groups);
-	bool LoadSpecialAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, SpecialAttributes &special_attrs);
-	bool LoadSpecialAttribute(const wxXmlNode *node, const wxString &locale_name, int type, SpecialAttributes &special_attrs);
+	bool LoadL3AttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, L3Attributes &attrs);
+	bool LoadL3Attribute(const wxXmlNode *node, const wxString &locale_name, int type, L3Attributes &attrs);
+
+	bool LoadFileNameChars(const wxXmlNode *node, wxString &val_chars, wxString &inv_chars, wxString &dup_chars, wxString &errmsgs);
+
+	bool LoadVariousParam(const wxXmlNode *node, const wxString &val, wxVariant &nval);
 
 public:
 	DiskBasicTemplates();
@@ -559,7 +609,7 @@ public:
 	/// カテゴリとタイプに一致するパラメータを検索
 	const DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type) const;
 	/// カテゴリが一致し、タイプリストに含まれるパラメータを検索
-	const DiskBasicParam *FindType(const wxString &n_category, const wxArrayString &n_basic_types) const;
+	const DiskBasicParam *FindType(const wxString &n_category, const DiskParamNames &n_basic_types) const;
 	/// カテゴリ、タイプ、サイド数とセクタ数が一致するパラメータを検索
 	const DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors) const;
 	/// DISK BASICフォーマット種類に一致するタイプを検索
@@ -571,7 +621,7 @@ public:
 	/// フォーマット種類を検索
 	const DiskBasicFormat *FindFormat(DiskBasicFormatType format_type) const;
 	/// タイプリストと一致するパラメータを得る
-	size_t FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params) const;
+	size_t FindParams(const DiskParamNames &n_type_names, DiskBasicParamPtrs &params) const;
 	/// カテゴリを検索
 	const DiskBasicCategory *FindCategory(const wxString &n_category) const;
 

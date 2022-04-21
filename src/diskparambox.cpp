@@ -195,8 +195,8 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 		hbox->Add(txtDiskName, 0);
 
 		comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize);
-		for(int i=0; gDiskDensity[i] != NULL; i++) {
-			comDensity->Append(wxGetTranslation(gDiskDensity[i]));
+		for(int i=0; gDiskDensity[i].name != NULL; i++) {
+			comDensity->Append(wxGetTranslation(gDiskDensity[i].name));
 		}
 		comDensity->SetSelection(0);
 		hbox->Add(comDensity, flagsH);
@@ -217,7 +217,7 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 
 	//
 	if (comCategory) comCategory->SetSelection(0);
-	SetTemplateValues();
+	SetTemplateValues(true);
 
 	//
 	if (manual_param) {
@@ -291,6 +291,13 @@ bool DiskParamBox::ValidateAllParam()
 				return false;
 			}
 		}
+	} else {
+		int i = comTemplate->GetSelection();
+		int temp_pos = -1;
+		if (i >= 0) temp_pos = (int)(intptr_t)comTemplate->GetClientData((wxUint32)i);
+		if (temp_pos < 0) {
+			return false;
+		}
 	}
 	if (trk * sid > DISKD88_MAX_TRACKS) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
@@ -332,29 +339,45 @@ void DiskParamBox::OnCategoryChanged(wxCommandEvent& event)
 	} else {
 		gDiskBasicTemplates.FindTypeNames(pos - 1, type_names);
 	}
-	SetTemplateValues();
+	SetTemplateValues(pos <= 0);
 }
 
-void DiskParamBox::SetTemplateValues()
+void DiskParamBox::SetTemplateValues(bool all)
 {
 	if (disk_params != NULL && manual_param == NULL) SetTemplateValuesFromParams();
-	else SetTemplateValuesFromGlobals();
+	else SetTemplateValuesFromGlobals(all);
 }
 
-void DiskParamBox::SetTemplateValuesFromGlobals()
+void DiskParamBox::SetTemplateValuesFromGlobals(bool all)
 {
 	if (!comTemplate) return;
 
 	comTemplate->Clear();
+	if (all) {
+		SetTemplateValuesFromGlobalsSub(-1);
+	} else {
+		SetTemplateValuesFromGlobalsSub(1);
+		if (comTemplate->GetCount() > 0) {
+			wxString str = wxT("----------");
+			comTemplate->Append(str, (void *)-1);
+		}
+		SetTemplateValuesFromGlobalsSub(0);
+	}
+	comTemplate->Append(_("Manual Setting"));
+	comTemplate->SetSelection(0);
+
+	SetParamOfIndex(0);
+}
+
+void DiskParamBox::SetTemplateValuesFromGlobalsSub(int flags)
+{
 	for(size_t i=0; i < gDiskTemplates.Count(); i++) {
 		const DiskParam *item = gDiskTemplates.ItemPtr(i);
-
 		if (type_names.Count() > 0) {
-			bool match = false;
-			const wxArrayString *btypes = &item->GetBasicTypes();
+			const DiskParamName *match = NULL;
 			for(size_t n=0; n<type_names.Count(); n++) {
-				if (btypes->Index(type_names.Item(n)) != wxNOT_FOUND) {
-					match = true;
+				match = item->FindBasicType(type_names.Item(n), flags);
+				if (match) {
 					break;
 				}
 			}
@@ -367,10 +390,6 @@ void DiskParamBox::SetTemplateValuesFromGlobals()
 
 		comTemplate->Append(str, (void *)i);
 	}
-	comTemplate->Append(_("Manual Setting"));
-	comTemplate->SetSelection(0);
-
-	SetParamOfIndex(0);
 }
 
 void DiskParamBox::SetTemplateValuesFromParams()
@@ -416,8 +435,10 @@ void DiskParamBox::SetParamOfIndex(size_t index)
 void DiskParamBox::SetParamOfIndexFromGlobals(size_t index)
 {
 	if (index < (comTemplate->GetCount() - 1)) {
-		const DiskParam *item = gDiskTemplates.ItemPtr((size_t)comTemplate->GetClientData((wxUint32)index));
-		SetParamFromTemplate(item);
+		int temp_pos = (int)(intptr_t)comTemplate->GetClientData((wxUint32)index);
+		const DiskParam *item = NULL;
+		if (temp_pos >= 0) item = gDiskTemplates.ItemPtr((size_t)temp_pos);
+		if (item) SetParamFromTemplate(item);
 	} else {
 		SetParamForManual();
 		if (manual_param) {
@@ -444,7 +465,7 @@ void DiskParamBox::SetParamOfIndexFromParams(size_t index)
 void DiskParamBox::SetParamFromTemplate(const DiskParam *item)
 {
 	SetParamToControl(item);
-	if (comDensity) comDensity->SetSelection(item->GetParamDensity());
+	SetDensity(item->GetParamDensity());
 
 	txtTracks->Enable(false);
 	txtSides->Enable(false);
@@ -524,6 +545,24 @@ bool DiskParamBox::GetParam(DiskParam &param)
 	else return GetParamFromGlobals(param);
 }
 
+void DiskParamBox::SetDensity(int val)
+{
+	if (!comDensity) return;
+
+	int match = DiskD88Disk::FindDensity(val);
+	if (match >= 0) {
+		// 選択肢にある
+		comDensity->SetSelection(match);
+	} else {
+		// 選択肢にない
+		wxString str = wxString::Format(wxT("0x%02x"), val);
+		if (!comDensity->SetStringSelection(str)) {
+			comDensity->Append(str);
+			comDensity->SetStringSelection(str);
+		}
+	}
+}
+
 /// ダイアログのパラメータを取得
 /// @param [out] param
 /// @return true: テンプレートから false:手動設定
@@ -531,7 +570,8 @@ bool DiskParamBox::GetParamFromGlobals(DiskParam &param)
 {
 	size_t index = 0;
 	if (comTemplate && (index = comTemplate->GetSelection()) < (comTemplate->GetCount() - 1)) {
-		param = *gDiskTemplates.ItemPtr((size_t)comTemplate->GetClientData((wxUint32)index));
+		int temp_pos = (int)(intptr_t)comTemplate->GetClientData((wxUint32)index);
+		if (temp_pos >= 0) param = *gDiskTemplates.ItemPtr((size_t)temp_pos);
 		return true;
 	} else {
 		// manual
@@ -560,7 +600,7 @@ bool DiskParamBox::GetParamFromParams(DiskParam &param)
 void DiskParamBox::GetParamForManual(DiskParam &param)
 {
 	// manual
-	SingleDensities sd;
+	DiskParticulars sd;
 	int snum = GetSingleNumber();
 	int strk = 0;
 	int ssid = 0;
@@ -583,12 +623,33 @@ void DiskParamBox::GetParamForManual(DiskParam &param)
 	}
 	if (snum > 0) {
 		// single density
-		SingleDensity s(strk, ssid, GetSingleSectorsPerTrack(), GetSingleSectorSize());
+		DiskParticular s(
+			strk,
+			ssid,
+			-1,
+			GetSingleSectorsPerTrack(),
+			GetSingleSectorSize()
+		);
 		sd.Add(s);
 	}
-	wxArrayString basic_types;
-	param.SetDiskParam(wxT(""), basic_types, false 
-		, GetSidesPerDisk(), GetTracksPerSide(), GetSectorsPerTrack(), GetSectorSize(), GetNumberingSector(), GetDensity(), GetInterleave(), sd, wxT(""), wxT(""));
+	DiskParamNames basic_types;
+	DiskParticulars pt, ps;
+	param.SetDiskParam(wxT(""),
+		basic_types,
+		false,
+		GetSidesPerDisk(),
+		GetTracksPerSide(),
+		GetSectorsPerTrack(),
+		GetSectorSize(),
+		GetNumberingSector(),
+		GetDensity(),
+		GetInterleave(),
+		sd,
+		pt,
+		ps,
+		wxT(""),
+		wxT("")
+	);
 }
 
 /// パラメータをディスクにセット

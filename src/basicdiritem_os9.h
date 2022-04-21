@@ -29,13 +29,14 @@ enum en_file_type_mask_os9 {
 	FILETYPE_MASK_OS9_USER_WRITE = 0x02,
 	FILETYPE_MASK_OS9_USER_READ = 0x01,
 };
-#define FILETYPE_OS9_PERMISSION_MASK 0x3f00000
-#define FILETYPE_OS9_PERMISSION_POS  20
+//#define FILETYPE_OS9_PERMISSION_MASK 0x3f00000
+//#define FILETYPE_OS9_PERMISSION_POS  20
 
 /// File Descriptorエリアのポインタ
 class DiskBasicDirItemOS9FD
 {
 private:
+	DiskBasic			*basic;
 	DiskD88Sector		*sector;
 	directory_os9_fd_t	*fd;
 	bool				fd_ownmake;
@@ -49,49 +50,51 @@ private:
 public:
 	DiskBasicDirItemOS9FD();
 	~DiskBasicDirItemOS9FD();
-	/// 代入
+#ifdef COPYABLE_DIRITEM
+	/// @brief 代入
 	DiskBasicDirItemOS9FD &operator=(const DiskBasicDirItemOS9FD &src);
-	/// 複製
+	/// @brief 複製
 	void Dup(const DiskBasicDirItemOS9FD &src);
-	/// ポインタをセット
-	void Set(DiskD88Sector *n_sector, directory_os9_fd_t *n_fd);
-	/// FDのメモリ確保
+#endif
+	/// @brief ポインタをセット
+	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, directory_os9_fd_t *n_fd);
+	/// @brief FDのメモリ確保
 	void Alloc();
-	/// FDをクリア
+	/// @brief FDをクリア
 	void Clear();
-	/// 有効か
+	/// @brief 有効か
 	bool IsValid() const { return (fd != NULL); }
-	/// 属性を返す
+	/// @brief 属性を返す
 	wxUint8 GetATT() const;
-	/// 属性をセット
+	/// @brief 属性をセット
 	void SetATT(wxUint8 val);
-	/// セグメントのLSNを返す
+	/// @brief セグメントのLSNを返す
 	wxUint32 GetLSN(int idx) const;
-	/// セグメントのセクタ数を返す
+	/// @brief セグメントのセクタ数を返す
 	wxUint16 GetSIZ(int idx) const;
-	/// セグメントにLSNを設定
+	/// @brief セグメントにLSNを設定
 	void SetLSN(int idx, wxUint32  val);
-	/// セグメントにセクタ数を設定
+	/// @brief セグメントにセクタ数を設定
 	void SetSIZ(int idx, wxUint16 val);
-	/// ファイルサイズを返す
+	/// @brief ファイルサイズを返す
 	wxUint32 GetSIZ() const;
-	/// ファイルサイズを設定
+	/// @brief ファイルサイズを設定
 	void SetSIZ(wxUint32 val);
-	/// リンク数を返す
+	/// @brief リンク数を返す
 	wxUint8 GetLNK() const;
-	/// リンク数を設定
+	/// @brief リンク数を設定
 	void SetLNK(wxUint8 val);
-	/// 更新日付を返す
+	/// @brief 更新日付を返す
 	const os9_date_t &GetDAT() const;
-	/// 更新日付をセット
+	/// @brief 更新日付をセット
 	void SetDAT(const os9_date_t &val);
-	/// 更新日付をセット
+	/// @brief 更新日付をセット
 	void SetDAT(const os9_cdate_t &val);
-	/// 作成日付を返す
+	/// @brief 作成日付を返す
 	const os9_cdate_t &GetDCR() const;
-	/// 作成日付をセット
+	/// @brief 作成日付をセット
 	void SetDCR(const os9_cdate_t &val);
-	/// 更新にする
+	/// @brief 更新にする
 	void SetModify();
 };
 
@@ -102,144 +105,168 @@ private:
 	DiskBasicDirItemOS9() : DiskBasicDirItem() {}
 	DiskBasicDirItemOS9(const DiskBasicDirItemOS9 &src) : DiskBasicDirItem(src) {}
 
-	/// File Descriptorエリアのポインタ
+#ifdef COPYABLE_DIRITEM
+	/// @brief 複製
+	void	Dup(const DiskBasicDirItem &src);
+#endif
+
+	/// @brief File Descriptorエリアのポインタ
 	DiskBasicDirItemOS9FD fd;
 
-	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	int		GetFileNameSize(bool *invert = NULL) const;
-	/// 属性１を返す
+	/// @brief ファイル名を格納する位置を返す
+	wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 属性１を返す
 	int		GetFileType1() const;
-	/// 属性１のセット
+	/// @brief 属性１のセット
 	void	SetFileType1(int val);
-	/// 使用しているアイテムか
+	/// @brief 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int		GetFileType2Pos();
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
+//	int		GetFileType2Pos();
+	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1);
 
-	/// ファイル名を設定
-	void	SetFileName(const wxUint8 *filename, size_t length);
-	/// ファイル名を得る
-	void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
+	/// @brief ファイル名を設定
+	void	SetNativeName(wxUint8 *filename, size_t size, size_t length);
+	/// @brief ファイル名を得る
+	void	GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 
-	/// 日付を変換
-	void			ConvDateToTm(const os9_cdate_t &date, struct tm *tm) const;
-	/// 時間を変換
-	void			ConvTimeToTm(const os9_date_t &time, struct tm *tm) const;
-	/// 日付に変換
-	void			ConvTmToDate(const struct tm *tm, os9_cdate_t &date) const;
-	/// 時間に変換
-	void			ConvTmToTime(const struct tm *tm, os9_date_t &time) const;
+	/// @brief 日付を変換
+	void	ConvDateToTm(const os9_cdate_t &date, struct tm *tm) const;
+	/// @brief 時間を変換
+	void	ConvTimeToTm(const os9_date_t &time, struct tm *tm) const;
+	/// @brief 日付に変換
+	void	ConvTmToDate(const struct tm *tm, os9_cdate_t &date) const;
+	/// @brief 時間に変換
+	void	ConvTmToTime(const struct tm *tm, os9_date_t &time) const;
 
 public:
 	DiskBasicDirItemOS9(DiskBasic *basic);
-	DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// 複製
-	void			Dup(const DiskBasicDirItem &src);
-	/// ディレクトリアイテムのチェック
-	bool			Check(bool &last);
+	/// @brief ディレクトリアイテムのチェック
+	bool	Check(bool &last);
 
-	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		GetDefaultInvalidateChars() const;
-	/// ファイル名は必須（空文字不可）か
-	bool			IsFileNameRequired() const { return true; }
+//	/// @brief ファイル名に設定できない文字を文字列にして返す
+//	wxString GetDefaultInvalidateChars() const;
+	/// @brief ファイル名は必須（空文字不可）か
+	bool	IsFileNameRequired() const { return true; }
 
-	/// 削除
-	bool			Delete(wxUint8 code);
+	/// @brief 削除
+	bool	Delete(wxUint8 code);
 
-	/// 属性を設定
-	void			SetFileAttr(const DiskBasicFileType &file_type);
-	/// 属性を返す
+	/// @brief 属性を設定
+	void	SetFileAttr(const DiskBasicFileType &file_type);
+	/// @brief 属性を返す
 	DiskBasicFileType GetFileAttr() const;
 
-//	/// リストの位置から属性を返す(プロパティダイアログ用)
-//	int				CalcFileTypeFromPos(int pos1, int pos2);
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr() const;
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
+	wxString GetFileAttrStr() const;
 
-	/// ファイルサイズをセット
-	void			SetFileSize(int val);
-	/// ファイルサイズを返す
-	int				GetFileSize() const;
-	/// ファイルサイズとグループ数を計算する
-	void			CalcFileSize();
-	/// 指定ディレクトリのすべてのグループを取得
-	void			GetAllGroups(DiskBasicGroups &group_items);
+//	/// @brief ファイルパスから内部ファイル名を生成する インポート時などのダイアログを出す前
+//	bool PreImportDataFile(wxString &filename);
 
-	/// 最初のグループ番号をセット
-	void			SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	wxUint32		GetStartGroup() const;
-	/// 追加のグループ番号をセット FDセクタへのLSNをセット
-	void			SetExtraGroup(wxUint32 val);
-	/// 追加のグループ番号を返す FDセクタへのLSNを返す
-	wxUint32		GetExtraGroup() const;
+	/// @brief ファイルサイズをセット
+	void	SetFileSize(int val);
+	/// @brief ファイルサイズを返す
+	int		GetFileSize() const;
+	/// @brief ファイルサイズとグループ数を計算する
+	void	CalcFileUnitSize(int fileunit_num);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	void	GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
 
-	/// アイテムが日時を持っているか
-	bool			HasDateTime() const { return true; }
-	bool			HasDate() const { return true; }
-	bool			HasTime() const { return true; }
-	/// 日付を返す
-	void			GetFileDate(struct tm *tm) const;
-	/// 時間を返す
-	void			GetFileTime(struct tm *tm) const;
-	/// 日付を返す
-	wxString		GetFileDateStr() const;
-	/// 時間を返す
-	wxString		GetFileTimeStr() const;
-	/// 日付をセット
-	void			SetFileDate(const struct tm *tm);
-	/// 時間をセット
-	void			SetFileTime(const struct tm *tm);
-	/// 日付のタイトル名（ダイアログ用）
-	wxString		GetFileDateTimeTitle() const;
-	/// 日付を返す
-	wxString		GetCDateStr() const;
-	/// 日付をセット
-	void			SetCDate(const struct tm *tm);
+	/// @brief 最初のグループ番号をセット
+	void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	wxUint32 GetStartGroup(int fileunit_num) const;
+	/// @brief 追加のグループ番号をセット FDセクタへのLSNをセット
+	void	SetExtraGroup(wxUint32 val);
+	/// @brief 追加のグループ番号を返す FDセクタへのLSNを返す
+	wxUint32 GetExtraGroup() const;
+	/// @brief 追加のグループ番号を得る
+	void	GetExtraGroups(wxArrayInt &arr) const;
 
-	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize() const;
+	/// @brief チェイン用のセクタをセット
+	void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 
-	/// アイテムを削除できるか
-	bool			IsDeletable() const;
-	/// ファイル名を編集できるか
-	bool			IsFileNameEditable() const;
+	/// @brief アイテムが日時を持っているか
+	bool	HasDateTime() const { return true; }
+	bool	HasDate() const { return true; }
+	bool	HasTime() const { return true; }
+	/// @brief 日付を返す
+	void	GetFileDate(struct tm *tm) const;
+	/// @brief 時間を返す
+	void	GetFileTime(struct tm *tm) const;
+	/// @brief 日付を返す
+	wxString GetFileDateStr() const;
+	/// @brief 時間を返す
+	wxString GetFileTimeStr() const;
+	/// @brief 日付をセット
+	void	SetFileDate(const struct tm *tm);
+	/// @brief 時間をセット
+	void	SetFileTime(const struct tm *tm);
+	/// @brief 日付のタイトル名（ダイアログ用）
+	wxString GetFileDateTimeTitle() const;
+	/// @brief 日付を返す
+	wxString GetCDateStr() const;
+	/// @brief 日付をセット
+	void	SetCDate(const struct tm *tm);
 
-	/// アイテムをコピー
-	void			CopyItem(const DiskBasicDirItem &src);
+	/// @brief ディレクトリアイテムのサイズ
+	size_t	GetDataSize() const;
 
-	/// FDセクタのポインタを返す
+	/// @brief アイテムを削除できるか
+	bool	IsDeletable() const;
+	/// @brief ファイル名を編集できるか
+	bool	IsFileNameEditable() const;
+	/// @brief アイテムをロード・エクスポートできるか
+	bool	IsLoadable() const;
+	/// @brief アイテムをコピー(内部でDnD)できるか
+	bool	IsCopyable() const;
+	/// @brief アイテムを上書きできるか
+	bool	IsOverWritable() const;
+
+	/// @brief アイテムをコピー
+	void	CopyItem(const DiskBasicDirItem &src);
+
+	/// @brief FDセクタのポインタを返す
 	DiskBasicDirItemOS9FD &GetFD() { return fd; }
-	/// FDセクタのポインタを返す
+	/// @brief FDセクタのポインタを返す
 	const DiskBasicDirItemOS9FD &GetFD() const { return fd; }
 
-	/// アイテムの属するセクタを変更済みにする
-	void			SetModify();
+	/// @brief アイテムの属するセクタを変更済みにする
+	void	SetModify();
 
-	/// 文字列の最後のMSBをセット
+	/// @brief 文字列の最後のMSBをセット
 	static size_t	EncodeString(wxUint8 *dst, size_t dlen, const char *src, size_t slen);
-	/// 文字列の最後のMSBをクリア
+	/// @brief 文字列の最後のMSBをクリア
 	static size_t	DecodeString(char *dst, size_t dlen, const wxUint8 *src, size_t slen);
+
+	/// @brief データをエクスポートする前に必要な処理
+	bool	PreExportDataFile(wxString &filename);
+	/// @brief データをインポートする前に必要な処理
+	bool	PreImportDataFile(wxString &filename);
+	/// @brief ファイル名から属性を決定する
+	int		ConvOriginalTypeFromFileName(const wxString &filename) const;
+	/// @brief その他の属性値を設定する
+	void	SetAttr(DiskBasicDirItemAttr &attr);
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ内の属性部分のレイアウトを作成
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// ダイアログ内の値を設定
+	/// @brief ダイアログ内の値を設定
 	void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data);
-	/// 属性を変更した際に呼ばれるコールバック
+	/// @brief 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// 機種依存の属性を設定する
-	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// @brief 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
+	/// @brief ダイアログ入力後のファイル名チェック
+	bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	//@}
 };
 

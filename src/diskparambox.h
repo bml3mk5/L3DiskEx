@@ -110,11 +110,13 @@ public:
 	void OnOK(wxCommandEvent& event);
 
 	// properties
-	void SetTemplateValues();
-	void SetTemplateValuesFromGlobals();
+	void SetTemplateValues(bool all);
+	void SetTemplateValuesFromGlobals(bool all);
+	void SetTemplateValuesFromGlobalsSub(int flags);
 	void SetTemplateValuesFromParams();
 	void SetParamOfIndex(size_t index);
 	void SetParamFromDisk(const DiskD88Disk *disk);
+	void SetDensity(int val);
 	bool GetParam(DiskParam &param);
 	bool GetParamToDisk(DiskD88Disk &disk);
 	wxString GetCategory() const;

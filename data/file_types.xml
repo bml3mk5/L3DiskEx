@@ -12,6 +12,22 @@
 		<Description>CPC DSK format file</Description>
 		<Description lang="ja">CPC DSK形式ファイル</Description>
 	</FileFormatType>
+	<FileFormatType name="fdi">
+		<Description>FDI format file</Description>
+		<Description lang="ja">FDI形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="cqmimg">
+		<Description>CopyQM IMG format file</Description>
+		<Description lang="ja">CopyQM IMG形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="teletd0">
+		<Description>Teledisk TD0 format file</Description>
+		<Description lang="ja">Teledisk TD0形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="difcdim">
+		<Description>DIFC.X DIM format file</Description>
+		<Description lang="ja">DIFC.X DIM形式ファイル</Description>
+	</FileFormatType>
 
 	<FileType ext="d88">
 		<Format type="d88" />
@@ -20,6 +36,18 @@
 	<FileType ext="d77">
 		<Format type="d88" />
 		<Description>D77 file</Description>
+	</FileType>
+	<FileType ext="d68">
+		<Format type="d88" />
+		<Description>D68 file</Description>
+	</FileType>
+	<FileType ext="1dd">
+		<Format type="d88" />
+		<Format type="plain">
+			<DiskTypeHint>1DD-70-16-1</DiskTypeHint>
+			<DiskTypeHint>1DD-80-16-1</DiskTypeHint>
+		</Format>
+		<Description>1DD file</Description>
 	</FileType>
 	<FileType ext="2d">
 		<Format type="plain">
@@ -43,8 +71,13 @@
 		</Format>
 		<Description>2HD file</Description>
 	</FileType>
+	<FileType ext="dim">
+		<Format type="difcdim" />
+		<Description>DIM file</Description>
+	</FileType>
 	<FileType ext="dsk">
 		<Format type="cpcdsk" />
+		<Format type="cqmimg" />
 		<Format type="plain">
 			<DiskTypeHint>2DD-80-9-1</DiskTypeHint>
 			<DiskTypeHint>1DD-80-9-1</DiskTypeHint>
@@ -54,6 +87,10 @@
 			<DiskTypeHint>2D-40-18-1</DiskTypeHint>
 		</Format>
 		<Description>DSK file</Description>
+	</FileType>
+	<FileType ext="fdi">
+		<Format type="fdi" />
+		<Description>FDI file</Description>
 	</FileType>
 	<FileType ext="flp">
 		<Format type="plain">
@@ -69,10 +106,21 @@
 		<Description>HDM file</Description>
 	</FileType>
 	<FileType ext="img">
+		<Format type="cqmimg" />
 		<Format type="plain">
 			<DiskTypeHint>2D-40-16-1</DiskTypeHint>
 			<DiskTypeHint>2HD-77-26-1</DiskTypeHint>
 		</Format>
 		<Description>IMG file</Description>
+	</FileType>
+	<FileType ext="td0">
+		<Format type="teletd0" />
+		<Description>TD0 file</Description>
+	</FileType>
+	<FileType ext="xdf">
+		<Format type="plain">
+			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
+		</Format>
+		<Description>XDF file</Description>
 	</FileType>
 </FileTypes>

@@ -17,8 +17,9 @@ enum en_type_name_x1hu_1 {
 	TYPE_NAME_X1HU_BINARY = 0,
 	TYPE_NAME_X1HU_BASIC,
 	TYPE_NAME_X1HU_ASCII,
-	TYPE_NAME_X1HU_DIRECTORY,
+	TYPE_NAME_X1HU_SWORD,
 	TYPE_NAME_X1HU_RANDOM,
+	TYPE_NAME_X1HU_DIRECTORY,
 	TYPE_NAME_X1HU_END
 };
 enum en_file_type_mask_x1hu {
@@ -28,6 +29,12 @@ enum en_file_type_mask_x1hu {
 	FILETYPE_X1HU_DIRECTORY = 0x80,
 };
 #define FILETYPE_X1HU_MASK (FILETYPE_X1HU_BINARY | FILETYPE_X1HU_BASIC | FILETYPE_X1HU_ASCII | FILETYPE_X1HU_DIRECTORY)
+
+enum en_external_type_x1 {
+	EXTERNAL_X1_DEFAULT = 0,
+	EXTERNAL_X1_RANDOM,
+	EXTERNAL_X1_SWORD
+};
 
 /// X1 Hu-BASIC 属性名2
 extern const char *gTypeNameX1HU_2[];
@@ -56,129 +63,135 @@ private:
 	DiskBasicDirItemX1HU() : DiskBasicDirItem() {}
 	DiskBasicDirItemX1HU(const DiskBasicDirItemX1HU &src) : DiskBasicDirItem(src) {}
 
-	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
-	/// 拡張子を格納する位置を返す
+	/// @brief ファイル名を格納する位置を返す
+	wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
+	/// @brief 拡張子を格納する位置を返す
 	wxUint8 *GetFileExtPos(size_t &len) const;
-//	/// ファイル名を格納するバッファサイズを返す
-//	int		GetFileNameSize(bool *invert = NULL) const; 
-//	/// 拡張子を格納するバッファサイズを返す
-//	int		GetFileExtSize(bool *invert = NULL) const;
-	/// 属性１を返す
+	/// @brief 属性１を返す
 	int		GetFileType1() const;
-	/// 属性２を返す
+	/// @brief 属性２を返す
 	int		GetFileType2() const;
-	/// 属性１のセット
+	/// @brief 属性１のセット
 	void	SetFileType1(int val);
-	/// 属性２のセット
+	/// @brief 属性２のセット
 	void	SetFileType2(int val);
-	/// 使用しているアイテムか
+	/// @brief 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
-	/// 属性を変換
+	/// @brief 属性を変換
 	int		ConvToNativeType(int file_type, int val) const;
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int		ConvFileType1Pos(int native_type) const;
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int		GetFileType1Pos() const;
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int		GetFileType2Pos() const;
-	/// 属性1を得る
+	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
+	int		GetFileType1Pos(int native_type) const;
+//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
+//	int		GetFileType1Pos() const;
+//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
+//	int		GetFileType2Pos() const;
+	/// @brief 属性1を得る
 	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
+	/// @brief 属性2を得る
 	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int		CalcFileTypeFromPos(int pos);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
+	int		CalcFileTypeFromPos(int pos) const;
+
+	/// @brief 最終セクタのサイズを計算してファイルサイズを返す
+	int		RecalcFileSize(DiskBasicGroups &group_items, int occupied_size);
 
 public:
 	DiskBasicDirItemX1HU(DiskBasic *basic);
-	DiskBasicDirItemX1HU(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItemX1HU(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemX1HU(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-	/// ディレクトリアイテムのチェック
-	bool			Check(bool &last);
+	/// @brief ディレクトリアイテムのチェック
+	bool	Check(bool &last);
 
-	/// ファイル名が一致するか
-	bool			IsSameFileName(const DiskBasicFileName &filename) const;
+//	/// @brief ファイル名が一致するか
+//	bool	IsSameFileName(const DiskBasicFileName &filename) const;
 
-	/// 属性を設定
-	void			SetFileAttr(const DiskBasicFileType &file_type);
-	/// ディレクトリを初期化 未使用にする
-	void			InitialData();
+	/// @brief 属性を設定
+	void	SetFileAttr(const DiskBasicFileType &file_type);
+	/// @brief ディレクトリを初期化 未使用にする
+	void	InitialData();
 
-	/// 属性を返す
+	/// @brief 属性を返す
 	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr() const;
+	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
+	wxString GetFileAttrStr() const;
 
-	/// ファイルサイズをセット
-	void			SetFileSize(int val);
-	/// ファイルサイズとグループ数を計算する
-	void			CalcFileSize();
+	/// @brief ファイルサイズをセット
+	void	SetFileSize(int val);
+	/// @brief ファイルサイズを返す
+	int		GetFileSize() const;
+	/// @brief ファイルサイズとグループ数を計算する
+	void	CalcFileUnitSize(int fileunit_num);
 
-	/// 指定ディレクトリのすべてのグループを取得
-	void			GetAllGroups(DiskBasicGroups &group_items);
+	/// @brief 指定ディレクトリのすべてのグループを取得
+	void	GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items);
 
-	/// 最初のグループ番号をセット
-	void			SetStartGroup(wxUint32 val);
-	/// 最初のグループ番号を返す
-	wxUint32		GetStartGroup() const;
+	/// @brief 最初のグループ番号をセット
+	void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+	/// @brief 最初のグループ番号を返す
+	wxUint32 GetStartGroup(int fileunit_num) const;
 
-	/// アイテムが日時を持っているか
-	bool			HasDateTime() const { return true; }
-	bool			HasDate() const { return true; }
-	bool			HasTime() const { return true; }
-	/// アイテムの時間設定を無視することができるか
-	bool			CanIgnoreDateTime() const { return true; }
-	/// 日付を返す
-	void			GetFileDate(struct tm *tm) const;
-	/// 時間を返す
-	void			GetFileTime(struct tm *tm) const;
-	/// 日付を返す
-	wxString		GetFileDateStr() const;
-	/// 時間を返す
-	wxString		GetFileTimeStr() const;
-	/// 日付をセット
-	void			SetFileDate(const struct tm *tm);
-	/// 時間をセット
-	void			SetFileTime(const struct tm *tm);
+	/// @brief アイテムが日時を持っているか
+	bool	HasDateTime() const { return true; }
+	bool	HasDate() const { return true; }
+	bool	HasTime() const { return true; }
+	/// @brief アイテムの時間設定を無視することができるか
+	bool	CanIgnoreDateTime() const { return true; }
+	/// @brief 日付を返す
+	void	GetFileDate(struct tm *tm) const;
+	/// @brief 時間を返す
+	void	GetFileTime(struct tm *tm) const;
+	/// @brief 日付を返す
+	wxString GetFileDateStr() const;
+	/// @brief 時間を返す
+	wxString GetFileTimeStr() const;
+	/// @brief 日付をセット
+	void	SetFileDate(const struct tm *tm);
+	/// @brief 時間をセット
+	void	SetFileTime(const struct tm *tm);
 
-	/// アイテムがアドレスを持っているか
-	bool			HasAddress() const { return true; }
-	/// 開始アドレスを返す
-	int				GetStartAddress() const;
-	/// 実行アドレスを返す
-	int				GetExecuteAddress() const;
-	/// 開始アドレスをセット
-	void			SetStartAddress(int val);
-	/// 実行アドレスをセット
-	void			SetExecuteAddress(int val);
+	/// @brief アイテムがアドレスを持っているか
+	bool	HasAddress() const { return true; }
+	/// @brief 開始アドレスを返す
+	int		GetStartAddress() const;
+	/// @brief 実行アドレスを返す
+	int		GetExecuteAddress() const;
+	/// @brief 開始アドレスをセット
+	void	SetStartAddress(int val);
+	/// @brief 実行アドレスをセット
+	void	SetExecuteAddress(int val);
 
-	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize() const;
+	/// @brief ディレクトリアイテムのサイズ
+	size_t	GetDataSize() const;
 
-	/// ファイルの終端コードをチェックする必要があるか
-	bool			NeedCheckEofCode();
-//	/// データをエクスポートする前に必要な処理
-//	bool			PreExportDataFile(wxString &filename);
-	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
-	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
+	/// @brief ファイルの終端コードをチェックする必要があるか
+	bool	NeedCheckEofCode();
+	/// @brief ファイルの終端コードを返す
+	wxUint8	GetEofCode() const;
+	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
+	int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
+
+//	/// @brief データをエクスポートする前に必要な処理
+//	bool	PreExportDataFile(wxString &filename);
+//	/// @brief データをインポートする前に必要な処理
+//	bool	PreImportDataFile(wxString &filename);
+	/// @brief ファイル名から属性を決定する
+	int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ内の属性部分のレイアウトを作成
+	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// ダイアログ内の値を設定
+	/// @brief ダイアログ内の値を設定
 	void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data);
-	/// 属性を変更した際に呼ばれるコールバック
+	/// @brief 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// 機種依存の属性を設定する
-	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
-	/// ファイルサイズが適正か
+	/// @brief 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
+	/// @brief ファイルサイズが適正か
 	bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit);
 	//@}
 };

@@ -25,7 +25,7 @@ class FileParam;
 /// べたディスクパーサー
 class DiskPlainParser
 {
-private:
+protected:
 	DiskD88File		*file;
 	short			mod_flags;
 	DiskResult		*result;
@@ -38,11 +38,11 @@ private:
 
 public:
 	DiskPlainParser(DiskD88File *file, short mod_flags, DiskResult *result);
-	~DiskPlainParser();
+	virtual ~DiskPlainParser();
 
 	/// チェック
-	int Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
-	int Parse(wxInputStream &istream, const DiskParam *disk_param);
+	virtual int Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+	virtual int Parse(wxInputStream &istream, const DiskParam *disk_param);
 };
 
 #endif /* _DISKPLAIN_PARSER_H_ */

@@ -12,6 +12,8 @@
 #include <wx/frame.h>
 #include <wx/scrolwin.h>
 #include <wx/dynarray.h>
+#include <wx/pen.h>
+#include <wx/brush.h>
 #include "basicfat.h"
 
 
@@ -37,7 +39,8 @@ public:
 	void SetData(wxUint32 offset, const wxArrayInt *arr);
 	void ClearData();
 	void SetGroup(wxUint32 group_num);
-	void SetGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num);
+	void SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
+	void UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
 	void ClearGroup();
 
 	enum en_menu_id
@@ -60,6 +63,12 @@ private:
 	wxUint32   offset;	///< 開始グループ番号
 	wxArrayInt datas;	///< 各グループの状態
 
+	wxPen   pens[FAT_AVAIL_NULLEND];
+
+	wxBrush brushes[FAT_AVAIL_NULLEND];
+	wxBrush brush_select;
+	wxBrush brush_extra;
+
 	wxSize sq;
 	int margin;
 	int lpadding;
@@ -67,6 +76,7 @@ private:
 	int ll;
 
 	void SetGroupBase(wxUint32 group_num, int highlight);
+	void UnsetGroupBase(wxUint32 group_num);
 	void ClearGroupBase();
 
 public:
@@ -79,7 +89,8 @@ public:
 	void SetData(wxUint32 offset, const wxArrayInt *arr);
 	void ClearData();
 	void SetGroup(wxUint32 group_num);
-	void SetGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num);
+	void SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
+	void UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums);
 	void ClearGroup();
 
 	wxDECLARE_EVENT_TABLE();

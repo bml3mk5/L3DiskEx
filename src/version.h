@@ -1,17 +1,17 @@
 ﻿/// @file version.h
 ///
-/// @author Copyright (c) 2015-2018 Sasaji. All rights reserved.
+/// @author Copyright (c) 2015-2019 Sasaji. All rights reserved.
 ///
 
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define APPLICATION_VERSION	"0.3.8"
+#define APPLICATION_VERSION	"0.4.0"
 #define APP_VER_MAJOR	0
-#define APP_VER_MINOR	3
-#define APP_VER_REV	8
+#define APP_VER_MINOR	4
+#define APP_VER_REV	0
 #define APP_VER_BUILD	0
-#define APP_COPYRIGHT	"Copyright (C) 2015-2018 Sasaji"
+#define APP_COPYRIGHT	"Copyright (C) 2015-2019 Sasaji"
 
 #if defined(__MINGW32__)
 #if defined(x86_64) || defined(__x86_64)
@@ -44,7 +44,13 @@
 #define PLATFORM "MacOSX"
 #endif
 #elif defined(__FreeBSD__)
+#ifdef __x86_64
+#define PLATFORM "FreeBSD 64bit"
+#elif __i386
+#define PLATFORM "FreeBSD 32bit"
+#else
 #define PLATFORM "FreeBSD"
+#endif
 #else
 #define PLATFORM "Unknown"
 #endif

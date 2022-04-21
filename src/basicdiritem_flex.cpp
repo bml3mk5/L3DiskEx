@@ -6,6 +6,7 @@
 ///
 
 #include "basicdiritem_flex.h"
+#include <wx/regex.h>
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
@@ -33,8 +34,8 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
 }
-DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -46,61 +47,52 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemFLEX::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemFLEX::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
-	size = len = sizeof(data->flex.name);
-	return data->flex.name; 
+	if (num == 0) {
+		size = len = sizeof(m_data->flex.name);
+		return m_data->flex.name;
+	} else {
+		size = len = 0;
+		return NULL; 
+	}
 }
 
 /// 拡張子を格納する位置を返す
 wxUint8 *DiskBasicDirItemFLEX::GetFileExtPos(size_t &len) const
 {
-	len = sizeof(data->flex.ext);
-	return data->flex.ext;
+	len = sizeof(m_data->flex.ext);
+	return m_data->flex.ext;
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemFLEX::GetFileNameSize(bool *invert) const
-{
-	return (int)sizeof(data->flex.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemFLEX::GetFileExtSize(bool *invert) const
-{
-	return (int)sizeof(data->flex.ext);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemFLEX::GetFileType1() const
 {
-	return data->flex.type;
+	return m_data->flex.type;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemFLEX::SetFileType1(int val)
 {
-	data->flex.type = (val & 0xff);
+	m_data->flex.type = (val & 0xff);
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemFLEX::GetFileType2() const
 {
-	return data->flex.random_access;
+	return m_data->flex.random_access;
 }
 
 /// 属性２を設定
 void DiskBasicDirItemFLEX::SetFileType2(int val)
 {
-	data->flex.random_access = (val & 0xff);
+	m_data->flex.random_access = (val & 0xff);
 }
 
 /// 使用しているアイテムか
 bool DiskBasicDirItemFLEX::CheckUsed(bool unuse)
 {
-	return (data->flex.name[0] != 0 && data->flex.name[0] != 0xff);
+	return (m_data->flex.name[0] != 0 && m_data->flex.name[0] != 0xff);
 }
 
 /// 削除
@@ -108,7 +100,7 @@ bool DiskBasicDirItemFLEX::CheckUsed(bool unuse)
 bool DiskBasicDirItemFLEX::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
-	data->flex.name[0] = code;
+	m_data->flex.name[0] = code;
 	Used(false);
 	return true;
 }
@@ -118,26 +110,28 @@ bool DiskBasicDirItemFLEX::Delete(wxUint8 code)
 /// @return チェックOK
 bool DiskBasicDirItemFLEX::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
 
-	if (data->flex.name[0] == 0) {
+	if (m_data->flex.name[0] == 0) {
 		last = true;
 		return valid;
 	}
 	// 属性 0-3bitはゼロ
-	if (data->flex.type & 0x0f) {
+	if (m_data->flex.type & 0x0f) {
 		valid = false;
 	}
 	return valid;
 }
 
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemFLEX::GetDefaultInvalidateChars() const
 {
 	return wxT(" !\"#$%&'()*+,/:;<=>?@[\\]^{|}~");
 }
+#endif
 
 /// ダイアログ入力前のファイル名文字列を変換 大文字にする
 void DiskBasicDirItemFLEX::ConvertToFileNameStr(wxString &filename) const
@@ -151,6 +145,7 @@ void DiskBasicDirItemFLEX::ConvertFromFileNameStr(wxString &filename) const
 	filename = filename.Upper();
 }
 
+/// 属性を設定
 void DiskBasicDirItemFLEX::SetFileAttr(const DiskBasicFileType &file_type)
 {
 	int ftype = file_type.GetType();
@@ -177,6 +172,7 @@ void DiskBasicDirItemFLEX::SetFileAttr(const DiskBasicFileType &file_type)
 	SetFileType1(val);
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemFLEX::GetFileAttr() const
 {
 	int val = 0;
@@ -232,48 +228,87 @@ wxString DiskBasicDirItemFLEX::GetFileAttrStr() const
 /// ファイルサイズをセット
 void DiskBasicDirItemFLEX::SetFileSize(int val)
 {
-	file_size = val;
-	val = val / (basic->GetSectorSize() - 4);
-	data->flex.total_sectors = wxUINT16_SWAP_ON_LE(val);
+	m_groups.SetSize(val);
+	int sec_size = (basic->GetSectorSize() - 4); 
+	val = (val + sec_size - 1) / sec_size;
+	m_data->flex.total_sectors = wxUINT16_SWAP_ON_LE(val);
 }
 
 /// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemFLEX::CalcFileSize()
+void DiskBasicDirItemFLEX::CalcFileUnitSize(int fileunit_num)
 {
 	if (!IsUsed()) return;
 
+	GetUnitGroups(fileunit_num, m_groups);
+}
+
+/// 指定ディレクトリのすべてのグループを取得
+/// @param [in]  fileunit_num ファイル番号
+/// @param [out] group_items  グループリスト
+void DiskBasicDirItemFLEX::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
+{
 	// セクタ先頭4バイトを除く
 	int sec_size = (basic->GetSectorSize() - 4);
 
-	// ファイルサイズ
-	file_size = wxUINT16_SWAP_ON_LE(data->flex.total_sectors) * sec_size;
-
 	int calc_file_size = 0;
 	int calc_groups = 0;
-//	int calc_last_group = 0;
-//	int calc_last_sector = 0;
-	bool rc = true;
 
-//	DiskD88Disk *disk = basic->GetDisk();
-	directory_flex_t *d = &data->flex;
+	directory_flex_t *d = &m_data->flex;
 
 	int track_num  = d->start_track;
 	int sector_num = d->start_sector;
+	int next_track_num  = 0;
+	int next_sector_num = 0;
+
+	int random_file = GetFileType2();
+	if (random_file > 0) {
+		// ランダムアクセスファイル
+		for(int idx = 0; idx < random_file; idx++) {
+			DiskD88Sector *sector = basic->GetSector(track_num, sector_num);
+			if (!sector) {
+				// error
+				break;
+			}
+			flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
+			next_track_num = p->next_track;
+			next_sector_num = p->next_sector;
+
+			wxUint32 gnum = (wxUint32)type->GetSectorPosFromNumS(track_num, sector_num);
+			m_random_group_nums.Add((int)gnum);
+
+			track_num = next_track_num;
+			sector_num = next_sector_num;
+		}
+	} else {
+		m_random_group_nums.Clear();
+	}
 
 	int limit = basic->GetFatEndGroup() + 1;
-	while(limit >= 0) {
+	while((track_num != 0 || sector_num != 0) && limit >= 0) {
 		DiskD88Sector *sector = basic->GetSector(track_num, sector_num);
 		if (!sector) {
 			// error
-			rc = false;
 			break;
 		}
 		flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
-		track_num = p->next_track;
-		sector_num = p->next_sector;
+		next_track_num = p->next_track;
+		next_sector_num = p->next_sector;
 
 		calc_file_size += sec_size;
 		calc_groups++;
+
+		wxUint32 gnum = (wxUint32)type->GetSectorPosFromNumS(track_num, sector_num);
+		wxUint32 next_gnum = (wxUint32)type->GetSectorPosFromNumS(next_track_num, next_sector_num);
+
+		int side_num = ((sector_num - 1) / basic->GetSectorsPerTrackOnBasic());
+		group_items.Add(gnum, next_gnum, track_num, side_num, sector_num, sector_num);
+
+//		file_size += (sector->GetSectorSize() - 4);
+//		groups++;
+		track_num = next_track_num;
+		sector_num = next_sector_num;
+
+		limit--;
 
 		if (track_num == 0 || sector_num == 0) {
 			// 最終セクタは0パディング部分のサイズを減らす
@@ -284,73 +319,25 @@ void DiskBasicDirItemFLEX::CalcFileSize()
 			}
 			break;
 		}
-
-		limit--;
-	}
-	if (limit < 0) {
-		rc = false;
 	}
 
-	// グループ数を計算
-	if (rc) {
-		file_size = calc_file_size;
-		groups = calc_groups;
-	}
-}
+	group_items.SetNums(calc_groups);
 
-/// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemFLEX::GetAllGroups(DiskBasicGroups &group_items)
-{
-//	bool rc = true;
-
-//	DiskD88Disk *disk = basic->GetDisk();
-	directory_flex_t *d = &data->flex;
-
-	int track_num  = d->start_track;
-	int sector_num = d->start_sector;
-	int next_track_num  = 0;
-	int next_sector_num = 0;
-
-	int limit = basic->GetFatEndGroup() + 1;
-	while((track_num != 0 || sector_num != 0) && limit >= 0) {
-		DiskD88Sector *sector = basic->GetSector(track_num, sector_num);
-		if (!sector) {
-			// error
-//			rc = false;
-			break;
-		}
-		flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
-		next_track_num = p->next_track;
-		next_sector_num = p->next_sector;
-
-		wxUint32 gnum = (wxUint32)basic->GetSectorPosFromNum(track_num, sector_num);
-		wxUint32 next_gnum = (wxUint32)basic->GetSectorPosFromNum(next_track_num, next_sector_num);
-
-		int side_num = ((sector_num - 1) / basic->GetSectorsPerTrackOnBasic());
-		group_items.Add(gnum, next_gnum, track_num, side_num, sector_num, sector_num);
-
-//		file_size += (sector->GetSectorSize() - 4);
-//		groups++;
-
-		track_num = next_track_num;
-		sector_num = next_sector_num;
-
-		limit--;
-	}
-
-	group_items.SetSize(file_size);
-
-//	if (limit < 0) {
-//		rc = false;
+	// ファイルサイズ
+//	int inter_file_size = wxUINT16_SWAP_ON_LE(m_data->flex.total_sectors) * sec_size;
+//	if (inter_file_size == 0) {
+//		inter_file_size = calc_file_size;
 //	}
+	group_items.SetSize(calc_file_size);
+	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
 }
 
 void DiskBasicDirItemFLEX::GetFileDate(struct tm *tm) const
 {
-	tm->tm_year = (data->flex.year % 100);
+	tm->tm_year = (m_data->flex.year % 100);
 	if (tm->tm_year < 80) tm->tm_year += 100;
-	tm->tm_mon = data->flex.month - 1; 
-	tm->tm_mday = data->flex.day;
+	tm->tm_mon = m_data->flex.month - 1; 
+	tm->tm_mday = m_data->flex.day;
 }
 
 void DiskBasicDirItemFLEX::GetFileTime(struct tm *tm) const
@@ -376,9 +363,9 @@ void DiskBasicDirItemFLEX::SetFileDate(const struct tm *tm)
 {
 	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
 
-	data->flex.year = (tm->tm_year % 100);
-	data->flex.month = tm->tm_mon + 1;
-	data->flex.day = tm->tm_mday;
+	m_data->flex.year = (tm->tm_year % 100);
+	m_data->flex.month = tm->tm_mon + 1;
+	m_data->flex.day = tm->tm_mday;
 }
 
 void DiskBasicDirItemFLEX::SetFileTime(const struct tm *tm)
@@ -392,19 +379,19 @@ size_t DiskBasicDirItemFLEX::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemFLEX::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemFLEX::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 	int trk_num = 0;
 	int sec_num = 0;
-	basic->GetNumFromSectorPos(val, trk_num, sec_num);
-	data->flex.start_track = trk_num;
-	data->flex.start_sector = sec_num;
+	type->GetNumFromSectorPosS(val, trk_num, sec_num);
+	m_data->flex.start_track = trk_num;
+	m_data->flex.start_sector = sec_num;
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemFLEX::GetStartGroup() const
+wxUint32 DiskBasicDirItemFLEX::GetStartGroup(int fileunit_num) const
 {
-	wxUint32 val = (wxUint32)basic->GetSectorPosFromNum(data->flex.start_track, data->flex.start_sector);
+	wxUint32 val = (wxUint32)type->GetSectorPosFromNumS(m_data->flex.start_track, m_data->flex.start_sector);
 	return val;
 }
 
@@ -413,69 +400,68 @@ void DiskBasicDirItemFLEX::SetLastGroup(wxUint32 val)
 {
 	int trk_num = 0;
 	int sec_num = 0;
-	basic->GetNumFromSectorPos(val, trk_num, sec_num);
-	data->flex.last_track = trk_num;
-	data->flex.last_sector = sec_num;
+	type->GetNumFromSectorPosS(val, trk_num, sec_num);
+	m_data->flex.last_track = trk_num;
+	m_data->flex.last_sector = sec_num;
 }
 
 /// 最後のグループ番号を返す
 wxUint32 DiskBasicDirItemFLEX::GetLastGroup() const
 {
-	wxUint32 val = (wxUint32)basic->GetSectorPosFromNum(data->flex.last_track, data->flex.last_sector);
+	wxUint32 val = (wxUint32)type->GetSectorPosFromNumS(m_data->flex.last_track, m_data->flex.last_sector);
 	return val;
+}
+
+/// 追加のグループ番号を得る(機種依存)
+void DiskBasicDirItemFLEX::GetExtraGroups(wxArrayInt &arr) const
+{
+	arr = m_random_group_nums;
 }
 
 bool DiskBasicDirItemFLEX::IsDeletable() const
 {
 	return true;
 }
-#if 0
-/// ファイル名を編集できるか
-bool DiskBasicDirItemFLEX::IsFileNameEditable() const
-{
-	return true;
-}
-#endif
 
 /// 最初のトラック番号をセット
 void DiskBasicDirItemFLEX::SetStartTrack(wxUint8 val)
 {
-	data->flex.start_track = val;
+	m_data->flex.start_track = val;
 }
 /// 最初のセクタ番号をセット
 void DiskBasicDirItemFLEX::SetStartSector(wxUint8 val)
 {
-	data->flex.start_sector = val;
+	m_data->flex.start_sector = val;
 }
 /// 最初のトラック番号を返す
 wxUint8 DiskBasicDirItemFLEX::GetStartTrack() const
 {
-	return data->flex.start_track;
+	return m_data->flex.start_track;
 }
 /// 最初のセクタ番号を返す
 wxUint8 DiskBasicDirItemFLEX::GetStartSector() const
 {
-	return data->flex.start_sector;
+	return m_data->flex.start_sector;
 }
 /// 最後のトラック番号をセット
 void DiskBasicDirItemFLEX::SetLastTrack(wxUint8 val)
 {
-	data->flex.last_track = val;
+	m_data->flex.last_track = val;
 }
 /// 最後のセクタ番号をセット
 void DiskBasicDirItemFLEX::SetLastSector(wxUint8 val)
 {
-	data->flex.last_sector = val;
+	m_data->flex.last_sector = val;
 }
 /// 最後のトラック番号を返す
 wxUint8 DiskBasicDirItemFLEX::GetLastTrack() const
 {
-	return data->flex.last_track;
+	return m_data->flex.last_track;
 }
 /// 最後のセクタ番号を返す
 wxUint8 DiskBasicDirItemFLEX::GetLastSector() const
 {
-	return data->flex.last_sector;
+	return m_data->flex.last_sector;
 }
 
 //
@@ -550,9 +536,10 @@ void DiskBasicDirItemFLEX::ChangeTypeInAttrDialog(IntNameBox *parent)
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemFLEX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemFLEX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkUndelete = (wxCheckBox *)parent->FindWindow(IDC_CHECK_UNDELETE);
@@ -572,7 +559,25 @@ bool DiskBasicDirItemFLEX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 		random = parent->GetUserData();
 	}
 
-	DiskBasicDirItem::SetFileAttr(val, random);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), val, random);
+
+	return true;
+}
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemFLEX::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
+{
+	wxFileName fn(filename);
+	if (fn.GetExt().IsEmpty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
+		return false;
+	}
+	wxRegEx re(wxT("[A-Za-z]"));
+	wxString first_char = fn.GetName().Left(1);
+	if (!re.Matches(first_char)) {
+		errormsg = wxString::Format(_("The char '%s' is not able to use the first char of filename."), first_char);
+		return false;
+	}
 
 	return true;
 }

@@ -37,33 +37,37 @@ DiskBasicTypeCDOS::DiskBasicTypeCDOS(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 }
 
 /// FATエリアをチェック
-bool DiskBasicTypeCDOS::CheckFat()
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0>      正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeCDOS::CheckFat(bool is_formatting)
 {
-	bool valid = true;
+	double valid_ratio = 1.0;
 
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	if (!fatbuf) {
-		return false;
+		return -1.0;
 	}
 	struct st_fat_cdos *f = (struct st_fat_cdos *)fatbuf->GetBuffer();
 	if (basic->InvertUint8(f->bits[0]) != 0xff) {
-		valid = false;
+		valid_ratio = 0.1;
 	}
-	wxCharBuffer d_id = basic->GetIDString().To8BitData();
+	wxCharBuffer d_id = basic->GetVariousStringParam(wxT("IDString")).To8BitData();
 	if (d_id.length() > 0) {
 		// FM用はID部分に"FM"とある
 		wxUint8 s_id[sizeof(f->id)];
 		basic->InvertMem(f->id, sizeof(f->id), s_id);
 		if (memcmp(s_id, d_id.data(), d_id.length()) != 0) {
-			valid = false;
+			valid_ratio = 0.1;
 		}
 	}
 
 	// 最終グループ番号
 	basic->SetFatEndGroup(basic->GetTracksPerSide() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() - 1);
 
-	return valid;
+	return valid_ratio;
 }
 
 /// 使用しているグループの位置を得る
@@ -74,12 +78,13 @@ void DiskBasicTypeCDOS::CalcUsedGroupPos(wxUint32 num, int &pos, int &mask)
 }
 
 /// データサイズ分のグループを確保する
-/// @param [in]  item        ディレクトリアイテム
-/// @param [in]  data_size   確保するデータサイズ（バイト）
-/// @param [in]  flags       新規か追加か
-/// @param [out] group_items 確保したセクタリスト
+/// @param [in]  fileunit_num ファイル番号
+/// @param [in]  item         ディレクトリアイテム
+/// @param [in]  data_size    確保するデータサイズ（バイト）
+/// @param [in]  flags        新規か追加か
+/// @param [out] group_items  確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeCDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
+int DiskBasicTypeCDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int file_size = 0;
 	int groups = 0;
@@ -102,7 +107,7 @@ int DiskBasicTypeCDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 	}
 
 	// 開始グループ決定
-	item->SetStartGroup(group_start);
+	item->SetStartGroup(fileunit_num, group_start);
 
 	// 領域を確保する
 	rc = AllocateGroupsSub(item, group_start, remain, sec_size, group_items, file_size, groups);
@@ -111,6 +116,7 @@ int DiskBasicTypeCDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 }
 
 /// データの読み込み/比較処理
+/// @param [in] fileunit_num  ファイル番号
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
 /// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
@@ -120,7 +126,7 @@ int DiskBasicTypeCDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 /// @param [in] sector_num    セクタ番号
 /// @param [in] sector_end    最終セクタ番号
 /// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
-int DiskBasicTypeCDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
+int DiskBasicTypeCDOS::AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
 	int size = (remain_size < sector_size ? remain_size : sector_size);
 
@@ -144,6 +150,61 @@ int DiskBasicTypeCDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istream
 	return size;
 }
 
+/// 内部ファイルをエクスポートする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicTypeCDOS::ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	int osize = (int)istream.GetLength();
+
+	if (item->GetFileAttr().IsAscii()) {
+		// 最終バイトが0かどうかチェック
+		istream.SeekI(-1, wxFromEnd);
+		if (istream.GetC() == 0) {
+			osize--;	// 最終データは出力しない
+		}
+		istream.SeekI(0);
+	}
+
+	temp.SetSize(TEMP_DATA_SIZE);
+	while(osize > 0) {
+		int len = (int)istream.Read(temp.GetData(), temp.GetSize()).LastRead();
+		ostream.Write(temp.GetData(), len > osize ? osize : len);
+		osize -= len;
+	}
+
+	return true;
+}
+
+/// エクスポートしたファイルをベリファイする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicTypeCDOS::ConvertDataForVerify(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+//	int osize = (int)istream.GetLength();
+
+	bool need_null_code = false;
+	if (item->GetFileAttr().IsAscii()) {
+		// 最終バイトが0かどうかチェック
+		istream.SeekI(-1, wxFromEnd);
+		int c = istream.GetC();
+		if (c != 0 && c != 0xff) {
+			need_null_code = true;
+		}
+		istream.SeekI(0);
+	}
+
+	ostream.Write(istream);
+
+	if (need_null_code) {
+		// 最後に$00をつけて出力
+		ostream.PutC(0);
+	}
+	return true;
+}
+
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
@@ -156,7 +217,7 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		wxUint8 *buf = sector->GetSectorBuffer();
 		if (buf) {
-			wxCharBuffer ipl = basic->GetIPLString().To8BitData();
+			wxCharBuffer ipl = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
 			size_t len = ipl.length();
 			if (len > 0) {
 				if (len > 32) len = 32;
@@ -208,9 +269,9 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	f->exdir = basic->InvertUint16(0xffff);
 
 	// ID
-	wxCharBuffer id = basic->GetIDString().To8BitData();
+	wxCharBuffer id = basic->GetVariousStringParam(wxT("IDString")).To8BitData();
 	if (id.length() > 0) {
-		basic->InvertMem((const wxUint8 *)id.data(), id.length(), f->id); 
+		basic->InvertMem((const wxUint8 *)id.data(), id.length(), f->id);
 	}
 
 	// ボリューム番号を設定
@@ -221,7 +282,7 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	if (!data.GetVolumeName().IsEmpty()) {
 		vol_name = data.GetVolumeName().To8BitData();
 	} else {
-		vol_name = basic->GetVolumeString().To8BitData();
+		vol_name = basic->GetVariousStringParam(wxT("VolumeString")).To8BitData();
 	}
 	mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
 	basic->InvertMem(f->volume_name, sizeof(f->volume_name));
@@ -249,7 +310,7 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	//
 	int trk_num, sid_num, sec_num;
 	for (int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {
-		basic->GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
+		GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
 		sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (sector) {
 			sector->Fill(basic->InvertUint8(basic->GetFillCodeOnDir()));
@@ -257,6 +318,16 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	}
 
 	return true;
+}
+
+/// ファイルをセーブする前にデータを変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム（ファイル）
+/// @param [out] ostream      出力先ストリーム
+bool DiskBasicTypeCDOS::ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	// 処理はベリファイと同じ
+	return ConvertDataForVerify(item, istream, ostream);
 }
 
 /// データの書き込み処理

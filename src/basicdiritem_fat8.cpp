@@ -8,6 +8,7 @@
 #include "basicdiritem_fat8.h"
 #include "basicfmt.h"
 #include "basictype.h"
+#include "config.h"
 #include "charcodes.h"
 
 
@@ -37,21 +38,31 @@ const char *gTypeName2[] = {
 DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
+	m_start_address = -1;
+	m_end_address = -1;
+	m_exec_address = -1;
 }
-DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
+	m_start_address = -1;
+	m_end_address = -1;
+	m_exec_address = -1;
 }
 DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
+	m_start_address = -1;
+	m_end_address = -1;
+	m_exec_address = -1;
+
 	Used(CheckUsed(unuse));
 }
 
 /// 使用しているアイテムか
 bool DiskBasicDirItemFAT8::CheckUsed(bool unuse)
 {
-	return (data->name[0] != 0 && data->name[0] != 0xff);
+	return (m_data->name[0] != 0 && m_data->name[0] != 0xff);
 }
 
 /// 属性を設定する
@@ -77,6 +88,7 @@ void DiskBasicDirItemFAT8::SetFileAttr(const DiskBasicFileType &file_type)
 	}
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemFAT8::GetFileAttr() const
 {
 	int t1 = GetFileType1();
@@ -98,66 +110,26 @@ wxString DiskBasicDirItemFAT8::GetFileAttrStr() const
 }
 
 /// ファイルサイズを計算
-void DiskBasicDirItemFAT8::CalcFileSize()
+void DiskBasicDirItemFAT8::CalcFileUnitSize(int fileunit_num)
 {
 	if (!IsUsed()) return;
 
-	int calc_file_size = 0;
-	int calc_groups = 0; 
-	wxUint32 last_group = GetStartGroup();
-//	int last_sector = 0;
-
-	// 8bit FAT
-	bool rc = true;
-	wxUint32 group_num = last_group;
-	bool working = true;
-	int limit = basic->GetFatEndGroup() + 1;
-	while(working) {
-		wxUint32 next_group = type->GetGroupNumber(group_num);
-		if (next_group == group_num) {
-			// 同じポジションならエラー
-			rc = false;
-		} else if (next_group >= basic->GetGroupSystemCode()) {
-			// システム領域はエラー(0xfe - )
-			rc = false;
-		} else if (next_group >= basic->GetGroupFinalCode()) {
-			// 最終グループ(0xc1 - )
-//			last_sector = next_group;
-			calc_file_size += (basic->GetSectorSize() * (next_group - basic->GetGroupFinalCode() + 1));
-			calc_groups++;
-			working = false;
-		} else if (next_group > basic->GetFatEndGroup()) {
-			// グループ番号がおかしい
-			rc = false;
-		} else {
-			calc_file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
-			calc_groups++;
-			last_group = group_num;
-			group_num = next_group;
-			limit--;
-		}
-		working = working && rc && (limit >= 0);
-	}
-	if (limit < 0) {
-		// too large or infinit loop
-		rc = false;
-	}
-
-	if (rc) {
-		file_size = calc_file_size;
-		groups = calc_groups;
-	}
+	GetUnitGroups(fileunit_num, m_groups);
 }
 
 /// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemFAT8::GetAllGroups(DiskBasicGroups &group_items)
+/// @param [in]  fileunit_num ファイル番号
+/// @param [out] group_items  グループリスト
+void DiskBasicDirItemFAT8::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
 {
 //	file_size = 0;
 //	groups = 0; 
+	int calc_file_size = 0;
+	int calc_groups = 0; 
 
 	// 8bit FAT
 	bool rc = true;
-	wxUint32 group_num = GetStartGroup();
+	wxUint32 group_num = GetStartGroup(fileunit_num);
 	bool working = true;
 	int limit = basic->GetFatEndGroup() + 1;
 	while(working) {
@@ -171,28 +143,128 @@ void DiskBasicDirItemFAT8::GetAllGroups(DiskBasicGroups &group_items)
 		} else if (next_group >= basic->GetGroupFinalCode()) {
 			// 最終グループ(0xc1 - )
 			basic->GetNumsFromGroup(group_num, next_group, basic->GetSectorSize(), 0, group_items);
-//			file_size += (sector_size * (next_group - group_final_code + 1));
-//			groups++;
+			calc_file_size += (basic->GetSectorSize() * (next_group - basic->GetGroupFinalCode() + 1));
+			calc_groups++;
+			calc_file_size = RecalcFileSize(group_items, calc_file_size);
 			working = false;
 		} else if (next_group > basic->GetFatEndGroup()) {
 			// グループ番号がおかしい
 			rc = false;
 		} else {
 			basic->GetNumsFromGroup(group_num, next_group, basic->GetSectorSize(), 0, group_items);
-//			file_size += (sector_size * secs_per_group);
-//			groups++;
+			calc_file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
+			calc_groups++;
 			group_num = next_group;
 			limit--;
 		}
 		working = working && rc && (limit >= 0);
 	}
 
-	group_items.SetSize(file_size);
+	group_items.AddNums(calc_groups);
+//	m_file_size += calc_file_size;
+	group_items.AddSize(calc_file_size);
+	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
 
 	if (limit < 0) {
 		// too large or infinit loop
 		rc = false;
 	}
+	if (rc) {
+		// ファイル内部のアドレスを得る
+		TakeAddressesInFile();
+	}
+}
+
+/// 最終セクタのサイズを計算してファイルサイズを返す
+/// @param [in] group_items   グループリスト
+/// @param [in] occupied_size 占有しているファイルサイズ
+/// @return 計算後のファイルサイズ
+int	DiskBasicDirItemFAT8::RecalcFileSize(DiskBasicGroups &group_items, int occupied_size)
+{
+	if (group_items.Count() == 0) return occupied_size;
+
+	DiskBasicGroupItem *litem = &group_items.Last();
+	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	if (!sector) return occupied_size;
+
+	int sector_size = sector->GetSectorSize();
+	int remain_size = ((occupied_size + sector_size - 1) % sector_size) + 1;
+	remain_size = type->CalcDataSizeOnLastSector(this, NULL, NULL, sector->GetSectorBuffer(), sector_size, remain_size);
+
+	occupied_size = occupied_size - sector_size + remain_size;
+	return occupied_size;
+}
+
+/// ファイル内部のアドレスを取り出す
+void DiskBasicDirItemFAT8::TakeAddressesInFile()
+{
+	if (m_groups.Count() == 0 || GetFileType1() != TYPE_NAME_1_MACHINE) {
+		m_start_address = -1;
+		m_end_address = -1;
+		m_exec_address = -1;
+		return;
+	}
+
+	DiskBasicGroupItem *item = &m_groups.Item(0);
+	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	if (!sector) return;
+
+	bool is_bigendian = basic->IsBigEndian();
+
+	// 開始アドレス
+	m_start_address = (int)sector->Get16(3, is_bigendian);
+	// 終了アドレス
+	m_end_address = (int)sector->Get16(1, is_bigendian) + m_start_address - 1;
+
+	item = &m_groups.Last();
+	sector = basic->GetSector(item->track, item->side, item->sector_end);
+	if (!sector) return;
+	// 実行アドレス
+	int remain_size = m_groups.GetSize() % sector->GetSectorSize();
+	if (remain_size >= 2) {
+		m_exec_address = (int)sector->Get16(remain_size - 2, is_bigendian);
+	} else {
+		DiskD88Sector *psector = basic->GetSector(item->track, item->side, item->sector_end - 1);
+		if (psector) {
+			if (remain_size >= 1) {
+				m_exec_address = sector->Get(0) | (int)psector->Get(psector->GetSectorSize() - 1) << 8;
+				if (is_bigendian) m_exec_address = wxUINT32_SWAP_ON_BE(m_exec_address);
+			} else {
+				m_exec_address = (int)psector->Get16(psector->GetSectorSize() - 2, is_bigendian);
+			}
+		}
+	}
+}
+
+/// 開始アドレスを返す
+int DiskBasicDirItemFAT8::GetStartAddress() const
+{
+	return m_start_address;
+}
+
+/// 終了アドレスを返す
+int DiskBasicDirItemFAT8::GetEndAddress() const
+{
+	return m_end_address;
+}
+
+/// 実行アドレスを返す
+int DiskBasicDirItemFAT8::GetExecuteAddress() const
+{
+	return m_exec_address;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemFAT8::ConvFileTypeFromFileName(const wxString &filename) const
+{
+	int ftype = 0;
+	// 拡張子で属性を設定する
+	wxFileName fn(filename);
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	if (sa) {
+		ftype = sa->GetType();
+	}
+	return ftype;
 }
 
 //
@@ -233,19 +305,29 @@ int DiskBasicDirItemFAT8::GetFileType2Pos() const
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemFAT8::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
 {
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
 		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".BAS")) {
+		wxFileName fn(name);
+		const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+		if (!sa) return;
+
+		int ftype = sa->GetType();
+		if ((ftype & (FILE_TYPE_BASIC_MASK | FILE_TYPE_BINARY_MASK)) == (FILE_TYPE_BASIC_MASK | FILE_TYPE_BINARY_MASK)) {
 			file_type_1 = TYPE_NAME_1_BASIC;
 			file_type_2 = TYPE_NAME_2_BINARY;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_1_DATA;
+		} else if ((ftype & (FILE_TYPE_BASIC_MASK | FILE_TYPE_ASCII_MASK)) == (FILE_TYPE_BASIC_MASK | FILE_TYPE_ASCII_MASK)) {
+			file_type_1 = TYPE_NAME_1_BASIC;
 			file_type_2 = TYPE_NAME_2_ASCII;
-		} else if (ext == wxT(".BIN")) {
+		} else if ((ftype & FILE_TYPE_MACHINE_MASK) == FILE_TYPE_MACHINE_MASK) {
 			file_type_1 = TYPE_NAME_1_MACHINE;
 			file_type_2 = TYPE_NAME_2_BINARY;
+		} else if ((ftype & FILE_TYPE_RANDOM_MASK) == FILE_TYPE_RANDOM_MASK) {
+			file_type_1 = TYPE_NAME_1_DATA;
+			file_type_2 = TYPE_NAME_2_RANDOM;
+		} else {
+			file_type_1 = TYPE_NAME_1_DATA;
+			file_type_2 = TYPE_NAME_2_ASCII;
 		}
 	}
 }
@@ -329,14 +411,15 @@ void DiskBasicDirItemFAT8::ChangeTypeInAttrDialog(IntNameBox *parent)
 			}
 		}
 		// 拡張子を付加
-		txtIntName->SetValue(AddExtensionForAttrDialog(selected_idx, txtIntName->GetValue()));
+		txtIntName->SetValue(AddExtension(selected_idx, txtIntName->GetValue()));
 	}
 }
 
 /// 機種依存の属性を設定する
-/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
 /// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemFAT8::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+bool DiskBasicDirItemFAT8::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE1);
 	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
@@ -355,7 +438,7 @@ bool DiskBasicDirItemFAT8::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 		val |= FILE_TYPE_RANDOM_MASK;
 		break;
 	}
-	DiskBasicDirItem::SetFileAttr(val);
+	attr.SetFileAttr(FORMAT_TYPE_UNKNOWN, val);
 
 	return true;
 }
@@ -367,8 +450,8 @@ DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic)
 	: DiskBasicDirItemFAT8(basic)
 {
 }
-DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemFAT8(basic, sector, data)
+DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemFAT8(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -383,10 +466,10 @@ DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int num, int trac
 /// @return チェックOK
 bool DiskBasicDirItemFAT8F::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = true;
-	directory_fat8f_t *p = (directory_fat8f_t *)data;
+	directory_fat8f_t *p = (directory_fat8f_t *)m_data;
 	if (p->name[0] == 0xff) {
 		last = true;
 		return valid;
@@ -401,55 +484,52 @@ bool DiskBasicDirItemFAT8F::Check(bool &last)
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemFAT8F::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemFAT8F::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
 	// 8chars
-	size = len = sizeof(data->fat8f.name);
-	return data->fat8f.name;
+	if (num == 0) {
+		size = len = sizeof(m_data->fat8f.name);
+		return m_data->fat8f.name;
+	} else {
+		size = len = 0;
+		return NULL; 
+	}
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemFAT8F::GetFileNameSize(bool *invert) const
-{
-	return (int)sizeof(data->fat8f.name);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemFAT8F::GetFileType1() const
 {
-	return data->fat8f.type;
+	return m_data->fat8f.type;
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemFAT8F::GetFileType2() const
 {
-	return data->fat8f.type2;
+	return m_data->fat8f.type2;
 }
 
 /// 属性３を返す
 int DiskBasicDirItemFAT8F::GetFileType3() const
 {
-	return data->fat8f.type3;
+	return m_data->fat8f.type3;
 }
 
 /// 属性１を設定
 void DiskBasicDirItemFAT8F::SetFileType1(int val)
 {
-	data->fat8f.type = val & 0xff;
+	m_data->fat8f.type = val & 0xff;
 }
 
 /// 属性２を設定
 void DiskBasicDirItemFAT8F::SetFileType2(int val)
 {
-	data->fat8f.type2 = val & 0xff;
+	m_data->fat8f.type2 = val & 0xff;
 }
 
 /// 属性３を設定
 void DiskBasicDirItemFAT8F::SetFileType3(int val)
 {
-	data->fat8f.type3 = val & 0xff;
+	m_data->fat8f.type3 = val & 0xff;
 }
 
 /// ディレクトリのサイズ
@@ -459,23 +539,52 @@ size_t DiskBasicDirItemFAT8F::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemFAT8F::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemFAT8F::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
-	data->fat8f.start_group = (val & 0xff);
+	m_data->fat8f.start_group = (val & 0xff);
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemFAT8F::GetStartGroup() const
+wxUint32 DiskBasicDirItemFAT8F::GetStartGroup(int fileunit_num) const
 {
-	return data->fat8f.start_group;
+	return m_data->fat8f.start_group;
 }
 
 /// ファイルのサイズ
 void DiskBasicDirItemFAT8F::SetFileSize(int val)
 {
-	// ファイルサイズはセクタサイズ境界で丸める
-	int sector_size = basic->GetSectorSize();
-	file_size = (((val - 1) / sector_size) + 1) * sector_size;
+//	// ファイルサイズはセクタサイズ境界で丸める
+//	int sector_size = basic->GetSectorSize();
+//	m_file_size = val;
+	m_groups.SetSize(val);
+}
+
+#if 0
+/// データをエクスポートする前に必要な処理
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemFAT8F::PreExportDataFile(wxString &filename)
+{
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindType(GetFileAttr().GetType(), -1);
+	if (sa) {
+		// 拡張子部分を付加
+		filename += wxT(".");
+		filename += sa->GetName();
+	}
+	return true;
+}
+#endif
+
+/// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemFAT8F::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		TrimExtensionByExtensionAttr(filename);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
 }
 
 /// ファイルの終端コードをチェックする必要があるか

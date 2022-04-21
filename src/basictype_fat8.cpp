@@ -34,6 +34,37 @@ wxUint32 DiskBasicTypeFAT8::GetGroupNumber(wxUint32 num) const
 	return fat->GetDiskBasicFatArea()->GetData8(0, num);
 }
 
+/// FATエリアをチェック
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFAT8::CheckFat(bool is_formatting)
+{
+	wxUint32 end = basic->GetFatEndGroup() < 0xff ? basic->GetFatEndGroup() : 0xff;
+	wxUint8 *tbl = new wxUint8[end + 1];
+	memset(tbl, 0, end + 1);
+
+	// 同じグループ番号が重複しているか
+	for(wxUint32 pos = 0; pos <= end; pos++) {
+		wxUint32 gnum = GetGroupNumber(pos);
+		if (gnum <= end) {
+			tbl[gnum]++;
+		}
+	}
+	// 同じグループ番号が重複している場合エラー
+	double valid_ratio = 1.0;
+	for(wxUint32 pos = 0; pos <= end; pos++) {
+		if (tbl[pos] > 4) {
+			valid_ratio = -1.0;
+			break;
+		}
+	}
+	delete [] tbl;
+
+	return valid_ratio;
+}
+
 /// セクタデータを指定コードで埋める
 void DiskBasicTypeFAT8::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
@@ -63,8 +94,11 @@ bool DiskBasicTypeFAT8::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	return true;
 }
 
-/// 最後のグループ番号を計算する
-wxUint32 DiskBasicTypeFAT8::CalcLastGroupNumber(wxUint32 group_num, int size_remain)
+/// グループ確保時に最後のグループ番号を計算する
+/// @param [in]     group_num	現在のグループ番号
+/// @param [in,out] size_remain	残りのデータサイズ
+/// @return 最後のグループ番号
+wxUint32 DiskBasicTypeFAT8::CalcLastGroupNumber(wxUint32 group_num, int &size_remain)
 {
 	// 残り使用セクタ数
 	int remain_secs = ((size_remain - 1) / basic->GetSectorSize());
@@ -119,7 +153,7 @@ int DiskBasicTypeFAT8F::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInput
 	// ファイルサイズはセクタサイズ境界なので要計算
 	if (item->NeedCheckEofCode()) {
 		// 終端コードの1つ前までを出力
-		wxUint8 eof_code = basic->InvertUint8(0x1a);
+		wxUint8 eof_code = basic->InvertUint8(basic->GetTextTerminateCode());
 		// ランダムアクセス時は除く
 		int len = sector_size - 1;
 		for(; len >= 0; len--) {

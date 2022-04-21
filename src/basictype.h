@@ -50,7 +50,7 @@ protected:
 
 	int			 free_disk_size;	///< 残りディスクサイズ
 	int			 free_groups;		///< 残りグループサイズ
-	wxArrayInt	 fat_availability;	///< FATの空き状況
+	DiskBasicAvailabillity fat_availability;	///< 使用状況(FAT,グループ単位)
 
 	/// ファイルアクセス時のテンポラリバッファ
 	DiskBasicTempData temp;
@@ -80,15 +80,14 @@ public:
 
 	/// @name check / assign FAT area
 	//@{
+	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
+	virtual double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting) { return 1.0; }
 	/// @brief FATエリアをチェック
-	virtual bool	CheckFat();
+	virtual double 	CheckFat(bool is_formatting) { return 1.0; }
 	/// @brief FATの開始位置を得る
 	void			GetStartNumOnFat(int &track_num, int &side_num, int &sector_num);
 	/// @brief FATの終了位置を得る
 	void			GetEndNumOnFat(int &track_num, int &side_num, int &sector_num);
-
-	/// @brief ディスクから各パラメータを取得
-	virtual int		ParseParamOnDisk(DiskD88Disk *disk) { return 0; }
 
 	/// @brief 管理エリアのトラック番号からグループ番号を計算
 	virtual wxUint32 CalcManagedStartGroup();
@@ -99,17 +98,20 @@ public:
 	/// @brief ルートディレクトリのセクタリストを計算
 	virtual bool	CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items);
 	/// @brief ルートディレクトリのチェック
-	bool			CheckRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, bool is_formatting);
+	double			CheckRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, bool is_formatting);
 	/// @brief ルートディレクトリをアサイン
 	virtual bool	AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	/// @brief ディレクトリのチェック
-	bool			CheckDirectory(bool is_root, const DiskBasicGroups &group_items);
+	double			CheckDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリが空か
 	virtual bool	IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリをアサイン
 	bool			AssignDirectory(bool is_root, const DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	/// @brief ディレクトリエリアのサイズに達したらアサイン終了するか
-	virtual bool	FinishAssigningDirectory(int size) const { return false; }
+	/// @retval  0 : 終了しない
+	/// @retval  1 : 強制的に未使用とする アサインは継続
+	/// @retval -1 : 強制的にアサイン終了する
+	virtual int		FinishAssigningDirectory(int size) const { return 0; }
 	/// @brief ルートディレクトリの開始位置を得る
 	void			GetStartNumOnRootDirectory(int &track_num, int &side_num, int &sector_num);
 	/// @brief ルートディレクトリの終了位置を得る
@@ -125,9 +127,11 @@ public:
 	/// @brief 残りディスクサイズをクリア
 	void			ClearDiskFreeSize();
 	/// @brief 残りディスクサイズを得る(CalcDiskFreeSize()で計算した結果)
-	int				GetFreeDiskSize() const { return free_disk_size; }
+	void			GetFreeDiskSize(int &disk_size, int &group_size) const;
+	/// @brief 残りディスクサイズを得る(CalcDiskFreeSize()で計算した結果)
+	int				GetFreeDiskSize() const;
 	/// @brief 残りグループ数を得る(CalcDiskFreeSize()で計算した結果)
-	int				GetFreeGroupSize() const { return free_groups; }
+	int				GetFreeGroupSize() const;
 	/// @brief FATの空き状況を配列で返す
 	void			GetFatAvailability(wxUint32 *offset, const wxArrayInt **arr) const;
 	//@}
@@ -135,7 +139,11 @@ public:
 	/// @name file chain
 	//@{
 	/// @brief データサイズ分のグループを確保する
+	virtual int		AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
+	/// @brief データサイズ分のグループを確保する
 	virtual int		AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
+	/// @brief グループをつなげる
+	virtual int		ChainGroups(wxUint32 group_num, wxUint32 append_group_num);
 
 	/// @brief グループ番号から開始セクタ番号を得る
 	virtual int		GetStartSectorFromGroup(wxUint32 group_num);
@@ -146,6 +154,19 @@ public:
 	virtual int		CalcDataStartSectorPos();
 	/// @brief スキップするトラック番号
 	virtual int		CalcSkippedTrack();
+
+	/// @brief セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
+	virtual void	GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
+	/// @brief セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
+	virtual void	GetNumFromSectorPosS(int sector_pos, int &track_num, int &sector_num);
+	/// @brief セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
+	virtual void	GetNumFromSectorPosT(int sector_pos, int &track_num, int &sector_num);
+	/// @brief トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+	virtual int		GetSectorPosFromNum(int track, int side, int sector_num, int div_num = 0, int div_nums = 1);
+	/// @brief トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+	virtual int		GetSectorPosFromNumS(int track, int sector_num);
+	/// @brief トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+	virtual int		GetSectorPosFromNumT(int track, int sector_num);
 	//@}
 
 	/// @name directory
@@ -154,12 +175,18 @@ public:
 	virtual bool	IsRootDirectory(wxUint32 group_num);
 	/// @brief サブディレクトリを作成できるか
 	virtual bool	CanMakeDirectory() const { return false; }
+	/// @brief ルートディレクトリのサイズを拡張できるか
+	virtual bool	CanExpandRootDirectory() const { return false; }
+	/// @brief サブディレクトリのサイズを拡張できるか
+	virtual bool	CanExpandDirectory() const { return false; }
 	/// @brief サブディレクトリを作成する前にディレクトリ名を編集する
 	virtual bool	RenameOnMakingDirectory(wxString &dir_name) { return true; }
 	/// @brief サブディレクトリを作成する前の準備を行う
 	virtual bool	PrepareToMakeDirectory(DiskBasicDirItem *item) { return true; }
 	/// @brief サブディレクトリを作成した後の個別処理
 	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item) {}
+	/// @brief ディレクトリ拡張後の個別処理
+	virtual bool	AdditionalProcessOnExpandedDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item) { return true; }
 	//@}
 
 	/// @name format
@@ -177,9 +204,9 @@ public:
 	/// @brief ファイルの最終セクタのデータサイズを求める
 	virtual int		CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size);
 	/// @brief データの読み込み/比較の前処理
-	virtual bool	PrepareToAccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo) { return true; }
+	virtual bool	PrepareToAccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo) { return true; }
 	/// @brief データの読み込み/比較処理
-	virtual int		AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end);
+	virtual int		AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end);
 	/// @brief 内部ファイルをエクスポートする際に内容を変換
 	virtual bool	ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
 	/// @brief エクスポートしたファイルをベリファイする際に内容を変換
@@ -192,8 +219,8 @@ public:
 	virtual bool	SupportWriting() const { return true; }
 	/// @brief ファイルをセーブする前にデータを変換
 	virtual bool	ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
-	/// @brief 最後のグループ番号を計算する
-	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
+	/// @brief グループ確保時に最後のグループ番号を計算する
+	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int &size_remain);
 	/// @brief ファイルをセーブする前の準備を行う
 	virtual bool	PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo) { return true; }
 	/// @brief データの書き込み処理

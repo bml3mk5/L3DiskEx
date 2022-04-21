@@ -52,6 +52,25 @@ void DiskBasicTypeMZBase::CalcDiskFreeSize(bool wrote)
 		fat_availability.Add(fsts);
 	}
 
+	// ディレクトリエントリのグループ
+	const DiskBasicDirItems *items = dir->GetCurrentItems();
+	if (items) {
+		for(size_t idx = 0; idx < items->Count(); idx++) {
+			DiskBasicDirItem *item = items->Item(idx);
+			if (!item || !item->IsUsed()) continue;
+
+			// グループ番号のマップを調べる
+			size_t gcnt = item->GetGroupCount();
+			if (gcnt > 0) {
+				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
+				wxUint32 gnum = gitem->group;
+				if (gnum <= basic->GetFatEndGroup()) {
+					fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;
+				}
+			}
+		}
+	}
+
 	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
 
 	free_disk_size = (int)fsize;

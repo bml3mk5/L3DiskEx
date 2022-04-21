@@ -28,8 +28,10 @@ public:
 
 	/// @name check / assign FAT area
 	//@{
+	/// ディスクから各パラメータを取得＆必要なパラメータを計算
+	double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
 	/// FATエリアをチェック
-	bool	CheckFat();
+	double 	CheckFat(bool is_formatting);
 	//@}
 };
 

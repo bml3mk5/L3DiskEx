@@ -17,7 +17,7 @@
 
 @brief TF-DOSの処理
 
-DiskBasicParam
+DiskBasicParam 固有のパラメータ
 @li IDString  : セクタ1のIPL
 @li VolumeString : FAT領域にあるボリューム名
 @li ReservedGroups : 使用済みにするトラック
@@ -51,13 +51,13 @@ public:
 	/// @name check / assign FAT area
 	//@{
 	/// @brief FATエリアをチェック
-	bool		CheckFat();
+	double 		CheckFat(bool is_formatting);
 	//@}
 
 	/// @name file chain
 	//@{
 	/// @brief データサイズ分のグループを確保する
-	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
+	int			AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
 
 	/// @brief グループ番号から最終セクタ番号を得る
 	int			GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
@@ -77,10 +77,8 @@ public:
 
 	/// @name data access (read / verify)
 	//@{
-//	/// @brief データの読み込み/比較の前処理
-//	bool		PrepareToAccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo);
 	/// @brief データの読み込み/比較処理
-	int			AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end);
+	int			AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end);
 	/// @brief 内部ファイルをエクスポートする際に内容を変換
 	bool		ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
 	/// @brief エクスポートしたファイルをベリファイする際に内容を変換
@@ -91,8 +89,6 @@ public:
 	//@{
 	/// @brief ファイルをセーブする前にデータを変換
 	bool		ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
-//	/// @brief ファイルをセーブする前の準備を行う
-//	bool		PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo);
 	/// @brief データの書き込み処理
 	int			WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end);
 	//@}

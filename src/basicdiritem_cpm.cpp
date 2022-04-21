@@ -39,30 +39,30 @@ enum en_type_name_cpm_2 {
 DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
-	// グループ番号の幅は最大グループ番号から判定
-	group_width = basic->GetFatEndGroup() >= 256 ? 2 : 1;
+	// グループ番号の幅
+	group_width = basic->GetGroupWidth();
 	group_entries = basic->GetGroupsPerDirEntry() >= 8 ? basic->GetGroupsPerDirEntry() : (16 / group_width);
-	external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
+	m_external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
 
 	next_item = NULL;
 }
-DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
-	// グループ番号の幅は最大グループ番号から判定
-	group_width = basic->GetFatEndGroup() >= 256 ? 2 : 1;
+	// グループ番号の幅
+	group_width = basic->GetGroupWidth();
 	group_entries = basic->GetGroupsPerDirEntry() >= 8 ? basic->GetGroupsPerDirEntry() : (16 / group_width);
-	external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
+	m_external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
 
 	next_item = NULL;
 }
 DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
-	// グループ番号の幅は最大グループ番号から判定
-	group_width = basic->GetFatEndGroup() >= 256 ? 2 : 1;
+	// グループ番号の幅
+	group_width = basic->GetGroupWidth();
 	group_entries = basic->GetGroupsPerDirEntry() >= 8 ? basic->GetGroupsPerDirEntry() : (16 / group_width);
-	external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
+	m_external_attr = GetFileTypeByExt(0, GetFileExtPlainStr());
 
 	next_item = NULL;
 
@@ -70,47 +70,36 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int num, int track, i
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemCPM::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemCPM::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
-	size = len = sizeof(data->cpm.name);
-	return data->cpm.name; 
+	if (num == 0) {
+		size = len = sizeof(m_data->cpm.name);
+		return m_data->cpm.name;
+	} else {
+		size = len = 0;
+		return NULL; 
+	}
 }
 
 /// 拡張子を格納する位置を返す
 wxUint8 *DiskBasicDirItemCPM::GetFileExtPos(size_t &len) const
 {
-	len = sizeof(data->cpm.ext);
-	return data->cpm.ext; 
+	len = sizeof(m_data->cpm.ext);
+	return m_data->cpm.ext;
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemCPM::GetFileNameSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->cpm.name);
-}
-
-/// 拡張子を格納するバッファサイズを返す
-int DiskBasicDirItemCPM::GetFileExtSize(bool *invert) const
-{
-	if (invert) *invert = basic->IsDataInverted();
-	return (int)sizeof(data->cpm.ext);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemCPM::GetFileType1() const
 {
-	return basic->InvertUint8(data->cpm.type);
+	return basic->InvertUint8(m_data->cpm.type);
 }
 
 /// 属性２を返す
 int	DiskBasicDirItemCPM::GetFileType2() const
 {
 	int val = 0;
-	wxUint8 ext[sizeof(data->cpm.ext) + 1];
-	basic->InvertMem(data->cpm.ext, sizeof(data->cpm.ext), ext);
+	wxUint8 ext[sizeof(m_data->cpm.ext) + 1];
+	basic->InvertMem(m_data->cpm.ext, sizeof(m_data->cpm.ext), ext);
 
 	val |= (ext[0] & 0x80 ? FILE_TYPE_READONLY_MASK : 0);	// read only
 	val |= (ext[1] & 0x80 ? FILE_TYPE_SYSTEM_MASK : 0);	// system
@@ -120,14 +109,15 @@ int	DiskBasicDirItemCPM::GetFileType2() const
 
 	val = GetFileTypeByExt(val, extstr);
 
-	val |= external_attr;
+	val |= m_external_attr;
 
 	return val;
 }
 
 int DiskBasicDirItemCPM::GetFileTypeByExt(int val, const wxString &ext) const
 {
-	if (ext.Upper() == wxT("COM")) {
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(ext, FILE_TYPE_BINARY_MASK, 0x3f);
+	if (sa) {
 		val |= FILE_TYPE_BINARY_MASK;
 	}
 	return val;
@@ -136,26 +126,26 @@ int DiskBasicDirItemCPM::GetFileTypeByExt(int val, const wxString &ext) const
 /// 属性１を設定
 void DiskBasicDirItemCPM::SetFileType1(int val)
 {
-	data->cpm.type = basic->InvertUint8(val);
+	m_data->cpm.type = basic->InvertUint8(val);
 }
 
 /// 属性２を設定
 void DiskBasicDirItemCPM::SetFileType2(int val)
 {
-	if (basic->IsDataInverted()) mem_invert(data->cpm.ext, sizeof(data->cpm.ext));	// invert
+	if (basic->IsDataInverted()) mem_invert(m_data->cpm.ext, sizeof(m_data->cpm.ext));	// invert
 
-	data->cpm.ext[0] = (data->cpm.ext[0] & 0x7f) | (val & FILE_TYPE_READONLY_MASK ? 0x80 : 0);
-	data->cpm.ext[1] = (data->cpm.ext[1] & 0x7f) | (val & FILE_TYPE_SYSTEM_MASK ? 0x80 : 0);
-	data->cpm.ext[2] = (data->cpm.ext[2] & 0x7f) | (val & FILE_TYPE_ARCHIVE_MASK ? 0x80 : 0);
-	external_attr = (val & FILE_TYPE_BINARY_MASK);
+	m_data->cpm.ext[0] = (m_data->cpm.ext[0] & 0x7f) | (val & FILE_TYPE_READONLY_MASK ? 0x80 : 0);
+	m_data->cpm.ext[1] = (m_data->cpm.ext[1] & 0x7f) | (val & FILE_TYPE_SYSTEM_MASK ? 0x80 : 0);
+	m_data->cpm.ext[2] = (m_data->cpm.ext[2] & 0x7f) | (val & FILE_TYPE_ARCHIVE_MASK ? 0x80 : 0);
+	m_external_attr = (val & FILE_TYPE_BINARY_MASK);
 
-	if (basic->IsDataInverted()) mem_invert(data->cpm.ext, sizeof(data->cpm.ext));	// invert
+	if (basic->IsDataInverted()) mem_invert(m_data->cpm.ext, sizeof(m_data->cpm.ext));	// invert
 }
 
 /// ファイル名を得る
-void DiskBasicDirItemCPM::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
+void DiskBasicDirItemCPM::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
 {
-	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
+	DiskBasicDirItem::GetNativeFileName(name, nlen, ext, elen);
 
 	// 拡張子部分のMSBは属性ビットなので除く
 	for(size_t en = 0; en < elen; en++) {
@@ -167,42 +157,43 @@ void DiskBasicDirItemCPM::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext,
 /// @return 拡張子
 wxString DiskBasicDirItemCPM::GetFileExtPlainStr() const
 {
-	if (!data) return wxT("");
+	if (!m_data) return wxT("");
 
-	wxUint8 ext[sizeof(data->cpm.ext) + 1];
-	basic->InvertMem(data->cpm.ext, sizeof(data->cpm.ext), ext);
-	for(size_t i=0; i<sizeof(data->cpm.ext); i++) {
+	wxUint8 ext[sizeof(m_data->cpm.ext) + 1];
+	basic->InvertMem(m_data->cpm.ext, sizeof(m_data->cpm.ext), ext);
+	for(size_t i=0; i<sizeof(m_data->cpm.ext); i++) {
 		ext[i] &= 0x7f;
 	}
-	return wxString(ext, sizeof(data->cpm.ext));
+	return wxString(ext, sizeof(m_data->cpm.ext));
 }
 
 /// ファイル名を設定
 /// @param [in]  filename ファイル名
+/// @param [in]  size     バッファサイズ
 /// @param [in]  length   長さ
 /// @note filename はデータビットが反転している場合あり
-void DiskBasicDirItemCPM::SetFileName(const wxUint8 *filename, size_t length)
+void DiskBasicDirItemCPM::SetNativeName(wxUint8 *filename, size_t size, size_t length)
 {
-	DiskBasicDirItem::SetFileName(filename, length);
+	DiskBasicDirItem::SetNativeName(filename, size, length);
 
 	// 複数ある時
 	if (next_item) {
-		next_item->SetFileName(filename, length);
+		next_item->SetNativeName(filename, size, length);
 	}
 }
 
 /// 拡張子を設定
 /// @param [in]  fileext  拡張子
+/// @param [in]  size     バッファサイズ
 /// @param [in]  length   長さ
 /// @note fileext はデータビットが反転している場合あり
-void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, size_t length)
+void DiskBasicDirItemCPM::SetNativeExt(wxUint8 *fileext, size_t size, size_t length)
 {
 	wxUint8 *e;
-	size_t s, l, el;
-	GetFileNamePos(s, l);
+	size_t el;
 	e = GetFileExtPos(el);
 
-	if (el > (size_t)length) el = (size_t)length;
+	if (el > size) el = size;
 
 	for(size_t i = 0; i < el; i++) {
 		// MSBは属性ビットなのでのこす
@@ -211,15 +202,17 @@ void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, size_t length)
 
 	// 複数ある時
 	if (next_item) {
-		next_item->SetFileExt(fileext, length);
+		next_item->SetNativeExt(fileext, size, length);
 	}
 }
 
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemCPM::GetDefaultInvalidateChars() const
 {
 	return wxT(" \"*,:;<=>?[\\]");
 }
+#endif
 
 /// ダイアログ入力前のファイル名文字列を変換 大文字にする
 void DiskBasicDirItemCPM::ConvertToFileNameStr(wxString &filename) const
@@ -259,14 +252,14 @@ bool DiskBasicDirItemCPM::Delete(wxUint8 code)
 /// @return チェックOK
 bool DiskBasicDirItemCPM::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	bool valid = false;
 	// ユーザIDが0～15でファイル名がオール0ならダメ
 	if (GetFileType1() < 0x10) {
-		wxUint8 name[sizeof(data->cpm.name) + 1];
-		basic->InvertMem(data->cpm.name, sizeof(data->cpm.name), name);
-		for(size_t n=0; n<sizeof(data->cpm.name); n++) {
+		wxUint8 name[sizeof(m_data->cpm.name) + 1];
+		basic->InvertMem(m_data->cpm.name, sizeof(m_data->cpm.name), name);
+		for(size_t n=0; n<sizeof(m_data->cpm.name); n++) {
 			if (name[n] != 0) {
 				valid = true;
 				break;
@@ -281,9 +274,10 @@ bool DiskBasicDirItemCPM::Check(bool &last)
 	return valid;
 }
 
+/// 属性を設定
 void DiskBasicDirItemCPM::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	SetFileType1(file_type.GetOrigin());
+	SetFileType1(file_type.GetFormat() == basic->GetFormatTypeNumber() ? file_type.GetOrigin() : 0);
 	SetFileType2(file_type.GetType());
 
 	// 複数ある場合
@@ -292,6 +286,7 @@ void DiskBasicDirItemCPM::SetFileAttr(const DiskBasicFileType &file_type)
 	}
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemCPM::GetFileAttr() const
 {
 	return DiskBasicFileType(basic->GetFormatTypeNumber(), GetFileType2(), GetFileType1());
@@ -305,6 +300,8 @@ wxString DiskBasicDirItemCPM::GetFileAttrStr() const
 
 	if (val & FILE_TYPE_BINARY_MASK) {
 		str += wxGetTranslation(gTypeNameCPM_2[TYPE_NAME_CPM_BINARY]);
+	} else {
+		str += wxGetTranslation(gTypeNameCPM_2[TYPE_NAME_CPM_ASCII]);
 	}
 	if (val & FILE_TYPE_READONLY_MASK) {
 		if (!str.IsEmpty()) str += wxT(", ");
@@ -324,58 +321,80 @@ wxString DiskBasicDirItemCPM::GetFileAttrStr() const
 /// ファイルサイズをセット
 void DiskBasicDirItemCPM::SetFileSize(int val)
 {
-	file_size = ((val / SECTOR_UNIT_CPM) * SECTOR_UNIT_CPM);
+	m_groups.SetSize(val);
 }
 
 /// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemCPM::CalcFileSize()
+void DiskBasicDirItemCPM::CalcFileUnitSize(int fileunit_num)
 {
-	if (IsUsed()) {
-		file_size = 0;
+	if (!IsUsed())  return;
 
-		int bytes_per_group = basic->GetSectorSize() * basic->GetSectorsPerGroup();
-
-		for(int map_pos=0; map_pos < group_entries; map_pos++) {
-			if (GetGroup(map_pos) == 0) break;
-			file_size += bytes_per_group;
-			groups++;
-		}
-
-		if (next_item) {
-			// ファイルには続きがある
-			next_item->CalcFileSize();
-			file_size += next_item->GetFileSize();
-			groups += next_item->GetGroupSize();
-		} else {
-			// ファイル終り
-			file_size = (GetExtentNumber() * SECTOR_UNIT_CPM + GetRecordNumber()) * SECTOR_UNIT_CPM;
-			// ファイルサイズは1エントリ分にする
-			int group_size = (bytes_per_group * group_entries);
-			if (file_size > 0) file_size = ((file_size + group_size - 1) % group_size) + 1;
-		}
-	}
+	GetUnitGroups(fileunit_num, m_groups);
 }
 
 /// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemCPM::GetAllGroups(DiskBasicGroups &group_items)
+void DiskBasicDirItemCPM::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
 {
+	int calc_file_size = 0;
+	int calc_groups = 0;
+
 	int bytes_per_group = basic->GetSectorSize() * basic->GetSectorsPerGroup();
+
 	// グループ数を計算
 	int map_size = GetGroupEntries();
-	int remain_size = file_size;
+	int group_size = (bytes_per_group * map_size);
+	int remain_size = (GetExtentNumber() * SECTOR_UNIT_CPM + GetRecordNumber()) * SECTOR_UNIT_CPM;
+	// ファイルサイズは1エントリ分にする
+	remain_size = ((remain_size + group_size - 1) % group_size) + 1;
 
 	for(int map_pos=0; map_pos < map_size; map_pos++) {
 		wxUint32 group_num = GetGroup(map_pos);
 		if (group_num == 0) break;
-
 		basic->GetNumsFromGroup(group_num, 0, basic->GetSectorSize(), remain_size, group_items);
+
+		calc_file_size += (remain_size < bytes_per_group ? remain_size : bytes_per_group);
+		calc_groups++;
+
 		remain_size -= bytes_per_group;
 	}
+	group_items.AddSize(calc_file_size);
+	group_items.AddNums(calc_groups);
 
 	if (next_item) {
 		// ファイルには続きがある
-		next_item->GetAllGroups(group_items);
+		next_item->GetUnitGroups(fileunit_num, group_items);
+	} else {
+		// ファイル終り
+
+		// グループサイズ
+		group_items.SetSizePerGroup(bytes_per_group);
+		// 最終セクタのサイズを計算
+		group_items.SetSize(RecalcFileSize(group_items, (int)group_items.GetSize()));
 	}
+}
+
+/// 最終セクタのサイズを計算してファイルサイズを返す
+/// @param [in] group_items   グループリスト
+/// @param [in] occupied_size 占有サイズ
+/// @return 計算後のファイルサイズ
+int DiskBasicDirItemCPM::RecalcFileSize(DiskBasicGroups &group_items, int occupied_size)
+{
+	if (group_items.Count() == 0) return occupied_size;
+
+	DiskBasicGroupItem *litem = &group_items.Last();
+	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	if (!sector) return occupied_size;
+
+	int sector_size = sector->GetSectorSize();
+	int remain_size = ((occupied_size + SECTOR_UNIT_CPM - 1) % SECTOR_UNIT_CPM) + 1;
+	int unit_pos = (((occupied_size + sector_size - 1) % sector_size) / SECTOR_UNIT_CPM);
+	wxUint8 *buf = sector->GetSectorBuffer();
+	buf += (unit_pos * SECTOR_UNIT_CPM);
+	remain_size = type->CalcDataSizeOnLastSector(this, NULL, NULL, buf, SECTOR_UNIT_CPM, remain_size);
+
+	occupied_size = occupied_size - SECTOR_UNIT_CPM + remain_size;
+
+	return occupied_size;
 }
 
 /// ディレクトリアイテムのサイズ
@@ -387,7 +406,7 @@ size_t DiskBasicDirItemCPM::GetDataSize() const
 /// ファイルの終端コードをチェックする必要があるか
 bool DiskBasicDirItemCPM::NeedCheckEofCode()
 {
-	return (external_attr == 0);
+	return (m_external_attr == 0);
 }
 
 /// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
@@ -398,21 +417,22 @@ int DiskBasicDirItemCPM::RecalcFileSizeOnSave(wxInputStream *istream, int file_s
 		// ただし、ファイルサイズが128バイトと合うなら終端記号は不要
 		if ((file_size % SECTOR_UNIT_CPM) != 0) {
 			file_size = CheckEofCode(istream, file_size);
+			file_size--;
 		}
 	}
 	return file_size;
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemCPM::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemCPM::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemCPM::GetStartGroup() const
+wxUint32 DiskBasicDirItemCPM::GetStartGroup(int fileunit_num) const
 {
 	wxUint32 val = 0;
-	val = group_width > 1 ? wxUINT16_SWAP_ON_BE(data->cpm.map.w[0]) : data->cpm.map.b[0];
+	val = group_width > 1 ? wxUINT16_SWAP_ON_BE(m_data->cpm.map.w[0]) : m_data->cpm.map.b[0];
 	if (basic->IsDataInverted()) val ^= (group_width > 1 ? 0xffff : 0xff);	// invert
 	return val;
 }
@@ -421,13 +441,6 @@ bool DiskBasicDirItemCPM::IsDeletable() const
 {
 	return true;
 }
-#if 0
-/// ファイル名を編集できるか
-bool DiskBasicDirItemCPM::IsFileNameEditable() const
-{
-	return true;
-}
-#endif
 
 /// グループ番号をセット
 void DiskBasicDirItemCPM::SetGroup(int pos, wxUint32 val)
@@ -437,9 +450,9 @@ void DiskBasicDirItemCPM::SetGroup(int pos, wxUint32 val)
 	if (basic->IsDataInverted()) val = ~val;	// invert
 
 	if (group_width > 1) {
-		data->cpm.map.w[pos] = wxUINT16_SWAP_ON_BE(val);
+		m_data->cpm.map.w[pos] = wxUINT16_SWAP_ON_BE(val);
 	} else {
-		data->cpm.map.b[pos] = (wxUint8)val;
+		m_data->cpm.map.b[pos] = (wxUint8)val;
 	}
 }
 
@@ -449,7 +462,7 @@ wxUint32 DiskBasicDirItemCPM::GetGroup(int pos) const
 	wxUint32 val = 0;
 	if (pos < 0 || pos >= group_entries) return val;
 
-	val = group_width > 1 ? wxUINT16_SWAP_ON_BE(data->cpm.map.w[pos]) : data->cpm.map.b[pos];
+	val = group_width > 1 ? wxUINT16_SWAP_ON_BE(m_data->cpm.map.w[pos]) : m_data->cpm.map.b[pos];
 	if (basic->IsDataInverted()) val ^= (group_width > 1 ? 0xffff : 0xff);	// invert
 	return val;
 }
@@ -457,7 +470,7 @@ wxUint32 DiskBasicDirItemCPM::GetGroup(int pos) const
 /// エクステント番号を返す
 wxUint8 DiskBasicDirItemCPM::GetExtentNumber() const
 {
-	wxUint8 num = data->cpm.extent_num;
+	wxUint8 num = m_data->cpm.extent_num;
 	if (basic->IsDataInverted()) num ^= 0xff;	// invert
 	return num;
 }
@@ -465,7 +478,7 @@ wxUint8 DiskBasicDirItemCPM::GetExtentNumber() const
 /// レコード番号を返す
 wxUint8 DiskBasicDirItemCPM::GetRecordNumber() const
 {
-	wxUint8 num = data->cpm.record_num;
+	wxUint8 num = m_data->cpm.record_num;
 	if (basic->IsDataInverted()) num ^= 0xff;	// invert
 	return num;
 }
@@ -476,21 +489,21 @@ void DiskBasicDirItemCPM::CalcExtentAndRecordNumber(int val)
 //	int limit_size = (basic->GetSectorSize() * basic->GetSectorsPerGroup() * group_entries);
 
 	if (val == 0) {
-		data->cpm.extent_num = 0;
-		data->cpm.record_num = 0;
+		m_data->cpm.extent_num = 0;
+		m_data->cpm.record_num = 0;
 	} else {
 		val = (val + SECTOR_UNIT_CPM - 1) / SECTOR_UNIT_CPM;
 		if ((val % SECTOR_UNIT_CPM) == 0) {
-			data->cpm.extent_num = (val / SECTOR_UNIT_CPM) - 1;
-			data->cpm.record_num = SECTOR_UNIT_CPM;
+			m_data->cpm.extent_num = (val / SECTOR_UNIT_CPM) - 1;
+			m_data->cpm.record_num = SECTOR_UNIT_CPM;
 		} else {
-			data->cpm.extent_num = (val / SECTOR_UNIT_CPM);
-			data->cpm.record_num = ((val - 1) % SECTOR_UNIT_CPM) + 1;
+			m_data->cpm.extent_num = (val / SECTOR_UNIT_CPM);
+			m_data->cpm.record_num = ((val - 1) % SECTOR_UNIT_CPM) + 1;
 		}
 	}
 	if (basic->IsDataInverted()) {
-		data->cpm.extent_num ^= 0xff;	// invert
-		data->cpm.record_num ^= 0xff;	// invert
+		m_data->cpm.extent_num ^= 0xff;	// invert
+		m_data->cpm.record_num ^= 0xff;	// invert
 	}
 }
 
@@ -498,7 +511,7 @@ void DiskBasicDirItemCPM::CalcExtentAndRecordNumber(int val)
 int DiskBasicDirItemCPM::Compare(DiskBasicDirItem **item1, DiskBasicDirItem **item2)
 {
 	directory_cpm_t d1, d2;
-	memcpy(&d1, (*item1)->GetData(), sizeof(directory_cpm_t)); 
+	memcpy(&d1, (*item1)->GetData(), sizeof(directory_cpm_t));
 	memcpy(&d2, (*item2)->GetData(), sizeof(directory_cpm_t));
 	if ((*item1)->GetBasic()->IsDataInverted()) {
 		mem_invert(&d1, sizeof(directory_cpm_t));
@@ -518,7 +531,7 @@ int DiskBasicDirItemCPM::Compare(DiskBasicDirItem **item1, DiskBasicDirItem **it
 int DiskBasicDirItemCPM::CompareName(DiskBasicDirItem **item1, DiskBasicDirItem **item2)
 {
 	directory_cpm_t d1, d2;
-	memcpy(&d1, (*item1)->GetData(), sizeof(directory_cpm_t)); 
+	memcpy(&d1, (*item1)->GetData(), sizeof(directory_cpm_t));
 	memcpy(&d2, (*item2)->GetData(), sizeof(directory_cpm_t));
 	if ((*item1)->GetBasic()->IsDataInverted()) {
 		mem_invert(&d1, sizeof(directory_cpm_t));
@@ -528,6 +541,16 @@ int DiskBasicDirItemCPM::CompareName(DiskBasicDirItem **item1, DiskBasicDirItem 
 	// ファイル名＋拡張子
 	cmp = memcmp(&d1.name, &d2.name, sizeof(d1.name) + sizeof(d1.ext));
 	return cmp;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemCPM::ConvFileTypeFromFileName(const wxString &filename) const
+{
+	int ftype = 0;
+	// 拡張子で属性を設定する
+	wxFileName fn(filename);
+	ftype = GetFileTypeByExt(m_external_attr, fn.GetExt());
+	return ftype;
 }
 
 //
@@ -568,12 +591,9 @@ int DiskBasicDirItemCPM::GetFileType2Pos() const
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemCPM::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
 {
-	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4);
-
-		file_type_2 = GetFileTypeByExt(external_attr, ext);
+		file_type_2 = ConvFileTypeFromFileName(name);
 	}
 }
 
@@ -629,7 +649,10 @@ void DiskBasicDirItemCPM::ChangeTypeInAttrDialog(IntNameBox *parent)
 }
 
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemCPM::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemCPM::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxSpinCtrl *spnUserId = (wxSpinCtrl *)parent->FindWindow(IDC_SPIN_USERID);
 	wxRadioBox *radBinAsc = (wxRadioBox *)parent->FindWindow(IDC_RADIO_BINASC);
@@ -644,7 +667,7 @@ bool DiskBasicDirItemCPM::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 	val |= chkArchive->GetValue() ? FILE_TYPE_ARCHIVE_MASK : 0;
 	val |= radBinAsc->GetSelection() == TYPE_NAME_CPM_BINARY ? FILE_TYPE_BINARY_MASK : 0;
 
-	DiskBasicDirItem::SetFileAttr(val, user_id);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), val, user_id);
 
 	return true;
 }

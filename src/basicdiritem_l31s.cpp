@@ -17,19 +17,13 @@ DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic)
 	: DiskBasicDirItemFAT8F(basic)
 {
 }
-DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItemFAT8F(basic, sector, data)
+DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItemFAT8F(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItemFAT8F(basic, num, track, side, sector, secpos, data, unuse)
 {
-}
-
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL31S::GetDefaultInvalidateChars() const
-{
-	return wxT("\":");
 }
 
 /// ダイアログ入力前のファイル名を変換 大文字にする

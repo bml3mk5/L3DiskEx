@@ -17,24 +17,32 @@ DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 {
 }
 
-/// ディスク上のパラメータを読む
-/// @retval  -1 エラー
-int DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk)
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+/// @param [in] disk          ディスク
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0>      正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
-	int valid = DiskBasicTypeFAT12::ParseParamOnDisk(disk);
-	if (valid >= 0) {
+	if (is_formatting) return 0;
+
+	double valid_ratio = DiskBasicTypeFAT12::ParseParamOnDisk(disk, is_formatting);
+	if (valid_ratio >= 0.0) {
 		DiskD88Sector *sector = disk->GetSector(0, 0, 1);
+		if (!sector) return -1.0;
 		wxUint8 *datas = sector->GetSectorBuffer();
+		if (!datas) return -1.0;
 		fat_bpb_t *bpb = (fat_bpb_t *)datas;
 		char oem_name[10];
 		memset(oem_name, 0, sizeof(oem_name));
 		memcpy(oem_name, bpb->BS_OEMName, sizeof(bpb->BS_OEMName));
 		if ((strstr(oem_name, "MSX") == NULL)
 		&& (sector->Find("MSXDOS",6) < 0)) {
-			valid = -1;
+			valid_ratio = 0.1;
 		}
 	}
-	return valid;
+	return valid_ratio;
 }
 
 /// セクタデータを埋めた後の個別処理

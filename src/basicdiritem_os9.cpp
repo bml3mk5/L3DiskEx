@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+#include "config.h"
 #include "utils.h"
 
 
@@ -37,6 +38,7 @@ const char *gTypeNameOS9_2l[] = {
 //
 DiskBasicDirItemOS9FD::DiskBasicDirItemOS9FD()
 {
+	basic = NULL;
 	sector = NULL;
 	fd = NULL;
 	fd_ownmake = false;
@@ -49,6 +51,7 @@ DiskBasicDirItemOS9FD::~DiskBasicDirItemOS9FD()
 DiskBasicDirItemOS9FD::DiskBasicDirItemOS9FD(const DiskBasicDirItemOS9FD &src)
 {
 }
+#ifdef COPYABLE_DIRITEM
 /// 代入
 DiskBasicDirItemOS9FD &DiskBasicDirItemOS9FD::operator=(const DiskBasicDirItemOS9FD &src)
 {
@@ -67,9 +70,11 @@ void DiskBasicDirItemOS9FD::Dup(const DiskBasicDirItemOS9FD &src)
 	}
 	fd_ownmake = src.fd_ownmake;
 }
+#endif
 /// ポインタをセット
-void DiskBasicDirItemOS9FD::Set(DiskD88Sector *n_sector, directory_os9_fd_t *n_fd)
+void DiskBasicDirItemOS9FD::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, directory_os9_fd_t *n_fd)
 {
+	basic = n_basic;
 	sector = n_sector;
 	if (fd_ownmake) delete fd;
 	fd = n_fd;
@@ -179,8 +184,8 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic)
 {
 	fd.Alloc();
 }
-DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -194,28 +199,29 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, i
 		if (lsn != 0) {
 			DiskD88Sector *sector = basic->GetSectorFromGroup(lsn);
 			if (sector) {
-				fd.Set(sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
+				fd.Set(basic, sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
 			}
 		}
 	}
 
 	CalcFileSize();
+
+	// カレント or 親ディレクトリはツリーに表示しない
+	wxString name = GetFileNamePlainStr();
+	VisibleOnTree(!(IsDirectory() && (name == wxT(".") || name == wxT(".."))));
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemOS9::GetFileNamePos(size_t &size, size_t &len) const
+wxUint8 *DiskBasicDirItemOS9::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
-	size = len = sizeof(data->os9.DE_NAM);
-	return data->os9.DE_NAM; 
+	if (num == 0) {
+		size = len = sizeof(m_data->os9.DE_NAM);
+		return m_data->os9.DE_NAM;
+	} else {
+		size = len = 0;
+		return NULL;
+	}
 }
-
-#if 0
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemOS9::GetFileNameSize(bool *invert) const
-{
-	return (int)sizeof(data->os9.DE_NAM);
-}
-#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemOS9::GetFileType1() const
@@ -232,14 +238,14 @@ void DiskBasicDirItemOS9::SetFileType1(int val)
 /// 使用しているアイテムか
 bool DiskBasicDirItemOS9::CheckUsed(bool unuse)
 {
-	return (data->os9.DE_NAM[0] != 0);
+	return (m_data->os9.DE_NAM[0] != 0);
 }
 
 /// ファイル名を設定
-void DiskBasicDirItemOS9::SetFileName(const wxUint8 *filename, size_t length)
+void DiskBasicDirItemOS9::SetNativeName(wxUint8 *filename, size_t size, size_t length)
 {
 	size_t s, l;
-	wxUint8 *n = GetFileNamePos(s, l);
+	wxUint8 *n = GetFileNamePos(0, s, l);
 	EncodeString(n, l, (const char *)filename, length);
 }
 
@@ -261,9 +267,9 @@ size_t DiskBasicDirItemOS9::EncodeString(wxUint8 *dst, size_t dlen, const char *
 }
 
 /// ファイル名を得る
-void DiskBasicDirItemOS9::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
+void DiskBasicDirItemOS9::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
 {
-	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
+	DiskBasicDirItem::GetNativeFileName(name, nlen, ext, elen);
 
 	// 文字列の最後はMSBがセットされているのでクリア
 	DecodeString((char *)name, nlen, name, nlen);
@@ -284,6 +290,7 @@ size_t DiskBasicDirItemOS9::DecodeString(char *dst, size_t dlen, const wxUint8 *
 	return len;
 }
 
+#ifdef COPYABLE_DIRITEM
 /// 複製
 void DiskBasicDirItemOS9::Dup(const DiskBasicDirItem &src)
 {
@@ -291,13 +298,14 @@ void DiskBasicDirItemOS9::Dup(const DiskBasicDirItem &src)
 	const DiskBasicDirItemOS9 *psrc = (const DiskBasicDirItemOS9 *)&src;
 	fd.Dup(psrc->fd);
 }
+#endif
 
 /// 削除
 /// @param [in] code : 削除コード(デフォルト0)
 bool DiskBasicDirItemOS9::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
-	data->os9.DE_NAM[0] = code;
+	m_data->os9.DE_NAM[0] = code;
 	Used(false);
 	return true;
 }
@@ -307,46 +315,63 @@ bool DiskBasicDirItemOS9::Delete(wxUint8 code)
 /// @return チェックOK
 bool DiskBasicDirItemOS9::Check(bool &last)
 {
-	if (!data) return false;
+	if (!m_data) return false;
 
 	return true;
 }
 
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemOS9::GetDefaultInvalidateChars() const
 {
 	return wxT(" !\"#$%&'()*+,-/:;<=>?@[\\]^{|}~");
 }
+#endif
 
+/// 属性を設定
 void DiskBasicDirItemOS9::SetFileAttr(const DiskBasicFileType &file_type)
 {
 	int ftype = file_type.GetType();
 	if (ftype == -1) return;
 
-	int val = 0;
-	if (ftype & FILE_TYPE_DIRECTORY_MASK) {
-		val |= FILETYPE_MASK_OS9_DIRECTORY;
+	int t1 = 0;
+	if (file_type.GetFormat() == basic->GetFormatTypeNumber()) {
+		t1 = file_type.GetOrigin();
+	} else {
+		if (ftype & FILE_TYPE_DIRECTORY_MASK) {
+			t1 |= FILETYPE_MASK_OS9_DIRECTORY;
+		}
+		if (ftype & FILE_TYPE_NONSHARE_MASK) {
+			t1 |= FILETYPE_MASK_OS9_NONSHARE;
+		}
+//		t1 |= ((ftype & FILETYPE_OS9_PERMISSION_MASK) >> FILETYPE_OS9_PERMISSION_POS);
+		if (ftype & FILE_TYPE_BINARY_MASK) {
+			t1 |= FILETYPE_MASK_OS9_PUBLIC_EXEC;
+			t1 |= FILETYPE_MASK_OS9_USER_EXEC;
+		}
+		t1 |= FILETYPE_MASK_OS9_PUBLIC_READ;
+		t1 |= FILETYPE_MASK_OS9_USER_WRITE;
+		t1 |= FILETYPE_MASK_OS9_USER_READ;
 	}
-	if (ftype & FILE_TYPE_NONSHARE_MASK) {
-		val |= FILETYPE_MASK_OS9_NONSHARE;
-	}
-	val |= ((ftype & FILETYPE_OS9_PERMISSION_MASK) >> FILETYPE_OS9_PERMISSION_POS);
-
-	SetFileType1(val);
+	SetFileType1(t1);
 }
 
+/// 属性を返す
 DiskBasicFileType DiskBasicDirItemOS9::GetFileAttr() const
 {
 	int val = 0;
-	int type1 = GetFileType1();
-	if (type1 & FILETYPE_MASK_OS9_DIRECTORY) {
+	int t1 = GetFileType1();
+	if (t1 & FILETYPE_MASK_OS9_DIRECTORY) {
 		val |= FILE_TYPE_DIRECTORY_MASK;
 	}
-	if (type1 & FILETYPE_MASK_OS9_NONSHARE) {
+	if (t1 & FILETYPE_MASK_OS9_NONSHARE) {
 		val |= FILE_TYPE_NONSHARE_MASK;
 	}
-	val |= ((type1 << FILETYPE_OS9_PERMISSION_POS) & FILETYPE_OS9_PERMISSION_MASK);
-	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
+	if ((t1 & (FILETYPE_MASK_OS9_PUBLIC_EXEC | FILETYPE_MASK_OS9_USER_EXEC)) != 0) {
+		val |= FILE_TYPE_BINARY_MASK;
+	}
+//	val |= ((t1 << FILETYPE_OS9_PERMISSION_POS) & FILETYPE_OS9_PERMISSION_MASK);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, t1);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
@@ -374,59 +399,49 @@ wxString DiskBasicDirItemOS9::GetFileAttrStr() const
 	return str;
 }
 
+#if 0
+/// ファイルパスから内部ファイル名を生成する
+/// エクスプローラからインポート時のダイアログを出す前
+/// @param [in] filepath ファイルパス
+/// @return ファイル名
+wxString DiskBasicDirItemOS9::PreImportDataFile(wxString &filename)
+{
+	return DiskBasicDirItem::RemakeFileNameStr(filepath);
+}
+#endif
+
 /// ファイルサイズをセット
 void DiskBasicDirItemOS9::SetFileSize(int val)
 {
 	fd.SetSIZ(val);
-	file_size = val;
+	m_groups.SetSize(val);
 }
 
 /// ファイルサイズを返す
 int DiskBasicDirItemOS9::GetFileSize() const
 {
-	int size = (int)fd.GetSIZ();
-	if (size == 0) size = file_size;
-	return size;
+	size_t size = fd.GetSIZ();
+	if (size == 0) size = m_groups.GetSize();
+	return (int)size;
 }
 
 /// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemOS9::CalcFileSize()
+void DiskBasicDirItemOS9::CalcFileUnitSize(int fileunit_num)
 {
 	if (!IsUsed() || !fd.IsValid()) return;
 
-	// ファイルサイズ
-	file_size = fd.GetSIZ();
-
-	int calc_file_size = 0;
-	int calc_groups = 0;
-//	int last_group = 0;
-//	int last_sector = 0;
-	bool rc = true;
-
-	for(int i=0; i<48; i++) {
-		wxUint32 lsn = fd.GetLSN(i);
-		if (lsn == 0) break;
-
-		int siz = fd.GetSIZ(i);
-		calc_file_size += (siz * basic->GetSectorsPerGroup() * basic->GetSectorSize());
-		calc_groups += siz;
-	}
-
-	// グループ数を計算
-	if (rc) {
-//		file_size = calc_file_size;
-		groups = calc_groups;
-	}
+	GetUnitGroups(fileunit_num, m_groups);
 }
 
 /// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemOS9::GetAllGroups(DiskBasicGroups &group_items)
+/// @param [in]  fileunit_num ファイル番号
+/// @param [out] group_items  グループリスト
+void DiskBasicDirItemOS9::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
 {
 	if (!fd.IsValid()) return;
 
-//	bool rc = true;
-
-	group_items.SetSize(GetFileSize());
+	int calc_groups = 0;
+	int calc_file_size = GetFileSize();
 
 	for(int i=0; i<48; i++) {
 		wxUint32 lsn = fd.GetLSN(i);
@@ -434,9 +449,13 @@ void DiskBasicDirItemOS9::GetAllGroups(DiskBasicGroups &group_items)
 		if (siz == 0) {
 			break;
 		}
+		calc_groups += siz;
+
 		if (i != 0) {
-			DiskBasicGroupItem *gitm = &group_items.Last();
-			gitm->next = lsn;
+			if (group_items.Count() > 0) {
+				DiskBasicGroupItem *gitm = &group_items.Last();
+				gitm->next = lsn;
+			}
 		}
 		for(int n = 0; n < siz; n++) {
 			int track_num = 0;
@@ -446,10 +465,11 @@ void DiskBasicDirItemOS9::GetAllGroups(DiskBasicGroups &group_items)
 			basic->CalcNumFromSectorPosForGroup(lsn + n, track_num, side_num, sector_num);
 			group_items.Add(lsn + n, next_lsn, track_num, side_num, sector_num, sector_num + basic->GetSectorsPerGroup() - 1);
 		}
-
-//		file_size += (siz * secs_per_group * sector_size);
-//		groups += siz;
 	}
+	group_items.SetNums(calc_groups);
+	group_items.SetSize(calc_file_size);
+	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
+
 }
 
 void DiskBasicDirItemOS9::GetFileDate(struct tm *tm) const
@@ -458,7 +478,7 @@ void DiskBasicDirItemOS9::GetFileDate(struct tm *tm) const
 		ConvDateToTm((const os9_cdate_t &)fd.GetDAT(), tm);
 	} else {
 		tm->tm_year = 0;
-		tm->tm_mon = 0; 
+		tm->tm_mon = 0;
 		tm->tm_mday = 0;
 	}
 }
@@ -468,7 +488,7 @@ void DiskBasicDirItemOS9::GetFileTime(struct tm *tm) const
 	if (fd.IsValid()) {
 		ConvTimeToTm(fd.GetDAT(), tm);
 	} else {
-		tm->tm_hour = 0; 
+		tm->tm_hour = 0;
 		tm->tm_min = 0;
 	}
 	tm->tm_sec = 0;
@@ -540,13 +560,13 @@ void DiskBasicDirItemOS9::ConvDateToTm(const os9_cdate_t &date, struct tm *tm) c
 {
 	tm->tm_year = (date.yy % 100);
 	if (tm->tm_year < 80) tm->tm_year += 100;
-	tm->tm_mon = date.mm - 1; 
+	tm->tm_mon = date.mm - 1;
 	tm->tm_mday = date.dd;
 }
 /// 時間を変換
 void DiskBasicDirItemOS9::ConvTimeToTm(const os9_date_t &time, struct tm *tm) const
 {
-	tm->tm_hour = time.hh; 
+	tm->tm_hour = time.hh;
 	tm->tm_min = time.mi;
 }
 /// 日付に変換
@@ -570,60 +590,98 @@ size_t DiskBasicDirItemOS9::GetDataSize() const
 }
 
 /// 最初のグループ番号を設定
-void DiskBasicDirItemOS9::SetStartGroup(wxUint32 val)
+void DiskBasicDirItemOS9::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
 //	if (fd) {
 //		SET_OS9_LSN(fd->FD_SEG[0].LSN, val);
 //	}
-	SET_OS9_LSN(data->os9.DE_LSN, val);
+	SET_OS9_LSN(m_data->os9.DE_LSN, val);
 }
 
 /// 最初のグループ番号を返す
-wxUint32 DiskBasicDirItemOS9::GetStartGroup() const
+wxUint32 DiskBasicDirItemOS9::GetStartGroup(int fileunit_num) const
 {
 //	wxUint32 val = 0;
 //	if (fd) {
 //		val = GET_OS9_LSN(fd->FD_SEG[0].LSN);
 //	}
 //	return val;
-	return GET_OS9_LSN(data->os9.DE_LSN);
+	return GET_OS9_LSN(m_data->os9.DE_LSN);
 }
 
 /// 追加のグループ番号をセット FDセクタへのLSNをセット
 void DiskBasicDirItemOS9::SetExtraGroup(wxUint32 val)
 {
-	SET_OS9_LSN(data->os9.DE_LSN, val);
+	SET_OS9_LSN(m_data->os9.DE_LSN, val);
 }
 
 /// 追加のグループ番号を返す FDセクタへのLSNを返す
 wxUint32 DiskBasicDirItemOS9::GetExtraGroup() const
 {
-	return GET_OS9_LSN(data->os9.DE_LSN);
+	return GET_OS9_LSN(m_data->os9.DE_LSN);
+}
+
+/// 追加のグループ番号を得る
+void DiskBasicDirItemOS9::GetExtraGroups(wxArrayInt &arr) const
+{
+	arr.Add((int)GetExtraGroup());
+}
+
+/// チェイン用のセクタをセット
+/// @param [in] sector セクタ
+/// @param [in] data   セクタ内のバッファ
+/// @param [in] pitem  コピー元のアイテム
+void DiskBasicDirItemOS9::SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
+{
+	fd.Set(basic, sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
+	fd.Clear();
+
+	// 属性をコピー
+	if (pitem) CopyItem(*pitem);
+
+	// リンク数
+	fd.SetLNK(1);
 }
 
 bool DiskBasicDirItemOS9::IsDeletable() const
 {
+	// ".", ".."は不可
 	bool valid = true;
-	if (GetFileAttr().IsDirectory()) {
-		wxString name =	GetFileNamePlainStr();
-		if (name == wxT(".") || name == wxT("..")) {
-			// ディレクトリ ".", ".."は削除不可
-			valid = false;
-		}
+	wxString name =	GetFileNamePlainStr();
+	if (name == wxT(".") || name == wxT("..")) {
+		valid = false;
 	}
 	return valid;
 }
 /// ファイル名を編集できるか
 bool DiskBasicDirItemOS9::IsFileNameEditable() const
 {
-	bool valid = true;
-	if (GetFileAttr().IsDirectory()) {
-		wxString name =	GetFileNamePlainStr();
-		if (name == wxT(".") || name == wxT("..")) {
-			// ディレクトリ ".", ".."は編集不可
-			valid = false;
-		}
-	}
+	// ".", ".."は不可
+	return IsDeletable();
+}
+/// アイテムをロード・エクスポートできるか
+/// @return true ロードできる
+bool DiskBasicDirItemOS9::IsLoadable() const
+{
+	// ".", ".."は不可
+	return IsDeletable();
+}
+/// アイテムをコピーできるか
+/// @return true コピーできる
+bool DiskBasicDirItemOS9::IsCopyable() const
+{
+	// ".", ".."は不可
+	return IsDeletable();
+}
+/// アイテムを上書きできるか
+/// @return true 上書きできる
+bool DiskBasicDirItemOS9::IsOverWritable() const
+{
+	// ディレクトリは不可
+	int t1 = GetFileType1();
+	bool valid = ((t1 & FILETYPE_MASK_OS9_DIRECTORY) == 0);
+	// ".", ".."は不可
+	valid &= IsDeletable();
 	return valid;
 }
 /// アイテムをコピー
@@ -642,6 +700,51 @@ void DiskBasicDirItemOS9::SetModify()
 {
 	DiskBasicDirItem::SetModify();
 	fd.SetModify();
+}
+
+/// データをエクスポートする前に必要な処理
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemOS9::PreExportDataFile(wxString &filename)
+{
+	if (!gConfig.IsAddExtensionExport()) return true;
+
+	if (!IsDirectory()) {
+		AddExtensionByFileAttr(GetFileAttr().GetType(), 0x3f, filename);
+	}
+	return true;
+}
+
+/// データをインポートする前に必要な処理
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
+bool DiskBasicDirItemOS9::PreImportDataFile(wxString &filename)
+{
+	if (gConfig.IsDecideAttrImport()) {
+		TrimExtensionByExtensionAttr(filename);
+	}
+	filename = RemakeFileNameAndExtStr(filename);
+	return true;
+}
+
+/// ファイル名から属性を決定する
+int DiskBasicDirItemOS9::ConvOriginalTypeFromFileName(const wxString &filename) const
+{
+	int t1 = 0;
+	// -- --R -wr
+	t1 |= FILETYPE_MASK_OS9_PUBLIC_READ;
+	t1 |= FILETYPE_MASK_OS9_USER_WRITE;
+	t1 |= FILETYPE_MASK_OS9_USER_READ;
+	// 拡張子で実行属性を付ける
+	wxFileName fn(filename);
+	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), FILE_TYPE_BINARY_MASK, FILE_TYPE_BINARY_MASK);
+	if (sa) {
+		// 実行属性を付ける
+		t1 |= FILETYPE_MASK_OS9_PUBLIC_EXEC;
+		t1 |= FILETYPE_MASK_OS9_USER_EXEC;
+	}
+
+	return t1;
 }
 
 //
@@ -669,31 +772,27 @@ void DiskBasicDirItemOS9::SetModify()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemOS9::GetFileType1Pos()
 {
-	return GetFileAttr().GetType();
+	return GetFileType1();
 }
 
+#if 0
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemOS9::GetFileType2Pos()
 {
 	return 0;
 }
+#endif
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
 /// @param [in] show_flags      ダイアログ表示フラグ
 /// @param [in]  name           ファイル名
 /// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1)
 {
 	if (show_flags & INTNAME_NEW_FILE) {
 		// 外部からインポート時
-		// -- --R -wr
-		file_type_1 = ((
-			FILETYPE_MASK_OS9_PUBLIC_READ |
-			FILETYPE_MASK_OS9_USER_WRITE |
-			FILETYPE_MASK_OS9_USER_READ
-		) << FILETYPE_OS9_PERMISSION_POS);
+		file_type_1 = ConvOriginalTypeFromFileName(name);
 	}
 	if (show_flags & INTNAME_IMPORT_INTERNAL) {
 		// 内部からインポート時
@@ -713,7 +812,7 @@ void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(int show_flags, const wxStrin
 void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
 	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+//	int file_type_2 = 0;
 
 	wxCheckBox *chkDirectory;
 	wxCheckBox *chkSharable;
@@ -727,17 +826,17 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 
 	wxTextCtrl *txtCDate;
 
-	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
 
 	chkDirectory = new wxCheckBox(parent, IDC_CHECK_DIRECTORY, wxGetTranslation(gTypeNameOS9[TYPE_NAME_OS9_DIRECTORY]));
-	chkDirectory->SetValue((file_type_1 & FILE_TYPE_DIRECTORY_MASK) != 0);
+	chkDirectory->SetValue((file_type_1 & FILETYPE_MASK_OS9_DIRECTORY) != 0);
 	hbox->Add(chkDirectory, flags);
 
 	chkSharable = new wxCheckBox(parent, IDC_CHECK_NONSHARE, wxGetTranslation(gTypeNameOS9[TYPE_NAME_OS9_NONSHARE]));
-	chkSharable->SetValue((file_type_1 & FILE_TYPE_NONSHARE_MASK) != 0);
+	chkSharable->SetValue((file_type_1 & FILETYPE_MASK_OS9_NONSHARE) != 0);
 	hbox->Add(chkSharable, flags);
 	staType4->Add(hbox);
 
@@ -748,13 +847,13 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	chkPubExec = new wxCheckBox(parent, IDC_CHECK_PUB_EXEC, wxGetTranslation(gTypeNameOS9_2l[0]));
-	chkPubExec->SetValue((file_type_1 & (FILETYPE_MASK_OS9_PUBLIC_EXEC << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkPubExec->SetValue((file_type_1 & FILETYPE_MASK_OS9_PUBLIC_EXEC) != 0);
 	hbox->Add(chkPubExec, flags);
 	chkPubWrite = new wxCheckBox(parent, IDC_CHECK_PUB_WRITE, wxGetTranslation(gTypeNameOS9_2l[1]));
-	chkPubWrite->SetValue((file_type_1 & (FILETYPE_MASK_OS9_PUBLIC_WRITE << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkPubWrite->SetValue((file_type_1 & FILETYPE_MASK_OS9_PUBLIC_WRITE) != 0);
 	hbox->Add(chkPubWrite, flags);
 	chkPubRead = new wxCheckBox(parent, IDC_CHECK_PUB_READ, wxGetTranslation(gTypeNameOS9_2l[2]));
-	chkPubRead->SetValue((file_type_1 & (FILETYPE_MASK_OS9_PUBLIC_READ << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkPubRead->SetValue((file_type_1 & FILETYPE_MASK_OS9_PUBLIC_READ) != 0);
 	hbox->Add(chkPubRead, flags);
 	staType5->Add(hbox);
 
@@ -762,20 +861,20 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	chkUsrExec = new wxCheckBox(parent, IDC_CHECK_USR_EXEC, wxGetTranslation(gTypeNameOS9_2l[0]));
-	chkUsrExec->SetValue((file_type_1 & (FILETYPE_MASK_OS9_USER_EXEC << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkUsrExec->SetValue((file_type_1 & FILETYPE_MASK_OS9_USER_EXEC) != 0);
 	hbox->Add(chkUsrExec, flags);
 	chkUsrWrite = new wxCheckBox(parent, IDC_CHECK_USR_WRITE, wxGetTranslation(gTypeNameOS9_2l[1]));
-	chkUsrWrite->SetValue((file_type_1 & (FILETYPE_MASK_OS9_USER_WRITE << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkUsrWrite->SetValue((file_type_1 & FILETYPE_MASK_OS9_USER_WRITE) != 0);
 	hbox->Add(chkUsrWrite, flags);
 	chkUsrRead = new wxCheckBox(parent, IDC_CHECK_USR_READ, wxGetTranslation(gTypeNameOS9_2l[2]));
-	chkUsrRead->SetValue((file_type_1 & (FILETYPE_MASK_OS9_USER_READ << FILETYPE_OS9_PERMISSION_POS)) != 0);
+	chkUsrRead->SetValue((file_type_1 & FILETYPE_MASK_OS9_USER_READ) != 0);
 	hbox->Add(chkUsrRead, flags);
 	staType5->Add(hbox);
 
 	sizer->Add(staType5, flags);
 
-	DateTimeValidator date_validate(false);
-	DateTimeValidator time_validate(true);
+	DateTimeValidator date_validate(false, !CanIgnoreDateTime());
+	DateTimeValidator time_validate(true, !CanIgnoreDateTime());
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
@@ -804,8 +903,13 @@ void DiskBasicDirItemOS9::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
 }
 
+#define ATTR_CDATE_IDX 1
+
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+/// @param [in,out] parent  プロパティダイアログ
+/// @param [in,out] attr    プロパティの属性値
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	wxCheckBox *chkDirectory = (wxCheckBox *)parent->FindWindow(IDC_CHECK_DIRECTORY);
 	wxCheckBox *chkSharable = (wxCheckBox *)parent->FindWindow(IDC_CHECK_NONSHARE);
@@ -817,24 +921,43 @@ bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 	wxCheckBox *chkUsrWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_USR_WRITE);
 	wxCheckBox *chkUsrRead = (wxCheckBox *)parent->FindWindow(IDC_CHECK_USR_READ);
 
-	int val = 0;
-	val |= (chkDirectory->GetValue() ? FILE_TYPE_DIRECTORY_MASK : 0);
-	val |= (chkSharable->GetValue() ? FILE_TYPE_NONSHARE_MASK : 0);
-	val |= (chkPubExec->GetValue() ? (FILETYPE_MASK_OS9_PUBLIC_EXEC << FILETYPE_OS9_PERMISSION_POS) : 0);
-	val |= (chkPubWrite->GetValue() ? (FILETYPE_MASK_OS9_PUBLIC_WRITE << FILETYPE_OS9_PERMISSION_POS) : 0);
-	val |= (chkPubRead->GetValue() ? (FILETYPE_MASK_OS9_PUBLIC_READ << FILETYPE_OS9_PERMISSION_POS) : 0);
-	val |= (chkUsrExec->GetValue() ? (FILETYPE_MASK_OS9_USER_EXEC << FILETYPE_OS9_PERMISSION_POS) : 0);
-	val |= (chkUsrWrite->GetValue() ? (FILETYPE_MASK_OS9_USER_WRITE << FILETYPE_OS9_PERMISSION_POS) : 0);
-	val |= (chkUsrRead->GetValue() ? (FILETYPE_MASK_OS9_USER_READ << FILETYPE_OS9_PERMISSION_POS) : 0);
+	int t1 = 0;
+	t1 |= (chkDirectory->GetValue() ? FILETYPE_MASK_OS9_DIRECTORY : 0);
+	t1 |= (chkSharable->GetValue() ? FILETYPE_MASK_OS9_NONSHARE : 0);
+	t1 |= (chkPubExec->GetValue() ? FILETYPE_MASK_OS9_PUBLIC_EXEC : 0);
+	t1 |= (chkPubWrite->GetValue() ? FILETYPE_MASK_OS9_PUBLIC_WRITE : 0);
+	t1 |= (chkPubRead->GetValue() ? FILETYPE_MASK_OS9_PUBLIC_READ : 0);
+	t1 |= (chkUsrExec->GetValue() ? FILETYPE_MASK_OS9_USER_EXEC : 0);
+	t1 |= (chkUsrWrite->GetValue() ? FILETYPE_MASK_OS9_USER_WRITE : 0);
+	t1 |= (chkUsrRead->GetValue() ? FILETYPE_MASK_OS9_USER_READ : 0);
 
-	DiskBasicDirItem::SetFileAttr(val);
+	attr.SetFileAttr(basic->GetFormatTypeNumber(), 0, t1);
 
 	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CREATEDATE);
 
 	struct tm tm;
 	if (txtCDate) {
 		Utils::ConvDateStrToTm(txtCDate->GetValue(), &tm);
-		SetCDate(&tm);
+		attr.SetDateTime(ATTR_CDATE_IDX, &tm);
 	}
 	return true;
+}
+
+/// その他の属性値を設定する
+void DiskBasicDirItemOS9::SetAttr(DiskBasicDirItemAttr &attr)
+{
+	SetCDate(attr.GetDateTime(ATTR_CDATE_IDX));
+}
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemOS9::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
+{
+	bool valid = true;
+	wxString name =	filename;
+	// ".",".."は設定できない
+	if (name == wxT(".") || name == wxT("..")) {
+		errormsg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERRV_CANNOT_SET_NAME]), name);
+		valid = false;
+	}
+	return valid;
 }

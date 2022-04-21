@@ -99,6 +99,7 @@ public:
 	bool Load(const wxString &data_path, const wxString &locale_name);
 
 	FileParam *FindExt(const wxString &n_ext);
+	FileFormat *FindFormat(const wxString &n_name);
 
 	FileParam *ItemPtr(size_t index) const { return &types[index]; }
 	FileParam &Item(size_t index) const { return types[index]; }
@@ -106,6 +107,7 @@ public:
 
 	const wxString &GetWildcardForLoad() const { return wcard_for_load; }
 	const wxString &GetWildcardForSave() const { return wcard_for_save; }
+	FileFormat *GetFilterForSave(int index);
 
 	const FileFormats &GetFormats() const { return formats; }
 };

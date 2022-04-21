@@ -7,7 +7,7 @@
 
 #include "basictype_x1hu.h"
 #include "basicfmt.h"
-#include "basicdiritem.h"
+#include "basicdiritem_x1hu.h"
 #include "basicdir.h"
 #include "logging.h"
 
@@ -21,23 +21,18 @@ DiskBasicTypeX1HU::DiskBasicTypeX1HU(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 }
 
 /// FATエリアをチェック
-bool DiskBasicTypeX1HU::CheckFat()
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeX1HU::CheckFat(bool is_formatting)
 {
-	bool valid = true;
+	double valid_ratio = 1.0;
 
-	// FAT領域の先頭が0x01であるか
+	// FAT領域の先頭がFAT領域のセクタ数であるか
 	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-#if 0
-	for(size_t j=0; j<bufs->Count(); j++) {
-		if (bufs->GetData8(j, 0) != (wxUint32)basic->InvertUint8(0x01)) {
-			valid = false;
-			break;
-		}
-	}
-#endif
-	valid = (bufs->MatchData8(0, basic->InvertUint8(0x01)) == (int)bufs->Count());
-	if (!valid) {
-		return valid;
+	if (bufs->MatchData8(0, basic->InvertUint8(0x01)) != (int)bufs->Count()) {
+		return -1.0;
 	}
 
 	wxUint32 end = basic->GetFatEndGroup() < basic->GetGroupFinalCode() ? basic->GetFatEndGroup() : basic->GetGroupFinalCode() - 1;
@@ -54,13 +49,58 @@ bool DiskBasicTypeX1HU::CheckFat()
 	// 同じグループ番号が重複している場合エラー
 	for(wxUint32 pos = 0; pos <= end; pos++) {
 		if (tbl[pos] > 4) {
-			valid = false;
+			valid_ratio = -1.0;
 			break;
 		}
 	}
 	delete [] tbl;
 
-	return valid;
+	// Hu-BASIC か S-OS SWORD か
+	if (valid_ratio >= 0) {
+		int atype = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
+		int pt = 0;
+		for(int i=0; i<2; i++) {
+			DiskD88Sector *sector = NULL;
+			switch(i) {
+			case 0:
+				// IPL領域
+				sector = basic->GetSector(0, 0, 1);
+				break;
+			case 1:
+				// ディレクトリ領域
+				sector = basic->GetManagedSector(basic->GetDirStartSector() - 1);
+				break;
+			}
+			if (sector) {
+				int hfind = sector->Find("CZ8F", 4);
+				int sfind = sector->Find("SWORD", 5);
+				if (atype == EXTERNAL_X1_DEFAULT && hfind >= 0) {
+					pt++;
+				} else if (atype == EXTERNAL_X1_SWORD && sfind >= 0) {
+					pt++;
+				}
+			}
+		}
+		if (pt < 1) {
+			valid_ratio /= 2.0;
+		}
+	}
+
+	return valid_ratio;
+}
+
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+double DiskBasicTypeX1HU::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+{
+	if (basic->GetFatEndGroup() == 0) {
+		wxUint32 end_grp = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() - 1;
+		if (end_grp >= 0x80) {
+			end_grp = 0x80;
+		}
+		basic->SetFatEndGroup(end_grp);
+	}
+
+	return 1.0;
 }
 
 /// FAT位置をセット
@@ -145,7 +185,7 @@ wxUint32 DiskBasicTypeX1HU::GetNextEmptyGroupNumber(wxUint32 curr_group)
 		group_end = (dir > 0 ? group_max : -1);
 		for(int g = group_start; g != group_end; g += dir) {
 			if (dir > 0 && g == (int)basic->GetGroupFinalCode()) g += basic->GetGroupFinalCode();
-			else if (dir < 0 && g == (int)basic->GetGroupUnusedCode()) g -= basic->GetGroupFinalCode();
+			else if (dir < 0 && g == (int)basic->GetGroupSystemCode()) g -= basic->GetGroupFinalCode();
 			wxUint32 gnum = GetGroupNumber(g);
 			if (gnum == basic->GetGroupUnusedCode()) {	// 0xff
 				new_num = g;
@@ -191,6 +231,7 @@ void DiskBasicTypeX1HU::CalcDiskFreeSize(bool wrote)
 		}
 		fat_availability.Add(fsts);
 	}
+
 	free_disk_size = (int)fsize;
 	free_groups = (int)grps;
 
@@ -232,24 +273,25 @@ int DiskBasicTypeX1HU::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputS
 	// 最終セクタ
 	if (item->NeedCheckEofCode()) {
 		// アスキー形式の場合
-		wxUint8 eof_code = 	basic->InvertUint8(0x1a);
+		wxUint8 null_code = basic->InvertUint8(0);
+		wxUint8 eof_code = basic->InvertUint8(basic->GetTextTerminateCode());
 		// 終端コードの1つ前までを出力
-		int len = sector_size - 1;
-		for(; len >= 0; len--) {
-			if (sector_buffer[len] == eof_code) break;
+		int len = 0;
+		for(; len < sector_size; len++) {
+			if (sector_buffer[len] == eof_code || sector_buffer[len] == null_code) {
+				break;
+			}
 		}
-		if (len < 0) {
-			len = sector_size;
-		}
-		sector_size = len;
-	} else {
-		sector_size = remain_size;
+		remain_size = len;
 	}
-	return sector_size;
+	return remain_size;
 }
 
-/// 最後のグループ番号を計算する
-wxUint32 DiskBasicTypeX1HU::CalcLastGroupNumber(wxUint32 group_num, int size_remain)
+/// グループ確保時に最後のグループ番号を計算する
+/// @param [in]     group_num	現在のグループ番号
+/// @param [in,out] size_remain	残りのデータサイズ
+/// @return 最後のグループ番号
+wxUint32 DiskBasicTypeX1HU::CalcLastGroupNumber(wxUint32 group_num, int &size_remain)
 {
 	// 残り使用セクタ数
 	int remain_secs = ((size_remain - 1) / basic->GetSectorSize());
@@ -271,9 +313,13 @@ bool DiskBasicTypeX1HU::IsRootDirectory(wxUint32 group_num)
 
 /// サブディレクトリを作成する前にディレクトリ名を編集する
 /// @param [in,out] dir_name ディレクトリ名
-bool  DiskBasicTypeX1HU::RenameOnMakingDirectory(wxString &dir_name)
+bool DiskBasicTypeX1HU::RenameOnMakingDirectory(wxString &dir_name)
 {
 	int pos;
+	// 空や"."で始まるディレクトリは作成不可
+	if (dir_name.IsEmpty() || dir_name.Left(1) == wxT(".")) {
+		return false;
+	}
 	if ((pos = dir_name.Find('.', true)) != wxNOT_FOUND) {
 		// 拡張子以下を除く
 		dir_name = dir_name.Mid(0, pos);
@@ -290,7 +336,7 @@ void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 	if (group_items.Count() <= 0) return;
 
 	// 書き込み禁止
-	item->SetFileAttr(FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
+	item->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
 }
 
 /// セクタデータを埋めた後の個別処理
@@ -302,14 +348,14 @@ bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	// DIRエリアの初期化
 	dir->ClearRoot();
 	// IPL (MZ用)
-	int len = (int)basic->GetIPLString().Length();
+	int len = (int)basic->GetVariousStringParam(wxT("IPLString")).Length();
 	if (len > 0) {
 		DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
 		if (sector) {
 			sector->Fill(basic->GetFillCodeOnFAT() ^ 0xff, 32);	// invert
 			wxUint8 buf[32];
 			if (len > 32) len = 32;
-			memcpy(buf, basic->GetIPLString().To8BitData(), len);
+			memcpy(buf, basic->GetVariousStringParam(wxT("IPLString")).To8BitData(), len);
 			mem_invert(buf, len);
 			sector->Copy(buf, len);
 		}

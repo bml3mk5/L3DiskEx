@@ -9,6 +9,7 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+#include "config.h"
 #include "utils.h"
 
 
@@ -19,8 +20,8 @@ DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
 }
-DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data)
+	: DiskBasicDirItem(basic, sector, secpos, data)
 {
 }
 DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
@@ -36,7 +37,7 @@ bool DiskBasicDirItemMZBase::Delete(wxUint8 code)
 	SetFileType1(code);
 	Used(false);
 	// 開始グループを未使用にする
-	type->SetGroupNumber(GetStartGroup(), 0);
+	type->SetGroupNumber(GetStartGroup(0), 0);
 	return true;
 }
 
@@ -49,7 +50,7 @@ void DiskBasicDirItemMZBase::InitialData()
 /// ファイルサイズをセット
 void DiskBasicDirItemMZBase::SetFileSize(int val)
 {
-	file_size = val;
+	m_groups.SetSize(val);
 	SetFileSizeBase(val);
 }
 
@@ -59,51 +60,11 @@ void DiskBasicDirItemMZBase::PreCalcFileSize()
 }
 
 /// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemMZBase::CalcFileSize()
+void DiskBasicDirItemMZBase::CalcFileUnitSize(int fileunit_num)
 {
 	if (!IsUsed()) return;
 
-	// ファイルサイズ
-	file_size = GetFileSizeBase();
-	PreCalcFileSize();
-
-	int calc_groups = 0;
-
-	bool rc = true;
-	wxUint32 group_num = GetStartGroup();
-	int remain = file_size;
-	int sec_size = basic->GetSectorSize();
-	int calc_flags = 0;
-	void *user_data = NULL;
-
-	PreCalcAllGroups(calc_flags, group_num, remain, sec_size, &user_data);
-
-	int limit = basic->GetFatEndGroup() + 1;
-	while(remain > 0 && limit >= 0) {
-		// 使用しているか
-		bool used_group = type->IsUsedGroupNumber(group_num);
-		if (used_group) {
-			int start_sec = type->GetStartSectorFromGroup(group_num);
-			int end_sec = type->GetEndSectorFromGroup(group_num, 0, start_sec, sec_size, remain);
-			CalcAllGroups(calc_flags, group_num, remain, sec_size, end_sec, user_data);
-			calc_groups++;
-			remain -= (sec_size * basic->GetSectorsPerGroup());
-		} else {
-			limit = 0;
-			rc = false;
-		}
-		limit--;
-	}
-	if (limit < 0) {
-		rc = false;
-	}
-
-	// グループ数を計算
-	if (rc) {
-		groups = calc_groups;
-	}
-
-	PostCalcAllGroups(user_data);
+	GetUnitGroups(fileunit_num, m_groups);
 }
 
 /// グループ取得計算前処理
@@ -122,12 +83,19 @@ void DiskBasicDirItemMZBase::PostCalcAllGroups(void *user_data)
 }
 
 /// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemMZBase::GetAllGroups(DiskBasicGroups &group_items)
+/// @param [in]  fileunit_num ファイル番号
+/// @param [out] group_items  グループリスト
+void DiskBasicDirItemMZBase::GetUnitGroups(int fileunit_num, DiskBasicGroups &group_items)
 {
-	wxUint32 group_num = GetStartGroup();
-	int remain = file_size;
+	// ファイルサイズ
+	int calc_file_size = GetFileSizeBase();
+	PreCalcFileSize();
+
+	wxUint32 group_num = GetStartGroup(fileunit_num);
+	int remain = calc_file_size;
 	int sec_size = basic->GetSectorSize();
 	int calc_flags = 0;
+	int calc_groups = 0;
 	void *user_data = NULL;
 
 	PreCalcAllGroups(calc_flags, group_num, remain, sec_size, &user_data);
@@ -140,6 +108,7 @@ void DiskBasicDirItemMZBase::GetAllGroups(DiskBasicGroups &group_items)
 			int end_sec = -1;
 			basic->GetNumsFromGroup(group_num, 0, sec_size, remain, group_items, &end_sec);
 			CalcAllGroups(calc_flags, group_num, remain, sec_size, end_sec, user_data);
+			calc_groups++;
 			remain -= (sec_size * basic->GetSectorsPerGroup());
 		} else {
 			limit = 0;
@@ -147,29 +116,22 @@ void DiskBasicDirItemMZBase::GetAllGroups(DiskBasicGroups &group_items)
 		limit--;
 	}
 
-	group_items.SetSize(file_size);
+	group_items.SetNums(calc_groups);
+	group_items.SetSize(calc_file_size);
+	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
 
 	PostCalcAllGroups(user_data);
 }
 
-
-/// ファイルパスから内部ファイル名を生成する
-wxString DiskBasicDirItemMZBase::RemakeFileNameStr(const wxString &filepath) const
-{
-	wxString newname;
-	wxFileName fn(filepath);
-	size_t nl;
-	GetFileNamePos(nl);
-	newname = fn.GetFullName().Left(nl);
-	return newname;
-}
-
+#if 0
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemMZBase::GetDefaultInvalidateChars() const
 {
 	return wxT("\"\\/:*?");
 }
+#endif
 
+#if 0
 /// 同じファイル名か
 bool DiskBasicDirItemMZBase::IsSameFileName(const DiskBasicFileName &filename) const
 {
@@ -178,6 +140,7 @@ bool DiskBasicDirItemMZBase::IsSameFileName(const DiskBasicFileName &filename) c
 
 	return DiskBasicDirItem::IsSameFileName(filename);
 }
+#endif
 
 bool DiskBasicDirItemMZBase::IsDeletable() const
 {
@@ -214,36 +177,15 @@ bool DiskBasicDirItemMZBase::IsFileNameEditable() const
 
 #include <wx/choice.h>
 
-/// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemMZBase::GetFileAttrStrSub(DiskBasic *basic, int pos1, const char *list[], int unknown_pos)
-{
-	wxString attr;
-	if (pos1 >= 0) {
-		attr = wxGetTranslation(list[pos1]);
-	} else {
-		const SpecialAttribute *sa = NULL;
-		for(int i=0; i<2 && sa == NULL; i++) {
-			if (i == 0) sa = basic->FindSpecialAttr(-pos1);
-			else        sa = basic->GetFormatType()->FindSpecialAttr(-pos1);
-
-			if (sa != NULL) attr = sa->GetName();
-		}
-		if (sa == NULL) {
-			attr = wxGetTranslation(list[unknown_pos]);
-		}
-	}
-	return attr;
-}
-
 /// 属性の選択肢を作成する（プロパティダイアログ用）
 void DiskBasicDirItemMZBase::CreateChoiceForAttrDialog(DiskBasic *basic, const char *list[], int end_pos, wxArrayString &types1)
 {
 	for(size_t i=0; i<(size_t)end_pos; i++) {
 		types1.Add(wxGetTranslation(list[i]));
 	}
-	const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+	const L3Attributes *attrs = &basic->GetSpecialAttributes();
 	for(size_t i=0; i<attrs->Count(); i++) {
-		const SpecialAttribute *attr = &attrs->Item(i);
+		const L3Attribute *attr = &attrs->Item(i);
 		wxString str;
 		str += attr->GetName();
 		str += wxString::Format(wxT(" 0x%02x"), attr->GetValue());
@@ -260,7 +202,7 @@ void DiskBasicDirItemMZBase::CreateChoiceForAttrDialog(DiskBasic *basic, const c
 int  DiskBasicDirItemMZBase::SelectChoiceForAttrDialog(DiskBasic *basic, wxChoice *choice, int file_type_1, int end_pos, int unknown_pos)
 {
 	if (file_type_1 < 0) {
-		const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+		const L3Attributes *attrs = &basic->GetSpecialAttributes();
 		int n_type = attrs->GetIndexByValue(-file_type_1);
 		if (n_type >= 0) {
 			file_type_1 = n_type + end_pos;
@@ -272,16 +214,31 @@ int  DiskBasicDirItemMZBase::SelectChoiceForAttrDialog(DiskBasic *basic, wxChoic
 }
 
 /// リストの位置から属性を返す(プロパティダイアログ用)
-int DiskBasicDirItemMZBase::CalcSpecialFileTypeFromPos(DiskBasic *basic, int pos, int end_pos)
+int DiskBasicDirItemMZBase::CalcSpecialOriginalTypeFromPos(DiskBasic *basic, int pos, int end_pos)
 {
 	int val = -1;
 	if (pos >= end_pos) {
 		pos -= end_pos;
-		const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+		const L3Attributes *attrs = &basic->GetSpecialAttributes();
 		int count = (int)attrs->Count();
 		if (pos < count) {
 			val = attrs->GetValueByIndex(pos);
 		}
 	}
 	return val;
+}
+
+/// リストの位置から属性を返す(プロパティダイアログ用)
+int DiskBasicDirItemMZBase::CalcSpecialFileTypeFromPos(DiskBasic *basic, int pos, int end_pos)
+{
+	int t = 0;
+	if (pos >= end_pos) {
+		pos -= end_pos;
+		const L3Attributes *attrs = &basic->GetSpecialAttributes();
+		int count = (int)attrs->Count();
+		if (pos < count) {
+			t = attrs->GetTypeByIndex(pos);
+		}
+	}
+	return t;
 }

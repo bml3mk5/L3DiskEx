@@ -52,59 +52,71 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 	return new_num;
 }
 
-/// FATエリアをチェック
-/// @return false エラーあり
-bool DiskBasicTypeN88::CheckFat()
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+double DiskBasicTypeN88::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
 		end_group /= basic->GetSectorsPerGroup();
 		basic->SetFatEndGroup(end_group - 1);
 	}
+	return 1.0;
+}
 
-	bool valid = DiskBasicTypeFAT8::CheckFat();
-	if (valid) {
+/// FATエリアをチェック
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeN88::CheckFat(bool is_formatting)
+{
+	double valid_ratio = DiskBasicTypeFAT8::CheckFat(is_formatting);
+	if (valid_ratio >= 0.0) {
 		// FAT,ディレクトリエリアはシステム予約となっているか
 		wxArrayInt groups = basic->GetReservedGroups();
 		for(size_t idx = 0; idx < groups.Count(); idx++) {
 			wxUint32 grp = GetGroupNumber((wxUint32)groups.Item(idx));
 			if (grp != basic->GetGroupSystemCode()) {
-				valid = false;
+				valid_ratio = -1.0;
 				break;
 			}
 		}
 	}
-	return valid;
+	return valid_ratio;
 }
 
 /// セクタデータを指定コードで埋める
 void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
-	// FAT,DIRエリアが属するトラック、サイド
-	int sec_pos = basic->GetFatStartSector() + (basic->GetFatSideNumber() * basic->GetSectorsPerTrackOnBasic()) - 1;
-
-	if (track == basic->GetManagedTrack(sec_pos)) {
-		// ファイル管理エリアの場合(指定サイドのみ)
-		sector->Fill(basic->GetFillCodeOnFAT());
-	} else {
-		// ユーザーエリア
-		sector->Fill(basic->GetFillCodeOnFormat());
-	}
+	sector->Fill(basic->GetFillCodeOnFormat());
 }
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeN88::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
+	DiskD88Track *track = NULL;
+	DiskD88Sectors *sectors = NULL;
+	DiskD88Sector *sector = NULL;
+
+	// FAT,DIRエリア
+	track = basic->GetTrack(basic->GetManagedTrackNumber(), basic->GetFatSideNumber());
+	if (!track) return false;
+	sectors = track->GetSectors();
+	if (!sectors) return false;
+	int id_sec = (basic->GetDirEndSector() + 1) % basic->GetSectorsPerTrackOnBasic();
+	for(size_t i = 0; i < sectors->Count(); i++) {
+		sector = sectors->Item(i);
+		if (sector) {
+			// ファイル管理エリアをクリア IDエリアは0でクリア
+			sector->Fill(sector->GetSectorNumber() != id_sec ? basic->GetFillCodeOnFAT() : 0);
+		}
+	}
+
 	// システムで使用している部分のクラスタ位置を予約済みにする
 	wxArrayInt grps = basic->GetReservedGroups();
 	for(size_t i = 0; i < grps.Count(); i++) {
 		SetGroupNumber(grps[i], basic->GetGroupSystemCode());
-	}
-	// IDをクリア
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetDirEndSector());
-	if (sector) {
-		sector->Fill(0);
 	}
 
 	return true;
@@ -127,13 +139,14 @@ int DiskBasicTypeN88::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputSt
 	// ファイルサイズはセクタサイズ境界なので要計算
 	if (item->NeedCheckEofCode()) {
 		// 終端コードの1つ前までを出力
+		wxUint8 eof_code = basic->InvertUint8(basic->GetTextTerminateCode());
 		wxUint8 null_code = basic->InvertUint8(0);
 		// ランダムアクセス時は除く
 		int len = sector_size - 1;
 		for(; len >= 0; len--) {
-			if (sector_buffer[len] != null_code) break;
+			if (sector_buffer[len] != eof_code && sector_buffer[len] != null_code) break;
 		}
-		if (len >= 0) sector_size = len;
+		if (len >= 0) sector_size = len + 1;
 	} else {
 		// 計算手段がないので残りサイズをそのまま返す
 		if (istream) {
@@ -169,12 +182,17 @@ int DiskBasicTypeN88::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, 
 	if (remain <= size) {
 		// 残り少ない
 		if (remain < 0) remain = 0;
-		if (need_eof_code) {
-			// 最終は終端コード
-			if (remain > 1) istream.Read((void *)buffer, remain - 1);
-			if (remain > 0) buffer[remain - 1]=0x1a;
-		} else {
-			if (remain > 0) istream.Read((void *)buffer, remain);
+		if (remain > 0) {
+			if (need_eof_code) {
+				int iread = (int)istream.Read((void *)buffer, remain).LastRead();
+				// 最終は終端コードを入れる
+				// ただし、残りサイズが丁度セクタサイズなら入れない
+				if (iread + 1 == remain) {
+					buffer[remain - 1]=basic->GetTextTerminateCode();
+				}
+			} else {
+				istream.Read((void *)buffer, remain);
+			}
 		}
 		if (size > remain) {
 			// バッファの余りは0サプレス
@@ -185,10 +203,6 @@ int DiskBasicTypeN88::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, 
 		// 継続
 		istream.Read((void *)buffer, size);
 		len = size;
-		if (need_eof_code && remain == size + 1) {
-			// のこりが終端コードだけなら終端コードを出さずここで終了
-			len++;
-		}
 	}
 	// 反転
 	basic->InvertMem(buffer, size);

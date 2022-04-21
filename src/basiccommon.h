@@ -11,6 +11,10 @@
 
 #include "common.h"
 #include <wx/string.h>
+#include <wx/dynarray.h>
+
+#define FILENAME_BUFSIZE	(32)
+#define FILEEXT_BUFSIZE		(4)
 
 /// 共通属性フラグ
 enum en_file_type_mask {
@@ -28,6 +32,7 @@ enum en_file_type_mask {
 	FILE_TYPE_VOLUME_MASK	 = 0x00800,
 	FILE_TYPE_DIRECTORY_MASK = 0x01000,
 	FILE_TYPE_ARCHIVE_MASK	 = 0x02000,
+	FILE_TYPE_LIBRARY_MASK	 = 0x04000,
 	FILE_TYPE_NONSHARE_MASK	 = 0x08000,
 	FILE_TYPE_UNDELETE_MASK	 = 0x10000,
 	FILE_TYPE_WRITEONLY_MASK = 0x20000,
@@ -49,6 +54,7 @@ enum en_file_type_pos {
 	FILE_TYPE_VOLUME_POS	= 11,
 	FILE_TYPE_DIRECTORY_POS = 12,
 	FILE_TYPE_ARCHIVE_POS	= 13,
+	FILE_TYPE_LIBRARY_POS	= 14,
 	FILE_TYPE_NONSHARE_POS	= 15,
 	FILE_TYPE_UNDELETE_POS	= 16,
 	FILE_TYPE_WRITEONLY_POS	= 17,
@@ -98,7 +104,7 @@ typedef struct st_directory_n88 {
 	char reserved[5];
 } directory_n88_t;
 
-/// ディレクトリエントリ X1 Hu-BASIC
+/// ディレクトリエントリ X1 Hu-BASIC (32bytes)
 typedef struct st_directory_x1_hu {
 	wxUint8 type;
 	wxUint8 name[13];
@@ -113,7 +119,7 @@ typedef struct st_directory_x1_hu {
 	wxUint16 start_group_l;
 } directory_x1_hu_t;
 
-/// ディレクトリエントリ MZ DISK BASIC
+/// ディレクトリエントリ MZ DISK BASIC (32bytes)
 typedef struct st_directory_mz {
 	wxUint8 type;
 	wxUint8 name[17];	// file name has $0D on the end of string
@@ -126,7 +132,7 @@ typedef struct st_directory_mz {
 	wxUint16 start_sector;
 } directory_mz_t;
 
-/// ディレクトリエントリ MS-DOS FAT
+/// ディレクトリエントリ MS-DOS FAT (32bytes)
 typedef struct st_directory_ms_dos {
 	wxUint8 name[8];
 	wxUint8 ext[3];
@@ -143,7 +149,46 @@ typedef struct st_directory_ms_dos {
 	wxUint32 file_size;
 } directory_msdos_t;
 
-/// ディレクトリエントリ FLEX
+/// ディレクトリエントリ MS-DOS LFN (32bytes)
+typedef struct st_directory_ms_lfn {
+	wxUint8 order;
+	wxUint8 name[10];
+	wxUint8 type;
+	wxUint8 type2;
+	wxUint8 chksum;
+	wxUint8 name2[12];
+	wxUint16 dummy_group;
+	wxUint8 name3[4];
+} directory_ms_lfn_t;
+
+/// ディレクトリエントリ Human68K (MS-DOS compatible) (32bytes)
+typedef struct st_directory_hu68k {
+	wxUint8 name[8];
+	wxUint8 ext[3];
+	wxUint8 type;
+	wxUint8 name2[10];
+	wxUint16 wtime;
+	wxUint16 wdate;
+	wxUint16 start_group;
+	wxUint32 file_size;
+} directory_hu68k_t;
+
+/// ディレクトリエントリ L-os Angeles (MS-DOS compatible) (32bytes)
+typedef struct st_directory_losa {
+	wxUint8 name[8];
+	wxUint8 ext[3];
+	wxUint8 type;
+	wxUint8 start_addr[4];
+	wxUint8 binary_type;
+	wxUint8 exec_addr[4];
+	wxUint8 reserved;
+	wxUint16 wtime;
+	wxUint16 wdate;
+	wxUint16 start_group;
+	wxUint32 file_size;
+} directory_losa_t;
+
+/// ディレクトリエントリ FLEX (24bytes)
 typedef struct st_directory_flex {
 	wxUint8 name[8];
 	wxUint8 ext[3];
@@ -204,7 +249,7 @@ typedef struct st_os9_cdate {
 	wxUint8 dd;
 } os9_cdate_t;
 
-/// ディレクトリエントリ OS-9
+/// ディレクトリエントリ OS-9 (32bytes)
 typedef struct st_directory_os9 {
 	wxUint8		DE_NAM[28];
 	wxUint8		DE_Reserved;
@@ -222,7 +267,7 @@ typedef struct st_directory_os9_fd {
 	os9_segment_t FD_SEG[48];	// 5*48=240
 } directory_os9_fd_t;
 
-/// ディレクトリエントリ CP/M
+/// ディレクトリエントリ CP/M (32bytes)
 typedef struct st_directory_cpm {
 	wxUint8	type;	// user id
 	wxUint8 name[8];
@@ -246,6 +291,23 @@ typedef struct st_directory_tfdos {
 	wxUint8  track;
 } directory_tfdos_t;
 
+/// ディレクトリエントリ PC-8001 DOS (New PC.DOS) (16bytes)
+typedef struct st_directory_dos80 {
+	wxUint8 name[16];
+} directory_dos80_t;
+
+/// PC-8001 DOS (New PC.DOS) グループエントリ
+typedef struct st_directory_dos80_grp {
+	wxUint8  g;
+	wxUint16 a;
+} directory_dos80_grp_t;
+
+/// ディレクトリエントリ2 PC-8001 DOS (New PC.DOS) (16bytes)
+typedef struct st_directory_dos80_2 {
+	directory_dos80_grp_t grps[5];
+	wxUint8 reserved[1];
+} directory_dos80_2_t;
+
 /// ディレクトリエントリ C-DOS (32bytes)
 typedef struct st_directory_cdos {
 	wxUint8  type;
@@ -263,12 +325,142 @@ typedef struct st_directory_cdos {
 	wxUint8  sector;
 } directory_cdos_t;
 
+/// ディレクトリエントリ MZ Floppy DOS (64bytes)
+typedef struct st_directory_mz_fdos {
+	wxUint8  type;
+	wxUint8  name[17];	// file name has $0D on the end of string
+	wxUint16 file_size;
+	wxUint16 load_addr;
+	wxUint16 exec_addr;
+	wxUint16 groups;
+	wxUint8  attr[2];		// 0x30 0x53
+	wxUint8  password[2];	// 0x00 0x00
+	wxUint16 dummy_sector;	// 0x01 0x02
+
+	wxUint8  mmddyy[7];
+	wxUint8  reserved2[13];
+	wxUint8  track;
+	wxUint8  sector;
+	wxUint8  reserved3[5];
+	wxUint8  seq_num;
+	wxUint8  unknown1;		// 0x9x - 0xax
+	wxUint8  unknown2;		// 0x15
+	wxUint8  data_track;
+	wxUint8  data_sector;
+} directory_mz_fdos_t;
+
+/// ディレクトリエントリ Frost-DOS (16bytes)
+typedef struct st_directory_frost {
+	wxUint8  name[6];
+	wxUint8  ext[3];
+	wxUint8  type;
+	wxUint8  track;
+	wxUint8  sector;
+	wxUint16 load_addr;
+	wxUint16 size;
+} directory_frost_t;
+
+/// X-DOSセグメント情報
+typedef struct st_xdos_seg {
+	wxUint8 track;
+	wxUint8 sector;
+	wxUint8 size;
+} xdos_seg_t;
+
+/// ディレクトリエントリ X-DOS X1 (32bytes)
+typedef struct st_directory_xdos {
+	wxUint16 ftype;		// big endien
+	wxUint8  name[16];
+	wxUint16 load_addr;
+	wxUint16 file_size;
+	wxUint16 exec_addr;
+	wxUint16 date;
+	wxUint16 time;
+	wxUint8  attr;		// アトリビュート
+	xdos_seg_t start;
+} directory_xdos_t;
+
+/// Magical DOS セグメント情報
+typedef struct st_magical_seg {
+	wxUint8  track;
+	wxUint8  sector;
+	wxUint8  size;
+} magical_seg_t;
+
+/// ディレクトリエントリ parts Magical DOS
+struct st_directory_magical_p0 {
+	wxUint8  type;
+	wxUint8  name[15];
+};
+struct st_directory_magical_p1 {
+	wxUint8  name[16];
+};
+struct st_directory_magical_p2 {
+	wxUint8  type2;
+	wxUint16 load_addr;
+	wxUint16 file_size;
+	wxUint16 exec_addr;
+	wxUint8  date[2];
+	wxUint8  time[2];
+	wxUint8  reserved[2];
+	magical_seg_t start;
+};
+
+/// ディレクトリエントリ Magical DOS (48bytes)
+struct st_directory_magical {
+	struct st_directory_magical_p0 p0;
+	struct st_directory_magical_p1 p1;
+	struct st_directory_magical_p2 p2;
+};
+
+/// Magical DOSのエントリはセクタをまたぐので
+/// ポインタでアクセス可能にする
+typedef union un_directory_magical {
+	struct st_directory_magical s;
+	wxUint8 p[3][16];
+} directory_magical_t;
+
+/// ディレクトリエントリ S-DOS (32bytes)
+struct st_directory_sdos {
+	wxUint8  name[22];
+	wxUint8  type;
+	wxUint8  track;
+	wxUint8  sector;
+	wxUint8  size;		// number of sector
+	wxUint8  rest_size;
+	wxUint16 load_addr;
+	wxUint16 exec_addr;
+	wxUint8  reserved;
+};
+
+typedef union un_directory_sdos {
+	struct st_directory_sdos s;
+	wxUint8 p[32];
+} directory_sdos_t;
+
+/// ディレクトリエントリ C82-BASIC (32bytes)
+typedef struct st_directory_fp {
+	wxUint8  type;
+	wxUint8  name[8];
+	wxUint8  ext[3];
+	wxUint8  term;
+	wxUint8  unknown[7];
+	wxUint16 load_addr;
+	wxUint16 end_addr;
+	wxUint16 exec_addr;
+	wxUint16 file_size;
+	wxUint8  start_group;
+	wxUint8  attr;
+	wxUint8  reserved[2];
+} directory_fp_t;
+
 /// ディレクトリエントリ サイズに注意！
 typedef union un_directory {
 	wxUint8				name[16];
 	directory_l3_2d_t	l3_2d;
 	directory_fat8f_t	fat8f;
 	directory_msdos_t	msdos;
+	directory_ms_lfn_t	mslfn;
 	directory_n88_t		n88;
 	directory_x1_hu_t	x1hu;
 	directory_mz_t		mz;
@@ -276,13 +468,22 @@ typedef union un_directory {
 	directory_os9_t		os9;
 	directory_cpm_t		cpm;
 	directory_tfdos_t	tfdos;
+	directory_dos80_t	dos80;
+	directory_frost_t	frost;
+	directory_magical_t magical;
+	directory_sdos_t	sdos;
+	directory_fp_t		fp;
+	directory_xdos_t	xdos;
 	directory_cdos_t	cdos;
+	directory_mz_fdos_t	fdos;
+	directory_hu68k_t	hu68k;
+	directory_losa_t	losa;
 } directory_t;
 #pragma pack()
 
 /// DISK BASIC種類 番号
 enum DiskBasicFormatType {
-	FORMAT_TYPE_NONE	= -1,
+	FORMAT_TYPE_UNKNOWN	= -1,
 	FORMAT_TYPE_L3_1S	= 0,
 	FORMAT_TYPE_L3S1_2D = 1,
 	FORMAT_TYPE_FM		= 2,
@@ -294,9 +495,44 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_FLEX	= 8,
 	FORMAT_TYPE_OS9		= 9,
 	FORMAT_TYPE_CPM		= 10,
+	FORMAT_TYPE_PA		= 11,
+	FORMAT_TYPE_SMC		= 12,
+	FORMAT_TYPE_FP		= 13,
+	FORMAT_TYPE_HU68K	= 14,
+	FORMAT_TYPE_LOSA	= 31,
+	FORMAT_TYPE_CDOS2	= 32,
+	FORMAT_TYPE_DOS80	= 51,
+	FORMAT_TYPE_FROST	= 52,
+	FORMAT_TYPE_MAGICAL	= 53,
+	FORMAT_TYPE_SDOS	= 54,
+	FORMAT_TYPE_XDOS	= 61,
 	FORMAT_TYPE_TFDOS	= 71,
 	FORMAT_TYPE_CDOS	= 72,
+	FORMAT_TYPE_MZ_FDOS	= 73,
 };
+
+//////////////////////////////////////////////////////////////////////
+
+/// ファイルプロパティでファイル名変更した時に渡す値
+class DiskBasicFileName
+{
+private:
+	wxString	name;		///< ファイル名
+	int			optional;	///< 拡張属性 ファイル名が同じでも、この属性が異なれば違うファイルとして扱う
+
+public:
+	DiskBasicFileName();
+	DiskBasicFileName(const wxString &n_name, int n_optional = 0);
+	~DiskBasicFileName();
+
+	const wxString &GetName() const { return name; }
+	wxString &GetName() { return name; }
+	void SetName(const wxString &val) { name = val; }
+	int GetOptional() const { return optional; }
+	void SetOptional(int val) { optional = val; }
+};
+
+//////////////////////////////////////////////////////////////////////
 
 /// 属性保存クラス
 class DiskBasicFileType
@@ -326,6 +562,85 @@ public:
 	bool IsDirectory() const;
 };
 
+//////////////////////////////////////////////////////////////////////
+
+/// グループ番号に対応するパラメータを保持
+class DiskBasicGroupItem
+{
+public:
+	wxUint32 group;
+	wxUint32 next;
+	int track;
+	int side;
+	int sector_start;
+	int sector_end;
+	int div_num;
+	int div_nums;
+public:
+	DiskBasicGroupItem();
+	DiskBasicGroupItem(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div = 0, int n_divs = 1);
+	~DiskBasicGroupItem() {}
+	void Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div = 0, int n_divs = 1);
+	static int Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2);
+};
+
+WX_DECLARE_OBJARRAY(DiskBasicGroupItem, DiskBasicGroupItems);
+
+//////////////////////////////////////////////////////////////////////
+
+/// グループ番号のリストを保持
+class DiskBasicGroups
+{
+private:
+	DiskBasicGroupItems	items;			///< グループ番号のリスト
+	int					nums;			///< グループ数
+	size_t				size;			///< グループ内の占有サイズ
+	size_t				size_per_group;	///< １グループのサイズ
+
+public:
+	DiskBasicGroups();
+	~DiskBasicGroups() {}
+
+	void	Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div = 0, int n_divs = 1);
+	void	Add(const DiskBasicGroupItem &item);
+	void	Add(const DiskBasicGroups &n_items);
+	/// リストをクリア
+	void	Empty();
+	/// リストの数を返す
+	size_t	Count() const;
+	/// リストの最後を返す
+	DiskBasicGroupItem &Last() const;
+	/// リストアイテムを返す
+	DiskBasicGroupItem &Item(size_t idx) const;
+	/// リストアイテムを返す
+	DiskBasicGroupItem *ItemPtr(size_t idx) const;
+	/// リストを返す
+	const DiskBasicGroupItems &GetItems() const { return items; }
+
+	/// グループ数を返す
+	int		GetNums() const { return nums; }
+	/// 占有サイズを返す
+	size_t	GetSize() const { return size; }
+	/// １グループのサイズを返す
+	size_t	GetSizePerGroup() const { return size_per_group; }
+
+	/// グループ数を設定
+	void	SetNums(int val) { nums = val; }
+	/// 占有サイズを設定
+	void	SetSize(size_t val) { size = val; }
+	/// １グループのサイズを設定
+	void	SetSizePerGroup(size_t val) { size_per_group = val; }
+
+	/// グループ数を足す
+	int		AddNums(int val);
+	/// 占有サイズを足す
+	int		AddSize(int val);
+
+	/// グループ番号でソート
+	void SortItems();
+};
+
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -334,8 +649,11 @@ enum en_fat_availability {
 	FAT_AVAIL_FREE = 0,
 	FAT_AVAIL_SYSTEM,
 	FAT_AVAIL_USED,
+	FAT_AVAIL_USED_FIRST,
 	FAT_AVAIL_USED_LAST,
-	FAT_AVAIL_MISSING
+	FAT_AVAIL_MISSING,
+	FAT_AVAIL_LEAK,
+	FAT_AVAIL_NULLEND
 };
 
 #endif /* _BASICCOMMON_H_ */

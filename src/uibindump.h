@@ -37,6 +37,7 @@ public:
 
 class wxMenu;
 class wxCheckBox;
+class wxChoice;
 class wxRadioButton;
 class wxButton;
 
@@ -60,9 +61,9 @@ private:
 		IDM_VIEW_INVERT = 1,
 		IDM_VIEW_TEXT,
 		IDM_VIEW_BINARY,
-		IDM_VIEW_CHAR_ASCII,
-		IDM_VIEW_CHAR_SJIS,
 		IDM_VIEW_FONT,
+
+		IDM_VIEW_CHAR_0,
 	};
 
 public:
@@ -84,7 +85,7 @@ public:
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
-	void SetDataChar(int val);
+	void SetDataChar(int sel);
 	void SetDataFont(const wxFont &font);
 	void GetDefaultDataFont(wxFont &font);
 	wxFont GetDefaultFont() const;
@@ -140,7 +141,7 @@ public:
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
-	void SetDataChar(int val);
+	void SetDataChar(const wxString &name);
 	void SetDataFont(const wxFont &font);
 	wxString GetDataFontName() const;
 	int GetDataFontSize() const;
@@ -156,10 +157,9 @@ private:
 	wxRadioButton *radText;
 	wxRadioButton *radBinary;
 
-	wxRadioButton *radCharAscii;
-	wxRadioButton *radCharSJIS;
+	wxChoice *comCharCode;
 	wxCheckBox *chkInvert;
-	wxButton *btnFont;
+//	wxButton *btnFont;
 
 public:
 	L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *parent);
@@ -168,8 +168,7 @@ public:
 	enum {
 		IDC_RADIO_TEXT = 1,
 		IDC_RADIO_BINARY,
-		IDC_RADIO_CHAR_ASCII,
-		IDC_RADIO_CHAR_SJIS,
+		IDC_COMBO_CHAR_CODE,
 		IDC_CHECK_INVERT,
 		IDC_BUTTON_FONT,
 	};
@@ -181,7 +180,7 @@ public:
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
-	void SetDataChar(int val);
+	void SetDataChar(const wxString &name);
 
 	wxDECLARE_EVENT_TABLE();
 };
@@ -204,7 +203,7 @@ private:
 
 	int  text_binary;
 	bool data_invert;
-	int  data_char;
+	wxString data_char;
 
 	Utils::Dump dump;
 
@@ -240,7 +239,7 @@ public:
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
-	void SetDataChar(int val);
+	void SetDataChar(const wxString &name);
 	void SetDataFont(const wxFont &font);
 	wxString GetDataFontName() const;
 	int GetDataFontSize() const;

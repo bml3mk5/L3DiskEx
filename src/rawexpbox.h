@@ -20,7 +20,7 @@ _("'%s' should only contain digits.")
 
 class wxTextCtrl;
 class wxCheckBox;
-class DiskParam;
+class DiskD88Disk;
 
 /// Rawエクスポート＆インポートボックス
 class RawExpBox : public wxDialog
@@ -32,13 +32,11 @@ private:
 	wxCheckBox *chkInvData;
 	wxCheckBox *chkRevSide;
 
-	const DiskParam *param;
+	DiskD88Disk *disk;
 	int sel_side_num;
 
-	int GetSideNumberWithRev(int num) const;
-
 public:
-	RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, const DiskParam *param, int sel_side_num
+	RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, int sel_side_num
 		, int start_track_num, int start_side_num, int start_sector_num
 		, int end_track_num = -1, int end_side_num = -1, int end_sector_num = -1
 		, bool invert_data = false, bool reverse_side = false

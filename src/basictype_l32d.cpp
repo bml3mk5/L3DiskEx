@@ -17,8 +17,8 @@ DiskBasicTypeL32D::DiskBasicTypeL32D(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 {
 }
 
-/// FATエリアをチェック
-bool DiskBasicTypeL32D::CheckFat()
+/// ディスクから各パラメータを取得＆必要なパラメータを計算
+double DiskBasicTypeL32D::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
@@ -27,18 +27,27 @@ bool DiskBasicTypeL32D::CheckFat()
 		end_group /= basic->GetSectorsPerGroup();
 		basic->SetFatEndGroup(end_group - 1);
 	}
+	return 1.0;
+}
 
-	bool valid = DiskBasicType::CheckFat();
-	if (valid) {
+/// FATエリアをチェック
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeL32D::CheckFat(bool is_formatting)
+{
+	double valid_ratio = DiskBasicTypeFAT8::CheckFat(is_formatting);
+	if (valid_ratio >= 0.0) {
 		// FAT先頭エリアのチェック
 		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 		if (!sector) {
-			valid = false;
+			valid_ratio = -1.0;
 		} else if (!(sector->Get(0) == 0 || sector->Get(0) == 0xff)) {
-			valid = false;
+			valid_ratio = -1.0;
 		}
 	}
-	return valid;
+	return valid_ratio;
 }
 
 /// 空き位置を返す
@@ -101,4 +110,23 @@ int DiskBasicTypeL32D::CalcDataStartSectorPos()
 int DiskBasicTypeL32D::CalcSkippedTrack()
 {
 	return basic->GetManagedTrackNumber();
+}
+
+/// グループ確保時に最後のグループ番号を計算する
+/// @param [in]     group_num	現在のグループ番号
+/// @param [in,out] size_remain	残りのデータサイズ
+/// @return 最後のグループ番号
+wxUint32 DiskBasicTypeL32D::CalcLastGroupNumber(wxUint32 group_num, int &size_remain)
+{
+	if ((size_remain % basic->GetSectorSize()) == 0) {
+		// サイズがセクタ境界になる場合はサイズを+1する。→次のセクタも確保させる
+		size_remain++;
+	}
+	if (size_remain > (basic->GetSectorsPerGroup() * basic->GetSectorSize())) {
+		// 次のグループが必要
+		return group_num;
+	} else {
+		// ここが最終グループ
+		return DiskBasicTypeFAT8::CalcLastGroupNumber(group_num, size_remain);
+	}
 }

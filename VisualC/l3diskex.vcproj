@@ -202,7 +202,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_cdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_cpm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_dos80.cpp"
 				>
 			</File>
 			<File
@@ -218,11 +226,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_fp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_frost.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_l31s.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_l32d.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_magical.cpp"
 				>
 			</File>
 			<File
@@ -242,6 +262,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_mz_fdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_n88.cpp"
 				>
 			</File>
@@ -250,11 +274,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_sdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_tfdos.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_x1hu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_xdos.cpp"
 				>
 			</File>
 			<File
@@ -286,7 +318,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_cdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_cpm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_dos80.cpp"
 				>
 			</File>
 			<File
@@ -306,11 +346,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_fp.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_frost.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_l31s.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_l32d.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_magical.cpp"
 				>
 			</File>
 			<File
@@ -330,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_mz_fdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_n88.cpp"
 				>
 			</File>
@@ -338,11 +394,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_pa.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_sdos.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_smc.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_tfdos.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_x1hu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_xdos.cpp"
 				>
 			</File>
 			<File
@@ -355,6 +427,10 @@
 			</File>
 			<File
 				RelativePath="..\src\config.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\configbox.cpp"
 				>
 			</File>
 			<File
@@ -375,6 +451,10 @@
 			</File>
 			<File
 				RelativePath="..\src\diskdskparser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskfdiparser.cpp"
 				>
 			</File>
 			<File
@@ -458,6 +538,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\uicdlistctrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uicdtreectrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uiclistctrl.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uictreectrl.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\uidiskattr.cpp"
 				>
 			</File>
@@ -504,7 +600,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_cdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_cpm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_dos80.h"
 				>
 			</File>
 			<File
@@ -520,11 +624,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_fp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_frost.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_l31s.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_l32d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_magical.h"
 				>
 			</File>
 			<File
@@ -544,6 +660,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_mz_fdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_n88.h"
 				>
 			</File>
@@ -552,11 +672,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_sdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_tfdos.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_x1hu.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_xdos.h"
 				>
 			</File>
 			<File
@@ -588,7 +716,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_cdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_cpm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_dos80.h"
 				>
 			</File>
 			<File
@@ -608,11 +744,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_fp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_frost.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_l31s.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_l32d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_magical.h"
 				>
 			</File>
 			<File
@@ -632,6 +780,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_mz_fdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_n88.h"
 				>
 			</File>
@@ -640,11 +792,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_pa.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_sdos.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_smc.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_tfdos.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_x1hu.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_xdos.h"
 				>
 			</File>
 			<File
@@ -657,6 +825,10 @@
 			</File>
 			<File
 				RelativePath="..\src\config.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\configbox.h"
 				>
 			</File>
 			<File
@@ -677,6 +849,10 @@
 			</File>
 			<File
 				RelativePath="..\src\diskdskparser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskfdiparser.h"
 				>
 			</File>
 			<File
@@ -757,6 +933,26 @@
 			</File>
 			<File
 				RelativePath="..\src\uibindump.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uicdlistctrl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uicdtreectrl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uiclistctrl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uicommon.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uictreectrl.h"
 				>
 			</File>
 			<File

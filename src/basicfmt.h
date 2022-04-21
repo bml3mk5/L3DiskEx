@@ -26,6 +26,7 @@ class DiskBasicDir;
 class DiskBasicType;
 class DiskBasicDirItem;
 class DiskBasicDirItems;
+class DiskBasicDirItemAttr;
 class DiskBasicGroups;
 class AttrControls;
 
@@ -51,27 +52,6 @@ public:
 	void SetVolumeName(const wxString &val) { volume_name = val; }
 	void SetVolumeNumber(int val) { volume_number = val; }
 	void SetVolumeDate(const wxString &val) { volume_date = val; }
-};
-
-//////////////////////////////////////////////////////////////////////
-
-/// ファイルプロパティでファイル名変更した時に渡す値
-class DiskBasicFileName
-{
-private:
-	wxString	name;		///< ファイル名
-	int			optional;	///< 拡張属性 ファイル名が同じでも、この属性が異なれば違うファイルとして扱う
-
-public:
-	DiskBasicFileName();
-	DiskBasicFileName(const wxString &n_name, int n_optional = 0);
-	~DiskBasicFileName();
-
-	const wxString &GetName() const { return name; }
-	wxString &GetName() { return name; }
-	void SetName(const wxString &val) { name = val; }
-	int GetOptional() const { return optional; }
-	void SetOptional(int val) { optional = val; }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -129,8 +109,8 @@ private:
 	int			data_start_sector;		///< グループ計算用 データ開始セクタ番号
 	int			skipped_track;			///< グループ計算する際にスキップするトラック番号
 //	bool		reverse_side;			///< グループ計算する際にサイド番号を逆転するか
-	int			char_code;				///< ファイルなどの文字コード
-	CharCodes	codes;
+	wxString	char_code;				///< ファイルなどの文字コード体系
+	CharCodes	codes;					///< 文字コード変換
 
 	wxString	desc_size;				///< 空きサイズを文字列に成形したもの
 
@@ -139,9 +119,11 @@ private:
 	/// BASIC種類を設定
 	void			CreateType();
 	/// 指定のDISK BASICでフォーマットされているかを解析＆チェック
-	int				ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam *match, bool is_formatting); 
+	double			ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam *match, bool is_formatting); 
 	/// セクタをディレクトリとして初期化
 	int				InitializeSectorsAsDirectory(DiskBasicGroups &group_items, int &file_size, int &sizeremain);
+
+	int				MaxRatio(wxArrayDouble &values);
 
 public:
 	DiskBasic();
@@ -154,11 +136,13 @@ public:
 	/// パラメータをクリア
 	void			Clear();
 
+	/// 固有のパラメータをセット
+	void			AssignParameter();
 	/// 現在選択しているディスクのFAT領域をアサイン
-	bool			AssignFat(bool is_formatting);
+	double			AssignFat(bool is_formatting);
 
 	/// 現在選択しているディスクのルートディレクトリ構造をチェック
-	bool			CheckRootDirectory(bool is_formatting);
+	double			CheckRootDirectory(bool is_formatting);
 	/// 現在選択しているディスクのルートディレクトリをアサイン
 	bool			AssignRootDirectory();
 	/// 現在選択しているディスクのFATとルートディレクトリをアサイン
@@ -172,6 +156,8 @@ public:
 	//@}
 	/// @name 読み出し
 	//@{
+	/// ロードできるか
+	bool			IsLoadableFile(DiskBasicDirItem *item);
 	/// 指定したディレクトリ位置のファイルをロード
 	bool			LoadFile(int item_number, const wxString &dstpath);
 	/// 指定したディレクトリアイテムのファイルをロード
@@ -181,8 +167,13 @@ public:
 
 	/// 指定したアイテムのファイルをベリファイ
 	bool			VerifyFile(DiskBasicDirItem *item, const wxString &srcpath);
+
+	/// 指定したストリームにファイルをロード
+	bool			LoadData(DiskBasicDirItem *item, wxOutputStream &ostream, size_t *outsize = NULL);
+	/// 指定したアイテムのファイルをベリファイ
+	bool			VerifyData(DiskBasicDirItem *item, wxInputStream &istream);
 	/// ディスクデータにアクセス（ロード/ベリファイで使用）
-	bool			AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, size_t *outsize = NULL);
+	bool			AccessUnitData(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, size_t *outsize = NULL);
 	//@}
 	/// @name 比較・チェック
 	//@{
@@ -190,11 +181,15 @@ public:
 	DiskBasicDirItem *FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 同じファイル名が既に存在して上書き可能か
 	int				IsFileNameDuplicated(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item = NULL, DiskBasicDirItem **next_item = NULL);
+	/// 同じファイル名が既に存在して上書き可能か
+	int				IsFileNameDuplicated(const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item = NULL, DiskBasicDirItem **next_item = NULL);
 
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxString &srcpath, int *file_size);
+#ifdef USE_CUSTOMDATA_FOR_DND
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxUint8 *buffer, size_t buflen);
+#endif
 
 	/// DISK BASICで使用できる残りディスクサイズ内か
 	bool			HasFreeDiskSize(int size);
@@ -214,13 +209,19 @@ public:
 	bool			SaveFile(const wxUint8 *buffer, size_t buflen, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem = NULL);
 	/// ストリームデータをディスクイメージにセーブ
 	bool			SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem = NULL);
+	/// ストリームデータをディスクイメージにセーブ
+	bool			SaveData(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *item, DiskBasicGroups &group_items, int &file_size);
+	/// ストリームデータをディスクイメージにセーブ
+	bool			SaveUnitData(int fileunit_num, wxInputStream &istream, int isize, const DiskBasicDirItem *pitem, DiskBasicDirItem *item, DiskBasicGroups &group_items, int &file_size);
 	//@}
 	/// @name 削除
 	//@{
 	/// ファイルを削除できるか
 	bool			IsDeletableFiles();
 	/// 指定したファイルを削除できるか
-	bool			IsDeletableFile(DiskBasicDirItem *item, DiskBasicGroups &group_items, bool clearmsg = true);
+	int				IsDeletableFile(DiskBasicDirItem *item, bool clearmsg = true);
+	/// 指定したディレクトリが空か
+	bool			IsEmptyDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, bool clearmsg = true);
 	/// ファイルを削除
 	bool			DeleteFile(DiskBasicDirItem *item, bool clearmsg = true);
 	/// ファイルを削除
@@ -231,9 +232,9 @@ public:
 	/// ファイル名や属性を更新できるか
 	bool			CanRenameFile(DiskBasicDirItem *item, bool showmsg = true);
 	/// ファイル名を更新
-	bool			RenameFile(DiskBasicDirItem *item, const DiskBasicFileName &newname);
+	bool			RenameFile(DiskBasicDirItem *item, const wxString &newname);
 	/// 属性を更新
-	bool			ChangeAttr(DiskBasicDirItem *item, int start_addr, int end_addr, int exec_addr, const struct tm *tm);
+	bool			ChangeAttr(DiskBasicDirItem *item, DiskBasicDirItemAttr &attr);
 	//@}
 	/// @name フォーマット
 	//@{
@@ -261,14 +262,16 @@ public:
 	/// サブディレクトリの作成できるか
 	bool			CanMakeDirectory() const;
 	/// サブディレクトリの作成
-	bool			MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem = NULL);
+	int				MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem = NULL);
+	/// ディレクトリのサイズを拡張
+	bool			ExpandDirectory(DiskBasicDirItem *dir_item);
 	//@}
 	/// @name ディレクトリアイテム操作
 	//@{
 	/// ディレクトリアイテムの作成 使用後はdeleteすること
 	DiskBasicDirItem *CreateDirItem();
 	/// ディレクトリアイテムの作成 使用後はdeleteすること
-	DiskBasicDirItem *CreateDirItem(DiskD88Sector *sector, wxUint8 *data);
+	DiskBasicDirItem *CreateDirItem(DiskD88Sector *sector, int secpos, wxUint8 *data);
 	/// ディレクトリのアイテムを取得
 	DiskBasicDirItem *GetDirItem(size_t pos);
 	/// ディレクトリアイテムの位置から開始セクタを返す
@@ -285,18 +288,22 @@ public:
 	/// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
 	bool			GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_size, int remain_size, DiskBasicGroups &items, int *end_sector = NULL);
 	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
-	bool			CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, int &side_start, int &sector_start);
+	bool			CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, int &side_start, int &sector_start, int *div_num = NULL, int *div_nums = NULL);
 	/// セクタ位置(トラック0,サイド0のセクタを0とした位置)からトラック、サイド、セクタの各番号を計算(グループ計算用)
-	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track_num, int &side_num, int &sector_num);
+	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
+	/// セクタ位置(トラック0のセクタ1を0とした位置)からトラック、セクタの各番号を計算(グループ計算用)
+	void			CalcNumFromSectorPosTForGroup(int sector_pos, int &track_num, int &sector_num);
 	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0のセクタを0とした位置)を計算(グループ計算用)
-	int				CalcSectorPosFromNumForGroup(int track_num, int side_num, int sector_num);
+	int				CalcSectorPosFromNumForGroup(int track_num, int side_num, int sector_num, int div_num = 0, int div_nums = 1);
+	/// トラック、セクタの各番号からセクタ位置(トラック0のセクタ1を0とした位置)を計算(グループ計算用)
+	int				CalcSectorPosFromNumTForGroup(int track_num, int sector_num);
 	//@}
 	/// @name ユーティリティ
 	//@{
 	/// 管理エリアのサイド番号、セクタ番号、トラックを得る
-	DiskD88Track	*GetManagedTrack(int sector_pos, int *side_num = NULL, int *sector_num = NULL);
+	DiskD88Track	*GetManagedTrack(int sector_pos, int *side_num = NULL, int *sector_num = NULL, int *div_num = NULL, int *div_nums = NULL);
 	/// 管理エリアのトラック番号、サイド番号、セクタ番号、セクタポインタを得る
-	DiskD88Sector	*GetManagedSector(int sector_pos, int *track_num = NULL, int *side_num = NULL, int *sector_num = NULL);
+	DiskD88Sector	*GetManagedSector(int sector_pos, int *track_num = NULL, int *side_num = NULL, int *sector_num = NULL, int *div_num = NULL, int *div_nums = NULL);
 
 	/// トラックを返す
 	DiskD88Track	*GetTrack(int track_num, int side_num);
@@ -306,32 +313,32 @@ public:
 	DiskD88Sector	*GetSector(int track_num, int sector_num, int *side_num = NULL);
 
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラックを返す
-	DiskD88Track	*GetTrackFromSectorPos(int sector_pos, int &sector_num);
+	DiskD88Track	*GetTrackFromSectorPos(int sector_pos, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
-	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos);
+	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int *div_num = NULL, int *div_nums = NULL);
 
-	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
-	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num);
-	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
-	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_num);
-	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
-	int				GetSectorPosFromNum(int track, int side, int sector_num);
-	/// トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
-	int				GetSectorPosFromNum(int track, int sector_num);
+//	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
+//	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
+//	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
+//	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_num);
+//	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+//	int				GetSectorPosFromNum(int track, int side, int sector_num, int div_num = 0, int div_nums = 1);
+//	/// トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+//	int				GetSectorPosFromNum(int track, int sector_num);
 	//@}
 	/// @name キャラクターコード
 	//@{
 	/// キャラクターコードの文字体系を設定
-	void			SetCharCode(int val);
+	void			SetCharCode(const wxString &name);
 	/// 現在のキャラクターコードの文字体系を返す
-	int				GetCharCode() const { return char_code; }
+	const wxString &GetCharCode() const { return char_code; }
 	/// キャラクターコードの文字体系
 	CharCodes		&GetCharCodes() { return codes; }
 
-	/// 文字列をバイト列に変換 文字コードは機種依存
-	bool			ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len);
-	/// バイト列を文字列に変換 文字コードは機種依存
-	void			ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst);
+//	/// 文字列をバイト列に変換 文字コードは機種依存
+//	int				ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len);
+//	/// バイト列を文字列に変換 文字コードは機種依存
+//	void			ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst);
 	//@}
 	/// @name プロパティ
 	//@{
@@ -341,6 +348,8 @@ public:
 	DiskD88Disk		*GetDisk() const { return disk; }
 	/// DISKイメージの番号を返す
 	int				GetDiskNumber() const;
+	/// 選択中のサイドを設定
+	void			SetSelectedSide(int val) { selected_side = val; }
 	/// 選択中のサイドを返す
 	int				GetSelectedSide() const { return selected_side; }
 	/// 選択中のサイド文字列を返す
@@ -393,6 +402,8 @@ public:
 	DiskBasicError	&GetErrinfo() { return errinfo; }
 	/// エラーメッセージを表示
 	void			ShowErrorMessage();
+	/// エラーメッセージをクリア
+	void			ClearErrorMessage();
 	//@}
 };
 

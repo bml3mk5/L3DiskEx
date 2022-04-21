@@ -28,8 +28,10 @@ public:
 
 	/// @name access to FAT area
 	//@{
+	/// ディスクから各パラメータを取得＆必要なパラメータを計算
+	double		ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
 	/// FATエリアをチェック
-	bool		CheckFat();
+	double 		CheckFat(bool is_formatting);
 	/// 空きFAT位置を返す
 	wxUint32	GetEmptyGroupNumber();
 	//@}
@@ -45,6 +47,12 @@ public:
 	int		CalcSkippedTrack();
 	/// データ領域の開始セクタを計算
 	int		CalcDataStartSectorPos();
+	//@}
+
+	/// @name save / write
+	//@{
+	/// @brief グループ確保時に最後のグループ番号を計算する
+	wxUint32 CalcLastGroupNumber(wxUint32 group_num, int &size_remain);
 	//@}
 };
 

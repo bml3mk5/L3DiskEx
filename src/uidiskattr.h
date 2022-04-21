@@ -15,7 +15,7 @@
 
 class wxTextCtrl;
 class wxButton;
-class wxComboBox;
+class wxChoice;
 class wxCheckBox;
 class wxBoxSizer;
 
@@ -31,7 +31,7 @@ private:
 
 	wxTextCtrl *txtAttr;
 	wxButton   *btnChange;
-	wxComboBox *comDensity;
+	wxChoice   *comDensity;
 	wxCheckBox *chkWprotect;
 	wxBoxSizer *szrButtons;
 
@@ -50,11 +50,14 @@ public:
 	void SetAttr(DiskD88Disk *newdisk);
 
 	void SetAttrText(const wxString &val);
-	void SetDiskDensity(const wxString &val);
-	void SetDiskDensity(int num);
+//	void SetDiskDensity(const wxString &val);
+	void SetDiskDensity(int val);
+	int  GetDiskDensity() const;
 	void SetWriteProtect(bool val, bool enable = true);
 	bool GetWriteProtect() const;
 	void ClearData();
+
+	void SetListFont(const wxFont &font);
 
 	enum {
 		IDC_TXT_ATTR = 1,
