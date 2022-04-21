@@ -1,7 +1,7 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.4.3
-                                                                2019/08/12
+                                                              Version 0.4.4
+                                                                2019/12/14
 
                             Copyright(C) Sasaji 2015-2019 All Rights Reserved.
 ==============================================================================
@@ -20,7 +20,7 @@
   ・シャープ X1 Hu-BASIC / MZ Hu-BASIC / S-OS SWORD
   ・シャープ MZ S-BASIC系
   ・シャープ MZ Floppy DOS
-  ・シャープ X68000 Human68k
+  ・シャープ X68000 Human68k (FAT12)
   ・東芝 パソピア T-BASIC
   ・ソニー SMC-777 Sony Filer
   ・カシオ FP-1100 C82-BASIC

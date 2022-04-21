@@ -436,7 +436,7 @@ public:
 	/// 拡張子でファイル種別を判別する 置換時
 	bool PreReplaceDisk(int disk_number, int side_number, const wxString &path);
 	/// 指定したディスクイメージ置換
-	void ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, DiskD88Disk *tag_disk);
+	void ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, int src_side_number, DiskD88Disk *tag_disk);
 	/// ディスクをファイルから削除
 	void DeleteDisk();
 	/// ディスク名を変更

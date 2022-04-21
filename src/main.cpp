@@ -1954,26 +1954,27 @@ bool L3DiskFrame::PreReplaceDisk(int disk_number, int side_number, const wxStrin
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
 		// 選択したディスク
-		DiskD88Disk *src_disk = src_file.GetDisk(dlg.GetSelection());
+		DiskD88Disk *src_disk = src_file.GetDisk(dlg.GetSelectedDiskNumber());
 		// 置き換え
-		ReplaceDisk(disk_number, side_number, path, src_disk, tag_disk);
+		ReplaceDisk(disk_number, side_number, path, src_disk, dlg.GetSelectedSideNumber(), tag_disk);
 	}
 	return true;
 }
 
 /// 指定したディスクイメージ置換
-/// @param [in] disk_number 置き換え対象ディスク番号
-/// @param [in] side_number 置き換え対象ディスクのサイド番号(両面なら-1)
-/// @param [in] path        置き換え元イメージファイルパス
-/// @param [in] src_disk    置き換え元ディスク
-/// @param [in] tag_disk    置き換え対象ディスク
-void L3DiskFrame::ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, DiskD88Disk *tag_disk)
+/// @param [in] disk_number     置き換え対象ディスク番号
+/// @param [in] side_number     置き換え対象ディスクのサイド番号(両面なら-1)
+/// @param [in] path            置き換え元イメージファイルパス
+/// @param [in] src_disk        置き換え元ディスク
+/// @param [in] src_side_number 置き換え元ディスクのサイド番号
+/// @param [in] tag_disk        置き換え対象ディスク
+void L3DiskFrame::ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, int src_side_number, DiskD88Disk *tag_disk)
 {
 	// set recent file path
 	SetIniRecentPath(path);
 
 	// open disk
-	int rc = d88.ReplaceDisk(disk_number, side_number, src_disk, tag_disk);
+	int rc = d88.ReplaceDisk(disk_number, side_number, src_disk, src_side_number, tag_disk);
 	if (rc >= 0) {
 		// update window
 		ClearRPanelData();

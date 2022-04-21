@@ -546,7 +546,7 @@ public:
 	/// 置換元のディスクを解析
 	int ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskD88File &src_file, DiskD88Disk* &tag_disk);
 	/// ファイルでディスクを置換
-	int ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, DiskD88Disk *tag_disk);
+	int ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, int src_side_number, DiskD88Disk *tag_disk);
 
 	/// ディスク名を設定
 	bool SetDiskName(size_t disk_number, const wxString &newname);

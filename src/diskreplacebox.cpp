@@ -13,6 +13,23 @@
 #include "diskd88.h"
 
 
+DiskReplaceNumber::DiskReplaceNumber()
+{
+	disknum = 0;
+	sidenum = 0;
+}
+DiskReplaceNumber::DiskReplaceNumber(int disknum_, int sidenum_)
+{
+	disknum = disknum_;
+	sidenum = sidenum_;
+}
+DiskReplaceNumber::~DiskReplaceNumber()
+{
+}
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(DiskReplaceNumbers);
+
 // Attach Event
 BEGIN_EVENT_TABLE(DiskReplaceBox, wxDialog)
 //	EVT_CHOICE(IDC_COMBO_FILE, DiskReplaceBox::OnFileChanged)
@@ -44,11 +61,32 @@ DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number,
 	// 元ディスク一覧
 	wxString str;
 	for(size_t idx = 0; idx < src_file.Count(); idx++) {
+		wxString sstr;
 		DiskD88Disk *disk = src_file.GetDisk(idx);
 		str = wxString::Format(_("[disk %d]"), (int)idx);
 		str += wxT(" ");
 		str += disk->GetDiskDescription();
-		comDisk->Append(str);
+		if (disk->IsReversible() && (side_number >= 0 || tag_disk.GetSidesPerDisk() == 1)) {
+			// AB面ありで片面のみ置換の場合
+			sstr = wxT(" ( ");
+			sstr += wxString::Format(_("side %c"), 'A');
+			sstr += wxT(" ( ");
+			sstr += wxString::Format(_("side %d"), 0);
+			sstr += wxT(" ))");
+		}
+		comDisk->Append(str + sstr);
+		numDisk.Add(DiskReplaceNumber((int)idx, 0));
+
+		if (disk->IsReversible() && (side_number >= 0 || tag_disk.GetSidesPerDisk() == 1)) {
+			// AB面ありで片面のみ置換の場合
+			sstr = wxT(" ( ");
+			sstr += wxString::Format(_("side %c"), 'B');
+			sstr += wxT(" ( ");
+			sstr += wxString::Format(_("side %d"), 1);
+			sstr += wxT(" ))");
+			comDisk->Append(str + sstr);
+			numDisk.Add(DiskReplaceNumber((int)idx, 1));
+		}
 	}
 	comDisk->SetSelection(0);
 
@@ -58,14 +96,15 @@ DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number,
 	str = wxString::Format(_("[disk %d]"), tag_disk.GetNumber());
 	str += wxT(" ");
 	str += tag_disk.GetDiskDescription();
+	if (side_number >= 0) {
+		str += wxT(" ( ");
+		str += wxString::Format(_("side %c"), side_number + 'A');
+		str += wxT(" ( ");
+		str += wxString::Format(_("side %d"), side_number);
+		str += wxT(" ))");
+	}
 	wxStaticText *txtTDisk = new wxStaticText(this, wxID_ANY, str, wxDefaultPosition, wxDefaultSize, wxBORDER_THEME);
 	szrAll->Add(txtTDisk, flags);
-
-	if (side_number >= 0) {
-		str = wxString::Format(_("I'll replace the data on side %d only."), side_number);
-		lbl = new wxStaticText(this, wxID_ANY, str);
-		szrAll->Add(lbl, flags);
-	}
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Are you sure to replace data in target disk by the selected disk?"));
 	szrAll->Add(lbl, flags);
@@ -101,7 +140,14 @@ void DiskReplaceBox::OnCancel(wxCommandEvent& event)
 	}
 }
 
-int DiskReplaceBox::GetSelection() const
+int DiskReplaceBox::GetSelectedDiskNumber() const
 {
-	return comDisk->GetSelection();
+	int idx = comDisk->GetSelection();
+	return numDisk.Item(idx).disknum;
+}
+
+int DiskReplaceBox::GetSelectedSideNumber() const
+{
+	int idx = comDisk->GetSelection();
+	return numDisk.Item(idx).sidenum;
 }

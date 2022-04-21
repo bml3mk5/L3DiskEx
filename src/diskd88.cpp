@@ -1083,6 +1083,11 @@ int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_nu
 			if (src_disk->GetSidesPerDisk() <= tag_side_number) {
 				tag_side_number = src_disk->GetSidesPerDisk() - 1;
 			}
+		} else {
+			if (GetSidesPerDisk() <= 1) {
+				// AB面のどちらかを片面ディスクにコピーする場合
+				tag_side_number = src_side_number;
+			}
 		}
 		DiskD88Track *src_track = src_disk->GetTrack(tag_track->GetTrackNumber(), tag_side_number);
 		if (!src_track) {
@@ -2157,14 +2162,15 @@ int DiskD88::ParseForReplace(int disk_number, int side_number, const wxString &f
 	return 0;
 }
 /// ファイルでディスクを置換
-/// @param [in] disk_number ディスク番号
-/// @param [in] side_number サイド番号
-/// @param [in] src_disk    ソースディスク
-/// @param [in] tag_disk    ターゲットディスク
+/// @param [in] disk_number     ディスク番号
+/// @param [in] side_number     サイド番号
+/// @param [in] src_disk        ソースディスク
+/// @param [in] src_side_number ソース側のサイド番号
+/// @param [in] tag_disk        ターゲットディスク
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, DiskD88Disk *tag_disk)
+int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, int src_side_number, DiskD88Disk *tag_disk)
 {
 	if (!file) return 0;
 
@@ -2185,7 +2191,6 @@ int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk
 		}
 	}
 #endif
-	int src_side_number = 0;
 	int valid_disk = tag_disk->Replace(side_number, src_disk, src_side_number);
 	if (valid_disk != 0) {
 		result.SetError(DiskResult::ERR_REPLACE);

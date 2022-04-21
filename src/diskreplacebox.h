@@ -10,17 +10,31 @@
 
 #include "common.h"
 #include <wx/dialog.h>
+#include <wx/dynarray.h>
 
 
 class wxChoice;
 class DiskD88File;
 class DiskD88Disk;
 
+class DiskReplaceNumber
+{
+public:
+	int disknum;
+	int sidenum;
+	DiskReplaceNumber();
+	DiskReplaceNumber(int disknum_, int sidenum_);
+	~DiskReplaceNumber();
+};
+
+WX_DECLARE_OBJARRAY(DiskReplaceNumber, DiskReplaceNumbers);
+
 /// ディスク置き換え確認ボックス
 class DiskReplaceBox : public wxDialog
 {
 private:
 	wxChoice *comDisk;
+	DiskReplaceNumbers numDisk;
 
 public:
 	DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskD88File &src_file, DiskD88Disk &tag_disk);
@@ -39,7 +53,8 @@ public:
 	void OnCancel(wxCommandEvent& event);
 
 	// properties
-	int GetSelection() const;
+	int GetSelectedDiskNumber() const;
+	int GetSelectedSideNumber() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

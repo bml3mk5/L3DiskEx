@@ -1098,13 +1098,14 @@
 		<Description>[N88-BASIC etc.]</Description>
 		<Description lang="ja">[N88-BASICなど]</Description>
 	</DiskType>
-	<DiskType name="2HD-77-26-4">
+	<DiskType name="2HD-77-26-4-S0">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>77</TracksPerSide>
 		<SectorsPerTrack>26</SectorsPerTrack>
 		<SectorSize>256</SectorSize>
 		<Density>0x20</Density>
 		<Interleave>4</Interleave>
+		<SingleDensity track="0" side="0" />
 		<DiskBasicTypes>
 			<Type p="major">FM-2HD</Type>
 			<Type>L3S1-2HD</Type>
@@ -1112,8 +1113,8 @@
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
-		<Description>[FM(F-BASIC,OS-9 etc.)]</Description>
-		<Description lang="ja">[FM用(F-BASIC,OS-9など)]</Description>
+		<Description>, Track0 and side0 is single density [FM(F-BASIC,OS-9 etc.)]</Description>
+		<Description lang="ja">トラック0,サイド0は単密度 [FM用(F-BASIC,OS-9など)]</Description>
 	</DiskType>
 	<DiskType name="2HD-77-8-1">
 		<SidesPerDisk>2</SidesPerDisk>
