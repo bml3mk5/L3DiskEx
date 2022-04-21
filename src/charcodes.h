@@ -6,14 +6,18 @@
 #define _CHARCODES_H_
 
 #include "common.h"
-#include <wx/wx.h>
+#include <wx/string.h>
+#include <wx/dynarray.h>
 
-///
+class wxCSConv;
+
+/// キャラクターコード１文字の変換情報
 class CharCode
 {
 public:
 	wxString str;
-	wxUint8  code;
+	wxUint8  code[4];
+	size_t   code_len;
 
 public:
 	CharCode();
@@ -23,43 +27,94 @@ public:
 
 WX_DEFINE_ARRAY(CharCode *, CharCodeList);
 
-///
+/// キャラクターコード変換マップ
 class CharCodeMap
 {
-public:
-	wxString     type;
+protected:
+	wxString     name;
 	CharCodeList list;
+	int          type;
+	int          font_encoding;
+
+	CharCodeMap(const CharCodeMap &) {}
 
 public:
 	CharCodeMap();
-	CharCodeMap(const wxString &newtype);
-	~CharCodeMap();
+	CharCodeMap(const wxString &n_name, int n_type);
+	virtual ~CharCodeMap();
+
+	virtual void Initialize() {}
+
+	const wxString &GetName() const { return name; }
+	CharCodeList &GetList() { return list; }
+	int GetFontEncoding() const { return font_encoding; }
+	void SetFontEncoding(int val) { font_encoding = val; }
+
+//	virtual bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	virtual size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字が文字変換テーブルにあるか
+	virtual bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
 };
 
-WX_DEFINE_ARRAY(CharCodeMap *, CharCodeMaps);
+/// キャラクターコード変換マップ Shift-JIS変換用
+class CharCodeMapMB : public CharCodeMap
+{
+private:
+	wxCSConv *cs;
 
-///
+	CharCodeMapMB(const CharCodeMapMB &src) : CharCodeMap(src) {}
+
+public:
+	CharCodeMapMB();
+	CharCodeMapMB(const wxString &n_name, int n_type);
+	~CharCodeMapMB();
+
+	void Initialize();
+
+//	bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字が文字変換テーブルにあるか
+	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
+};
+
+WX_DEFINE_ARRAY(CharCodeMap *, CharCodeMapList);
+
+/// キャラクターコード変換マップリスト
+class CharCodeMaps
+{
+private:
+	CharCodeMapList maps;
+public:
+	CharCodeMaps();
+	~CharCodeMaps();
+
+	bool Load(const wxString &data_path);
+	const CharCodeMapList &GetMaps() const { return maps; }
+	CharCodeMap *GetMap(size_t index);
+	CharCodeMap *FindMap(const wxString &name);
+};
+
+/// キャラクターコード変換操作
 class CharCodes
 {
 private:
-	CharCodeMaps maps;
-	CharCodeList *list_cache;
+	CharCodeMap *cache;
 
 public:
 	CharCodes();
 	~CharCodes();
 
-	bool Load(const wxString &data_path);
-
 	void ConvToString(const wxUint8 *src, size_t len, wxString &dst);
 	bool ConvToChars(const wxString &src, wxUint8 *dst, size_t len);
 
-	bool FindString(wxUint8 src, wxString &dst, const wxString &unknownchar = wxT("?"));
+//	bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字が文字変換テーブルにあるか
 	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
 
-	void SetMap(const wxString &type);
+	void SetMap(const wxString &name);
 };
 
-extern CharCodes gCharCodes;
+extern CharCodeMaps gCharCodeMaps;
 
 #endif /* _CHARCODES_H_ */

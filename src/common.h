@@ -4,16 +4,20 @@
 #ifndef _COMMON_H_
 #define _COMMON_H_
 
-#include <wx/platform.h>
+#include <wx/defs.h>
 #include "version.h"
 
 #ifndef _MAX_PATH
 #define _MAX_PATH	260
 #endif
 
-#define DEFAULT_TEXTWIDTH 140
+#define DEFAULT_TEXTWIDTH 160
 
 #define USE_DND_ON_TOP_PANEL 1
+
+size_t rtrim(void *, size_t, char);
+void mem_invert(void *, size_t);
+size_t str_shrink(void *, size_t);
 
 #if defined(__WXMSW__)
 

@@ -190,11 +190,143 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath="..\src\basiccommon.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdir.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_cpm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_fat8.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_flex.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_fm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_l31s.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_l32d.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_msdos.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_msx.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_mz.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_n88.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_os9.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_x1hu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicerror.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicfat.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicfmt.cpp"
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicparam.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicselbox.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_cpm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat12.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat8.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_flex.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_l31s.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_l32d.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_msx.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_mz.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_n88.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_os9.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_x1hu.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\charcodes.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\common.cpp"
 				>
 			</File>
 			<File
@@ -206,11 +338,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskd88creator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskd88parser.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\src\diskd88creator.cpp"
+				RelativePath="..\src\diskd88writer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskdskparser.cpp"
 				>
 			</File>
 			<File
@@ -222,7 +362,43 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskparser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskplainparser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskplainwriter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskresult.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskwriter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fileparam.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fileselbox.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fontminibox.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\intnamebox.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\logging.cpp"
 				>
 			</File>
 			<File
@@ -258,11 +434,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\uifatarea.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\uifilelist.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\uirawdisk.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uirpanel.cpp"
 				>
 			</File>
 			<File
@@ -276,7 +460,135 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\src\basiccommon.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdir.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_cpm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_fat8.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_flex.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_fm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_l31s.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_l32d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_msdos.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_msx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_mz.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_n88.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_os9.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_x1hu.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicerror.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicfat.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicfmt.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicparam.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicselbox.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_cpm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat12.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat8.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_flex.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_l31s.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_l32d.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_msx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_mz.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_n88.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_os9.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_x1hu.h"
 				>
 			</File>
 			<File
@@ -296,11 +608,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskd88creator.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskd88parser.h"
 				>
 			</File>
 			<File
-				RelativePath="..\src\diskd88creator.h"
+				RelativePath="..\src\diskd88writer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskdskparser.h"
 				>
 			</File>
 			<File
@@ -312,7 +632,43 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskparser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskplainparser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskplainwriter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskresult.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskwriter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fileparam.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fileselbox.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\fontminibox.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\intnamebox.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\logging.h"
 				>
 			</File>
 			<File
@@ -348,11 +704,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\uifatarea.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\uifilelist.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\uirawdisk.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\uirpanel.h"
 				>
 			</File>
 			<File

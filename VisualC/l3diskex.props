@@ -1,13 +1,13 @@
-<?xml version="1.0" encoding="utf-8"?> 
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Label="UserMacros">
     <DevelopDir>D:\Devel\vc\</DevelopDir>
-    <wxWidgetsDir>$(DevelopDir)wxWidgets-3.0.2\</wxWidgetsDir>
+    <wxWidgetsDir>$(DevelopDir)wxWidgets-3.1.0\</wxWidgetsDir>
     <wxWidgetsIncludeDir>$(wxWidgetsDir)include\msvc\;$(wxWidgetsDir)include\</wxWidgetsIncludeDir>
     <wxWidgetsLibDirWin32>$(wxWidgetsDir)lib\vc_lib\</wxWidgetsLibDirWin32>
     <wxWidgetsLibDirX64>$(wxWidgetsDir)lib\vc_x64_lib\</wxWidgetsLibDirX64>
-    <wxWidgetsLibsDebug>wxbase30ud.lib</wxWidgetsLibsDebug>
-    <wxWidgetsLibsRelease>wxbase30u.lib</wxWidgetsLibsRelease>
+    <wxWidgetsLibsDebug>wxbase31ud.lib</wxWidgetsLibsDebug>
+    <wxWidgetsLibsRelease>wxbase31u.lib</wxWidgetsLibsRelease>
   </PropertyGroup>
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>

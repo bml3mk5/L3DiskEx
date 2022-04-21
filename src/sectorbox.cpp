@@ -4,6 +4,11 @@
 ///
 
 #include "sectorbox.h"
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/valtext.h>
 #include <wx/numformatter.h>
 #include "basicfmt.h"
 #include "charcodes.h"

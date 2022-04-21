@@ -3,8 +3,8 @@
 /// @brief ディスクリスト
 ///
 
-#include "main.h"
 #include "uidisklist.h"
+#include "main.h"
 #include "uidiskattr.h"
 #include "uifilelist.h"
 #include "diskparambox.h"
@@ -31,14 +31,14 @@ L3DiskTreeStoreModel::L3DiskTreeStoreModel(L3DiskFrame *parentframe)
 {
 	frame = parentframe;
 }
-/// 編集できるか
+/// ディスク名編集できるか
 bool L3DiskTreeStoreModel::IsEnabled(const wxDataViewItem &item, unsigned int col) const
 {
 	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
 	if (!cd) return false;
 	return cd->GetEditable();
 }
-/// 名前を変更した
+/// ディスク名を変更した
 bool L3DiskTreeStoreModel::SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
 {
 	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
@@ -143,20 +143,20 @@ void L3DiskList::OnSize(wxSizeEvent& event)
 }
 #endif
 
-/// 右クリック
+/// 右クリック選択
 void L3DiskList::OnDataViewItemContextMenu(wxDataViewEvent& event)
 {
 	ShowPopupMenu();
 }
 
-/// 選択
+/// ツリーアイテム選択
 void L3DiskList::OnSelectionChanged(wxDataViewEvent& event)
 {
 	wxDataViewItem item = event.GetItem();
 	ChangeSelection(item);
 }
 
-/// 編集開始
+/// アイテム編集開始
 void L3DiskList::OnStartEditing(wxDataViewEvent& event)
 {
 #if 0
@@ -169,7 +169,7 @@ void L3DiskList::OnStartEditing(wxDataViewEvent& event)
 #endif
 }
 
-/// 編集終了
+/// アイテム編集終了
 void L3DiskList::OnEditingDone(wxDataViewEvent& event)
 {
 #if 0
@@ -191,55 +191,55 @@ void L3DiskList::OnEditingDone(wxDataViewEvent& event)
 #endif
 }
 
-/// ディスクを保存
+/// ディスクを保存選択
 void L3DiskList::OnSaveDisk(wxCommandEvent& WXUNUSED(event))
 {
 	ShowSaveDiskDialog();
 }
 
-/// ディスクを新規に追加
+/// ディスクを新規に追加選択
 void L3DiskList::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowAddNewDiskDialog();
 }
 
-/// ディスクをファイルから追加
+/// ディスクをファイルから追加選択
 void L3DiskList::OnAddDiskFromFile(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowAddFileDialog();
 }
 
-/// ディスクイメージを置換
+/// ディスクイメージを置換選択
 void L3DiskList::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowReplaceDiskDialog(GetSelectedDiskNumber(),GetSelectedDiskSide());
 }
 
-/// ディスクを削除
+/// ディスクを削除選択
 void L3DiskList::OnDeleteDisk(wxCommandEvent& WXUNUSED(event))
 {
 	DeleteDisk();
 }
 
-/// ディスク名を変更
+/// ディスク名を変更選択
 void L3DiskList::OnRenameDisk(wxCommandEvent& event)
 {
 	RenameDisk();
 }
 
-/// 初期化
+/// 初期化選択
 void L3DiskList::OnInitializeDisk(wxCommandEvent& event)
 {
 	InitializeDisk();
 }
 
-/// フォーマット
+/// フォーマット選択
 void L3DiskList::OnFormatDisk(wxCommandEvent& event)
 {
 	frame->FormatDisk();
 }
 
-/// プロパティ
+/// プロパティ選択
 void L3DiskList::OnPropertyDisk(wxCommandEvent& event)
 {
 	ShowDiskAttr();
@@ -254,6 +254,9 @@ void L3DiskList::OnChar(wxKeyEvent& event)
 		break;
 	case WXK_DELETE:
 		DeleteDisk();
+		break;
+	default:
+		event.Skip();
 		break;
 	}
 }
@@ -304,6 +307,7 @@ void L3DiskList::ChangeSelection(wxDataViewItem &item)
 		frame->ClearFileListData();
 		frame->ClearRawPanelData();
 		frame->ClearBinDumpData();
+		frame->ClearFatAreaData();
 		frame->UpdateMenuAndToolBarDiskList(this);
 		return;
 	}
@@ -327,6 +331,7 @@ void L3DiskList::ChangeSelection(wxDataViewItem &item)
 		frame->ClearFileListData();
 		frame->SetRawPanelData(disk, subnum);
 		frame->ClearBinDumpData();
+		frame->ClearFatAreaData();
 		frame->UpdateMenuAndToolBarDiskList(this);
 		return;
 	}
@@ -337,6 +342,51 @@ void L3DiskList::ChangeSelection(wxDataViewItem &item)
 	frame->SetRawPanelData(disk, subnum);
 	frame->ClearBinDumpData();
 	frame->UpdateMenuAndToolBarDiskList(this);
+}
+
+/// 選択
+void L3DiskList::ChangeSelection(int disk_number, int side_number)
+{
+	wxDataViewItem root = GetSelection();
+	wxDataViewItem item;
+
+	if (!root.IsOk() || disk_number < 0) {
+		return;
+	}
+
+	bool match = false;
+	if (IsContainer(root)) {
+		int nums = GetChildCount(root);
+		for(int i=0; i<nums && !match; i++) {
+			wxDataViewItem items = GetNthChild(root, i);
+			if (IsContainer(items)) {
+				Expand(items);
+				int snums = GetChildCount(items);
+				for(int j=0; j<snums && !match; j++) {
+					item = GetNthChild(items, j);
+					if (!IsContainer(item)) {
+						L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
+						int num = cd->GetNumber();
+						int sid = cd->GetSubNumber();
+						if (disk_number == num && side_number == sid) {
+							match = true;
+						}
+					}
+				}
+			} else {
+				L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(items);
+				int num = cd->GetNumber();
+				if (disk_number == num) {
+					item = items;
+					match = true;
+				}
+			}
+		}
+	}
+	if (match) {
+		Select(item);
+		ChangeSelection(item);
+	}
 }
 
 /// ファイル名をリストにセット
@@ -360,6 +410,7 @@ void L3DiskList::SetFileName()
 	}
 
 	SetFileName(frame->GetFileName(), disknames);
+	frame->ClearDiskAttrData();
 }
 
 /// ファイル名をリストにセット
@@ -425,6 +476,7 @@ bool L3DiskList::InitializeDisk()
 			if (rc == wxID_OK) {
 				DiskParam param;
 				dlg.GetParam(param);
+				disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
 				sts = disk->Rebuild(param, selected_side);
 
 				// ファイル名一覧を更新
@@ -439,7 +491,8 @@ bool L3DiskList::InitializeDisk()
 				dlg.GetParam(param);
 				disk->SetName(dlg.GetDiskName());
 				disk->SetDensity(dlg.GetDensity());
-				disk->SetWriteProtect(dlg.GetWriteProtect());
+				disk->SetWriteProtect(dlg.IsWriteProtected());
+				disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
 				sts = disk->Rebuild(param, selected_side);
 
 				// ファイル名一覧を更新
@@ -487,7 +540,10 @@ bool L3DiskList::DeleteDisk()
 		sts = frame->GetDiskD88().Delete(cd->GetNumber());
 
 		// 画面を更新
-		frame->UpdateDataOnWindow();
+		frame->UpdateDataOnWindow(false);
+
+		// プロパティダイアログを閉じる
+		frame->CloseAllFileAttr();
 	}
 	return sts;
 }
@@ -500,7 +556,7 @@ void L3DiskList::RenameDisk()
 	EditItem(item, GetColumn(0));
 }
 
-/// ディスク情報
+/// ディスク情報ダイアログ
 void L3DiskList::ShowDiskAttr()
 {
 	if (!disk) return;
@@ -513,8 +569,9 @@ void L3DiskList::ShowDiskAttr()
 		disk->SetDiskParam(param);
 		disk->SetName(dlg.GetDiskName());
 		disk->SetDensity(dlg.GetDensity());
-		disk->SetWriteProtect(dlg.GetWriteProtect());
+		disk->SetWriteProtect(dlg.IsWriteProtected());
 		disk->SetModify();
+		disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
 		// ディスク名をセット
 		SetDiskName(disk->GetName());
 		// ディスク属性をセット

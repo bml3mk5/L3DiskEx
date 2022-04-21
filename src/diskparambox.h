@@ -14,8 +14,13 @@ _("'%s' should only contain digits.") \
 _("'%s' should only contain ASCII characters.")
 
 #include "common.h"
-#include <wx/wx.h>
-#include <wx/listctrl.h>
+#include <wx/dialog.h>
+#include <wx/arrstr.h>
+
+class wxComboBox;
+class wxTextCtrl;
+class wxCheckBox;
+class wxRadioButton;
 
 class DiskParam;
 class DiskD88Disk;
@@ -29,6 +34,7 @@ class DiskD88Disk;
 class DiskParamBox : public wxDialog
 {
 private:
+	wxComboBox *comCategory;
 	wxComboBox *comTemplate;
 	wxTextCtrl *txtTracks;
 	wxTextCtrl *txtSides;
@@ -39,9 +45,13 @@ private:
 	wxTextCtrl *txtDiskName;
 	wxComboBox *comDensity;
 	wxCheckBox *chkWprotect;
-	wxCheckBox *chkSingle00;
+	wxRadioButton *radSingle[3];
+	wxTextCtrl *txtSingleSectors;
+	wxComboBox *comSingleSecSize;
 
 	wxUint32 disable_flags;
+
+	wxArrayString type_names;
 
 	int FindTemplate(DiskD88Disk *disk);
 
@@ -49,7 +59,8 @@ public:
 	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, bool use_template, wxUint32 disable_flags = 0);
 
 	enum {
-		IDC_COMBO_TEMPLATE = 1,
+		IDC_COMBO_CATEGORY = 1,
+		IDC_COMBO_TEMPLATE,
 		IDC_TEXT_TRACKS,
 		IDC_TEXT_SIDES,
 		IDC_TEXT_SECTORS,
@@ -57,7 +68,11 @@ public:
 		IDC_TEXT_DISKNAME,
 		IDC_COMBO_DENSITY,
 		IDC_CHK_WPROTECT,
-		IDC_CHK_SINGLE00,
+		IDC_RADIO_SINGLE_NONE,
+		IDC_RADIO_SINGLE_ALL,
+		IDC_RADIO_SINGLE_T00,
+		IDC_TEXT_SINGLE_SECTORS,
+		IDC_COMBO_SINGLE_SECSIZE,
 	};
 
 	/// @name functions
@@ -67,14 +82,18 @@ public:
 	//@}
 
 	// event procedures
+	void OnCategoryChanged(wxCommandEvent& event);
 	void OnTemplateChanged(wxCommandEvent& event);
+	void OnSingleChanged(wxCommandEvent& event);
 	void OnOK(wxCommandEvent& event);
 
 	// properties
+	void SetTemplateValues();
 	void SetParamOfIndex(size_t index);
-	void SetParamFromDisk(DiskD88Disk *disk);
+	void SetParamFromDisk(const DiskD88Disk *disk);
 	bool GetParam(DiskParam &param);
 	bool GetParamToDisk(DiskD88Disk &disk);
+	wxString GetCategory() const;
 	int GetTracksPerSide();
 	int GetSidesPerDisk();
 	int GetSectorsPerTrack();
@@ -82,9 +101,11 @@ public:
 	int GetInterleave();
 	wxString GetDiskName() const;
 	int GetDensity();
-	bool GetWriteProtect();
-	bool IsSingleOnTrack00();
-	void SetDisableFlags(wxUint32 val);
+	bool IsWriteProtected();
+	int  GetSingleNumber();
+	int  GetSingleSectorsPerTrack();
+	int  GetSingleSectorSize();
+//	void SetDisableFlags(wxUint32 val);
 
 	wxDECLARE_EVENT_TABLE();
 };

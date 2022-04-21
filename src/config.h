@@ -6,7 +6,8 @@
 #define _CONFIG_H_
 
 #include "common.h"
-#include <wx/wx.h>
+#include <wx/string.h>
+#include <wx/arrstr.h>
 
 #define MAX_RECENT_FILES 20
 

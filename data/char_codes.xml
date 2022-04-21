@@ -1,6 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <CharCodeMap version="1.0">
-<Map type="default">
+<Map name="L3S1">
+<Char code="96DE">が</Char>
+<Char code="97DE">ぎ</Char>
+<Char code="98DE">ぐ</Char>
+<Char code="99DE">げ</Char>
+<Char code="9ADE">ご</Char>
+<Char code="9BDE">ざ</Char>
+<Char code="9CDE">じ</Char>
+<Char code="9DDE">ず</Char>
+<Char code="9EDE">ぜ</Char>
+<Char code="9FDE">ぞ</Char>
+<Char code="B6DE">ガ</Char>
+<Char code="B7DE">ギ</Char>
+<Char code="B8DE">グ</Char>
+<Char code="B9DE">ゲ</Char>
+<Char code="BADE">ゴ</Char>
+<Char code="BBDE">ザ</Char>
+<Char code="BCDE">ジ</Char>
+<Char code="BDDE">ズ</Char>
+<Char code="BEDE">ゼ</Char>
+<Char code="BFDE">ゾ</Char>
+<Char code="C0DE">ダ</Char>
+<Char code="C1DE">ヂ</Char>
+<Char code="C2DE">ヅ</Char>
+<Char code="C3DE">デ</Char>
+<Char code="C4DE">ド</Char>
+<Char code="CADE">バ</Char>
+<Char code="CBDE">ビ</Char>
+<Char code="CCDE">ブ</Char>
+<Char code="CDDE">ベ</Char>
+<Char code="CEDE">ボ</Char>
+<Char code="CADF">パ</Char>
+<Char code="CBDF">ピ</Char>
+<Char code="CCDF">プ</Char>
+<Char code="CDDF">ペ</Char>
+<Char code="CEDF">ポ</Char>
+<Char code="E0DE">だ</Char>
+<Char code="E1DE">ぢ</Char>
+<Char code="E2DE">づ</Char>
+<Char code="E3DE">で</Char>
+<Char code="E4DE">ど</Char>
+<Char code="EADE">ば</Char>
+<Char code="EBDE">び</Char>
+<Char code="ECDE">ぶ</Char>
+<Char code="EDDE">べ</Char>
+<Char code="EEDE">ぼ</Char>
+<Char code="EADF">ぱ</Char>
+<Char code="EBDF">ぴ</Char>
+<Char code="ECDF">ぷ</Char>
+<Char code="EDDF">ぺ</Char>
+<Char code="EEDF">ぽ</Char>
 <Char code="7F">＼</Char>
 <Char code="80">年</Char>
 <Char code="81">月</Char>
@@ -130,7 +180,7 @@
 <Char code="FD">ん</Char>
 <Char code="FE">■</Char>
 </Map>
-<Map type="hankaku">
+<Map name="hankaku">
 <Char code="A1">｡</Char>
 <Char code="A2">｢</Char>
 <Char code="A3">｣</Char>
@@ -194,5 +244,8 @@
 <Char code="DD">ﾝ</Char>
 <Char code="DE">ﾞ</Char>
 <Char code="DF">ﾟ</Char>
+</Map>
+<Map name="sjis" type="1">
+<FontEncoding>27</FontEncoding><!-- wxFONTENCODING_CP932 -->
 </Map>
 </CharCodeMap>

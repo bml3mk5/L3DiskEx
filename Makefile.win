@@ -9,10 +9,10 @@ DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
 #ARCH=-m32
 #ARCH=-m64
 
-WXDIR=/D/Devel/sources/wxWidgets-3.0.2
-WXCONFIG_SH=$(WXDIR)/build_release_shared_unicode/wx-config
-WXCONFIG_ST=$(WXDIR)/build_release_static_unicode/wx-config
-WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode/wx-config
+WXDIR=/D/Devel/sources/wxWidgets-3.1.0
+WXCONFIG_SH=$(WXDIR)/build_release_shared_unicode_i686/wx-config
+WXCONFIG_ST=$(WXDIR)/build_release_static_unicode_i686/wx-config
+WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode_i686/wx-config
 
 SH_CFLAGS=$(ARCH) -Wall -O2 $(shell $(WXCONFIG_SH) --cppflags)
 ST_CFLAGS=$(ARCH) -Wall -O2 $(shell $(WXCONFIG_ST) --cppflags)
@@ -44,16 +44,60 @@ SRCLANG=$(LANGDIR)/
 DATADIR=data
 SRCDATA=$(DATADIR)/
 
-OBJS=utils.o \
+OBJS=	utils.o \
+	common.o \
+	basiccommon.o \
+	basicparam.o \
+	basicerror.o \
+	basictype.o \
+	basictype_fat8.o \
+	basictype_fat12.o \
+	basictype_fm.o \
+	basictype_l31s.o \
+	basictype_l32d.o \
+	basictype_msx.o \
+	basictype_mz.o \
+	basictype_n88.o \
+	basictype_x1hu.o \
+	basictype_flex.o \
+	basictype_os9.o \
+	basictype_cpm.o \
+	basicfat.o \
+	basicdiritem_fat8.o \
+	basicdiritem_fm.o \
+	basicdiritem_l31s.o \
+	basicdiritem_l32d.o \
+	basicdiritem_msdos.o \
+	basicdiritem_msx.o \
+	basicdiritem_mz.o \
+	basicdiritem_n88.o \
+	basicdiritem_x1hu.o \
+	basicdiritem_flex.o \
+	basicdiritem_os9.o \
+	basicdiritem_cpm.o \
+	basicdiritem.o \
+	basicdir.o \
 	basicfmt.o \
+	basicselbox.o \
 	charcodes.o \
 	config.o \
 	diskd88.o \
-	diskd88parser.o \
 	diskd88creator.o \
+	diskplainparser.o \
+	diskd88parser.o \
+	diskdskparser.o \
+	diskparser.o \
+	diskd88writer.o \
+	diskplainwriter.o \
+	diskwriter.o \
 	diskparam.o \
 	diskparambox.o \
+	diskresult.o \
+	fileparam.o \
+	fileselbox.o \
+	fontminibox.o \
 	intnamebox.o \
+	logging.o \
 	rawparambox.o \
 	rawexpbox.o \
 	result.o \
@@ -63,6 +107,8 @@ OBJS=utils.o \
 	uidisklist.o \
 	uifilelist.o \
 	uirawdisk.o \
+	uifatarea.o \
+	uirpanel.o \
 	main.o
 
 RESOBJS=l3diskex.res

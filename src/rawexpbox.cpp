@@ -4,6 +4,11 @@
 ///
 
 #include "rawexpbox.h"
+#include <wx/stattext.h>
+#include <wx/textctrl.h>
+#include <wx/sizer.h>
+#include <wx/valtext.h>
+#include <wx/msgdlg.h>
 #include "diskd88.h"
 
 // Attach Event

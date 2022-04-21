@@ -4,6 +4,7 @@
 ///
 
 #include "uidiskattr.h"
+#include <wx/wx.h>
 #include "main.h"
 #include "diskd88.h"
 #include "diskparambox.h"
@@ -27,7 +28,7 @@ L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	wxSizerFlags flagsW = wxSizerFlags().Expand().Border(wxALL, 2);
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-	wxSize size(400, -1);
+	wxSize size(500, -1);
 
 	txtAttr = new wxTextCtrl(this, IDC_TXT_ATTR, wxT(""), wxDefaultPosition, size, wxTE_READONLY | wxTE_LEFT);
 	hbox->Add(txtAttr, flagsW);
@@ -86,7 +87,7 @@ void L3DiskDiskAttr::SetAttr(DiskD88Disk *newdisk)
 	SetAttrText(disk->GetAttrText());
 	btnChange->Enable(true);
 	SetDiskDensity(disk->GetDensityText());
-	SetWriteProtect(disk->GetWriteProtect());
+	SetWriteProtect(disk->IsWriteProtected());
 }
 void L3DiskDiskAttr::SetAttrText(const wxString &val)
 {

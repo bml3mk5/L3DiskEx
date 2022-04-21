@@ -4,6 +4,13 @@
 ///
 
 #include "rawparambox.h"
+#include <wx/textctrl.h>
+#include <wx/choice.h>
+#include <wx/radiobox.h>
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/valtext.h>
+#include <wx/msgdlg.h>
 
 // Attach Event
 BEGIN_EVENT_TABLE(RawParamBox, wxDialog)
@@ -25,16 +32,36 @@ RawParamBox::RawParamBox(wxWindow* parent, wxWindowID id, int type, int value, i
 	typenames.Add(wxT("ID H"));
 	typenames.Add(wxT("ID R"));
 	typenames.Add(wxT("ID N"));
-	const int maxlens[] = { 2, 1, 2, 2 };
+	typenames.Add(_("NumOfSectors"));
+	typenames.Add(_("SectorSize"));
+	const int maxlens[] = { 2, 1, 2, 2, 3, 4 };
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
 	wxString typestr = typenames[type] + wxT(" : ") + wxString::Format(wxT("%d  --> "), value);
 	hbox->Add(new wxStaticText(this, wxID_ANY, typestr), flags);
-	txtValue = new wxTextCtrl(this, IDC_TEXT_VALUE, wxEmptyString, wxDefaultPosition, wxDefaultSize, style, validate);
-	txtValue->SetMaxLength(maxlens[type]);
-	hbox->Add(txtValue, 0);
+	txtValue = NULL;
+	comValue = NULL;
+	if (type != TYPE_SECTOR_SIZE) {
+		txtValue = new wxTextCtrl(this, IDC_TEXT_VALUE, wxEmptyString, wxDefaultPosition, wxDefaultSize, style, validate);
+		txtValue->SetMaxLength(maxlens[type]);
+		hbox->Add(txtValue, 0);
+	} else {
+		// choose sector size
+		wxArrayString choices;
+		int choice = 0;
+		for (int i=0; i<=4; i++) {
+			int nsize = (128 * (1 << i));
+			choices.Add(wxString::Format(wxT("%d"), nsize));
+			if (value == nsize) {
+				choice = i;
+			}
+		}
+		comValue = new wxChoice(this, IDC_COMBO_VALUE, wxDefaultPosition, wxDefaultSize, choices);
+		comValue->SetSelection(choice);
+		hbox->Add(comValue, 0);
+	}
 
 	szrAll->Add(hbox, flags);
 
@@ -75,8 +102,13 @@ bool RawParamBox::ValidateParam()
 
 int RawParamBox::GetValue()
 {
-	long val;
-	txtValue->GetValue().ToLong(&val);
+	long val = 0;
+	if (txtValue) {
+		txtValue->GetValue().ToLong(&val);
+	} else if (comValue) {
+		int sel = comValue->GetSelection();
+		val = 128 * (1 << sel);
+	}
 	return (int)val;
 }
 

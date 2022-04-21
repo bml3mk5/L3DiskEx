@@ -6,22 +6,33 @@
 #define _DISK_PARAMETER_H_
 
 #include "common.h"
-#include <wx/wx.h>
+#include <wx/string.h>
+#include <wx/arrstr.h>
 #include <wx/dynarray.h>
 
 /// (0:128bytes 1:256bytes 2:512bytes 3:1024bytes)
 extern const int gSectorSizes[5];
 
-///
+/// 単密度情報を保持する
 class SingleDensity
 {
+private:
+	SingleDensity() {}
+
 public:
 	int track_num;
 	int side_num;
-	SingleDensity(int n_track_num, int n_side_num);
+	int sectors_per_track;
+	int sector_size;
+	SingleDensity(int n_track_num, int n_side_num, int n_sectors_per_track, int n_sector_size);
 	~SingleDensity() {}
 
 	bool operator==(const SingleDensity &dst) const;
+
+	int GetTrackNumber() const { return track_num; }
+	int GetSideNumber() const { return side_num; }
+	int GetSectorsPerTrack() const { return sectors_per_track; }
+	int GetSectorSize() const { return sector_size; }
 };
 
 WX_DECLARE_OBJARRAY(SingleDensity, SingleDensities);
@@ -32,8 +43,9 @@ bool operator==(const SingleDensities &src, const SingleDensities &dst);
 class DiskParam
 {
 protected:
-	wxString disk_type_name;	///< "2D" "2HD" など（DiskBasicParamとのマッチングにも使用）
+	wxString disk_type_name;	///< "2D" "2HD" など
 	wxUint32 disk_type;			///< 1: AB面あり（3インチFD）
+	wxArrayString basic_types;	///< BASIC種類（DiskBasicParamとのマッチングにも使用）
 	int sides_per_disk;			///< サイド数
 	int tracks_per_side;		///< トラック数
 	int sectors_per_track;		///< セクタ数
@@ -41,25 +53,35 @@ protected:
 	int density;				///< 0:2D 1:2DD 2:2HD
 	int interleave;				///< セクタの間隔
 	SingleDensities singles;	///< 単密度にするトラック
+	wxString description;		///< 説明
 
 public:
 	DiskParam();
 	DiskParam(const DiskParam &src);
-	DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
+	DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, const wxArrayString &n_basic_types, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles, const wxString &n_desc);
 	virtual ~DiskParam() {}
 
+	DiskParam &operator=(const DiskParam &src);
 	void SetDiskParam(const DiskParam &src);
 	void SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave);
+	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, const wxArrayString &n_basic_types, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles, const wxString &n_desc);
+//	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, const wxArrayString &n_basic_types, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave);
 
 	void ClearDiskParam();
-	bool Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, const SingleDensities &n_singles);
+	/// 指定したパラメータで一致するものがあるか
+	bool Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, const SingleDensities &n_singles);
+	/// 指定したパラメータで一致するものがあるか
 	bool Match(const DiskParam &param);
-	bool MatchNear(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size);
-	bool FindSingleDensity(int track_num, int side_num) const;
+	/// 指定したパラメータに近い値で一致するものがあるか
+	bool MatchNear(int num, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, const SingleDensities &n_singles, bool &last);
+	/// 指定したトラック、サイドが単密度か
+	bool FindSingleDensity(int track_num, int side_num, int *sectors_per_track = NULL, int *sector_size = NULL) const;
+	/// 単密度を持っているか
+	int  HasSingleDensity(int *sectors_per_track = NULL, int *sector_size = NULL) const;
+
 	const wxString &GetDiskTypeName() const { return disk_type_name; }
 	wxUint32 GetDiskType() const { return disk_type; }
+	const wxArrayString &GetBasicTypes() const { return basic_types; }
 	int GetSidesPerDisk() const { return sides_per_disk; }
 	int GetTracksPerSide() const { return tracks_per_side; }
 	int GetSectorsPerTrack() const { return sectors_per_track; }
@@ -68,11 +90,12 @@ public:
 	int GetInterleave() const { return interleave; }
 	void SetInterleave(int val) { interleave = val; }
 	const SingleDensities &GetSingles() const { return singles; }
+	const wxString &GetDiskDescription() const { return description; }
 };
 
 WX_DECLARE_OBJARRAY(DiskParam, DiskParams);
 
-///
+/// ディスクパラメータのテンプレートを提供する
 class DiskTypes
 {
 private:
@@ -82,10 +105,16 @@ public:
 	DiskTypes();
 	~DiskTypes() {}
 
-	bool Load(const wxString &data_path);
+	/// XMLファイルから読み込み
+	bool Load(const wxString &data_path, const wxString &locale_name);
 
+	/// タイプ名に一致するテンプレートの番号を返す
 	int IndexOf(const wxString &n_type_name);
-	DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, const SingleDensities &n_singles);
+	/// タイプ名に一致するテンプレートを返す
+	DiskParam *Find(const wxString &n_type_name);
+	/// パラメータに一致するあるいは近い物のテンプレートを返す
+	DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, const SingleDensities &n_singles);
+
 	DiskParam *ItemPtr(size_t index) const { return &types[index]; }
 	DiskParam &Item(size_t index) const { return types[index]; }
 	size_t Count() const { return types.Count(); }

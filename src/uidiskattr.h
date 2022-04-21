@@ -6,7 +6,13 @@
 #define _UIDISKATTR_H_
 
 #include "common.h"
-#include <wx/wx.h>
+#include <wx/string.h>
+#include <wx/panel.h>
+
+class wxTextCtrl;
+class wxButton;
+class wxComboBox;
+class wxCheckBox;
 
 class L3DiskFrame;
 class DiskD88Disk;

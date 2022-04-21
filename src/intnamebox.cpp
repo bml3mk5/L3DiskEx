@@ -4,63 +4,160 @@
 ///
 
 #include "intnamebox.h"
+#include "main.h"
+#include <wx/listctrl.h>
+#include <wx/stattext.h>
+#include <wx/sizer.h>
+#include <wx/regex.h>
 #include <wx/numformatter.h>
+#include <wx/msgdlg.h>
+#include "uifilelist.h"
 #include "basicfmt.h"
+#include "basicdir.h"
 #include "charcodes.h"
+#include "utils.h"
+
+#define TEXT_VALIDATOR_TRANS \
+_("'%s' should only contain ASCII characters."), \
+_("'%s' should only contain alphabetic characters."), \
+_("'%s' should only contain alphabetic or numeric characters."), \
+_("'%s' should only contain digits."), \
+_("'%s' should be numeric."), \
+_("'%s' doesn't consist only of valid characters"), \
+_("'%s' contains illegal characters")
 
 // Attach Event
 BEGIN_EVENT_TABLE(IntNameBox, wxDialog)
 	EVT_BUTTON(wxID_OK, IntNameBox::OnOK)
-	EVT_RADIOBOX(IDC_RADIO_TYPE1, IntNameBox::OnChangeType1)
 END_EVENT_TABLE()
 
-IntNameBox::IntNameBox(wxWindow* parent, wxWindowID id, const wxString &caption, int format_type, const wxString &name, size_t name_len, int file_type, int data_type, bool isproperty)
-	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption
+	, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int showitems)
+		: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX, wxT(INTNAMEBOX_CLASSNAME))
 {
-	this->format_type = format_type;
+	this->frame = frame;
+	this->item = item;
+	this->unique_number = basic->GetDir()->GetUniqueNumber();
+	this->basic = basic;
+	this->format_type = basic->GetFormatType();
+
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	wxSize size;
 	long style = 0;
-	mNameMaxLen = name_len;
-	IntNameValidator validate(name_len);
+	mNameMaxLen = item->GetFileNameStrSize();
+
+	wxString file_name;
+	if (showitems & INTNAME_SPECIFY_FILE_NAME) {
+		// ファイル名の指定があるとき
+		if (!file_path.IsEmpty()) file_name = item->RemakeFileNameStr(file_path);
+	} else {
+		// アイテム内のファイル名
+		file_name = item->GetFileNameStr();
+	}
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer *hbox;
+	wxSize sz;
 
-	szrAll->Add(new wxStaticText(this, wxID_ANY, _("File Name In The Disk Image")), flags);
-	size.x = DEFAULT_TEXTWIDTH; size.y = -1;
-	txtIntName = new wxTextCtrl(this, IDC_TEXT_INTNAME, name, wxDefaultPosition, size, style, validate);
-	txtIntName->SetMaxLength((unsigned long)mNameMaxLen);
-	szrAll->Add(txtIntName, flags);
-
-	wxArrayString types1;
-	for(size_t i=0; !gTypeName1[i].IsEmpty(); i++) {
-		types1.Add(wxGetTranslation(gTypeName1[i]));
-	}
-	radType1 = new wxRadioBox(this, IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 0, wxRA_SPECIFY_COLS);
-	radType1->SetSelection(file_type);
-	szrAll->Add(radType1, flags);
-
-	wxArrayString types2;
-	for(size_t i=0; !gTypeName2[i].IsEmpty(); i++) {
-		types2.Add(wxGetTranslation(gTypeName2[i]));
-	}
-	if (format_type == 0) {
-		// 1S
-		types2.Add(wxGetTranslation(gTypeName3[1]));
-	} else {
-		if (data_type == DISKBASIC_DATATYPE_RANDOM) {
-			// 1Sから2Dへのコピーでランダムアクセスのデータはアスキーとする。
-			data_type = DISKBASIC_DATATYPE_ASCII;
+	txtIntName = NULL;
+	if (showitems & INTNAME_SHOW_TEXT) {
+		szrAll->Add(new wxStaticText(this, wxID_ANY, _("File Name In The Disk Image")), flags);
+		size.x = DEFAULT_TEXTWIDTH; size.y = -1;
+		if (item->IsFileNameEditable()) {
+			IntNameValidator validate(basic, item);
+			txtIntName = new wxTextCtrl(this, IDC_TEXT_INTNAME, file_name, wxDefaultPosition, size, style, validate);
+			txtIntName->SetMaxLength((unsigned long)mNameMaxLen);
+		} else {
+			txtIntName = new wxTextCtrl(this, IDC_TEXT_INTNAME, file_name, wxDefaultPosition, size, style | wxTE_READONLY);
 		}
+		szrAll->Add(txtIntName, flags);
 	}
-	radType2 = new wxRadioBox(this, IDC_RADIO_TYPE2, _("Data Type"), wxDefaultPosition, wxDefaultSize, types2, 0, wxRA_SPECIFY_COLS);
-	radType2->SetSelection(data_type);
-	szrAll->Add(radType2, flags);
+	controls.Add(txtIntName);
+
+	int file_type_1 = 0;
+	int file_type_2 = 0;
+
+	if (showitems & INTNAME_INVALID_FILE_TYPE) {
+		item->SetFileTypeForAttrDialog(file_path, file_type_1, file_type_2);
+	} else {
+		file_type_1 = item->GetFileType1Pos();
+		file_type_2 = item->GetFileType2Pos();
+	}
+
+	user_data = 0;
+
+	txtStartAddr = NULL;
+	txtExecAddr = NULL;
+	txtCDate = NULL;
+	txtCTime = NULL;
+	if (showitems & INTNAME_SHOW_ATTR) {
+		// 属性の表示は機種依存
+		item->CreateControlsForAttrDialog(this, file_type_1, file_type_2, szrAll, flags, controls, &user_data);
+
+		// 開始アドレス、実行アドレス
+		if (item->HasAddress()) {
+			wxTextValidator validate(wxFILTER_INCLUDE_CHAR_LIST);
+			validate.SetCharIncludes(wxT("0123456789abcdefABCDEF"));
+
+			wxBoxSizer *szrH;
+			szrH = new wxBoxSizer(wxHORIZONTAL);
+
+			szrH->Add(new wxStaticText(this, wxID_ANY, _("Load Address") + _("(Hex)")), stflags);
+			txtStartAddr = new wxTextCtrl(this, IDC_TEXT_START_ADDR, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, validate);
+			txtStartAddr->SetMaxLength(4);
+			szrH->Add(txtStartAddr, flags);
+			szrAll->Add(szrH, flags);
+
+			szrH = new wxBoxSizer(wxHORIZONTAL);
+
+			szrH->Add(new wxStaticText(this, wxID_ANY, _("Execute Address") + _("(Hex)")), stflags);
+			txtExecAddr = new wxTextCtrl(this, IDC_TEXT_EXEC_ADDR, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, validate);
+			txtExecAddr->SetMaxLength(4);
+			szrH->Add(txtExecAddr, flags);
+			szrAll->Add(szrH, flags);
+
+			txtStartAddr->SetValue(wxString::Format(wxT("%x"), item->GetStartAddress()));
+			txtExecAddr->SetValue(wxString::Format(wxT("%x"), item->GetExecuteAddress()));
+		}
+
+		controls.Add(txtStartAddr);
+		controls.Add(txtExecAddr);
+
+		// 作成日付を表示
+		if (item->HasDateTime()) {
+			sz.Set(80, -1);
+
+			hbox = new wxBoxSizer(wxHORIZONTAL);
+			hbox->Add(new wxStaticText(this, wxID_ANY, item->GetFileDateTimeTitle()), stflags);
+
+			if (item->HasDate()) {
+				DateTimeValidator date_validate(false);
+				txtCDate = new wxTextCtrl(this, IDC_TEXT_CDATE, wxEmptyString, wxDefaultPosition, sz, 0, date_validate);
+				txtCDate->SetMaxLength(10);
+				hbox->Add(txtCDate, flags);
+			}
+			if (item->HasTime()) {
+				DateTimeValidator time_validate(true);
+				txtCTime = new wxTextCtrl(this, IDC_TEXT_CTIME, wxEmptyString, wxDefaultPosition, sz, 0, time_validate);
+				txtCTime->SetMaxLength(10);
+				hbox->Add(txtCTime, flags);
+			}
+			szrAll->Add(hbox, flags);
+		}
+
+		controls.Add(txtCDate);
+		controls.Add(txtCTime);
+	}
 
 	// プロパティの場合は詳細表示
-	if (isproperty) {
+	txtFileSize = NULL;
+	txtGroups = NULL;
+	lstGroups = NULL;
+
+	if (showitems & INTNAME_SHOW_PROPERTY) {
 		// ファイルサイズ
-		wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
+		hbox = new wxBoxSizer(wxHORIZONTAL);
 		hbox->Add(new wxStaticText(this, wxID_ANY, _("File Size:")), flags);
 		txtFileSize = new wxTextCtrl(this, IDC_TEXT_FILE_SIZE, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_RIGHT | wxTE_READONLY | wxBORDER_NONE);
 		hbox->Add(txtFileSize, flags);
@@ -73,7 +170,8 @@ IntNameBox::IntNameBox(wxWindow* parent, wxWindowID id, const wxString &caption,
 		hbox->Add(txtGroups, flags);
 		szrAll->Add(hbox, flags);
 
-		lstGroups = new wxListCtrl(this, IDC_LIST_GROUPS, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL);
+		sz.Set(232, -1);
+		lstGroups = new wxListCtrl(this, IDC_LIST_GROUPS, wxDefaultPosition, sz, wxLC_REPORT | wxLC_SINGLE_SEL);
 		lstGroups->AppendColumn(_("Group"), wxLIST_FORMAT_LEFT, 40);
 		lstGroups->AppendColumn(_("Track"), wxLIST_FORMAT_RIGHT, 40);
 		lstGroups->AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, 40);
@@ -81,10 +179,8 @@ IntNameBox::IntNameBox(wxWindow* parent, wxWindowID id, const wxString &caption,
 		lstGroups->AppendColumn(_("End Sector"), wxLIST_FORMAT_RIGHT, 40);
 		szrAll->Add(lstGroups, flags);
 
-	} else {
-		txtFileSize = NULL;
-		txtGroups = NULL;
-		lstGroups = NULL;
+		lstGroups->Bind(wxEVT_LIST_ITEM_SELECTED, &IntNameBox::OnListItemSelected, this);
+
 	}
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
@@ -92,7 +188,10 @@ IntNameBox::IntNameBox(wxWindow* parent, wxWindowID id, const wxString &caption,
 
 	SetSizerAndFit(szrAll);
 
-	ChangedType1(file_type);
+	SetDateTime(item->GetFileDateStr(), item->GetFileTimeStr());
+	SetFileSize(item->GetFileSize());
+
+	ChangedType1();
 }
 
 int IntNameBox::ShowModal()
@@ -106,111 +205,199 @@ void IntNameBox::OnOK(wxCommandEvent& event)
 		if (IsModal()) {
 			EndModal(wxID_OK);
 		} else {
+			// モードレスの場合、値を反映
+			L3DiskFileList *file_list = frame->GetFileListPanel();
+			if (file_list) {
+				file_list->AcceptSubmittedFileAttr(this);
+			}
 			SetReturnCode(wxID_OK);
 			this->Show(false);
 		}
 	}
 }
 
-void IntNameBox::OnChangeType1(wxCommandEvent& event)
+/// 属性を変更した時(機種依存)
+void IntNameBox::OnChangeType1(wxCommandEvent& WXUNUSED(event))
 {
-	int pos = event.GetSelection();
-	ChangedType1(pos);
+	ChangedType1();
 }
 
-void IntNameBox::ChangedType1(int sel_idx)
+void IntNameBox::ChangedType1()
 {
-	if (!radType2) return;
-	int cnt = (int)radType2->GetCount();
-	int cur_pos = radType2->GetSelection();
-
-	radType2->Enable(0, true);
-	radType2->Enable(1, true);
-	if (cnt > 2) radType2->Enable(2, true);
-
-	if (sel_idx == 0) {
-		// BASIC
-		if (cnt > 2) {
-			if (cur_pos == 2) {
-				radType2->SetSelection(0);
-			}
-			radType2->Enable(2, false);	// ランダムアクセス指定不可
-		}
-	} else if (sel_idx == 1) {
-		// データ
-		if (cur_pos == 0) {
-			radType2->SetSelection(1);
-		}
-		radType2->Enable(0, false);	// バイナリ指定不可
-	} else if (sel_idx == 2) {
-		// 機械語
-		radType2->SetSelection(0);
-		radType2->Enable(1, false);	// アスキー指定不可
-		if (cnt > 2) {
-			radType2->Enable(2, false);	// ランダムアクセス指定不可
-		}
+	if (controls.Count() > 1) {
+		item->ChangeTypeInAttrDialog(controls);
 	}
-	// 拡張子を付加
-	AddExtension(sel_idx);
 }
 
-void IntNameBox::AddExtension(int file_type)
+/// グループリストのアイテムを選択
+void IntNameBox::OnListItemSelected(wxListEvent& event)
 {
-	if (format_type == 0) return;
-	wxString intname = txtIntName->GetValue();
-	int len = (int)intname.Length();
-	wxString ext = intname.Right(4).Upper();
-	bool match = (ext == wxT(".BAS") || ext == wxT(".DAT") || ext == wxT(".BIN"));
-	if (match) {
-		len -= 4;
-		if (len >= 0) intname = intname.Left(len);
-		else intname.Empty();
-	} else {
-		len = intname.Find('.', false);
-		if (len >= 0) return;
+	int idx = (int)event.GetIndex();
+
+	if (frame->GetBinDumpFrame()) {
+		L3DiskFileList *file_list = frame->GetFileListPanel();
+		if (!file_list) return;
+
+		long grp, trk, sid, sec_start, sec_end;
+		lstGroups->GetItemText(idx, 0).ToLong(&grp, 16);
+		lstGroups->GetItemText(idx, 1).ToLong(&trk);
+		lstGroups->GetItemText(idx, 2).ToLong(&sid);
+		lstGroups->GetItemText(idx, 3).ToLong(&sec_start);
+		lstGroups->GetItemText(idx, 4).ToLong(&sec_end);
+
+		file_list->SetDumpData((int)trk, (int)sid, (int)sec_start, (int)sec_end);
 	}
-	switch(file_type) {
-	case 1:
-		intname += wxT(".DAT");
-		break;
-	case 2:
-		intname += wxT(".BIN");
-		break;
-	default:
-		intname += wxT(".BAS");
-		break;
-	}
-	txtIntName->SetValue(intname);
 }
 
-void IntNameBox::SetInternalName(const wxString &item)
+/// ダイアログで指定した値をディレクトリアイテムに設定する
+void IntNameBox::SetValuesToDirItem()
 {
-	txtIntName->SetValue(item);
+	if (!item) return;
+
+	item->SetFileNameStr(GetInternalName());
+	item->SetFileAttr(CalcFileType());
+	item->SetStartAddress(GetStartAddress());
+	item->SetExecuteAddress(GetExecuteAddress());
+	struct tm tm;
+	GetDateTime(&tm);
+	item->SetFileDateTime(&tm);
 }
+
+/// ディレクトリアイテムを設定
+void IntNameBox::SetDiskBasicDirItem(DiskBasicDirItem *item)
+{
+	this->item = item;
+
+//	SetDateTime(item->GetFileDateStr(), item->GetFileTimeStr());
+//	SetFileSize(item->GetFileSize());
+}
+
+/// 内部ファイル名を設定
+void IntNameBox::SetInternalName(const wxString &name)
+{
+	if (txtIntName) txtIntName->SetValue(name);
+}
+
+/// 内部ファイル名を返す
+/// DiskBasicDirItem::ConvertFromFileNameStr()で変換したファイル名
 wxString IntNameBox::GetInternalName() const
 {
+	if (!txtIntName) return wxT("");
+
 	wxString val = txtIntName->GetValue();
 	size_t len = val.Length();
 	if (len > mNameMaxLen) {
 		val = val.Mid(0, mNameMaxLen);
 	}
+	if (item) {
+		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理 大文字にするなど
+		item->ConvertFromFileNameStr(val);
+	}
 	return val;
 }
-int IntNameBox::GetFileType() const
+
+/// 属性を返す(機種依存)
+int IntNameBox::CalcFileType()
 {
-	return radType1->GetSelection();
+	return item->CalcFileTypeFromPos(GetFileType1(), GetFileType2());
 }
-int IntNameBox::GetDataType() const
+
+/// 属性1を返す(機種依存)
+int IntNameBox::GetFileType1() const
 {
-	return radType2->GetSelection();
+	return item->GetFileType1InAttrDialog(controls);
 }
+
+/// 属性2を返す(機種依存)
+int IntNameBox::GetFileType2() const
+{
+	return item->GetFileType2InAttrDialog(controls, &user_data);
+}
+
+/// 開始アドレスを返す
+/// @return -1 エラーあり
+int IntNameBox::GetStartAddress() const
+{
+	int val = -1;
+	if (txtStartAddr) {
+		wxString sval = txtStartAddr->GetValue();
+		long lval = 0;
+		if (sval.ToLong(&lval, 16)) {
+			val = (int)lval;
+		}
+	}
+	return val;
+}
+
+/// 実行アドレスを返す
+/// @return -1 エラーあり
+int IntNameBox::GetExecuteAddress() const
+{
+	int val = -1;
+	if (txtExecAddr) {
+		wxString sval = txtExecAddr->GetValue();
+		long lval = 0;
+		if (sval.ToLong(&lval, 16)) {
+			val = (int)lval;
+		}
+	}
+	return val;
+}
+
+/// 日時を得る
+void IntNameBox::GetDateTime(struct tm *tm)
+{
+	if (tm) {
+		memset(tm, 0, sizeof(struct tm));
+
+		if (txtCDate) {
+			L3DiskUtils::ConvDateStrToTm(txtCDate->GetValue(), tm);
+		}
+		if (txtCTime) {
+			L3DiskUtils::ConvTimeStrToTm(txtCTime->GetValue(), tm);
+		}
+	}
+}
+
+/// 日時を返す
+struct tm IntNameBox::GetDateTime()
+{
+	struct tm tm;
+	GetDateTime(&tm);
+	return tm;
+}
+
+/// 日時を設定
+void IntNameBox::SetDateTime(const wxString &date, const wxString &time)
+{
+	if (txtCDate && !date.IsEmpty()) {
+		txtCDate->SetValue(date);
+	}
+	if (txtCTime && !time.IsEmpty()) {
+		txtCTime->SetValue(time);
+	}
+}
+
+/// 日時を設定
+void IntNameBox::SetDateTime(const wxDateTime &date_time)
+{
+	wxString sdate = wxString::Format(wxT("%04d/%02d/%02d")
+		, date_time.GetYear(), date_time.GetMonth() + 1, date_time.GetDay());
+	wxString stime = wxString::Format(wxT("%02d:%02d:%02d")
+		, date_time.GetHour(), date_time.GetMinute(), date_time.GetSecond());
+	SetDateTime(sdate, stime);
+}
+
+/// ファイルサイズを設定
 void IntNameBox::SetFileSize(long val)
 {
 	if (txtFileSize) {
 		txtFileSize->SetValue(val >= 0 ? wxNumberFormatter::ToString(val) : wxT("---"));
 	}
 }
-void IntNameBox::SetGroups(long val, DiskBasicGroupItems &vals)
+
+/// グループリストを設定
+void IntNameBox::SetGroups(long val, DiskBasicGroups &vals)
 {
 	if (txtGroups) {
 		txtGroups->SetValue(val >= 0 ? wxNumberFormatter::ToString(val) : wxT("---"));
@@ -219,14 +406,23 @@ void IntNameBox::SetGroups(long val, DiskBasicGroupItems &vals)
 		lstGroups->DeleteAllItems();
 
 		for(size_t i=0; i < vals.Count(); i++) {
-			lstGroups->InsertItem(i, wxString::Format(wxT("%02x"), vals[i].group));
-			lstGroups->SetItem(i, 1, wxString::Format(wxT("%d"), vals[i].track));
-			lstGroups->SetItem(i, 2, wxString::Format(wxT("%d"), vals[i].side));
-			lstGroups->SetItem(i, 3, wxString::Format(wxT("%d"), vals[i].sector_start));
-			lstGroups->SetItem(i, 4, wxString::Format(wxT("%d"), vals[i].sector_end));
+			DiskBasicGroupItem *item = vals.ItemPtr(i);
+			lstGroups->InsertItem(i, wxString::Format(wxT("%02x"), item->group));
+			lstGroups->SetItem(i, 1, wxString::Format(wxT("%d"), item->track));
+			lstGroups->SetItem(i, 2, wxString::Format(wxT("%d"), item->side));
+			lstGroups->SetItem(i, 3, wxString::Format(wxT("%d"), item->sector_start));
+			lstGroups->SetItem(i, 4, wxString::Format(wxT("%d"), item->sector_end));
 		}
 	}
 }
+
+#if 0
+void IntNameBox::SetHidden(bool val)
+{
+	if (!chkHidden) return;
+	chkHidden->SetValue(val);
+}
+#endif
 
 //
 //
@@ -236,13 +432,15 @@ wxBEGIN_EVENT_TABLE(IntNameValidator, wxValidator)
     EVT_CHAR(IntNameValidator::OnChar)
 wxEND_EVENT_TABLE()
 
-IntNameValidator::IntNameValidator(size_t maxlength) : wxValidator()
+IntNameValidator::IntNameValidator(DiskBasic *basic, DiskBasicDirItem *item) : wxValidator()
 {
-	invchrs.Add("\"");
-	invchrs.Add("(");
-	invchrs.Add(")");
-	invchrs.Add(";");
-	maxlen = maxlength;
+	this->basic = basic;
+	this->item = item;
+	wxString invalidate_chars = item->InvalidateChars();
+	for(size_t i=0; i<invalidate_chars.Length(); i++) {
+		invchrs.Add(invalidate_chars.Mid(i, 1));
+	}
+	maxlen = item->GetFileNameStrSize();
 }
 IntNameValidator::IntNameValidator(const IntNameValidator& val) : wxValidator()
 {
@@ -252,6 +450,8 @@ IntNameValidator::IntNameValidator(const IntNameValidator& val) : wxValidator()
 bool IntNameValidator::Copy(const IntNameValidator& val)
 {
     wxValidator::Copy(val);
+	basic = val.basic;
+	item = val.item;
 	invchrs = val.invchrs;
 	maxlen = val.maxlen;
 	return true;
@@ -280,22 +480,38 @@ bool IntNameValidator::Validate(wxWindow *parent)
 
 	wxString val(text->GetValue());
 
+	return Validate(parent, val);
+}
+
+bool IntNameValidator::Validate(wxWindow *parent, const wxString &val)
+{
 	wxString errormsg;
 
-	if ( val.empty() )
-		errormsg = _("File name is required.");
-	else if ( val.length() > maxlen )
+//	if ( val.empty() )
+//		errormsg = _("File name is required.");
+	if ( val.length() > maxlen )
 		errormsg = _("File name is too long.");
 	else if ( invchrs.Index(val) != wxNOT_FOUND )
 		errormsg = _("Invalid char is contained in file name.");
 	else if ( !(errormsg = IsValid(val)).empty() ) {
 		errormsg = _("Invalid char is contained in file name.");
-	} else if ( !gCharCodes.ConvToChars(val, NULL, 20) ) {
+	} else if ( !basic->ConvStringToChars(val, NULL, 32) ) {
 		errormsg = _("Invalid char is contained in file name.");
+	} else if ( item ) {
+		if (item->IsFileNameRequired()) {
+			wxString name = val;
+			name = name.Trim().Trim(true);
+			if (name.empty()) {
+				errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+			}
+		}
+		if (errormsg.empty()) {
+			item->ValidateFileName(val, errormsg);
+		}
 	}
 
 	if ( !errormsg.empty() ) {
-		m_validatorWindow->SetFocus();
+		if (m_validatorWindow) m_validatorWindow->SetFocus();
 		wxMessageBox(errormsg, _("Validation conflict"),
 			wxOK | wxICON_EXCLAMATION, parent);
 
@@ -353,4 +569,54 @@ void IntNameValidator::OnChar(wxKeyEvent& event)
 	} else {
 		event.Skip();
 	}
+}
+
+//
+// 日付用バリデータ
+//
+DateTimeValidator::DateTimeValidator(bool is_time)
+	: wxTextValidator(wxFILTER_INCLUDE_CHAR_LIST)
+{
+	this->is_time = is_time;
+	SetCharIncludes("0123456789/:.-");
+}
+DateTimeValidator::DateTimeValidator(const DateTimeValidator &src)
+	: wxTextValidator(src)
+{
+	this->is_time = src.is_time;
+}
+
+wxObject *DateTimeValidator::Clone() const
+{
+	return (new DateTimeValidator(*this));
+}
+
+bool DateTimeValidator::Validate(wxWindow *parent)
+{
+    // If window is disabled, simply return
+    if (!m_validatorWindow->IsEnabled()) return true;
+
+    wxTextEntry * const text = GetTextEntry();
+    if (!text) return false;
+    wxString val(text->GetValue());
+	wxString errormsg;
+	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
+	wxRegEx re2("^([0-9]+)[/:.]([0-9]+)$");
+	if (!re.Matches(val)) {
+		if (is_time) {
+			if (!re2.Matches(val)) {
+				errormsg = _("Invalid format is contained in date or time.");
+			}
+		} else {
+			errormsg = _("Invalid format is contained in date or time.");
+		}
+	}
+	if ( !errormsg.empty() ) {
+		m_validatorWindow->SetFocus();
+		wxMessageBox(errormsg, _("Validation conflict"),
+						wxOK | wxICON_EXCLAMATION, parent);
+
+		return false;
+	}
+	return true;
 }

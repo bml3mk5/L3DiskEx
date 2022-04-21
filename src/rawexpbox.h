@@ -13,9 +13,9 @@ _("Validation conflict") \
 _("'%s' should only contain digits.")
 
 #include "common.h"
-#include <wx/wx.h>
-#include <wx/listctrl.h>
+#include <wx/dialog.h>
 
+class wxTextCtrl;
 class DiskParam;
 
 /// Rawエクスポート＆インポートボックス

@@ -13,8 +13,11 @@ _("Validation conflict") \
 _("'%s' should only contain digits.")
 
 #include "common.h"
-#include <wx/wx.h>
-#include <wx/listctrl.h>
+#include <wx/dialog.h>
+
+class wxTextCtrl;
+class wxChoice;
+class wxRadioBox;
 
 /// Rawパラメータボックス
 class RawParamBox : public wxDialog
@@ -23,12 +26,23 @@ private:
 	int type;
 	int maxvalue;
 	wxTextCtrl *txtValue;
+	wxChoice   *comValue;
 
 public:
 	RawParamBox(wxWindow* parent, wxWindowID id, int type, int value, int maxvalue);
 
 	enum {
 		IDC_TEXT_VALUE = 1,
+		IDC_COMBO_VALUE,
+	};
+
+	enum {
+		TYPE_IDC = 0,
+		TYPE_IDH,
+		TYPE_IDR,
+		TYPE_IDN,
+		TYPE_NUM_OF_SECTORS,
+		TYPE_SECTOR_SIZE,
 	};
 
 	/// @name functions
