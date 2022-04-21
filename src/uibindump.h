@@ -32,6 +32,7 @@ public:
 	void OnSize(wxSizeEvent& event);
 
 	void SetDatas(const wxUint8 *buf, size_t len);
+	void AppendDatas(const wxUint8 *buf, size_t len);
 	void ClearDatas();
 
 	void SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py);

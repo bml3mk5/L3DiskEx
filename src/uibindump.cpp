@@ -103,6 +103,33 @@ void L3DiskBinDump::SetDatas(const wxUint8 *buf, size_t len)
 	}
 }
 
+void L3DiskBinDump::AppendDatas(const wxUint8 *buf, size_t len)
+{
+	wxString str;
+	wxSize sz, cszH, cszA;
+	int rows = L3DiskUtils::DumpBinary(buf,len,str);
+	rows+=2;
+
+	txtHex->AppendText(str);	
+	txtAsc->AppendText(L3DiskUtils::DumpAscii(buf,len));
+
+	sz = txtHex->GetTextExtent(str);
+	cszH = txtHex->GetSize();
+	cszA = txtAsc->GetSize();
+
+	if (min_y < sz.y * rows) {
+		min_y = sz.y * rows;
+
+		cszH.y = min_y;
+		cszA.y = min_y;
+
+		txtHex->SetSize(cszH);
+		txtAsc->SetSize(cszA);
+
+		SetScrollBarPos(min_x, min_y, 0, 0);
+	}
+}
+
 void L3DiskBinDump::ClearDatas()
 {
 	txtHex->Clear();

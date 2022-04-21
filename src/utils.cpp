@@ -61,6 +61,7 @@ wxString DumpAscii(const wxUint8 *buffer, size_t bufsize)
 		gCharCodes.FindString(c, cstr, wxT("."));
 		str += cstr;
 	}
+	str += wxT("\n");
 	return str;
 }
 

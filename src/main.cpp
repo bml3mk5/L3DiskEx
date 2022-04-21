@@ -210,7 +210,7 @@ wxBEGIN_EVENT_TABLE(L3DiskFrame, wxFrame)
 	EVT_MENU(IDM_DELETE_DISK_FROM_FILE, L3DiskFrame::OnDeleteDiskFromFile)
 	EVT_MENU(IDM_RENAME_DISK, L3DiskFrame::OnRenameDisk)
 
-	EVT_MENU_RANGE(IDM_RECENT_FILE_0, IDM_RECENT_FILE_9, L3DiskFrame::OnOpenRecentFile)
+	EVT_MENU_RANGE(IDM_RECENT_FILE_0, IDM_RECENT_FILE_0 + MAX_RECENT_FILES - 1, L3DiskFrame::OnOpenRecentFile)
 
 	EVT_MENU(IDM_EXPORT_DISK, L3DiskFrame::OnExportFileFromDisk)
 	EVT_MENU(IDM_IMPORT_DISK, L3DiskFrame::OnImportFileToDisk)
@@ -737,6 +737,11 @@ void L3DiskFrame::SetBinDumpData(const wxUint8 *buf, size_t len)
 	L3DiskBinDump *binpanel = GetBinDumpPanel();
 	if (binpanel) binpanel->SetDatas(buf, len);
 }
+void L3DiskFrame::AppendBinDumpData(const wxUint8 *buf, size_t len)
+{
+	L3DiskBinDump *binpanel = GetBinDumpPanel();
+	if (binpanel) binpanel->AppendDatas(buf, len);
+}
 void L3DiskFrame::ClearBinDumpData()
 {
 	L3DiskBinDump *binpanel = GetBinDumpPanel();
@@ -782,7 +787,7 @@ void L3DiskFrame::UpdateMenuRecentFiles()
 	// メニューを更新
 	wxArrayString names;
 	ini->GetRecentFiles(names);
-	for(int i=0; i<10 && i<(int)names.Count(); i++) {
+	for(int i=0; i<MAX_RECENT_FILES && i<(int)names.Count(); i++) {
 		if (menuRecentFiles->FindItem(IDM_RECENT_FILE_0 + i)) menuRecentFiles->Delete(IDM_RECENT_FILE_0 + i);
 		menuRecentFiles->Append(IDM_RECENT_FILE_0 + i, names[i]);
 	}

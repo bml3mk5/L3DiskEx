@@ -174,6 +174,7 @@ private:
 	int start_sector;	///< 開始セクタ番号
 	int end_sector;		///< 終了セクタ番号
 	int start_pos;		///< 開始位置
+	int sides;			///< サイド数
 	int grps_per_track;	///< 1トラックあたりのグループ数
 	int secs_per_group;	///< 1グループ（クラスタ）あたりのセクタ数
 	int sector_size;	///< セクタサイズ
@@ -196,13 +197,14 @@ public:
 	DiskBasicFat();
 	~DiskBasicFat();
 
-	bool SetStart(DiskD88Track *newtrack, int newfmttype, int newstart, int newend, int newstartpos, int newgrpspertrk, int newsecspergrp, int newendgrp);
+	bool SetStart(DiskD88Track *newtrack, int newfmttype, int newstart, int newend, int newstartpos, int newsides, int newgrpspertrk, int newsecspergrp, int newendgrp);
 	void Clear();
 	void Empty();
 
 	void SetGroupNumber(wxUint8 num, wxUint8 val);
 	wxUint8 GetGroupNumber(wxUint8 num);
 	wxUint8 GetEmptyGroupNumber();
+	wxUint8 GetNextEmptyGroupNumber(wxUint8 curr_group);
 
 	bool CalcSize(wxUint8 start_group);
 	bool CalcFreeSize();
@@ -381,6 +383,8 @@ public:
 	DiskD88Track *GetTrackFromGroup(wxUint8 group_num, wxUint8 next_group, int *sector_start = NULL, int *sector_end = NULL);
 	DiskD88Sector *GetSectorFromGroup(wxUint8 group_num);
 	DiskD88Sector *GetSectorFromPosition(size_t position);
+
+	bool GetGroupsFromPosition(size_t position, DiskBasicGroupItems &group_items);
 	//@}
 
 	/// @name properties

@@ -8,7 +8,7 @@
 #include "common.h"
 #include <wx/wx.h>
 
-#define MAX_RECENT_FILES 10
+#define MAX_RECENT_FILES 20
 
 /// 設定ファイルパラメータ
 class Params

@@ -213,13 +213,14 @@ DiskBasicFat::DiskBasicFat()
 DiskBasicFat::~DiskBasicFat()
 {
 }
-bool DiskBasicFat::SetStart(DiskD88Track *newtrack, int newfmttype, int newstart, int newend, int newstartpos, int newgrpspertrk, int newsecspergrp, int newendgrp)
+bool DiskBasicFat::SetStart(DiskD88Track *newtrack, int newfmttype, int newstart, int newend, int newstartpos, int newsides, int newgrpspertrk, int newsecspergrp, int newendgrp)
 {
 	managed_track = newtrack;
 	format_type = newfmttype;
 	start_sector = newstart;
 	end_sector   = newend;
 	start_pos = newstartpos;
+	sides = newsides;
 	grps_per_track = newgrpspertrk;
 	secs_per_group = newsecspergrp;
 	end_group = newendgrp;
@@ -376,14 +377,64 @@ wxUint8 DiskBasicFat::GetEmptyGroupNumber()
 	}
 	return new_num;
 }
+/// 次の空き位置を返す
+/// @return 0xff:空きなし
+wxUint8 DiskBasicFat::GetNextEmptyGroupNumber(wxUint8 curr_group)
+{
+	wxUint8 new_num = 0xff;
+	if (format_type == 0) {
+		// 1Sの場合は若い番号順に検索
+		for(int num = curr_group; num <= end_group; num++) {
+			wxUint8 gnum = GetGroupNumber(num);
+			if (gnum == 0xff) {
+				new_num = (num & 0xff);
+				break;
+			}
+		}
+	} else {
+		// 2Dの場合は同じトラックでグループが連続するように検索
+		int sed = grps_per_track; // / sides;
+		int gmx = (end_group / sed) + 1;
+		int gms = managed_start_group / sed;
+		int gst = curr_group / sed;
+		int ged;
+		int dir;
+		int sst = curr_group % sed;
+		bool found = false;
+
+		// 管理エリアより大きいグループは+方向、小さいグループなら-方向に検索
+		dir = (gst >= gms ? 1 : -1);
+
+		for(int i=0; i<2; i++) {
+			ged = (dir > 0 ? gmx : -1);
+			for(int g = gst; g != ged; g += dir) {
+				for(int s = sst; s < sed; s++) {
+					int num = g * sed + s;
+					wxUint8 gnum = GetGroupNumber(num);
+					if (gnum == 0xff) {
+						new_num = (num & 0xff);
+						found = true;
+						break;
+					}
+				}
+				if (found) break;
+				sst = 0;
+			}
+			if (found) break;
+			dir = -dir;
+			gst = gms;
+		}
+	}
+	return new_num;
+}
 
 /// 管理エリアのトラック番号からグループ番号を計算
 void DiskBasicFat::CalcGroupNumberFromManagedTrack()
 {
 	int trk_num = managed_track->GetTrackNumber();
 
-	if (format_type == 1) {
-		// トラック1から開始するので-1する
+	if (format_type != 0) {
+		// 2D/2HD トラック1から開始するので-1する
 		trk_num--;
 	}
 	managed_start_group = trk_num * grps_per_track;
@@ -1043,6 +1094,7 @@ bool DiskBasic::AssignFat()
 		if (!manage_track[selected_side]) return false;
 		valid = fat.SetStart(manage_track[selected_side], GetFormatType()
 			, GetFatStartSector(), GetFatEndSector(), GetFatStartPos()
+			, GetSidesPerDisk()
 			, sectors_per_track / GetSectorsPerGroup()
 			, GetSectorsPerGroup(), GetFatEndGroup());
 	} else {
@@ -1050,6 +1102,7 @@ bool DiskBasic::AssignFat()
 		if (!manage_track[0]) return false;
 		valid = fat.SetStart(manage_track[0], GetFormatType()
 			, GetFatStartSector(), GetFatEndSector(), GetFatStartPos()
+			, GetSidesPerDisk()
 			, sectors_per_track * sides_per_disk / GetSectorsPerGroup()
 			, GetSectorsPerGroup(), GetFatEndGroup());
 	}
@@ -1434,7 +1487,7 @@ bool DiskBasic::SaveFile(DiskBasicDirItem *item, wxInputStream *istream, const w
 		fat.SetGroupNumber(gnum, 0xc0);
 
 		// 次の空きグループをさがす
-		next_gnum = fat.GetEmptyGroupNumber();
+		next_gnum = fat.GetNextEmptyGroupNumber(gnum);
 
 		// トラック＆セクタがあるかをチェックする
 		// グループ番号からトラック番号、サイド番号、セクタ番号を計算
@@ -1774,6 +1827,16 @@ DiskD88Sector *DiskBasic::GetSectorFromPosition(size_t position)
 	wxUint8 group_num = item->GetStartGroup();
 
 	return GetSectorFromGroup(group_num);
+}
+
+/// ディレクトリ位置からグループを返す
+bool DiskBasic::GetGroupsFromPosition(size_t position, DiskBasicGroupItems &group_items)
+{
+	DiskBasicDirItem *item = directory.ItemPtr(position);
+	if (!item) return false;
+
+	GetAllGroups(item, group_items);
+	return true;
 }
 
 /// エラーメッセージ

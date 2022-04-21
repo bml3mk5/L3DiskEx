@@ -236,6 +236,7 @@ public:
 
 	L3DiskBinDump *GetBinDumpPanel();
 	void SetBinDumpData(const wxUint8 *buf, size_t len);
+	void AppendBinDumpData(const wxUint8 *buf, size_t len);
 	void ClearBinDumpData();
 
 	wxString MakeTitleName(const wxString &path);
@@ -285,16 +286,7 @@ public:
 		IDD_CHARTYPEBOX,
 		IDD_INTNAMEBOX,
 
-		IDM_RECENT_FILE_0 = 90,
-		IDM_RECENT_FILE_1,
-		IDM_RECENT_FILE_2,
-		IDM_RECENT_FILE_3,
-		IDM_RECENT_FILE_4,
-		IDM_RECENT_FILE_5,
-		IDM_RECENT_FILE_6,
-		IDM_RECENT_FILE_7,
-		IDM_RECENT_FILE_8,
-		IDM_RECENT_FILE_9,
+		IDM_RECENT_FILE_0 = 80,
 	};
 
 	wxDECLARE_EVENT_TABLE();

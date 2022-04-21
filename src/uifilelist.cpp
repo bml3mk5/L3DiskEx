@@ -172,15 +172,26 @@ void L3DiskFileList::OnSelectionChanged(wxDataViewEvent& event)
 		return;
 	}
 	wxDataViewItem selected_item = list->GetSelection();
+#if 1
 	DiskD88Sector *sector = basic.GetSectorFromPosition(list->GetItemData(selected_item));
 	if (!sector) {
 		// セクタなし
 		UnselectItem();
 		return;
 	}
-
 	// 選択
 	SelectItem(sector);
+#else
+	DiskBasicGroupItems arr;
+	if (!basic.GetGroupsFromPosition(list->GetItemData(selected_item), arr)) {
+		// セクタなし
+		UnselectItem();
+		return;
+	}
+
+	// 選択
+	SelectItem(arr);
+#endif
 }
 
 // 編集終了
@@ -380,6 +391,34 @@ void L3DiskFileList::SelectItem(DiskD88Sector *sector)
 {
 	// ダンプリストをセット
 	frame->SetBinDumpData(sector->GetSectorBuffer(), sector->GetSectorSize());
+
+	// メニューを更新
+	frame->UpdateMenuAndToolBarFileList(this);
+}
+
+void L3DiskFileList::SelectItem(DiskBasicGroupItems &group)
+{
+	// ダンプリストをセット
+	DiskD88Disk *disk = basic.GetDisk();
+	DiskD88Track *track;
+
+	frame->ClearBinDumpData();
+
+	for(size_t i=0; i<group.Count(); i++) {
+		DiskBasicGroupItem *itm = &group.Item(i);
+		track = disk->GetTrack(itm->track, itm->side);
+		if (!track) {
+			break;
+		}
+		for(int s=itm->sector_start; s<=itm->sector_end; s++) {
+			DiskD88Sector *sector;
+			sector = track->GetSector(s);
+			if (!sector) {
+				break;
+			}
+			frame->AppendBinDumpData(sector->GetSectorBuffer(), sector->GetSectorSize());
+		}
+	}
 
 	// メニューを更新
 	frame->UpdateMenuAndToolBarFileList(this);

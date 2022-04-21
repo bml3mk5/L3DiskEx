@@ -93,6 +93,7 @@ public:
 	void ClearFiles();
 
 	void SelectItem(DiskD88Sector *sector);
+	void SelectItem(DiskBasicGroupItems &group);
 	void UnselectItem();
 
 	bool ShowExportDataFileDialog();

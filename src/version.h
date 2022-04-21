@@ -4,12 +4,12 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define APPLICATION_VERSION	"0.2.3"
+#define APPLICATION_VERSION	"0.2.4"
 #define APP_VER_MAJOR	0
 #define APP_VER_MINOR	2
-#define APP_VER_REV	3
+#define APP_VER_REV	4
 #define APP_VER_BUILD	0
-#define APP_COPYRIGHT	"Copyright (C) 2015-2017 Sasaji"
+#define APP_COPYRIGHT	"Copyright (C) 2015-2018 Sasaji"
 
 #if defined(__MINGW32__)
 #ifdef x86_64
