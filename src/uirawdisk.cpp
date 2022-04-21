@@ -13,6 +13,7 @@
 #include "sectorbox.h"
 #include "rawparambox.h"
 #include "rawexpbox.h"
+#include "rawtrackbox.h"
 #include "utils.h"
 
 
@@ -189,6 +190,8 @@ wxString L3DiskRawPanel::MakeFileName(int st_c, int st_h, int st_r, int ed_c, in
 // Attach Event
 wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
 	EVT_LIST_ITEM_SELECTED(wxID_ANY, L3DiskRawTrack::OnListItemSelected)
+	EVT_LIST_ITEM_ACTIVATED(wxID_ANY, L3DiskRawTrack::OnListActivated)
+
 	EVT_LIST_BEGIN_DRAG(wxID_ANY, L3DiskRawTrack::OnBeginDrag)
 
 	EVT_CHAR(L3DiskRawTrack::OnChar)
@@ -210,6 +213,8 @@ wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
 	EVT_MENU(IDM_MODIFY_SIZE_TRACK, L3DiskRawTrack::OnModifySectorSizeOnTrack)
 
 	EVT_MENU(IDM_DELETE_TRACKS_BELOW, L3DiskRawTrack::OnDeleteTracksBelow)
+
+	EVT_MENU(IDM_PROPERTY_TRACK, L3DiskRawTrack::OnPropertyTrack)
 wxEND_EVENT_TABLE()
 
 L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow)
@@ -243,6 +248,8 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_DELETE_TRACKS_BELOW, _("Delete All Tracks Below Current Track"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_PROPERTY_TRACK, _("&Property"));
 }
 
 L3DiskRawTrack::~L3DiskRawTrack()
@@ -256,13 +263,13 @@ void L3DiskRawTrack::OnListItemSelected(wxListEvent& event)
 	if (!disk) return;
 
 	int row = (int)event.GetIndex();
-	int num = (int)GetItemData(row);
-	wxUint32 offset = disk->GetOffset(num);
-	if (offset > 0) {
-		parent->SetSectorListData(disk->GetTrackByOffset(offset));
-	} else {
-		parent->ClearSectorListData();
-	}
+	SelectData(row);
+}
+
+/// トラックリストをダブルクリック
+void L3DiskRawTrack::OnListActivated(wxListEvent &event)
+{
+	ShowTrackAttr();
 }
 
 /// トラックリスト右クリック
@@ -352,6 +359,12 @@ void L3DiskRawTrack::OnDeleteTracksBelow(wxCommandEvent& event)
 	}
 }
 
+/// トラックプロパティ選択
+void L3DiskRawTrack::OnPropertyTrack(wxCommandEvent& event)
+{
+	ShowTrackAttr();
+}
+
 /// キー押下
 void L3DiskRawTrack::OnChar(wxKeyEvent& event)
 {
@@ -371,6 +384,18 @@ void L3DiskRawTrack::OnChar(wxKeyEvent& event)
 	default:
 		event.Skip();
 		break;
+	}
+}
+
+/// 選択
+void L3DiskRawTrack::SelectData(int row)
+{
+	int num = (int)GetItemData(row);
+	wxUint32 offset = disk->GetOffset(num);
+	if (offset > 0) {
+		parent->SetSectorListData(disk->GetTrackByOffset(offset));
+	} else {
+		parent->ClearSectorListData();
 	}
 }
 
@@ -452,6 +477,8 @@ void L3DiskRawTrack::ShowPopupMenu()
 	menuPopup->Enable(IDM_MODIFY_ID_H_DISK, opened);
 	menuPopup->Enable(IDM_MODIFY_ID_N_DISK, opened);
 	menuPopup->Enable(IDM_MODIFY_DENSITY_DISK, opened);
+
+	menuPopup->Enable(IDM_PROPERTY_TRACK, opened);
 
 	if (opened) {
 		row = (int)GetFirstSelected();
@@ -900,6 +927,21 @@ void L3DiskRawTrack::ModifyDensityOnDisk()
 	}
 }
 
+/// トラック情報を表示
+void L3DiskRawTrack::ShowTrackAttr()
+{
+	if (!disk) return;
+
+	int row = (int)GetFirstSelected();
+	if (row < 0) return;
+	int num = (int)GetItemData(row);
+
+	wxUint32 offset = disk->GetOffset(num);
+
+	RawTrackBox dlg(this, wxID_ANY, row, offset, disk);
+	dlg.ShowModal();
+}
+
 /// 選択行のトラックを返す
 DiskD88Track *L3DiskRawTrack::GetSelectedTrack()
 {
@@ -1235,12 +1277,12 @@ void L3DiskRawSector::SetSectors(DiskD88Track *newtrack)
 /// セクタリストをリフレッシュ
 void L3DiskRawSector::RefreshSectors()
 {
+	DeleteAllItems();
+
 	if (!track) return;
 
 	DiskD88Sectors *sectors = track->GetSectors();
 	if (!sectors) return;
-
-	DeleteAllItems();
 
 	wxVector<wxVariant> data;
 	for (size_t i=0; i<sectors->Count(); i++) {

@@ -24,7 +24,7 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 	// トラック当たりのグループ数
 	wxUint32 grps_per_trk = basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup();
 	// 最大グループ数
-	wxUint32 max_group = end_group - managed_start_group;
+	wxUint32 max_group = basic->GetFatEndGroup() - managed_start_group;
 	if (max_group < managed_start_group) max_group = managed_start_group;
 	max_group = max_group * 2 - 1;
 
@@ -37,11 +37,11 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 		} else {
 			num = managed_start_group + ((i4 + 1) * grps_per_trk) + (i % grps_per_trk);
 		}
-		if (end_group < num) {
+		if (basic->GetFatEndGroup() < num) {
 			continue;
 		}
 		wxUint32 gnum = GetGroupNumber(num);
-		if (gnum == group_unused_code) {
+		if (gnum == basic->GetGroupUnusedCode()) {
 			new_num = num;
 			break;
 		}
@@ -55,7 +55,7 @@ void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 	// FAT,DIRエリアが属するトラック、サイド
 	int sec_pos = basic->GetFatStartSector() + (basic->GetFatSideNumber() * basic->GetSectorsOnBasic()) - 1;
 
-	if (track == basic->GetManagedTrack(sec_pos, NULL, NULL)) {
+	if (track == basic->GetManagedTrack(sec_pos)) {
 		// ファイル管理エリアの場合(指定サイドのみ)
 		sector->Fill(basic->GetFillCodeOnFAT());
 	} else {
@@ -66,18 +66,20 @@ void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
-void DiskBasicTypeN88::AdditionalProcessOnFormatted()
+bool DiskBasicTypeN88::AdditionalProcessOnFormatted()
 {
 	// システムで使用している部分のクラスタ位置を予約済みにする
 	wxArrayInt grps = basic->GetReservedGroups();
 	for(size_t i = 0; i < grps.Count(); i++) {
-		SetGroupNumber(grps[i], group_system_code);
+		SetGroupNumber(grps[i], basic->GetGroupSystemCode());
 	}
 	// IDをクリア
 	DiskD88Sector *sector = basic->GetManagedSector(basic->GetDirEndSector());
 	if (sector) {
 		sector->Fill(0);
 	}
+
+	return true;
 }
 
 //
@@ -85,15 +87,23 @@ void DiskBasicTypeN88::AdditionalProcessOnFormatted()
 //
 
 /// ファイルの最終セクタのデータサイズを求める
+/// @param [in] item          ディレクトリアイテム
+/// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
+/// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
+/// @param [in] sector_buffer セクタバッファ
+/// @param [in] sector_size   バッファイサイズ
+/// @param [in] remain_size   残りサイズ
+/// @return 残りサイズ
 int DiskBasicTypeN88::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size)
 {
 	// ファイルサイズはセクタサイズ境界なので要計算
 	if (item->NeedCheckEofCode()) {
 		// 終端コードの1つ前までを出力
+		wxUint8 null_code = basic->InvertUint8(0);
 		// ランダムアクセス時は除く
 		int len = sector_size - 1;
 		for(; len >= 0; len--) {
-			if (sector_buffer[len] != 0) break;
+			if (sector_buffer[len] != null_code) break;
 		}
 		if (len >= 0) sector_size = len;
 	} else {
@@ -152,5 +162,8 @@ int DiskBasicTypeN88::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, 
 			len++;
 		}
 	}
+	// 反転
+	basic->InvertMem(buffer, size);
+
 	return len;
 }

@@ -49,6 +49,10 @@ protected:
 	virtual void	SetFileType1(int val);
 	/// 使用しているアイテムか
 	virtual bool	CheckUsed(bool unuse);
+	/// ファイル名を設定
+	virtual void	SetFileName(const wxUint8 *filename, int length);
+	/// ファイル名と拡張子を得る
+	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 
 	/// 日付を変換
 	void			ConvDateToTm(wxUint16 date, struct tm *tm);
@@ -66,17 +70,17 @@ public:
 
 	/// ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
+	/// アイテムを削除できるか
+	virtual bool	IsDeletable();
 	/// ファイル名に設定できない文字を文字列にして返す
 	virtual wxString InvalidateChars();
 	/// ファイル名は必須（空文字不可）か
 	virtual bool	IsFileNameRequired() { return true; }
 	/// 属性を設定
 	virtual void	SetFileAttr(int file_type);
-//	/// ディレクトリをクリア ファイル新規作成時
-//	virtual void	ClearData();
 
 	/// 属性を返す
-	virtual int		GetFileType();
+	virtual int		GetFileAttr();
 
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	virtual int		GetFileType1Pos();
@@ -139,12 +143,14 @@ public:
 
 	/// @name プロパティダイアログ用
 	//@{
+	/// ダイアログ表示前にファイルの属性を設定
+	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// ダイアログ内の属性部分のレイアウトを作成
-	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data);
+	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const AttrControls &controls) const;
+	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 機種依存の属性を設定する
-	virtual bool	SetAttrInAttrDialog(const AttrControls &controls, DiskBasicError &errinfo);
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}
 };
 

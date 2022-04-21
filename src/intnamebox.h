@@ -23,15 +23,17 @@ class DiskBasic;
 class DiskBasicDirItem;
 class DiskBasicGroups;
 
-typedef enum en_intnamebox_showitems {
-	INTNAME_SHOW_TEXT = 0x0001,
-	INTNAME_SHOW_ATTR = 0x0002,
-	INTNAME_SHOW_NO_PROPERTY = 0x0003,
-	INTNAME_SHOW_PROPERTY = 0x0004,
-	INTNAME_SHOW_ALL = 0xff,
-	INTNAME_SPECIFY_FILE_NAME = 0x100,
-	INTNAME_INVALID_FILE_TYPE = 0x200,
-} IntNameBoxShowItems;
+typedef enum en_intnamebox_show_flags {
+	INTNAME_SHOW_TEXT			 = 0x0001,	// 内部ファイル名を表示する
+	INTNAME_SHOW_ATTR			 = 0x0002,	// 属性を表示する
+	INTNAME_SHOW_NO_PROPERTY	 = 0x0003,
+	INTNAME_SHOW_PROPERTY		 = 0x0004,	// プロパティ表示（グループ一覧表示）
+	INTNAME_SHOW_ALL			 = 0x000f,
+	INTNAME_NEW_FILE			 = 0x0010,
+	INTNAME_IMPORT_INTERNAL		 = 0x0020,
+	INTNAME_SPECIFY_FILE_NAME	 = 0x0100,	// ファイル名を別途指定
+	INTNAME_INVALID_FILE_TYPE	 = 0x0200,	// アイテム内の属性は無効
+} IntNameBoxShowFlags;
 
 /// 内部ファイル名ボックス
 class IntNameBox : public wxDialog
@@ -46,8 +48,6 @@ private:
 	wxTextCtrl *txtIntName;
 	size_t mNameMaxLen;
 
-	AttrControls controls;
-
 	int user_data;	// machine depended
 
 	wxTextCtrl *txtStartAddr;
@@ -61,16 +61,12 @@ private:
 	wxTextCtrl *txtGroups;
 	wxListCtrl *lstGroups;
 
-	DiskBasicFormatType format_type;
-
 public:
 	IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption
-		, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int showitems);
+		, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
 
 	enum {
 		IDC_TEXT_INTNAME = 1,
-//		IDC_RADIO_TYPE1,
-//		IDC_RADIO_TYPE2,
 		IDC_TEXT_START_ADDR,
 		IDC_TEXT_EXEC_ADDR,
 		IDC_TEXT_CDATE,
@@ -78,10 +74,6 @@ public:
 		IDC_TEXT_FILE_SIZE,
 		IDC_TEXT_GROUPS,
 		IDC_LIST_GROUPS,
-//		IDC_CHECK_READONLY,
-//		IDC_CHECK_HIDDEN,
-//		IDC_CHECK_READWRITE,
-//		IDC_CHECK_ENCRYPT,
 	};
 
 	/// @name functions
@@ -99,24 +91,19 @@ public:
 
 	// properties
 	void SetDiskBasicDirItem(DiskBasicDirItem *item);
-	DiskBasicDirItem *GetDiskBasicDirItem() const { return item; }
+	DiskBasic *GetDiskBasic() { return basic; }
+	DiskBasicDirItem *GetDiskBasicDirItem() { return item; }
 	int GetUniqueNumber() const { return unique_number; }
 
 	void ChangedType1();
-//	void AddExtension(int file_type);
 	void SetInternalName(const wxString &name);
 	wxString GetInternalName() const;
-	int CalcFileType();
-	int GetFileType1() const;
-	int GetFileType2() const;
 
 	int GetStartAddress() const;
 	int GetExecuteAddress() const;
 
 	void GetDateTime(struct tm *tm);
 	struct tm GetDateTime();
-//	const wxString &GetDate() const;
-//	const wxString &GetTime() const;
 
 	void SetDateTime(const wxString &date, const wxString &time);
 	void SetDateTime(const wxDateTime &date_time);
@@ -124,8 +111,8 @@ public:
 	void SetFileSize(long val);
 	void SetGroups(long val, DiskBasicGroups &vals);
 
-//	void SetHidden(bool val);
-	AttrControls &GetAttrControls() { return controls; }
+	int GetUserData() const { return user_data; }
+	void SetUserData(int val) { user_data = val; }
 
 	wxDECLARE_EVENT_TABLE();
 };

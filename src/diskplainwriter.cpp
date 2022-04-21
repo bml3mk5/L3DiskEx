@@ -114,7 +114,7 @@ int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream
 	SingleDensities singles;
 	singles.Add(new SingleDensity(-1, -1, disk->GetSectorsPerTrack(), 128));
 	wxArrayString basic_types;
-	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""));
+	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
 
 	DiskD88File tmpfile;
 	DiskD88Creator cr("", param, false, &tmpfile, *result);

@@ -92,11 +92,9 @@ public:
 	/// セクタのデータを置き換える
 	bool	Replace(DiskD88Sector *src_sector);
 	/// セクタのデータを埋める
-	bool	Fill(wxUint8 code); 
+	bool	Fill(wxUint8 code, size_t len = (size_t)-1); 
 	/// セクタのデータを上書き
-	bool	Copy(const wxUint8 *buf, size_t len); 
-	/// セクタのデータを上書き
-	bool	Copy(const char *buf, size_t len); 
+	bool	Copy(const void *buf, size_t len); 
 	/// 指定位置のセクタデータを返す
 	wxUint8	Get(int pos) const;
 	/// セクタサイズを変更
@@ -228,11 +226,16 @@ public:
 	int		GetInterleave() const { return interleave; }
 	/// インターリーブを設定
 	void	SetInterleave(int val) { interleave = val; }
+	/// インターリーブを計算して設定
+	void	CalcInterleave();
 
 	/// セクタリストを返す
 	DiskD88Sectors *GetSectors() const { return sectors; }
 	/// 指定セクタ番号のセクタを返す
 	DiskD88Sector  *GetSector(int sector_number);
+
+	/// トラック内のもっともらしいID Hを返す
+	wxUint8	GetMajorIDH() const;
 
 	/// トラック内のすべてのID Cを変更
 	void	SetAllIDC(wxUint8 val);
@@ -336,8 +339,8 @@ public:
 	/// ディスクの中でもっともらしいパラメータを設定
 	const DiskParam *CalcMajorNumber();
 
-	/// ディスクパラメータを文字列にフォーマットして返す
-	wxString GetAttrText() const;
+//	/// ディスクパラメータを文字列にフォーマットして返す
+//	wxString GetAttrText() const;
 
 	/// 書き込み禁止かどうかを返す
 	bool	IsWriteProtected() const;

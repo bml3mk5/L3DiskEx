@@ -60,6 +60,7 @@ protected:
 	int density;				///< 0:2D 1:2DD 2:2HD
 	int interleave;				///< セクタの間隔
 	SingleDensities singles;	///< 単密度にするトラック
+	wxString density_name;		///< 密度情報（説明用）
 	wxString description;		///< 説明
 
 public:
@@ -76,6 +77,7 @@ public:
 		, int n_density
 		, int n_interleave
 		, const SingleDensities &n_singles
+		, const wxString &n_density_name
 		, const wxString &n_desc
 	);
 	virtual ~DiskParam() {}
@@ -101,6 +103,7 @@ public:
 		, int n_density
 		, int n_interleave
 		, const SingleDensities &n_singles
+		, const wxString &n_density_name
 		, const wxString &n_desc
 	);
 
@@ -130,10 +133,14 @@ public:
 	int GetInterleave() const { return interleave; }
 	void SetInterleave(int val) { interleave = val; }
 	const SingleDensities &GetSingles() const { return singles; }
-	const wxString &GetDiskDescription() const { return description; }
+	const wxString &GetDensityName() const { return density_name; }
+	const wxString &GetDescription() const { return description; }
+	wxString GetDiskDescription() const;
 };
 
 WX_DECLARE_OBJARRAY(DiskParam, DiskParams);
+
+WX_DEFINE_ARRAY(const DiskParam *, DiskParamPtrs);
 
 /// ディスクパラメータのテンプレートを提供する
 class DiskTypes

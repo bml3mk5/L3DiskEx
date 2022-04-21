@@ -63,6 +63,11 @@ public:
 	/// ダイアログ入力前のファイル名を変換 大文字にする
 	void	ConvertToFileNameStr(wxString &filename);
 
+	/// ダイアログ内の属性部分のレイアウトを作成
+	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 	/// ファイル名に拡張子を付ける
 	wxString AddExtensionForAttrDialog(int file_type_1, const wxString &name);
 };

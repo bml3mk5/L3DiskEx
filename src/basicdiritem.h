@@ -21,8 +21,6 @@ class DiskBasicGroups;
 class DiskBasicError;
 class IntNameBox;
 
-WX_DEFINE_ARRAY(wxControl *, AttrControls);
-
 #define FILENAME_BUFSIZE	(32)
 #define FILEEXT_BUFSIZE		(4)
 
@@ -80,7 +78,11 @@ protected:
 	/// 拡張子を設定
 	virtual void	SetFileExt(const wxUint8 *fileext, int length);
 	/// ファイル名と拡張子を得る
-	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen);
+	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
+	/// ファイル名(拡張子除く)を返す
+	virtual wxString GetFileNamePlainStr() const;
+	/// 拡張子を返す
+	virtual wxString GetFileExtPlainStr() const;
 	/// ファイル名を変換して内部ファイル名にする "."で拡張子と分別
 	virtual void	ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length);
 	/// ファイル名を変換して内部ファイル名にする 検索用
@@ -112,7 +114,7 @@ public:
 	/// ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
 	/// アイテムを削除できるか
-	virtual bool	IsDeletable() { return true; }
+	virtual bool	IsDeletable();
 	/// 削除
 	virtual bool	Delete(wxUint8 code);
 	/// ENDマークがあるか(一度も使用していないか)
@@ -121,6 +123,10 @@ public:
 	virtual void	SetEndMark(DiskBasicDirItem *next_item) {}
 	/// 内部変数などを再設定
 	virtual void	Refresh();
+	/// アイテムをコピーできるか
+	virtual bool	IsCopyable();
+	/// アイテムを上書きできるか
+	virtual bool	IsOverWritable();
 	//@}
 
 	/// @name ファイル名へのアクセス
@@ -138,9 +144,11 @@ public:
 	/// ファイル名を返す 名前 + "." + 拡張子
 	wxString		GetFileNameStr();
 	/// ファイル名を得る 名前 + "." + 拡張子
-	void			GetFileName(wxUint8 *filename, size_t length);
+	void			GetFileName(wxUint8 *filename, size_t length) const;
 	/// ファイル名が一致するか
 	virtual bool	IsSameFileName(const wxString &filename);
+	/// ファイル名(拡張子除く)が一致するか
+	virtual bool	IsSameName(const wxString &name);
 	/// 同じファイル名か
 	virtual bool	IsSameFileName(const DiskBasicDirItem &src);
 	/// ファイル名＋拡張子のサイズ
@@ -166,7 +174,7 @@ public:
 	/// 属性を設定
 	virtual void	SetFileAttr(int file_type);
 	/// 属性を返す
-	virtual int		GetFileType();
+	virtual int		GetFileAttr();
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	virtual int     GetFileType1Pos() { return 0; }
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
@@ -202,7 +210,9 @@ public:
 	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合など
 	virtual int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size) { return file_size; }
 	/// ファイルサイズが適正か
-	virtual bool	IsFileValidSize(int file_type1, int size, int *limit) { return true; }
+	virtual bool	IsFileValidSize(int file_type1, int size, int *limit);
+	/// ファイルサイズが適正か
+	virtual bool	IsFileValidSize(const IntNameBox *dlg, int size, int *limit);
 	//@}
 
 	/// @name グループ番号/論理セクタ番号(LSN)へのアクセス
@@ -221,6 +231,10 @@ public:
 	virtual void	SetExtraGroup(wxUint32 val);
 	/// 追加のグループ番号を返す(機種依存)
 	virtual wxUint32 GetExtraGroup() const;
+	/// 最後のグループ番号をセット(機種依存)
+	virtual void	SetLastGroup(wxUint32 val);
+	/// 最後のグループ番号を返す(機種依存)
+	virtual wxUint32 GetLastGroup() const;
 	//@}
 
 	/// @name 日付、時間
@@ -317,24 +331,28 @@ public:
 	void			SetSector(DiskD88Sector	*val) { sector = val; }
 	/// アイテムの属するセクタを変更済みにする
 	virtual void	SetModify();
+	/// DISK BASICを返す
+	DiskBasic		*GetBasic() const { return basic; }
 	//@}
 
 	/// @name プロパティダイアログ用　機種依存部分を設定する
 	//@{
+	/// ダイアログ表示前にファイルの属性を設定
+	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2) {}
 	/// ダイアログ内の属性部分のレイアウトを作成
-	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data) {}
+	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags) {}
+	/// ダイアログ内の値を設定
+	virtual void	InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data) {}
 	/// 属性を変更した際に呼ばれるコールバック
-	virtual void	ChangeTypeInAttrDialog(AttrControls &controls) {}
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	virtual void	SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2) {}
+	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent) {}
 	/// ファイル名に拡張子を付ける
 	virtual wxString AddExtensionForAttrDialog(int file_type_1, const wxString &name) { return name; }
 	/// 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const AttrControls &controls) const { return 0; }
+	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const { return 0; }
 	/// 属性2を得る
-	virtual int		GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const { return 0; }
+	virtual int		GetFileType2InAttrDialog(const IntNameBox *parent) const { return 0; }
 	/// 機種依存の属性を設定する
-	virtual bool	SetAttrInAttrDialog(const AttrControls &controls, DiskBasicError &errinfo) { return true; }
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}
 };
 

@@ -184,6 +184,39 @@ wxString DiskBasicDirItemL32D::RemakeFileName(const wxUint8 *src, size_t srclen)
 	return dst;
 }
 
+#include <wx/radiobox.h>
+#include "intnamebox.h"
+
+
+/// ダイアログ用に属性を設定する
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemL32D::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+	if (file_type_2 == TYPE_NAME_2_RANDOM) {
+		// 1Sから2Dへのコピーでランダムアクセスのデータはアスキーとする。
+		file_type_2 = TYPE_NAME_2_ASCII;
+	}
+}
+
+/// ダイアログ内の属性部分のレイアウトを作成
+/// @param [in] parent         プロパティダイアログ
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
+/// @param [in] sizer
+/// @param [in] flags
+void DiskBasicDirItemL32D::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
+{
+	DiskBasicDirItemFAT8::CreateControlsForAttrDialog(parent, show_flags, file_path, sizer, flags);
+
+	// ランダムアクセスの選択肢を隠す
+	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
+	radType2->Show(TYPE_NAME_2_RANDOM, false);
+}
+
 /// 拡張子を追加
 wxString DiskBasicDirItemL32D::AddExtensionForAttrDialog(int file_type_1, const wxString &name)
 {

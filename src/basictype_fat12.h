@@ -44,7 +44,7 @@ public:
 	/// FAT位置をセット
 	void			SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FAT位置を返す
-	wxUint32		GetGroupNumber(wxUint32 num);
+	wxUint32		GetGroupNumber(wxUint32 num) const;
 	/// 次の空きFAT位置を返す
 	virtual wxUint32 GetNextEmptyGroupNumber(wxUint32 curr_group);
 	//@}
@@ -54,7 +54,7 @@ public:
 	/// FATエリアをチェック
 	bool			CheckFat();
 	/// ディスクから各パラメータを取得
-	virtual bool	ParseParamOnDisk(DiskD88Disk *disk);
+	virtual int		ParseParamOnDisk(DiskD88Disk *disk);
 	/// 管理エリアのトラック番号からグループ番号を計算
 	virtual wxUint32 CalcManagedStartGroup();
 	//@}
@@ -95,7 +95,9 @@ public:
 	/// セクタデータを指定コードで埋める
 	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	virtual void	AdditionalProcessOnFormatted();
+	virtual bool	AdditionalProcessOnFormatted();
+	/// BIOS Parameter Block を作成
+	bool			CreateBiosParameterBlock(const char *jmp, const char *name, wxUint8 **sec_buf = NULL);
 	//@}
 
 	/// @name save / write

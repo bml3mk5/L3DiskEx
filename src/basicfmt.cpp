@@ -12,6 +12,7 @@
 #include "basictype_l31s.h"
 #include "basictype_l32d.h"
 #include "basictype_fm.h"
+#include "basictype_msdos.h"
 #include "basictype_msx.h"
 #include "basictype_n88.h"
 #include "basictype_x1hu.h"
@@ -30,7 +31,7 @@ DiskBasic::DiskBasic() : DiskParam(), DiskBasicParam()
 	selected_side = -1;
 	data_start_sector = 0;
 	skipped_track = 0x7fff;
-	reverse_side = false;
+//	reverse_side = false;
 //	inverted_data = false;
 	char_code = 0;
 
@@ -62,7 +63,7 @@ void DiskBasic::CreateType()
 		type = new DiskBasicTypeFM(this, fat, dir);
 		break;
 	case FORMAT_TYPE_MSDOS:
-		type = new DiskBasicTypeFAT12(this, fat, dir);
+		type = new DiskBasicTypeMSDOS(this, fat, dir);
 		break;
 	case FORMAT_TYPE_MSX:
 		type = new DiskBasicTypeMSX(this, fat, dir);
@@ -89,12 +90,12 @@ void DiskBasic::CreateType()
 		type = new DiskBasicType(this, fat, dir);
 		break;
 	}
-	type->SetSectorSize(sector_size);
-	type->SetSecsPerGroup(GetSectorsPerGroup());
-	type->SetGroupFinalCode(GetGroupFinalCode());
-	type->SetGroupSystemCode(GetGroupSystemCode());
-	type->SetGroupUnusedCode(GetGroupUnusedCode());
-	type->SetEndGroup(GetFatEndGroup());
+//	type->SetSectorSize(sector_size);
+//	type->SetSecsPerGroup(GetSectorsPerGroup());
+//	type->SetGroupFinalCode(GetGroupFinalCode());
+//	type->SetGroupSystemCode(GetGroupSystemCode());
+//	type->SetGroupUnusedCode(GetGroupUnusedCode());
+//	type->SetEndGroup(GetFatEndGroup());
 }
 
 /// 指定したディスクがDISK BASICかを解析する
@@ -104,8 +105,6 @@ void DiskBasic::CreateType()
 /// @return <0:エラーあり 0:正常 >0:ワーニング
 int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 {
-	bool valid = true;
-
 	errinfo.Clear();
 
 	disk = newdisk;
@@ -117,6 +116,7 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 	DiskBasicParam *match = newdisk->GetDiskBasicParam();
 //	newdisk->SetFATArea(false);
 
+	int sts = 0;
 	if (!match) {
 		// DISK BASICかどうか
 		bool support = false;
@@ -135,17 +135,17 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 			match = gDiskBasicTemplates.FindType(hint, types.Item(n));
 			if (match) {
 				// フォーマットされているか？
-				valid = ParseFormattedDisk(newdisk, match, is_formatting);
-				if (valid) {
+				sts = ParseFormattedDisk(newdisk, match, is_formatting);
+				if (sts >= 0) {
 					break;
 				}
 			}
 		}
 	} else {
 		// すでにフォーマット済み
-		valid = ParseFormattedDisk(newdisk, match, is_formatting);
+		sts = ParseFormattedDisk(newdisk, match, is_formatting);
 	}
-	if (valid) {
+	if (sts == 0) {
 		errinfo.Clear();
 	}
 	if (!formatted) {
@@ -158,10 +158,10 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 /// @param [in] newdisk       : 新しいディスク
 /// @param [in] match         : DISK BASICのパラメータ
 /// @param [in] is_formatting : フォーマット実行時true
-/// @return false フォーマットされていない
-bool DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, bool is_formatting)
+/// @return -1:エラーあり 0:正常 1:ワーニング
+int DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, bool is_formatting)
 {
-	bool valid = true;
+	int sts = 0;
 
 	SetBasicParam(*match);
 	SetDiskParam(*newdisk);
@@ -174,30 +174,35 @@ bool DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, 
 
 	// FAT12/16の場合ディスク上のパラメータを解析
 	if (!is_formatting) {
-		valid = type->ParseParamOnDisk(disk);
+		sts = type->ParseParamOnDisk(disk);
+		if (sts != 0) {
+			errinfo.SetInfo(DiskBasicError::ERR_IN_PARAMETER_AREA);
+		}
 	}
 
 	// FATのチェック
-	if (valid) {
-		valid = AssignFat();
+	if (sts >= 0) {
+		bool valid = AssignFat();
 		if (!is_formatting && !valid) {
 			errinfo.SetInfo(DiskBasicError::ERR_IN_FAT_AREA);
+			sts = -1;
 		}
 	}
-	if (valid) {
+	if (sts >= 0) {
 		// ディレクトリのチェック
-		valid = CheckRootDirectory();
+		bool valid = CheckRootDirectory();
 		if (!is_formatting && !valid) {
 			errinfo.SetInfo(DiskBasicError::ERR_IN_DIRECTORY_AREA);
+			sts = -1;
 		}
 	}
-	if (valid || is_formatting) {
+	if (sts >= 0 || is_formatting) {
 		// フォーマット完了
 		formatted = true;
 		newdisk->SetDiskBasicParam(match);
 	}
 
-	return valid;
+	return sts;
 }
 
 /// パラメータをクリア
@@ -308,7 +313,7 @@ bool DiskBasic::AssignFat()
 	// 固有のパラメータ
 	data_start_sector = type->CalcDataStartSectorPos();
 	skipped_track = type->CalcSkippedTrack();
-	reverse_side = type->IsSideReversed(GetSidesOnBasic());
+//	reverse_side = type->IsSideReversed(GetSidesOnBasic());
 //	inverted_data = type->IsDataInverted();
 
 	bool valid = true;
@@ -495,7 +500,7 @@ bool DiskBasic::IsWritableIntoDisk()
 		return false;
 	}
 	// 書き込み処理に対応しているか
-	if (!type->IsWritable()) {
+	if (!type->SupportWriting()) {
 		errinfo.SetError(DiskBasicError::ERR_WRITE_UNSUPPORTED);
 		return false;
 	}
@@ -510,11 +515,12 @@ bool DiskBasic::IsWritableIntoDisk()
 /// 指定ファイルのサイズでディスクに書き込めるかをチェック
 /// @param [in]  srcpath    ファイルパス
 /// @param [out] file_size  ファイルのサイズを返す
-bool DiskBasic::CheckFile(const wxString &srcpath, int &file_size)
+bool DiskBasic::CheckFile(const wxString &srcpath, int *file_size)
 {
 	bool sts = true;
 
 	do {
+		// ディスクに書き込めるか
 		if (!IsWritableIntoDisk()) {
 			sts = false;
 			break;
@@ -527,9 +533,11 @@ bool DiskBasic::CheckFile(const wxString &srcpath, int &file_size)
 			sts = false;
 			break;
 		}
-		file_size = (int)infile.GetLength();
+		int size = (int)infile.GetLength();
+		if (file_size) *file_size = size;
 
-		if (!HasFreeDiskSize(file_size)) {
+		// 空きがあるか
+		if (!HasFreeDiskSize(size)) {
 			sts = false;
 			break;
 		}
@@ -549,6 +557,7 @@ bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
 	bool sts = true;
 
 	do {
+		// ディスクに書き込めるか
 		if (!IsWritableIntoDisk()) {
 			sts = false;
 			break;
@@ -561,6 +570,7 @@ bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
 			sts = false;
 			break;
 		}
+		// 空きがあるか
 		if (!HasFreeDiskSize((int)buflen)) {
 			sts = false;
 			break;
@@ -572,71 +582,6 @@ bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
 	}
 	return sts;
 }
-
-#if 0
-/// 指定ファイルをディスクイメージにセーブ
-/// @param [in] srcpath   元ファイルのあるパス
-/// @param [in] filename  ディレクトリに設定する内部ファイル名
-/// @param [in] file_type ファイル属性
-/// @param [in] start_addr 開始アドレス
-/// @param [in] exec_addr 実行アドレス
-/// @param [in] file_type ファイル属性
-/// @param [in] tm        作成日付
-/// @param [out] nitem    作成したディレクトリアイテム
-/// @return false:エラーあり
-bool DiskBasic::SaveFile(const wxString &srcpath, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem)
-{
-	if (!IsWritableIntoDisk()) return false;
-
-	wxFileInputStream infile(srcpath);
-	// ファイル読めるか
-	if (!infile.IsOk() || !infile.GetFile()->IsOpened()) {
-		errinfo.SetError(DiskBasicError::ERR_CANNOT_IMPORT);
-		return false;
-	}
-
-	// セーブ
-	return SaveFile(infile, filename, file_type, start_addr, exec_addr, tm, nitem);
-}
-
-/// バッファデータをディスクイメージにセーブ
-/// @param [in] buffer    データ
-/// @param [in] buflen    データサイズ
-/// @param [in] filename  ディレクトリに設定する内部ファイル名
-/// @param [in] file_type ファイル属性
-/// @param [in] start_addr 開始アドレス
-/// @param [in] exec_addr 実行アドレス
-/// @param [in] tm        作成日付
-/// @param [out] nitem    作成したディレクトリアイテム
-/// @return false:エラーあり
-bool DiskBasic::SaveFile(const wxUint8 *buffer, size_t buflen, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem)
-{
-	if (!IsWritableIntoDisk()) return false;
-
-	wxMemoryInputStream indata(buffer, buflen);
-	// データ読めるか
-	if (!indata.IsOk()) {
-		errinfo.SetError(DiskBasicError::ERR_CANNOT_IMPORT);
-		return false;
-	}
-
-	// セーブ
-	return SaveFile(indata, filename, file_type, start_addr, exec_addr, tm, nitem);
-}
-
-/// ストリームデータをディスクイメージにセーブ
-/// @param [in] istream   ストリームバッファ
-/// @param [in] filename  ディレクトリに設定する内部ファイル名
-/// @param [in] file_type ファイル属性
-/// @param [in] start_addr 開始アドレス
-/// @param [in] exec_addr 実行アドレス
-/// @param [in] tm        作成日付
-/// @param [out] nitem    作成したディレクトリアイテム
-/// @return false:エラーあり
-bool DiskBasic::SaveFile(wxInputStream &istream, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem)
-{
-}
-#endif
 
 /// 指定ファイルをディスクイメージにセーブ
 /// @param [in] srcpath   元ファイルのあるパス
@@ -820,7 +765,7 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 bool DiskBasic::IsDeletableFiles()
 {
 	errinfo.Clear();
-	if (!type || !type->IsDeletable()) {
+	if (!type || !type->SupportDeleting()) {
 		errinfo.SetError(DiskBasicError::ERR_DELETE_UNSUPPORTED);
 		return false;
 	}
@@ -882,10 +827,8 @@ bool DiskBasic::DeleteItem(DiskBasicDirItem *item, const DiskBasicGroups &group_
 		return false;
 	}
 
-	for(size_t gidx=0; gidx<group_items.Count(); gidx++) {
-		// FATエントリを削除
-		type->DeleteGroupNumber(group_items.Item(gidx).group);
-	}
+	// FATエントリを削除
+	type->DeleteGroups(group_items);
 
 	// ディレクトリエントリを削除
 	item->Delete(GetDeleteCode());
@@ -905,8 +848,8 @@ bool DiskBasic::DeleteItem(DiskBasicDirItem *item, const DiskBasicGroups &group_
 	return true;
 }
 
-/// ファイル名や属性を更新
-bool DiskBasic::RenameFile(DiskBasicDirItem *item, const wxString &newname, int file_type, int start_addr, int exec_addr, const struct tm *tm, const AttrControls *controls)
+/// ファイル名や属性を更新できるか
+bool DiskBasic::CanRenameFile(DiskBasicDirItem *item)
 {
 	errinfo.Clear();
 	if (!item) {
@@ -917,21 +860,35 @@ bool DiskBasic::RenameFile(DiskBasicDirItem *item, const wxString &newname, int 
 		errinfo.SetError(DiskBasicError::ERR_WRITE_PROTECTED);
 		return false;
 	}
-	// その他の属性更新
-	if (controls) {
-		if (!item->SetAttrInAttrDialog(*controls, errinfo)) {
-			return false;
-		}
+	if (!item->IsFileNameEditable()) {
+		wxString filename = item->GetFileNameStr();
+		errinfo.SetError(DiskBasicError::ERRV_CANNOT_EDIT_ENAME, filename.wc_str());
+		return false;
 	}
+	return true;
+}
 
+/// ファイル名を更新
+bool DiskBasic::RenameFile(DiskBasicDirItem *item, const wxString &newname)
+{
 	// ファイル名更新
 	if (item->IsFileNameEditable()) {
 		item->SetFileNameStr(newname);
 	}
-	// 属性更新
-	if (file_type >= 0) {
-		item->SetFileAttr(file_type);
-	}
+
+	// 変更されたか
+	item->Refresh();
+	item->SetModify();
+
+	// ファイル名を更新した後の個別処理
+	type->AdditionalProcessOnRenamedFile(item);
+
+	return true;
+}
+
+/// 属性を更新
+bool DiskBasic::ChangeAttr(DiskBasicDirItem *item, int start_addr, int exec_addr, const struct tm *tm)
+{
 	// 開始アドレス更新
 	if (start_addr >= 0) {
 		item->SetStartAddress(start_addr);
@@ -949,8 +906,8 @@ bool DiskBasic::RenameFile(DiskBasicDirItem *item, const wxString &newname, int 
 	item->Refresh();
 	item->SetModify();
 
-	// ファイル名を更新した後の個別処理
-	type->AdditionalProcessOnRenamedFile(item);
+	// 属性変更後の個別処理
+	type->AdditionalProcessOnChangedAttr(item);
 
 	return true;
 }
@@ -970,7 +927,7 @@ bool DiskBasic::IsFormattable()
 	if (!enable) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_FORMAT);
 	}
-	enable = type->IsFormattable();
+	enable = type->SupportFormatting();
 	if (!enable) {
 		errinfo.SetError(DiskBasicError::ERR_FORMAT_UNSUPPORTED);
 	}
@@ -1266,9 +1223,6 @@ DiskD88Track *DiskBasic::GetTrackFromSectorPos(int sector_pos, int &sector_num)
 	// セクタ番号からトラック番号、サイド番号、セクタ番号を計算
 	GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num);
 
-	// サイド番号を逆転するか
-	if (reverse_side) side_num = GetSidesOnBasic() - side_num - 1;
-
 	return disk->GetTrack(track_num, side_num);
 }
 
@@ -1284,9 +1238,6 @@ DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos)
 
 	// セクタ番号からトラック番号、サイド番号、セクタ番号を計算
 	GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num);
-
-	// サイド番号を逆転するか
-	if (reverse_side) side_num = GetSidesOnBasic() - side_num - 1;
 
 	return disk->GetSector(track_num, side_num, sector_num);
 }
@@ -1314,6 +1265,9 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &side_nu
 		// トラックごとに連番の場合
 		sector_num += (side_num * sectors_on_basic);
 	}
+
+	// サイド番号を逆転するか
+	side_num = GetReversedSideNumber(side_num);
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
@@ -1326,11 +1280,12 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_
 	if (selected_side >= 0) {
 		// 1S
 		track_num = sector_pos / sectors_on_basic;
+		sector_num = (sector_pos % sectors_on_basic) + 1;
 	} else {
 		// 2D, 2HD
-		track_num = sector_pos / sectors_on_basic / GetSidesOnBasic();
+		track_num = sector_pos / (sectors_on_basic * GetSidesOnBasic());
+		sector_num = (sector_pos % (sectors_on_basic * GetSidesOnBasic())) + 1;
 	}
-	sector_num = (sector_pos % sectors_on_basic) + 1;
 }
 
 /// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
@@ -1342,6 +1297,10 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_
 int  DiskBasic::GetSectorPosFromNum(int track_num, int side_num, int sector_num)
 {
 	int sector_pos;
+
+	// サイド番号を逆転するか
+	side_num = GetReversedSideNumber(side_num);
+
 	if (selected_side >= 0) {
 		// 1S
 		sector_pos = track_num * sectors_on_basic + sector_num - 1;
@@ -1449,53 +1408,43 @@ bool DiskBasic::CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, i
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を計算(グループ計算用)
 /// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
-/// @param [in] sector_pos : セクタ位置(トラック0,サイド0のセクタを0とした位置)
-/// @param [out] track     : トラック番号
-/// @param [out] side      : サイド番号
-/// @param [out] sector    : セクタ番号
-void DiskBasic::CalcNumFromSectorPosForGroup(int sector_pos, int &track, int &side, int &sector)
+/// @param [in] sector_pos  : セクタ位置(トラック0,サイド0のセクタを0とした位置)
+/// @param [out] track_num  : トラック番号
+/// @param [out] side_num   : サイド番号
+/// @param [out] sector_num : セクタ番号
+void DiskBasic::CalcNumFromSectorPosForGroup(int sector_pos, int &track_num, int &side_num, int &sector_num)
 {
 	// オフセットを足す
 	sector_pos += data_start_sector;
 
-	GetNumFromSectorPos(sector_pos, track, side, sector);
+	GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num);
 
 	// 管理エリアをまたがる場合はそこをとばす
-	if (track >= skipped_track) track++;
-	// サイド番号を逆転するか
-	if (reverse_side) side = GetSidesOnBasic() - side - 1;
+	if (track_num >= skipped_track) track_num++;
 }
 
 /// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を計算(グループ計算用)
 /// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
-/// @param [in] track  : トラック番号
-/// @param [in] side   : サイド番号
-/// @param [in] sector : セクタ番号
-/// @return            : セクタ位置(トラック0,サイド0のセクタを0とした位置)
-int  DiskBasic::CalcSectorPosFromNumForGroup(int track, int side, int sector)
+/// @param [in] track_num  : トラック番号
+/// @param [in] side_num   : サイド番号
+/// @param [in] sector_num : セクタ番号
+/// @return                : セクタ位置(トラック0,サイド0のセクタを0とした位置)
+int  DiskBasic::CalcSectorPosFromNumForGroup(int track_num, int side_num, int sector_num)
 {
 	int sector_pos;
 
 	// サイド番号を逆転するか
-	if (reverse_side) side = GetSidesOnBasic() - side - 1;
+	side_num = GetReversedSideNumber(side_num);
 	// 管理エリアをまたがる場合はそこをとばす
-	if (track >= skipped_track) track--;
+	if (track_num >= skipped_track) track_num--;
 
-	sector_pos = GetSectorPosFromNum(track, side, sector);
+	sector_pos = GetSectorPosFromNum(track_num, side_num, sector_num);
 
 	// オフセットを引く
 	sector_pos -= data_start_sector;
 
 	return sector_pos;
 }
-
-#if 0
-/// 指定ディレクトリのすべてのグループを取得
-void DiskBasic::GetAllGroups(DiskBasicDirItem *item, DiskBasicGroups &group_items)
-{
-	item->GetAllGroups(group_items);
-}
-#endif
 
 /// グループ番号から開始セクタを返す
 DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num)
@@ -1589,8 +1538,41 @@ void DiskBasic::ShowErrorMessage()
 	ResultInfo::ShowMessage(GetErrorLevel(), GetErrorMessage());
 }
 
+#if 0
 /// ディスク内のデータが反転しているか
-bool DiskBasic::IsDataInverted()
+bool DiskBasic::IsDataInverted() const
 {
-	return type->IsDataInverted();
+	return (DiskBasicParam::IsDataInverted()); // || type->IsDataInverted());
+}
+#endif
+
+/// 必要ならデータを反転する
+wxUint8 DiskBasic::InvertUint8(wxUint8 val) const
+{
+	return IsDataInverted() ? val ^ 0xff : val;
+}
+
+/// 必要ならデータを反転する
+wxUint16 DiskBasic::InvertUint16(wxUint16 val) const
+{
+	return IsDataInverted() ? val ^ 0xffff : val;
+}
+
+/// 必要ならデータを反転する
+wxUint32 DiskBasic::InvertUint32(wxUint32 val) const
+{
+	return IsDataInverted() ? ~val : val;
+}
+
+/// 必要ならデータを反転する
+void DiskBasic::InvertMem(void *val, size_t len) const
+{
+	if (IsDataInverted()) mem_invert(val, len);
+}
+
+/// 必要ならデータを反転する
+void DiskBasic::InvertMem(const wxUint8 *src, size_t len, wxUint8 *dst) const
+{
+	memcpy(dst, src, len);
+	if (IsDataInverted()) mem_invert(dst, len);
 }

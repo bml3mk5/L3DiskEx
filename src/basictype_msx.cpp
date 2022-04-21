@@ -13,35 +13,37 @@ DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 {
 }
 
+/// ディスク上のパラメータを読む
+int DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk)
+{
+	int valid = DiskBasicTypeFAT12::ParseParamOnDisk(disk);
+	if (valid == 0) {
+		DiskD88Sector *sector = disk->GetSector(0, 0, 1);
+		wxUint8 *datas = sector->GetSectorBuffer();
+		fat_bpb_t *bpb = (fat_bpb_t *)datas;
+		char oem_name[10];
+		memset(oem_name, 0, sizeof(oem_name));
+		memcpy(oem_name, bpb->BS_OEMName, sizeof(bpb->BS_OEMName));
+		if (strstr(oem_name, "MSX") == NULL) {
+			valid = -1;
+		}
+	}
+	return valid;
+}
+
 /// セクタデータを埋めた後の個別処理
 /// フォーマット IPLの書き込み
-void DiskBasicTypeMSX::AdditionalProcessOnFormatted()
+bool DiskBasicTypeMSX::AdditionalProcessOnFormatted()
 {
-	fat_bpb_t hed;
-	memset(&hed, 0, sizeof(hed));
-	memcpy(hed.BS_JmpBoot, "\xeb\xfe\x90", 3);
-	memcpy(hed.BS_OEMName, "MSX     ", 8);
-	hed.BPB_BytsPerSec = wxUINT16_SWAP_ON_BE(basic->GetSectorSize());
-	hed.BPB_SecPerClus = basic->GetSectorsPerGroup();
-	hed.BPB_RsvdSecCnt = wxUINT16_SWAP_ON_BE(basic->GetReservedSectors());
-	hed.BPB_NumFATs = basic->GetNumberOfFats();
-	hed.BPB_RootEntCnt = wxUINT16_SWAP_ON_BE(basic->GetDirEntryCount());
-	hed.BPB_TotSec16 = basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
-	hed.BPB_TotSec16 = wxUINT16_SWAP_ON_BE(hed.BPB_TotSec16);
-	hed.BPB_Media = basic->GetMediaId();
-	hed.BPB_FATSz16 = wxUINT16_SWAP_ON_BE(basic->GetSectorsPerFat());
-	hed.BPB_SecPerTrk =  wxUINT16_SWAP_ON_BE(basic->GetSectorsPerTrackOnBasic());
-	hed.BPB_NumHeads = wxUINT16_SWAP_ON_BE(basic->GetSidesOnBasic());
+	wxUint8 *buf = NULL;
+	if (!CreateBiosParameterBlock("\xeb\xfe\x90", "MSX", &buf)) {
+		return false;
+	}
 
-	DiskD88Sector *sec = basic->GetDisk()->GetSector(0, 0, 1);
-	if (!sec) return;
-	wxUint8 *buf = sec->GetSectorBuffer();
-	if (!buf) return;
-	memcpy(buf, &hed, sizeof(hed));
 	// 起動時の実行コード
-	buf[0x1e] = 0xd0;	// RET NC
+	if (buf) {
+		buf[0x1e] = 0xd0;	// RET NC
+	}
 
-	// FATの先頭にメディアIDをセット
-	SetGroupNumber(0, 0xffffff00 | basic->GetMediaId());
-	SetGroupNumber(1, 0xffffffff);
+	return true;
 }

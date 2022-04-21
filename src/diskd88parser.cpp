@@ -165,32 +165,8 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream *istream, size_t start_pos, int
 	}
 
 	if (result->GetValid() >= 0) {
-		// interleave of sector check
-		DiskD88Sectors *ss = track->GetSectors();
-		int state = 0;
-		int intl = 0;
-		for(size_t sec_pos = 0; sec_pos < ss->Count(); sec_pos++) {
-			DiskD88Sector *s = ss->Item(sec_pos);
-			switch(state) {
-			case 1:
-				intl++;
-				if (s->GetSectorNumber() == 2) {
-					state = 2;
-					sec_pos = ss->Count();
-				}
-				break;
-			default:
-				if (s->GetSectorNumber() == 1) {
-					state = 1;
-					intl = 0;
-				}
-				break;
-			}
-		}
-		if (intl <= 0) {
-			intl = 1;
-		}
-		track->SetInterleave(intl);
+		// インターリーブの計算
+		track->CalcInterleave();
 	}
 
 	if (result->GetValid() >= 0) {

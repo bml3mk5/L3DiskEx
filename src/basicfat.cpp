@@ -31,6 +31,11 @@ void DiskBasicGroupItem::Set(wxUint32 n_group, wxUint32 n_next, int n_track, int
 	sector_start = n_start;
 	sector_end = n_end;
 }
+/// グループ番号でソートする際の比較
+int DiskBasicGroupItem::Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2)
+{
+	return ((*item1)->group == (*item2)->group ? 0 : ((*item1)->group > (*item2)->group ? 1 : -1));
+}
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicGroupItems);
@@ -78,6 +83,11 @@ DiskBasicGroupItem *DiskBasicGroups::ItemPtr(size_t idx) const
 {
 	return &items.Item(idx);
 }
+/// グループ番号でソート
+void DiskBasicGroups::SortItems()
+{
+	items.Sort(&DiskBasicGroupItem::Compare);
+}
 
 //
 //
@@ -123,73 +133,76 @@ DiskBasicFat::~DiskBasicFat()
 }
 bool DiskBasicFat::Assign()
 {
+	bool valid = true;
+
 	int sector_num = basic->GetFatStartSector();
-	int side_num = basic->GetFatSideNumber();
+	int side_num = basic->GetReversedSideNumber(basic->GetFatSideNumber());
 
-	DiskD88Disk *disk = basic->GetDisk();
-	DiskD88Track *managed_track;
-	if (side_num >= 0) {
-		// トラック、サイド番号から計算
-		managed_track = disk->GetTrack(basic->GetManagedTrackNumber(), side_num);
-	} else {
-		// セクタ番号の通し番号で計算
-		managed_track = basic->GetManagedTrack(basic->GetReservedSectors(), &side_num, &sector_num);
-	}
-	if (!managed_track) {
-		return false;
-	}
-	// セクタ位置を得る
-	start = basic->GetSectorPosFromNum(basic->GetManagedTrackNumber(), side_num, sector_num);
+	bufs.Empty();
 
-//	sides = newsides;
+	type = basic->GetType();
 
-	type =			basic->GetType();
-	format_type =	basic->GetFormatType();
-	count =			basic->GetNumberOfFats();
-	size =			basic->GetSectorsPerFat();
-	start_pos =		basic->GetFatStartPos();
-//	grps_per_track = newgrpspertrk;
-//	sector_size =	0;
+	if (sector_num >= 0) {
+		DiskD88Track *managed_track;
+		if (side_num >= 0) {
+			// トラック、サイド番号から計算
+			managed_track = basic->GetTrack(basic->GetManagedTrackNumber(), side_num);
+		} else {
+			// セクタ番号の通し番号で計算
+			managed_track = basic->GetManagedTrack(basic->GetReservedSectors(), &side_num, &sector_num);
+		}
+		if (!managed_track) {
+			return false;
+		}
+		// セクタ位置を得る
+		start = basic->GetSectorPosFromNum(basic->GetManagedTrackNumber(), side_num, sector_num);
 
-//	group_final_code = basic->GetGroupFinalCode();
-//	group_system_code = basic->GetGroupSystemCode();
-//	group_unused_code = basic->GetGroupUnusedCode();
+//		sides = newsides;
 
-	if (type) {
+		format_type =	basic->GetFormatType();
+		count =			basic->GetNumberOfFats();
+		size =			basic->GetSectorsPerFat();
+		start_pos =		basic->GetFatStartPos();
+//		grps_per_track = newgrpspertrk;
+//		sector_size =	0;
+
+//		group_final_code = basic->GetGroupFinalCode();
+//		group_system_code = basic->GetGroupSystemCode();
+//		group_unused_code = basic->GetGroupUnusedCode();
+
 //		type->SetGrpsPerTrack(grps_per_track);
 
 		type->CalcManagedStartGroup();
-	}
 
-	// set buffer pointer for useful accessing
-	bool valid = true;
-	int start_sector = start;
-	int end_sector = start + size - 1;
-	for(int fat_num = 0; fat_num < count && valid; fat_num++) {
-		DiskBasicFatBuffers fatbufs;
-		for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec_num);
-			if (!sector) {
-				valid = false;
-				break;
+		// set buffer pointer for useful accessing
+		int start_sector = start;
+		int end_sector = start + size - 1;
+		for(int fat_num = 0; fat_num < count && valid; fat_num++) {
+			DiskBasicFatBuffers fatbufs;
+			for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
+				DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec_num);
+				if (!sector) {
+					valid = false;
+					break;
+				}
+
+				wxUint8 *buf = sector->GetSectorBuffer();
+				int ssize = sector->GetSectorSize();
+
+//				sector_size = ssize;
+				if (sec_num == start_sector) {
+					// 最初のセクタだけ開始位置がずれる
+					buf += start_pos;
+					ssize -= start_pos;
+				}
+				DiskBasicFatBuffer fatbuf(buf, ssize);
+				fatbufs.Add(fatbuf);
 			}
+			bufs.Add(fatbufs);
 
-			wxUint8 *buf = sector->GetSectorBuffer();
-			int ssize = sector->GetSectorSize();
-
-//			sector_size = ssize;
-			if (sec_num == start_sector) {
-				// 最初のセクタだけ開始位置がずれる
-				buf += start_pos;
-				ssize -= start_pos;
-			}
-			DiskBasicFatBuffer fatbuf(buf, ssize);
-			fatbufs.Add(fatbuf);
+			start_sector += size;
+			end_sector += size;
 		}
-		bufs.Add(fatbufs);
-
-		start_sector += size;
-		end_sector += size;
 	}
 
 	if (valid) {
@@ -278,4 +291,21 @@ void DiskBasicFat::Fill(wxUint8 code)
 		start_sector += size;
 		end_sector += size;
 	}
+}
+
+DiskBasicFatBuffers *DiskBasicFat::GetDiskBasicFatBuffers(size_t idx)
+{
+	if (idx >= bufs.Count()) {
+		return NULL;
+	}
+	return &bufs.Item(idx);
+}
+
+DiskBasicFatBuffer *DiskBasicFat::GetDiskBasicFatBuffer(size_t idx, size_t subidx)
+{
+	DiskBasicFatBuffers *fatbufs = GetDiskBasicFatBuffers(idx);
+	if (!fatbufs || subidx >= fatbufs->Count()) {
+		return NULL;
+	}
+	return &fatbufs->Item(subidx);
 }

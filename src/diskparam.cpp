@@ -4,6 +4,7 @@
 ///
 #include "diskparam.h"
 #include <wx/xml/xml.h>
+#include <wx/translation.h>
 #include "logging.h"
 #include "utils.h"
 
@@ -133,6 +134,7 @@ DiskParam::DiskParam(const wxString &n_type_name
 	, int n_density
 	, int n_interleave
 	, const SingleDensities &n_singles
+	, const wxString &n_density_name
 	, const wxString &n_desc
 ) {
 	this->SetDiskParam(n_type_name
@@ -146,6 +148,7 @@ DiskParam::DiskParam(const wxString &n_type_name
 		, n_density
 		, n_interleave
 		, n_singles
+		, n_density_name
 		, n_desc
 	);
 }
@@ -165,6 +168,7 @@ void DiskParam::SetDiskParam(const wxString &n_type_name
 	, int n_density
 	, int n_interleave
 	, const SingleDensities &n_singles
+	, const wxString &n_density_name
 	, const wxString &n_desc
 ) {
 	disk_type_name = n_type_name;
@@ -179,6 +183,7 @@ void DiskParam::SetDiskParam(const wxString &n_type_name
 	interleave = n_interleave;
 	if (density < 0 || 2 < density) density = 0;
 	singles = n_singles;
+	density_name = n_density_name;
 	description = n_desc;
 }
 void DiskParam::SetDiskParam(int n_sides_per_disk
@@ -211,6 +216,7 @@ void DiskParam::SetDiskParam(const DiskParam &src)
 	density = src.density;
 	interleave = src.interleave;
 	singles = src.singles;
+	density_name = src.density_name;
 	description = src.description;
 }
 void DiskParam::ClearDiskParam()
@@ -226,6 +232,7 @@ void DiskParam::ClearDiskParam()
 	density = 0;
 	interleave = 1;
 	singles.Empty();
+	density_name.Empty();
 	description.Empty();
 }
 /// 指定したパラメータで一致するものがあるか
@@ -404,6 +411,20 @@ int DiskParam::CalcDiskSize() const
 	return disk_size;
 }
 
+/// ディスクパラメータを文字列にフォーマットして返す
+wxString DiskParam::GetDiskDescription() const
+{
+	wxString str;
+
+	str = density_name;
+	str += wxT("  ");
+	str += wxString::Format(_("%dTracks, %dSectors, %dbytes/Sector, Interleave:%d"), tracks_per_side, sectors_per_track, sector_size, interleave);
+	str += wxT(" ");
+	str += description;
+
+	return str;
+}
+
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskParams);
 
@@ -446,6 +467,7 @@ bool DiskTypes::Load(const wxString &data_path, const wxString &locale_name)
 				disk_type = L3DiskUtils::ToInt(type_str);
 			}
 			SingleDensities singles;
+			wxString den_name, den_name_locale;
 			wxString desc, desc_locale;
 			wxString str;
 			while (itemnode) {
@@ -512,6 +534,15 @@ bool DiskTypes::Load(const wxString &data_path, const wxString &locale_name)
 					}
 					SingleDensity s((int)strk, (int)ssid, (int)sspt, (int)ssiz);
 					singles.Add(s);
+				} else if (itemnode->GetName() == "DensityName") {
+					if (itemnode->HasAttribute("lang")) {
+						wxString lang = itemnode->GetAttribute("lang");
+						if (locale_name.Find(lang) != wxNOT_FOUND) {
+							den_name_locale = itemnode->GetNodeContent();
+						}
+					} else {
+						den_name = itemnode->GetNodeContent();
+					}
 				} else if (itemnode->GetName() == "Description") {
 					if (itemnode->HasAttribute("lang")) {
 						wxString lang = itemnode->GetAttribute("lang");
@@ -523,6 +554,9 @@ bool DiskTypes::Load(const wxString &data_path, const wxString &locale_name)
 					}
 				}
 				itemnode = itemnode->GetNext();
+			}
+			if (!den_name_locale.IsEmpty()) {
+				den_name = den_name_locale;
 			}
 			if (!desc_locale.IsEmpty()) {
 				desc = desc_locale;
@@ -538,6 +572,7 @@ bool DiskTypes::Load(const wxString &data_path, const wxString &locale_name)
 				, density
 				, interleave
 				, singles
+				, den_name
 				, desc
 			);
 			types.Add(p);

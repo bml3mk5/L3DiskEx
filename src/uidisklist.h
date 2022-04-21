@@ -38,7 +38,7 @@ private:
 public:
 	L3DiskPositionData(int val1, int val2, bool edt) : wxClientData() { num = val1; subnum = val2; editable = edt; }
 
-	void SetNumber(int val1, int val2, bool edt) { num = val1; subnum = val2; editable = edt; }
+//	void SetNumber(int val1, int val2, bool edt) { num = val1; subnum = val2; editable = edt; }
 	int  GetNumber() { return num; }
 	int  GetSubNumber() { return subnum; }
 	bool GetEditable() { return editable; }

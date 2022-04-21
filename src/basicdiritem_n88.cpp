@@ -140,7 +140,7 @@ void DiskBasicDirItemN88::SetFileAttr(int file_type)
 	SetFileType1(t);
 }
 
-int DiskBasicDirItemN88::GetFileType()
+int DiskBasicDirItemN88::GetFileAttr()
 {
 	int t = GetFileType1();
 	int val = 0;
@@ -189,7 +189,7 @@ int DiskBasicDirItemN88::GetFileType1Pos()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemN88::GetFileType2Pos()
 {
-	return GetFileType();
+	return GetFileAttr();
 }
 
 int	DiskBasicDirItemN88::CalcFileTypeFromPos(int pos1, int pos2)
@@ -272,11 +272,13 @@ void DiskBasicDirItemN88::SetEndMark(DiskBasicDirItem *next_item)
 	if (HasEndMark()) next_item->Delete(basic->GetGroupUnusedCode());
 }
 
+#if 0
 /// 書き込み/上書き禁止か
 bool DiskBasicDirItemN88::IsWriteProtected()
 {
 	return (data->n88.type & 0x10) != 0;
 }
+#endif
 
 /// ファイルの終端コードをチェックする必要があるか
 bool DiskBasicDirItemN88::NeedCheckEofCode()
@@ -338,20 +340,44 @@ void DiskBasicDirItemN88::ClearData()
 #define IDC_CHECK_ENCRYPT 54
 #define IDC_RADIO_TYPE2 55
 
+/// ダイアログ用に属性を設定する
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemN88::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+		// 外部からインポート時
+		// 拡張子で属性を設定する
+		wxString ext = name.Right(4).Upper();
+		if (ext == wxT(".BAS")) {
+			file_type_1 = TYPE_NAME_N88_BINARY;
+		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
+			file_type_1 = TYPE_NAME_N88_ASCII;
+		} else if (ext == wxT(".BIN")) {
+			file_type_1 = TYPE_NAME_N88_MACHINE;
+		}
+	}
+}
+
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
 	wxRadioBox *radType1;
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkReadWrite;
 	wxCheckBox *chkEncrypt;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxArrayString types1;
 	for(size_t i=0; gTypeNameN88_1[i] != NULL; i++) {
@@ -374,20 +400,15 @@ void DiskBasicDirItemN88::CreateControlsForAttrDialog(IntNameBox *parent, int fi
 
 	// event handler
 	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
-
-	controls.Add(radType1);
-	controls.Add(chkReadOnly);
-	controls.Add(chkReadWrite);
-	controls.Add(chkEncrypt);
 }
 
 /// controls 0:txtIntName 1...: dependent
-void DiskBasicDirItemN88::ChangeTypeInAttrDialog(AttrControls &controls)
+void DiskBasicDirItemN88::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
-	wxRadioBox *radType1 = (wxRadioBox *)controls.Item(1);
-	wxCheckBox *chkReadOnly = (wxCheckBox *)controls.Item(2);
-	wxCheckBox *chkReadWrite = (wxCheckBox *)controls.Item(3);
-	wxCheckBox *chkEncrypt = (wxCheckBox *)controls.Item(4);
+	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(IDC_RADIO_TYPE1);
+	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
+	wxCheckBox *chkReadWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READWRITE);
+	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
 
 	int selected_idx = 0;
 	if (radType1) {
@@ -416,38 +437,20 @@ void DiskBasicDirItemN88::ChangeTypeInAttrDialog(AttrControls &controls)
 	}
 }
 
-/// ダイアログ用に属性を設定する
-/// インポート時ダイアログ表示前にファイルの属性を設定
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemN88::SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2)
-{
-	// 拡張子で属性を設定する
-	wxString ext = name.Right(4).Upper();
-	if (ext == wxT(".BAS")) {
-		file_type_1 = TYPE_NAME_N88_BINARY;
-	} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-		file_type_1 = TYPE_NAME_N88_ASCII;
-	} else if (ext == wxT(".BIN")) {
-		file_type_1 = TYPE_NAME_N88_MACHINE;
-	}
-}
-
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemN88::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemN88::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxRadioBox *radType1 = (wxRadioBox *)controls.Item(1);
+	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(IDC_RADIO_TYPE1);
 
 	return radType1->GetSelection();
 }
 
 /// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemN88::GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const
+int DiskBasicDirItemN88::GetFileType2InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkReadOnly = (wxCheckBox *)controls.Item(2);
-	wxCheckBox *chkReadWrite = (wxCheckBox *)controls.Item(3);
-	wxCheckBox *chkEncrypt = (wxCheckBox *)controls.Item(4);
+	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
+	wxCheckBox *chkReadWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READWRITE);
+	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
 
 	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkEncrypt->GetValue() ? FILE_TYPE_ENCRYPTED_MASK : 0;

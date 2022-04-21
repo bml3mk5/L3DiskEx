@@ -1187,8 +1187,7 @@ void L3DiskFrame::UpdateMenuDisk()
 void L3DiskFrame::UpdateMenuRecentFiles()
 {
 	// メニューを更新
-	wxArrayString names;
-	ini->GetRecentFiles(names);
+	wxArrayString names = ini->GetRecentFiles();
 	for(int i=0; i<MAX_RECENT_FILES && i<(int)names.Count(); i++) {
 		if (menuRecentFiles->FindItem(IDM_RECENT_FILE_0 + i)) menuRecentFiles->Delete(IDM_RECENT_FILE_0 + i);
 		menuRecentFiles->Append(IDM_RECENT_FILE_0 + i, names[i]);
@@ -1270,7 +1269,7 @@ void L3DiskFrame::UpdateMenuFileList(L3DiskFileList *list)
 	opened = (opened && list->IsFormattedBasicDisk());
 	menuDisk->Enable(IDM_IMPORT_DISK, opened /* && list->IsWritableBasicFile() */);
 
-	int	cnt = list->GetSelectedItemCount();
+	int	cnt = list->GetListSelectedItemCount();
 	opened = (opened && cnt > 0);
 	menuDisk->Enable(IDM_EXPORT_DISK, opened);
 	menuDisk->Enable(IDM_DELETE_DISK, opened /* && list->IsDeletableBasicFile() */);
@@ -1288,7 +1287,7 @@ void L3DiskFrame::UpdateToolBarFileList(L3DiskFileList *list)
 	bool opened = (list && list->IsFormattedBasicDisk());
 	toolBar->EnableTool(IDM_IMPORT_DISK, opened /* && list->IsWritableBasicFile() */);
 
-	int	cnt = list->GetSelectedItemCount();
+	int	cnt = list->GetListSelectedItemCount();
 	opened = (opened && cnt > 0);
 	toolBar->EnableTool(IDM_EXPORT_DISK, opened);
 	toolBar->EnableTool(IDM_DELETE_DISK, opened);
@@ -1437,7 +1436,7 @@ void L3DiskFrame::ShowCreateFileDialog()
 {
 	if (!CloseDataFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Create New Disk"), 0, NULL, true);
+	DiskParamBox dlg(this, wxID_ANY, _("Create New Disk"), 0, NULL, NULL);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1472,7 +1471,7 @@ void L3DiskFrame::ShowAddNewDiskDialog()
 {
 	if (!d88.GetFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Add New Disk"), d88.GetDiskTypeNumber(0), NULL, true);
+	DiskParamBox dlg(this, wxID_ANY, _("Add New Disk"), d88.GetDiskTypeNumber(0), NULL, NULL);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1650,7 +1649,7 @@ bool L3DiskFrame::ShowFileSelectDialog(const wxString &path, wxString &file_form
 			wxString name = dlg1.GetFormatType();
 			if (name == wxT("plain")) {
 				// パラメータを選択
-				DiskParamBox dlg2(this, wxID_ANY, _("Select Disk Type"), 0, NULL, true);
+				DiskParamBox dlg2(this, wxID_ANY, _("Select Disk Type"), 0, NULL, NULL);
 				int sts2 = dlg2.ShowModal();
 				if (sts2 != wxID_OK) {
 					continue;

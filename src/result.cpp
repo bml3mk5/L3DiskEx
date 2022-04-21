@@ -55,11 +55,6 @@ void ResultInfo::SetInfo(int error_number, ...)
 
 	if (valid == 0) valid = 2;
 }
-#if 0
-void ResultInfo::SetMessage(int error_number, va_list ap)
-{
-}
-#endif
 void ResultInfo::GetMessages(wxArrayString &arr)
 {
 	arr = msgs;

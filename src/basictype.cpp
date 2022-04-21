@@ -2,6 +2,7 @@
 ///
 /// @brief disk basic type
 ///
+#include "common.h"
 #include "basictype.h"
 #include "basicfmt.h"
 #include "basicdir.h"
@@ -17,10 +18,20 @@ DiskBasicTempData::DiskBasicTempData()
 	size = 0;
 }
 
-void DiskBasicTempData::SetData(const wxUint8 *data, size_t len)
+void DiskBasicTempData::SetData(const wxUint8 *data, size_t len, bool invert)
 {
 	this->SetSize(len);
 	memcpy(this->data, data, this->size);
+	if (invert) {
+		mem_invert(this->data, this->size);
+	}
+}
+
+void DiskBasicTempData::InvertData(bool invert)
+{
+	if (invert) {
+		mem_invert(data, size);
+	}
 }
 
 //
@@ -54,7 +65,7 @@ void DiskBasicType::SetGroupNumber(wxUint32 num, wxUint32 val)
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
 /// @return グループ番号
-wxUint32 DiskBasicType::GetGroupNumber(wxUint32 num)
+wxUint32 DiskBasicType::GetGroupNumber(wxUint32 num) const
 {
 	return 0;
 }
@@ -69,9 +80,9 @@ bool DiskBasicType::IsUsedGroupNumber(wxUint32 num)
 
 /// 次のグループ番号を得る
 /// @param [in] num        グループ番号(0...)
-/// @param [in] sector     セクタ位置
+/// @param [in] sector_pos セクタ位置
 /// @return 次のグループ番号 / INVALID_GROUP_NUMBER 空きなし
-wxUint32 DiskBasicType::GetNextGroupNumber(wxUint32 num, int sector)
+wxUint32 DiskBasicType::GetNextGroupNumber(wxUint32 num, int sector_pos)
 {
 	return 0;
 }
@@ -82,9 +93,9 @@ wxUint32 DiskBasicType::GetEmptyGroupNumber()
 {
 	wxUint32 new_num = INVALID_GROUP_NUMBER;
 	// 若い番号順に検索
-	for(wxUint32 num = 0; num <= end_group; num++) {
+	for(wxUint32 num = 0; num <= basic->GetFatEndGroup(); num++) {
 		wxUint32 gnum = GetGroupNumber(num);
-		if (gnum == group_unused_code) {
+		if (gnum == basic->GetGroupUnusedCode()) {
 			new_num = num;
 			break;
 		}
@@ -105,7 +116,7 @@ wxUint32 DiskBasicType::GetNextEmptyGroupNumber(wxUint32 curr_group)
 	int sides = basic->GetSidesOnBasic();
 
 	int sed = secs_per_trk * sides / secs_per_grp;
-	int group_max = (end_group / sed) + 1;
+	int group_max = (basic->GetFatEndGroup() / sed) + 1;
 	int group_manage = managed_start_group / sed;
 	int group_start = curr_group / sed;
 	int group_end;
@@ -121,12 +132,12 @@ wxUint32 DiskBasicType::GetNextEmptyGroupNumber(wxUint32 curr_group)
 		for(int g = group_start; g != group_end; g += dir) {
 			for(int s = sst; s < sed; s++) {
 				wxUint32 num = g * sed + s;
-				if (num > end_group) {
+				if (num > basic->GetFatEndGroup()) {
 					break;
 				}
 				wxUint32 gnum = GetGroupNumber(num);
 //				myLog.SetDebug("DiskBasicType::GetNextEmptyGroupNumber num:0x%03x gnum:0x%03x", num, gnum);
-				if (gnum == group_unused_code) {	// 0xff
+				if (gnum == basic->GetGroupUnusedCode()) {	// 0xff
 					new_num = num;
 					found = true;
 					break;
@@ -148,7 +159,7 @@ bool DiskBasicType::CheckFat()
 {
 	bool valid = true;
 
-	wxUint32 end = end_group < 0xff ? end_group : 0xff;
+	wxUint32 end = basic->GetFatEndGroup() < 0xff ? basic->GetFatEndGroup() : 0xff;
 	wxUint8 *tbl = new wxUint8[end + 1];
 	memset(tbl, 0, end + 1);
 
@@ -208,6 +219,11 @@ bool DiskBasicType::CheckRootDirectory(int start_sector, int end_sector)
 		}
 		int remain = sector->GetSectorSize();
 
+		if (sec_pos == start_sector) {
+			buffer += basic->GetDirStartPos();
+			remain -= basic->GetDirStartPos();
+		}
+
 		buffer += basic->GetDirStartPosOnSector();
 		remain -= basic->GetDirStartPosOnSector();
 
@@ -243,6 +259,11 @@ bool DiskBasicType::AssignRootDirectory(int start_sector, int end_sector)
 		int pos = 0;
 		int size = sector->GetSectorSize();
 		wxUint8 *buffer = sector->GetSectorBuffer();
+
+		if (sec_pos == start_sector) {
+			buffer += basic->GetDirStartPos();
+			size -= basic->GetDirStartPos();
+		}
 
 		buffer += basic->GetDirStartPosOnSector();
 		size -= basic->GetDirStartPosOnSector();
@@ -290,6 +311,9 @@ bool DiskBasicType::CheckDirectory(const DiskBasicGroups &group_items)
 			}
 			int remain = sector->GetSectorSize();
 
+			buffer += basic->GetDirStartPosOnSector();
+			remain -= basic->GetDirStartPosOnSector();
+
 			// ディレクトリのチェック
 			while(valid && !last && remain > 0) {
 				nitem->SetDataPtr((directory_t *)buffer);
@@ -334,6 +358,9 @@ bool DiskBasicType::IsEmptyDirectory(const DiskBasicGroups &group_items)
 				break;
 			}
 			int remain = sector->GetSectorSize();
+
+			buffer += basic->GetDirStartPosOnSector();
+			remain -= basic->GetDirStartPosOnSector();
 
 			// ディレクトリにファイルがないかのチェック
 			while(valid && !last && remain > 0) {
@@ -397,16 +424,16 @@ void DiskBasicType::CalcDiskFreeSize()
 	wxUint32 grps = 0;
 	fat_availability.Empty();
 
-	for(wxUint32 pos = 0; pos <= end_group; pos++) {
+	for(wxUint32 pos = 0; pos <= basic->GetFatEndGroup(); pos++) {
 		wxUint32 gnum = GetGroupNumber(pos);
 		int fsts = FAT_AVAIL_USED;
-		if (gnum == group_unused_code) {
-			fsize += (sector_size * secs_per_group);
+		if (gnum == basic->GetGroupUnusedCode()) {
+			fsize += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
 			grps++;
 			fsts = FAT_AVAIL_FREE;
-		} else if (gnum == group_system_code) {
+		} else if (gnum == basic->GetGroupSystemCode()) {
 			fsts = FAT_AVAIL_SYSTEM;
-		} else if (gnum >= group_final_code) {
+		} else if (gnum >= basic->GetGroupFinalCode()) {
 			fsts = FAT_AVAIL_USED_LAST;
 		}
 		fat_availability.Add(fsts);
@@ -450,9 +477,9 @@ int DiskBasicType::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBas
 	int  rc = 0;
 	bool first_group = true;
 	int sizeremain = data_size;
-	int bytes_per_group = secs_per_group * sector_size;
+	int bytes_per_group = basic->GetSectorsPerGroup() * basic->GetSectorSize();
 	wxUint32 group_num = GetEmptyGroupNumber();
-	int limit = end_group + 1;
+	int limit = basic->GetFatEndGroup() + 1;
 	while(rc >= 0 && limit >= 0 && sizeremain > 0) {
 		if (group_num == INVALID_GROUP_NUMBER) {
 			// 空きなし
@@ -467,7 +494,7 @@ int DiskBasicType::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBas
 		// グループ番号からトラック番号、サイド番号、セクタ番号を計算
 		bool err_sector = false;
 		DiskBasicGroups gitems;
-		GetNumsFromGroup(gnum, 0, sector_size, sizeremain, gitems);
+		GetNumsFromGroup(gnum, 0, basic->GetSectorSize(), sizeremain, gitems);
 		for(int gidx = 0; gidx < (int)gitms.Count(); gidx++) {
 			track_num = gitms[gidx].track;
 			side_num = gitms[gidx].side;
@@ -517,7 +544,7 @@ int DiskBasicType::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBas
 			next_group_num = CalcLastGroupNumber(next_group_num, sizeremain);
 		}
 		
-		basic->GetNumsFromGroup(group_num, next_group_num, sector_size, sizeremain, group_items);
+		basic->GetNumsFromGroup(group_num, next_group_num, basic->GetSectorSize(), sizeremain, group_items);
 
 		// グループ番号設定
 		SetGroupNumber(group_num, next_group_num);
@@ -544,7 +571,7 @@ int DiskBasicType::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBas
 /// @return 開始セクタ番号
 int DiskBasicType::GetStartSectorFromGroup(wxUint32 group_num)
 {
-	return group_num * secs_per_group;
+	return group_num * basic->GetSectorsPerGroup();
 }
 
 /// グループ番号から最終セクタ番号を得る
@@ -556,10 +583,10 @@ int DiskBasicType::GetStartSectorFromGroup(wxUint32 group_num)
 /// @return 最終セクタ番号
 int DiskBasicType::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size)
 {
-	int sector_end = sector_start + secs_per_group - 1;
-	if (next_group >= group_final_code) {
+	int sector_end = sector_start + basic->GetSectorsPerGroup() - 1;
+	if (next_group >= basic->GetGroupFinalCode()) {
 		// 最終グループの場合指定したセクタまで
-		sector_end = sector_start + (next_group - group_final_code);
+		sector_end = sector_start + (next_group - basic->GetGroupFinalCode());
 	}
 	return sector_end;
 }
@@ -574,18 +601,6 @@ int DiskBasicType::CalcDataStartSectorPos()
 int DiskBasicType::CalcSkippedTrack()
 {
 	return 0x7fff;
-}
-
-/// サイド番号を逆転するか
-bool DiskBasicType::IsSideReversed(int sides_per_disk)
-{
-	return false;
-}
-
-/// ディスク内のデータが反転しているか
-bool DiskBasicType::IsDataInverted()
-{
-	return false;
 }
 
 /// 指定したグループ番号からルートディレクトリかどうかを判定する
@@ -607,8 +622,9 @@ void DiskBasicType::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 }
 
 /// セクタデータを埋めた後の個別処理
-void DiskBasicType::AdditionalProcessOnFormatted()
+bool DiskBasicType::AdditionalProcessOnFormatted()
 {
+	return true;
 }
 
 //
@@ -651,13 +667,14 @@ int DiskBasicType::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wx
 
 	if (ostream) {
 		// 書き出し
-		temp.SetData(sector_buffer, sector_size);
-		ostream->Write((const void *)temp.GetData(), temp.GetSize());
+		temp.SetData(sector_buffer, sector_size, basic->IsDataInverted());
+		ostream->Write(temp.GetData(), temp.GetSize());
 	}
 	if (istream) {
 		// 読み込んで比較
 		temp.SetSize(sector_size);
-		istream->Read((void *)temp.GetData(), temp.GetSize());
+		istream->Read(temp.GetData(), temp.GetSize());
+		temp.InvertData(basic->IsDataInverted());
 
 		if (memcmp(temp.GetData(), sector_buffer, temp.GetSize()) != 0) {
 			// データが異なる
@@ -678,13 +695,6 @@ int DiskBasicType::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wx
 wxUint32 DiskBasicType::CalcLastGroupNumber(wxUint32 group_num, int size_remain)
 {
 	return group_num;
-}
-
-/// セーブ時にセクタがなかった時の処理
-/// @return true:スキップする / false:エラーにする
-bool DiskBasicType::SetSkipMarkOnErrorSector(DiskBasicDirItem *item, wxUint32 prev_group, wxUint32 group, wxUint32 next_group)
-{
-	return false;
 }
 
 /// データの書き込み処理
@@ -723,6 +733,10 @@ int DiskBasicType::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxU
 		istream.Read((void *)buffer, size);
 		len = size;
 	}
+
+	// 反転
+	basic->InvertMem(buffer, size);
+
 	return len;
 }
 
@@ -745,5 +759,5 @@ void DiskBasicType::DeleteGroups(const DiskBasicGroups &group_items)
 void DiskBasicType::DeleteGroupNumber(wxUint32 group_num)
 {
 	// FATに未使用コードを設定
-	SetGroupNumber(group_num, group_unused_code);
+	SetGroupNumber(group_num, basic->GetGroupUnusedCode());
 }

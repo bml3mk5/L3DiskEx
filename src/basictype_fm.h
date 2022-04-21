@@ -33,7 +33,7 @@ public:
 	/// @name format
 	//@{
 	/// セクタデータを埋めた後の個別処理
-	void	AdditionalProcessOnFormatted();
+	bool	AdditionalProcessOnFormatted();
 	//@}
 };
 

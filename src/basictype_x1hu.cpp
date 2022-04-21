@@ -26,7 +26,7 @@ bool DiskBasicTypeX1HU::CheckFat()
 	for(size_t j=0; j<bufs->Count(); j++) {
 		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
 		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
-		if (fatbuf->buffer[0] != 0x01) {
+		if (fatbuf->buffer[0] != basic->InvertUint8(0x01)) {
 			valid = false;
 			break;
 		}
@@ -35,7 +35,7 @@ bool DiskBasicTypeX1HU::CheckFat()
 		return valid;
 	}
 
-	wxUint32 end = end_group < group_final_code ? end_group : group_final_code - 1;
+	wxUint32 end = basic->GetFatEndGroup() < basic->GetGroupFinalCode() ? basic->GetFatEndGroup() : basic->GetGroupFinalCode() - 1;
 	wxUint8 *tbl = new wxUint8[end + 1];
 	memset(tbl, 0, end + 1);
 
@@ -71,8 +71,8 @@ void DiskBasicTypeX1HU::SetGroupNumber(wxUint32 num, wxUint32 val)
 			DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
 			wxUint32 half_size = (fatbuf->size >> 1);
 			if (num < half_size) {
-				fatbuf->buffer[num] = val & 0xff;
-				fatbuf->buffer[num + half_size] = ((val & 0xff00) >> 8);
+				fatbuf->buffer[num] = basic->InvertUint8(val);
+				fatbuf->buffer[num + half_size] = basic->InvertUint8((val & 0xff00) >> 8);
 				break;
 			}
 			num -= fatbuf->size;
@@ -82,18 +82,20 @@ void DiskBasicTypeX1HU::SetGroupNumber(wxUint32 num, wxUint32 val)
 
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
-wxUint32 DiskBasicTypeX1HU::GetGroupNumber(wxUint32 num)
+wxUint32 DiskBasicTypeX1HU::GetGroupNumber(wxUint32 num) const
 {
 	wxUint32 new_num = 0;
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
+	DiskBasicFatBuffers *fatbufs = fat->GetDiskBasicFatBuffers(0);
+	if (!fatbufs) {
+		return INVALID_GROUP_NUMBER;
+	}
 	// 8bit FAT + 8bit
 	for(size_t i=0; i<fatbufs->Count(); i++) {
 		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
 		wxUint32 half_size = (fatbuf->size >> 1);
 		if (num < half_size) {
-			new_num = fatbuf->buffer[num];
-			new_num |= ((wxUint32)fatbuf->buffer[num + half_size] << 8);
+			new_num = basic->InvertUint8(fatbuf->buffer[num]);
+			new_num |= ((wxUint32)basic->InvertUint8(fatbuf->buffer[num + half_size]) << 8);
 			break;
 		}
 		num -= fatbuf->size;
@@ -107,10 +109,10 @@ wxUint32 DiskBasicTypeX1HU::GetEmptyGroupNumber()
 {
 	wxUint32 new_num = INVALID_GROUP_NUMBER;
 	// 若い番号順に検索
-	for(wxUint32 num = 0; num <= end_group; num++) {
-		if (num == group_final_code) num += group_final_code;
+	for(wxUint32 num = 0; num <= basic->GetFatEndGroup(); num++) {
+		if (num == basic->GetGroupFinalCode()) num += basic->GetGroupFinalCode();
 		wxUint32 gnum = GetGroupNumber(num);
-		if (gnum == group_unused_code) {
+		if (gnum == basic->GetGroupUnusedCode()) {
 			new_num = num;
 			break;
 		}
@@ -125,7 +127,7 @@ wxUint32 DiskBasicTypeX1HU::GetNextEmptyGroupNumber(wxUint32 curr_group)
 	wxUint32 new_num = INVALID_GROUP_NUMBER;
 
 	// グループが連続するように検索
-	int group_max = end_group + 1;
+	int group_max = basic->GetFatEndGroup() + 1;
 	int group_start = curr_group;
 	int group_end;
 	int dir;
@@ -135,10 +137,10 @@ wxUint32 DiskBasicTypeX1HU::GetNextEmptyGroupNumber(wxUint32 curr_group)
 	for(int i=0; i<2; i++) {
 		group_end = (dir > 0 ? group_max : -1);
 		for(int g = group_start; g != group_end; g += dir) {
-			if (dir > 0 && g == (int)group_final_code) g += group_final_code;
-			else if (dir < 0 && g == (int)group_unused_code) g -= group_final_code;
+			if (dir > 0 && g == (int)basic->GetGroupFinalCode()) g += basic->GetGroupFinalCode();
+			else if (dir < 0 && g == (int)basic->GetGroupUnusedCode()) g -= basic->GetGroupFinalCode();
 			wxUint32 gnum = GetGroupNumber(g);
-			if (gnum == group_unused_code) {	// 0xff
+			if (gnum == basic->GetGroupUnusedCode()) {	// 0xff
 				new_num = g;
 				found = true;
 				break;
@@ -159,16 +161,16 @@ void DiskBasicTypeX1HU::CalcDiskFreeSize()
 	wxUint32 grps = 0; 
 	fat_availability.Empty();
 
-	for(wxUint32 pos = 0; pos <= end_group; pos++) {
-		if (pos == group_final_code) pos += group_final_code;
+	for(wxUint32 pos = 0; pos <= basic->GetFatEndGroup(); pos++) {
+		if (pos == basic->GetGroupFinalCode()) pos += basic->GetGroupFinalCode();
 		wxUint32 gnum = GetGroupNumber(pos);
 		int fsts = FAT_AVAIL_USED;
 //		myLog.SetDebug("  pos:0x%02x gnum:0x%02x", pos, gnum);
-		if (gnum == group_unused_code) {
-			fsize += (sector_size * secs_per_group);
+		if (gnum == basic->GetGroupUnusedCode()) {
+			fsize += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
 			grps++;
 			fsts = FAT_AVAIL_FREE;
-		} else if (gnum >= group_final_code && gnum <= group_system_code) {
+		} else if (gnum >= basic->GetGroupFinalCode() && gnum <= basic->GetGroupSystemCode()) {
 			fsts = FAT_AVAIL_USED_LAST;
 		}
 		fat_availability.Add(fsts);
@@ -183,34 +185,42 @@ void DiskBasicTypeX1HU::CalcDiskFreeSize()
 /// グループ番号から開始セクタ番号を得る
 int DiskBasicTypeX1HU::GetStartSectorFromGroup(wxUint32 group_num)
 {
-	if (group_num > group_system_code) {
+	if (group_num > basic->GetGroupSystemCode()) {
 		// 0x100以降の番号は0x80減算
-		group_num -= group_final_code;
+		group_num -= basic->GetGroupFinalCode();
 	}
-	return group_num * secs_per_group;
+	return group_num * basic->GetSectorsPerGroup();
 }
 
 /// グループ番号から最終セクタ番号を得る
 int DiskBasicTypeX1HU::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size)
 {
-	int sector_end = sector_start + secs_per_group - 1;
-	if (next_group >= group_final_code && next_group <= group_system_code) {
+	int sector_end = sector_start + basic->GetSectorsPerGroup() - 1;
+	if (next_group >= basic->GetGroupFinalCode() && next_group <= basic->GetGroupSystemCode()) {
 		// 最終グループの場合指定したセクタまで
-		sector_end = sector_start + (next_group - group_final_code);
+		sector_end = sector_start + (next_group - basic->GetGroupFinalCode());
 	}
 	return sector_end;
 }
 
 /// ファイルの最終セクタのデータサイズを求める
+/// @param [in] item          ディレクトリアイテム
+/// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
+/// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
+/// @param [in] sector_buffer セクタバッファ
+/// @param [in] sector_size   バッファイサイズ
+/// @param [in] remain_size   残りサイズ
+/// @return 残りサイズ
 int DiskBasicTypeX1HU::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size)
 {
 	// 最終セクタ
 	if (item->NeedCheckEofCode()) {
 		// アスキー形式の場合
+		wxUint8 eof_code = 	basic->InvertUint8(0x1a);
 		// 終端コードの1つ前までを出力
 		int len = sector_size - 1;
 		for(; len >= 0; len--) {
-			if (sector_buffer[len] == 0x1a) break;
+			if (sector_buffer[len] == eof_code) break;
 		}
 		if (len < 0) {
 			len = sector_size;
@@ -226,12 +236,12 @@ int DiskBasicTypeX1HU::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputS
 wxUint32 DiskBasicTypeX1HU::CalcLastGroupNumber(wxUint32 group_num, int size_remain)
 {
 	// 残り使用セクタ数
-	int remain_secs = ((size_remain - 1) / sector_size);
-	if (remain_secs >= secs_per_group) {
-		remain_secs = secs_per_group - 1;
+	int remain_secs = ((size_remain - 1) / basic->GetSectorSize());
+	if (remain_secs >= basic->GetSectorsPerGroup()) {
+		remain_secs = basic->GetSectorsPerGroup() - 1;
 	}
 	wxUint32 gnum = (remain_secs & 0xff);
-	gnum += group_final_code;
+	gnum += basic->GetGroupFinalCode();
 	return gnum; 
 }
 
@@ -239,7 +249,7 @@ wxUint32 DiskBasicTypeX1HU::CalcLastGroupNumber(wxUint32 group_num, int size_rem
 bool DiskBasicTypeX1HU::IsRootDirectory(wxUint32 group_num)
 {
 	int sec_num = basic->GetDirEndSector();
-	wxUint32 start_group = (wxUint32)(sec_num / secs_per_group);
+	wxUint32 start_group = (wxUint32)(sec_num / basic->GetSectorsPerGroup());
 	return (group_num < start_group);
 }
 
@@ -269,20 +279,33 @@ void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT,DIRエリアの初期化
-void DiskBasicTypeX1HU::AdditionalProcessOnFormatted()
+bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted()
 {
 	// FATエリアの初期化
 	fat->Fill(basic->GetFillCodeOnFAT());
 	// DIRエリアの初期化
 	dir->ClearRoot();
+	// IPL (MZ用)
+	int len = (int)basic->GetIPLString().Length();
+	if (len > 0) {
+		DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+		if (sector) {
+			sector->Fill(basic->GetFillCodeOnFAT() ^ 0xff, 32);	// invert
+			wxUint8 buf[32];
+			if (len > 32) len = 32;
+			memcpy(buf, basic->GetIPLString().To8BitData(), len);
+			mem_invert(buf, len);
+			sector->Copy(buf, len);
+		}
+	}
 
 	// 範囲外のグループを埋める
-	if (end_group >= 0xff) {
-		for(wxUint32 gnum = end_group + 1; gnum <= 0x17f; gnum++) {
+	if (basic->GetFatEndGroup() >= 0xff) {
+		for(wxUint32 gnum = basic->GetFatEndGroup() + 1; gnum <= 0x17f; gnum++) {
 			SetGroupNumber(gnum, 0x8f);
 		}
 	}
-	for(wxUint32 gnum = end_group + 1; gnum <= 0x7f; gnum++) {
+	for(wxUint32 gnum = basic->GetFatEndGroup() + 1; gnum <= 0x7f; gnum++) {
 		SetGroupNumber(gnum, 0x8f);
 	}
 	// システム領域のグループを埋める
@@ -293,28 +316,10 @@ void DiskBasicTypeX1HU::AdditionalProcessOnFormatted()
 
 	/// FATエリアの初め
 	int sec_pos = basic->CalcSectorPosFromNumForGroup(trk_num, sid_num, sec_num);
-	wxUint32 gend = (sec_pos / secs_per_group); 
+	wxUint32 gend = (sec_pos / basic->GetSectorsPerGroup()); 
 	for(wxUint32 gnum = 0; gnum <= gend; gnum++) {
 		SetGroupNumber(gnum, gnum == 0 ? gnum + 1 : 0x8f);
 	}
-}
 
-#if 0
-/// データの書き込み処理
-/// @return 読み込んだバイト数
-size_t DiskBasicTypeX1HU::WriteLastData(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, size_t size, size_t last_size, int sector_num, wxUint32 next_group, int sector_end, wxUint16 &next_sector)
-{
-	bool need_eof_code = item->NeedCheckEofCode();
-	if (need_eof_code) {
-		// 最終は終端コード
-		if (last_size > 1) istream.Read((void *)buffer, last_size - 1);
-		if (last_size > 0) buffer[last_size - 1]=0x1a;
-	} else {
-		if (last_size > 0) istream.Read((void *)buffer, last_size);
-	}
-	if (size > last_size) {
-		memset((void *)&buffer[last_size], 0, size - last_size);
-	}
-	return last_size;
+	return true;
 }
-#endif

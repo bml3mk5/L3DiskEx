@@ -277,13 +277,39 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem &target_item, Di
 {
 	DiskBasicDirItem *match_item = NULL;
 	for(size_t pos = 0; pos <items.Count(); pos++) {
-		DiskBasicDirItem *item = items[pos];
+		DiskBasicDirItem *item = items.Item(pos);
 		if (item != exclude_item && item->IsSameFileName(target_item)) {
 			match_item = item;
 			if (next_item) {
 				pos++;
 				if (pos < items.Count()) {
-					*next_item = items[pos];
+					*next_item = items.Item(pos);
+				} else {
+					*next_item = NULL;
+				}
+			}
+			break;
+		}
+	}
+	return match_item;
+}
+
+/// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
+/// @param [in]  name         ファイル名
+/// @param [in]  exclude_item 検索対象から除くアイテム
+/// @param [out] next_item    一致したアイテムの次位置にあるアイテム
+/// @return NULL: ない
+DiskBasicDirItem *DiskBasicDir::FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+{
+	DiskBasicDirItem *match_item = NULL;
+	for(size_t pos = 0; pos <items.Count(); pos++) {
+		DiskBasicDirItem *item = items.Item(pos);
+		if (item != exclude_item && item->IsSameName(name)) {
+			match_item = item;
+			if (next_item) {
+				pos++;
+				if (pos < items.Count()) {
+					*next_item = items.Item(pos);
 				} else {
 					*next_item = NULL;
 				}

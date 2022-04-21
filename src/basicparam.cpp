@@ -31,7 +31,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_number_of_fats,
 	int					n_sectors_per_fat,
 	int					n_fat_start_pos,
-	int					n_fat_end_group,
+	wxUint32			n_fat_end_group,
 	int					n_fat_side_number,
 	const wxArrayInt &	n_reserved_groups,
 	wxUint32			n_group_final_code,
@@ -42,6 +42,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_dir_entry_count,
 	int					n_subdir_group_size,
 	wxUint8				n_dir_space_code,
+	int					n_dir_start_pos,
 	int					n_dir_start_pos_on_sec,
 	int					n_groups_per_dir_entry,
 	int					n_id_sector_pos,
@@ -53,6 +54,8 @@ DiskBasicParam::DiskBasicParam(
 	wxUint8				n_fillcode_on_dir,
 	wxUint8				n_delete_code,
 	wxUint8				n_media_id,
+	bool				n_data_inverted,
+	bool				n_side_reversed,
 	const wxString &	n_basic_description
 ) {
 	basic_type_name = n_basic_type_name;
@@ -77,6 +80,7 @@ DiskBasicParam::DiskBasicParam(
 	dir_entry_count = n_dir_entry_count;
 	subdir_group_size = n_subdir_group_size;
 	dir_space_code = n_dir_space_code;
+	dir_start_pos = n_dir_start_pos;
 	dir_start_pos_on_sec = n_dir_start_pos_on_sec;
 	groups_per_dir_entry = n_groups_per_dir_entry;
 	id_sector_pos = n_id_sector_pos;
@@ -88,6 +92,8 @@ DiskBasicParam::DiskBasicParam(
 	fillcode_on_dir = n_fillcode_on_dir;
 	delete_code = n_delete_code;
 	media_id = n_media_id;
+	data_inverted = n_data_inverted;
+	side_reversed = n_side_reversed;
 	basic_description = n_basic_description;
 }
 void DiskBasicParam::ClearBasicParam()
@@ -114,6 +120,7 @@ void DiskBasicParam::ClearBasicParam()
 	dir_entry_count		 = 0;
 	subdir_group_size	 = 0;
 	dir_space_code		 = 0x20;
+	dir_start_pos		 = 0;
 	dir_start_pos_on_sec = 0;
 	groups_per_dir_entry = 0;
 	id_sector_pos		 = 0;
@@ -125,6 +132,8 @@ void DiskBasicParam::ClearBasicParam()
 	fillcode_on_dir		 = 0xff;
 	delete_code			 = 0x00;
 	media_id			 = 0x00;
+	data_inverted		 = false;
+	side_reversed		 = false;
 	basic_description.Empty();
 }
 void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
@@ -151,6 +160,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	dir_entry_count = src.dir_entry_count;
 	subdir_group_size = src.subdir_group_size;
 	dir_space_code = src.dir_space_code;
+	dir_start_pos = src.dir_start_pos;
 	dir_start_pos_on_sec = src.dir_start_pos_on_sec;
 	groups_per_dir_entry = src.groups_per_dir_entry;
 	id_sector_pos = src.id_sector_pos;
@@ -162,6 +172,8 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	fillcode_on_dir = src.fillcode_on_dir;
 	delete_code = src.delete_code;
 	media_id = src.media_id;
+	data_inverted = src.data_inverted;
+	side_reversed = src.side_reversed;
 	basic_description = src.basic_description;
 }
 const DiskBasicParam &DiskBasicParam::GetBasicParam() const
@@ -180,6 +192,12 @@ void DiskBasicParam::CalcDirStartEndSector(int sector_size)
 		dir_entry_count = (dir_end_sector - dir_start_sector + 1) * sector_size / 32;
 	}
 }
+/// サイド番号を返す 反転しているときは計算する
+int DiskBasicParam::GetReversedSideNumber(int side_num) const
+{
+	return (side_reversed &&  0 <= side_num && side_num < sides_on_basic ? sides_on_basic - side_num - 1 : side_num);
+}
+
 #if 0
 int DiskBasicParam::GetDirStartSector(int sector_size)
 {
@@ -267,6 +285,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int dir_entry_count		 = -1;
 			int subdir_group_size	 = 1;
 			int dir_space_code		 = 0x20;
+			int dir_start_pos		 = 0;
 			int dir_start_pos_on_sec = 0;
 			int groups_per_dir_entry = 0;
 			int fill_code_on_format	 = 0;
@@ -281,6 +300,8 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int group_system_code	 = 0;
 			int group_unused_code	 = 0;
 			int id_sector_pos		 = 0;
+			bool data_inverted		 = false;
+			bool side_reversed		 = false;
 			wxString desc, desc_locale;
 			wxString id_string, ipl_string, volume_string;
 
@@ -355,6 +376,9 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "DirSpaceCode") {
 					wxString str = itemnode->GetNodeContent();
 					dir_space_code = L3DiskUtils::ToInt(str);
+				} else if (itemnode->GetName() == "DirStartPosition") {
+					wxString str = itemnode->GetNodeContent();
+					dir_start_pos = L3DiskUtils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
 					wxString str = itemnode->GetNodeContent();
 					dir_start_pos_on_sec = L3DiskUtils::ToInt(str);
@@ -379,6 +403,12 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "MediaID") {
 					wxString str = itemnode->GetNodeContent();
 					media_id = L3DiskUtils::ToInt(str);
+				} else if (itemnode->GetName() == "DataInverted") {
+					wxString str = itemnode->GetNodeContent();
+					data_inverted = L3DiskUtils::ToBool(str);
+				} else if (itemnode->GetName() == "SideReversed") {
+					wxString str = itemnode->GetNodeContent();
+					side_reversed = L3DiskUtils::ToBool(str);
 				} else if (itemnode->GetName() == "IDSectorPosition") {
 					wxString str = itemnode->GetNodeContent();
 					id_sector_pos = L3DiskUtils::ToInt(str);
@@ -432,6 +462,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				dir_entry_count,
 				subdir_group_size,
 				dir_space_code,
+				dir_start_pos,
 				dir_start_pos_on_sec,
 				groups_per_dir_entry,
 				id_sector_pos,
@@ -443,6 +474,8 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				fill_code_on_dir,
 				delete_code_on_dir,
 				media_id,
+				data_inverted,
+				side_reversed,
 				desc
 			);
 			types.Add(p);
@@ -467,7 +500,10 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			if (!desc_locale.IsEmpty()) {
 				desc = desc_locale;
 			}
-			DiskBasicCategory c(type_name, desc);
+			DiskBasicCategory c(
+				type_name,
+				desc
+			);
 			categories.Add(c);
 		}
 		item = item->GetNext();

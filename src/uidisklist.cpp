@@ -474,7 +474,7 @@ bool L3DiskList::InitializeDisk()
 		// トラックが全くない場合は、ディスク作成
 		if (selected_side >= 0) {
 			// 選択したサイドだけ作り直す
-			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), 0, disk, false);
+			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), 0, disk, NULL, DiskParamBox_Category | DiskParamBox_Template);
 			int rc = dlg.ShowModal();
 			if (rc == wxID_OK) {
 				DiskParam param;
@@ -487,7 +487,7 @@ bool L3DiskList::InitializeDisk()
 			}
 		} else {
 			// パラメータを選択するダイアログを表示
-			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), -1, disk, true);
+			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), -1, disk, NULL);
 			int rc = dlg.ShowModal();
 			if (rc == wxID_OK) {
 				DiskParam param;
@@ -564,7 +564,7 @@ void L3DiskList::ShowDiskAttr()
 {
 	if (!disk) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Change Parameter"), -1, disk, true);
+	DiskParamBox dlg(this, wxID_ANY, _("Change Parameter"), -1, disk, NULL);
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
 		DiskParam param;

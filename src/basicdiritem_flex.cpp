@@ -168,22 +168,7 @@ void DiskBasicDirItemFLEX::SetFileAttr(int file_type)
 	SetFileType1(val);
 }
 
-#if 0
-/// ディレクトリをクリア ファイル新規作成時
-void DiskBasicDirItemFLEX::ClearData()
-{
-	if (!data) return;
-	memset(data, 0, sizeof(directory_flex_t));
-}
-
-/// ディレクトリを初期化 未使用にする
-void DiskBasicDirItemFLEX::InitialData()
-{
-	ClearData();
-}
-#endif
-
-int DiskBasicDirItemFLEX::GetFileType()
+int DiskBasicDirItemFLEX::GetFileAttr()
 {
 	int val = 0;
 	int type1 = GetFileType1();
@@ -209,7 +194,7 @@ int DiskBasicDirItemFLEX::GetFileType()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemFLEX::GetFileType1Pos()
 {
-	return GetFileType();
+	return GetFileAttr();
 }
 
 // 属性からリストの位置を返す(プロパティダイアログ用)
@@ -428,19 +413,80 @@ wxUint32 DiskBasicDirItemFLEX::GetStartGroup() const
 	return val;
 }
 
+/// 最後のグループ番号をセット
+void DiskBasicDirItemFLEX::SetLastGroup(wxUint32 val)
+{
+	int trk_num = 0;
+	int sec_num = 0;
+	basic->GetNumFromSectorPos(val, trk_num, sec_num);
+	data->flex.last_track = trk_num;
+	data->flex.last_sector = sec_num;
+}
+
+/// 最後のグループ番号を返す
+wxUint32 DiskBasicDirItemFLEX::GetLastGroup() const
+{
+	wxUint32 val = (wxUint32)basic->GetSectorPosFromNum(data->flex.last_track, data->flex.last_sector);
+	return val;
+}
+
+#if 0
 /// 書き込み/上書き禁止か
 bool DiskBasicDirItemFLEX::IsWriteProtected()
 {
 	return false;
 }
+#endif
+
 bool DiskBasicDirItemFLEX::IsDeletable()
 {
-	return false;
+	return true;
 }
 /// ファイル名を編集できるか
 bool DiskBasicDirItemFLEX::IsFileNameEditable()
 {
 	return true;
+}
+
+/// 最初のトラック番号をセット
+void DiskBasicDirItemFLEX::SetStartTrack(wxUint8 val)
+{
+	data->flex.start_track = val;
+}
+/// 最初のセクタ番号をセット
+void DiskBasicDirItemFLEX::SetStartSector(wxUint8 val)
+{
+	data->flex.start_sector = val;
+}
+/// 最初のトラック番号を返す
+wxUint8 DiskBasicDirItemFLEX::GetStartTrack() const
+{
+	return data->flex.start_track;
+}
+/// 最初のセクタ番号を返す
+wxUint8 DiskBasicDirItemFLEX::GetStartSector() const
+{
+	return data->flex.start_sector;
+}
+/// 最後のトラック番号をセット
+void DiskBasicDirItemFLEX::SetLastTrack(wxUint8 val)
+{
+	data->flex.last_track = val;
+}
+/// 最後のセクタ番号をセット
+void DiskBasicDirItemFLEX::SetLastSector(wxUint8 val)
+{
+	data->flex.last_sector = val;
+}
+/// 最後のトラック番号を返す
+wxUint8 DiskBasicDirItemFLEX::GetLastTrack() const
+{
+	return data->flex.last_track;
+}
+/// 最後のセクタ番号を返す
+wxUint8 DiskBasicDirItemFLEX::GetLastSector() const
+{
+	return data->flex.last_sector;
 }
 
 //
@@ -459,21 +505,33 @@ bool DiskBasicDirItemFLEX::IsFileNameEditable()
 #define IDC_CHECK_HIDDEN   54
 #define IDC_CHECK_RANDOM   55
 
+/// ダイアログ用に属性を設定する
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemFLEX::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+}
+
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkUndelete;
 	wxCheckBox *chkWriteOnly;
 	wxCheckBox *chkHidden;
 	wxCheckBox *chkRandom;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	chkReadOnly = new wxCheckBox(parent, IDC_CHECK_READONLY, wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_READ_ONLY]));
@@ -494,37 +552,22 @@ void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int f
 	sizer->Add(staType4, flags);
 
 	// ユーザ定義データ(ランダムファイル属性値)
-	*user_data = (file_type_1 & FILETYPE_FLEX_RANDOM_MASK);
-
-	controls.Add(chkReadOnly);
-	controls.Add(chkUndelete);
-	controls.Add(chkWriteOnly);
-	controls.Add(chkHidden);
-	controls.Add(chkRandom);
+	parent->SetUserData(file_type_1 & FILETYPE_FLEX_RANDOM_MASK);
 }
 
 /// 属性を変更した際に呼ばれるコールバック
-void DiskBasicDirItemFLEX::ChangeTypeInAttrDialog(AttrControls &controls)
-{
-}
-
-/// ダイアログ用に属性を設定する
-/// インポート時ダイアログ表示前にファイルの属性を設定
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemFLEX::SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2)
+void DiskBasicDirItemFLEX::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
 }
 
 /// 属性1を得る
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemFLEX::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemFLEX::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkReadOnly = (wxCheckBox *)controls.Item(1);
-	wxCheckBox *chkUndelete = (wxCheckBox *)controls.Item(2);
-	wxCheckBox *chkWriteOnly = (wxCheckBox *)controls.Item(3);
-	wxCheckBox *chkHidden = (wxCheckBox *)controls.Item(4);
+	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
+	wxCheckBox *chkUndelete = (wxCheckBox *)parent->FindWindow(IDC_CHECK_UNDELETE);
+	wxCheckBox *chkWriteOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_WRITEONLY);
+	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
 
 	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkUndelete->GetValue() ? FILE_TYPE_UNDELETE_MASK : 0;
@@ -536,10 +579,10 @@ int DiskBasicDirItemFLEX::GetFileType1InAttrDialog(const AttrControls &controls)
 
 /// 属性2を得る
 /// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemFLEX::GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const
+int DiskBasicDirItemFLEX::GetFileType2InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkRandom = (wxCheckBox *)controls.Item(5);
+	wxCheckBox *chkRandom = (wxCheckBox *)parent->FindWindow(IDC_CHECK_RANDOM);
 
 	// ユーザ定義データ(ランダムファイル属性値)
-	return (chkRandom->GetValue() ? (FILE_TYPE_RANDOM_MASK | *user_data) : 0);
+	return (chkRandom->GetValue() ? (FILE_TYPE_RANDOM_MASK | parent->GetUserData()) : 0);
 }

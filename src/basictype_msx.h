@@ -18,6 +18,12 @@ private:
 public:
 	DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
 
+	/// @name check / assign FAT area
+	//@{
+	/// ディスクから各パラメータを取得
+	int		ParseParamOnDisk(DiskD88Disk *disk);
+	//@}
+
 	/// @name directory
 	//@{
 	/// サブディレクトリを作成できるか
@@ -27,7 +33,7 @@ public:
 	/// @name format
 	//@{
 	/// セクタデータを埋めた後の個別処理
-	void	AdditionalProcessOnFormatted();
+	bool	AdditionalProcessOnFormatted();
 	//@}
 };
 

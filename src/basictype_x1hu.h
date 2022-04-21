@@ -23,7 +23,7 @@ public:
 	/// FAT位置をセット
 	void		SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FAT位置を返す
-	wxUint32	GetGroupNumber(wxUint32 num);
+	wxUint32	GetGroupNumber(wxUint32 num) const;
 	/// 空きFAT位置を返す
 	wxUint32	GetEmptyGroupNumber();
 	/// 次の空き位置を返す
@@ -65,7 +65,7 @@ public:
 	/// @name format
 	//@{
 	/// セクタデータを埋めた後の個別処理
-	void		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted();
 	//@}
 
 	/// @name data access (read / verify)
@@ -78,8 +78,6 @@ public:
 	//@{
 	/// 最後のグループ番号を計算する
 	wxUint32	CalcLastGroupNumber(wxUint32 group_num, int size_remain);
-
-//	size_t		WriteLastData(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, size_t size, size_t last_size, int sector_num, wxUint32 next_group, int sector_end, wxUint16 &next_sector);
 	//@}
 };
 

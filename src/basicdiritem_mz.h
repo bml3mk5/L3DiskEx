@@ -86,7 +86,7 @@ public:
 	/// ディレクトリを初期化 未使用にする
 	void			InitialData();
 	/// 属性を返す
-	int				GetFileType();
+	int				GetFileAttr();
 
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType1Pos();
@@ -144,8 +144,8 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-	/// 書き込み/上書き禁止か
-	bool			IsWriteProtected();
+//	/// 書き込み/上書き禁止か
+//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
 	bool			IsDeletable();
 	/// ファイル名を編集できるか
@@ -157,15 +157,15 @@ public:
 	/// @name プロパティダイアログ用
 	//@{
 	/// ダイアログ内の属性部分のレイアウトを作成
-	void	CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data);
+	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
-	void	ChangeTypeInAttrDialog(AttrControls &controls);
+	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2);
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const AttrControls &controls) const;
+	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const;
+	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
 	//@}
 };
 

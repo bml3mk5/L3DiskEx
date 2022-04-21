@@ -29,6 +29,8 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk)
 	szrAll->Add(comBasic, flags);
 
 	wxArrayString types = disk->GetBasicTypes();
+	types.Sort();
+
 	wxString category = disk->GetFile()->GetBasicTypeHint();
 	int cur_num = 0;
 	int pos = 0;
@@ -85,6 +87,8 @@ DiskBasicParam *BasicSelBox::GetBasicParam()
 	if (!comBasic || !disk) return match;
 
 	wxArrayString types = disk->GetBasicTypes();
+	types.Sort();
+
 	int num = comBasic->GetSelection();
 	int pos = 0;
 	for(size_t n = 0; n < types.Count(); n++) {

@@ -66,6 +66,8 @@ public:
 	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内に同じファイル名が既に存在するか
 	DiskBasicDirItem *FindFile(const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
+	DiskBasicDirItem *FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// ルートディレクトリのチェック
 	bool		CheckRoot(DiskBasicType *type, int start_sector, int end_sector);
 	/// ルートディレクトリをアサイン

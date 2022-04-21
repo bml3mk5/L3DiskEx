@@ -123,6 +123,26 @@ bool DiskBasicDirItemMSDOS::CheckUsed(bool unuse)
 	return (data->msdos.name[0] != 0 && data->msdos.name[0] != 0xe5);
 }
 
+/// ファイル名を設定
+void DiskBasicDirItemMSDOS::SetFileName(const wxUint8 *filename, int length)
+{
+	wxUint8 name[FILENAME_BUFSIZE];
+	memcpy(name, filename, length);
+	if (length > 0) {
+		if (name[0] == 0xe5) name[0] = 0x05;
+	}
+	DiskBasicDirItem::SetFileName(name, length);
+}
+
+/// ファイル名と拡張子を得る
+void DiskBasicDirItemMSDOS::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
+{
+	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
+	if (nlen > 0) {
+		if (name[0] == 0x05) name[0] = 0xe5;
+	}
+}
+
 /// ディレクトリアイテムのチェック
 /// @param [in,out] last チェックを終了するか
 /// @return チェックOK
@@ -134,6 +154,21 @@ bool DiskBasicDirItemMSDOS::Check(bool &last)
 	// ファイルサイズが16MBを超えている
 	if (CheckUsed(false) && wxUINT32_SWAP_ON_BE(data->msdos.file_size) > 0xffffff) {
 		valid = false;
+	}
+	return valid;
+}
+
+/// 削除できるか
+bool DiskBasicDirItemMSDOS::IsDeletable()
+{
+	bool valid = true;
+	int attr = GetFileAttr();
+	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+		wxString name =	GetFileNamePlainStr();
+		if (name == wxT(".") || name == wxT("..")) {
+			// ディレクトリ ".", ".."は削除不可
+			valid = false;
+		}
 	}
 	return valid;
 }
@@ -152,18 +187,7 @@ void DiskBasicDirItemMSDOS::SetFileAttr(int file_type)
 	SetFileType1((file_type & 0xff00) >> 8);
 }
 
-#if 0
-void DiskBasicDirItemMSDOS::ClearData()
-{
-	if (!data) return;
-	int c = 0;
-	size_t l;
-	l = sizeof(directory_msdos_t);
-	memset(data, c, l);
-}
-#endif
-
-int DiskBasicDirItemMSDOS::GetFileType()
+int DiskBasicDirItemMSDOS::GetFileAttr()
 {
 	return GetFileType1() << 8;
 }
@@ -171,7 +195,7 @@ int DiskBasicDirItemMSDOS::GetFileType()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemMSDOS::GetFileType1Pos()
 {
-	return GetFileType();
+	return GetFileAttr();
 }
 
 int	DiskBasicDirItemMSDOS::CalcFileTypeFromPos(int pos1, int pos2)
@@ -184,27 +208,27 @@ wxString DiskBasicDirItemMSDOS::GetFileAttrStr()
 {
 	wxString attr;
 	// MS-DOS
-	if (GetFileType() & FILE_TYPE_READONLY_MASK) {
+	if (GetFileAttr() & FILE_TYPE_READONLY_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_READ_ONLY]);	// read only
 	}
-	if (GetFileType() & FILE_TYPE_HIDDEN_MASK) {
+	if (GetFileAttr() & FILE_TYPE_HIDDEN_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_HIDDEN]);	// hidden
 	}
-	if (GetFileType() & FILE_TYPE_SYSTEM_MASK) {
+	if (GetFileAttr() & FILE_TYPE_SYSTEM_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_SYSTEM]);	// system
 	}
-	if (GetFileType() & FILE_TYPE_VOLUME_MASK) {
+	if (GetFileAttr() & FILE_TYPE_VOLUME_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_VOLUME]);	// volume
 	}
-	if (GetFileType() & FILE_TYPE_DIRECTORY_MASK) {
+	if (GetFileAttr() & FILE_TYPE_DIRECTORY_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_DIRECTORY]);	// directory
 	}
-	if (GetFileType() & FILE_TYPE_ARCHIVE_MASK) {
+	if (GetFileAttr() & FILE_TYPE_ARCHIVE_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_ARCHIVE]);	// archive
 	}
@@ -488,16 +512,33 @@ void DiskBasicDirItemMSDOS::ConvertFromFileNameStr(wxString &filename)
 #define IDC_TEXT_CTIME		58
 #define IDC_TEXT_ADATE		59
 
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemMSDOS::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+	if (show_flags & INTNAME_NEW_FILE) {
+		// 外部からインポート時
+		file_type_1 = FILE_TYPE_ARCHIVE_MASK;
+	}
+	if (show_flags & INTNAME_IMPORT_INTERNAL) {
+		// 内部からインポート時
+		file_type_1 |= FILE_TYPE_ARCHIVE_MASK;
+	}
+}
+
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkHidden;
 	wxCheckBox *chkSystem;
@@ -507,6 +548,8 @@ void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int 
 	wxTextCtrl *txtCDate;
 	wxTextCtrl *txtCTime;
 	wxTextCtrl *txtADate;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
@@ -556,31 +599,18 @@ void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int 
 	txtADate = new wxTextCtrl(parent, IDC_TEXT_ADATE, GetADateStr(), wxDefaultPosition, sz, 0, date_validate);
 	hbox->Add(txtADate, flags);
 	sizer->Add(hbox, flags);
-
-	// event handler
-//	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
-
-	controls.Add(chkReadOnly);
-	controls.Add(chkHidden);
-	controls.Add(chkSystem);
-	controls.Add(chkVolume);
-	controls.Add(chkDirectory);
-	controls.Add(chkArchive);
-	controls.Add(txtCDate);
-	controls.Add(txtCTime);
-	controls.Add(txtADate);
 }
 
 /// 属性1を得る
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemMSDOS::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemMSDOS::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkReadOnly = (wxCheckBox *)controls.Item(1);
-	wxCheckBox *chkHidden = (wxCheckBox *)controls.Item(2);
-	wxCheckBox *chkSystem = (wxCheckBox *)controls.Item(3);
-	wxCheckBox *chkVolume = (wxCheckBox *)controls.Item(4);
-	wxCheckBox *chkDirectory = (wxCheckBox *)controls.Item(5);
-	wxCheckBox *chkArchive = (wxCheckBox *)controls.Item(6);
+	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
+	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
+	wxCheckBox *chkSystem = (wxCheckBox *)parent->FindWindow(IDC_CHECK_SYSTEM);
+	wxCheckBox *chkVolume = (wxCheckBox *)parent->FindWindow(IDC_CHECK_VOLUME);
+	wxCheckBox *chkDirectory = (wxCheckBox *)parent->FindWindow(IDC_CHECK_DIRECTORY);
+	wxCheckBox *chkArchive = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ARCHIVE);
 
 	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
@@ -593,11 +623,13 @@ int DiskBasicDirItemMSDOS::GetFileType1InAttrDialog(const AttrControls &controls
 }
 
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemMSDOS::SetAttrInAttrDialog(const AttrControls &controls, DiskBasicError &errinfo)
+bool DiskBasicDirItemMSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
-	wxTextCtrl *txtCDate = (wxTextCtrl *)controls.Item(7);
-	wxTextCtrl *txtCTime = (wxTextCtrl *)controls.Item(8);
-	wxTextCtrl *txtADate = (wxTextCtrl *)controls.Item(9);
+	DiskBasicDirItem::SetAttrInAttrDialog(parent, errinfo);
+
+	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CDATE);
+	wxTextCtrl *txtCTime = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CTIME);
+	wxTextCtrl *txtADate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_ADATE);
 
 	struct tm tm;
 	if (txtCDate) {

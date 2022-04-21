@@ -33,7 +33,7 @@ BEGIN_EVENT_TABLE(DiskParamBox, wxDialog)
 	EVT_BUTTON(wxID_OK, DiskParamBox::OnOK)
 END_EVENT_TABLE()
 
-DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, bool use_template, wxUint32 disable_flags)
+DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, wxUint32 disable_flags)
 	: wxDialog(parent, id, caption.IsEmpty() ? _("Disk Parameter") : caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -42,8 +42,10 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	wxSize size;
 	long style = 0;
 	this->disable_flags = disable_flags;
+	this->disk_params = params;
 	wxTextValidator validigits(wxFILTER_EMPTY | wxFILTER_DIGITS);
 	wxTextValidator valialpha(wxFILTER_ASCII);
+	bool use_template = ((disable_flags & DiskParamBox_Temp_All) != DiskParamBox_Temp_All);
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -55,23 +57,28 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	comTemplate = NULL;
 	if (use_template) {
 		wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-		vbox->Add(new wxStaticText(this, wxID_ANY, _("Category:")), flags);
-		comCategory = new wxChoice(this, IDC_COMBO_CATEGORY, wxDefaultPosition, wxDefaultSize);
 
-		const DiskBasicCategories *categories = &gDiskBasicTemplates.GetCategories();
-		comCategory->Append(_("All"));
-		for(size_t i=0; i < categories->Count(); i++) {
-			DiskBasicCategory *item = &categories->Item(i);
-			wxString str = item->GetDescription();
-			comCategory->Append(str);
+		if ((disable_flags & DiskParamBox_Category) == 0) {
+			vbox->Add(new wxStaticText(this, wxID_ANY, _("Category:")), flags);
+			comCategory = new wxChoice(this, IDC_COMBO_CATEGORY, wxDefaultPosition, wxDefaultSize);
+
+			const DiskBasicCategories *categories = &gDiskBasicTemplates.GetCategories();
+			comCategory->Append(_("All"));
+			for(size_t i=0; i < categories->Count(); i++) {
+				DiskBasicCategory *item = &categories->Item(i);
+				wxString str = item->GetDescription();
+				comCategory->Append(str);
+			}
+			vbox->Add(comCategory, flags);
 		}
-		vbox->Add(comCategory, flags);
 
-		vbox->Add(new wxStaticText(this, wxID_ANY, _("Template:")), flags);
-		comTemplate = new wxChoice(this, IDC_COMBO_TEMPLATE, wxDefaultPosition, wxDefaultSize);
-		vbox->Add(comTemplate, flags);
+		if ((disable_flags & DiskParamBox_Template) == 0) {
+			vbox->Add(new wxStaticText(this, wxID_ANY, _("Template:")), flags);
+			comTemplate = new wxChoice(this, IDC_COMBO_TEMPLATE, wxDefaultPosition, wxDefaultSize);
+			vbox->Add(comTemplate, flags);
 
-		szrAll->Add(vbox, flags);
+			szrAll->Add(vbox, flags);
+		}
 	}
 
 	//
@@ -171,23 +178,33 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	//
 	//
 
-	hbox = new wxBoxSizer(wxHORIZONTAL);
-	hbox->Add(new wxStaticText(this, wxID_ANY, _("Disk Name")), flags);
-	size.x = 160; size.y = -1;
-	txtDiskName = new wxTextCtrl(this, IDC_TEXT_DISKNAME, wxEmptyString, wxDefaultPosition, size, style);
-	txtDiskName->SetMaxLength(16);
-	hbox->Add(txtDiskName, 0);
+	txtDiskName = NULL;
+	comDensity = NULL;
+	chkWprotect = NULL;
 
-	comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize);
-	for(int i=0; gDiskDensity[i] != NULL; i++) {
-		comDensity->Append(wxGetTranslation(gDiskDensity[i]));
+	if ((disable_flags & DiskParamBox_Disk_All) != DiskParamBox_Disk_All) {
+		hbox = new wxBoxSizer(wxHORIZONTAL);
+		hbox->Add(new wxStaticText(this, wxID_ANY, _("Disk Name")), flags);
+		size.x = 160; size.y = -1;
+		txtDiskName = new wxTextCtrl(this, IDC_TEXT_DISKNAME, wxEmptyString, wxDefaultPosition, size, style);
+		txtDiskName->SetMaxLength(16);
+		hbox->Add(txtDiskName, 0);
+
+		comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize);
+		for(int i=0; gDiskDensity[i] != NULL; i++) {
+			comDensity->Append(wxGetTranslation(gDiskDensity[i]));
+		}
+		comDensity->SetSelection(0);
+		hbox->Add(comDensity, flagsH);
+		chkWprotect = new wxCheckBox(this, IDC_CHK_WPROTECT, _("Write Protect"));
+		hbox->Add(chkWprotect, flagsH);
+
+		szrAll->Add(hbox, flags);
 	}
-	comDensity->SetSelection(0);
-	hbox->Add(comDensity, flagsH);
-	chkWprotect = new wxCheckBox(this, IDC_CHK_WPROTECT, _("Write Protect"));
-	hbox->Add(chkWprotect, flagsH);
 
-	szrAll->Add(hbox, flags);
+	//
+	//
+	//
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
@@ -214,9 +231,9 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 		comTemplate->SetSelection(sel_num);
 		SetParamOfIndex(sel_num);
 	} else {
-		txtDiskName->Enable(false);
-		comDensity->Enable(false);
-		chkWprotect->Enable(false);
+		if (txtDiskName) txtDiskName->Enable(false);
+		if (comDensity) comDensity->Enable(false);
+		if (chkWprotect) chkWprotect->Enable(false);
 	}
 }
 
@@ -300,6 +317,12 @@ void DiskParamBox::OnCategoryChanged(wxCommandEvent& event)
 
 void DiskParamBox::SetTemplateValues()
 {
+	if (disk_params) SetTemplateValuesFromParams();
+	else SetTemplateValuesFromGlobals();
+}
+
+void DiskParamBox::SetTemplateValuesFromGlobals()
+{
 	if (!comTemplate) return;
 
 	comTemplate->Clear();
@@ -330,6 +353,22 @@ void DiskParamBox::SetTemplateValues()
 	SetParamOfIndex(0);
 }
 
+void DiskParamBox::SetTemplateValuesFromParams()
+{
+	if (!comTemplate || !disk_params) return;
+
+	comTemplate->Clear();
+	for(size_t i=0; i < disk_params->Count(); i++) {
+		const DiskParam *item = disk_params->Item(i);
+
+		wxString str = item->GetDiskDescription();
+
+		comTemplate->Append(str, (void *)i);
+	}
+
+	SetParamOfIndex(0);
+}
+
 void DiskParamBox::OnTemplateChanged(wxCommandEvent& event)
 {
 	SetParamOfIndex(event.GetSelection());
@@ -341,37 +380,15 @@ void DiskParamBox::OnSingleChanged(wxCommandEvent& event)
 
 void DiskParamBox::SetParamOfIndex(size_t index)
 {
+	if (disk_params) SetParamOfIndexFromParams(index);
+	else SetParamOfIndexFromGlobals(index);
+}
+
+void DiskParamBox::SetParamOfIndexFromGlobals(size_t index)
+{
 	if (index < (comTemplate->GetCount() - 1)) {
-		DiskParam *item = gDiskTypes.ItemPtr((size_t)comTemplate->GetClientData((wxUint32)index));
-
-		txtTracks->SetValue(wxString::Format(wxT("%d"), item->GetTracksPerSide()));
-		txtSides->SetValue(wxString::Format(wxT("%d"), item->GetSidesPerDisk()));
-		txtSectors->SetValue(wxString::Format(wxT("%d"), item->GetSectorsPerTrack()));
-		comSecSize->SetValue(wxString::Format(wxT("%d"), item->GetSectorSize()));
-		txtSecIntl->SetValue(wxString::Format(wxT("%d"), item->GetInterleave()));
-		comNumbSec->SetSelection(item->GetNumberingSector());
-		comDensity->SetSelection(item->GetDensity());
-
-		int single_secs = 0;
-		int single_size = 0;
-		int single_pos = item->HasSingleDensity(&single_secs, &single_size);
-		radSingle[single_pos]->SetValue(true);
-		txtSingleSectors->SetValue(wxString::Format(wxT("%d"), single_secs));
-		comSingleSecSize->SetValue(wxString::Format(wxT("%d"), single_size));
-
-		txtTracks->Enable(false);
-		txtSides->Enable(false);
-		txtSectors->Enable(false);
-		comSecSize->Enable(false);
-		txtSecIntl->Enable(false);
-		comNumbSec->Enable(false);
-		comDensity->Enable(false);
-		radSingle[0]->Enable(false);
-		radSingle[1]->Enable(false);
-		radSingle[2]->Enable(false);
-		radSingle[3]->Enable(false);
-		txtSingleSectors->Enable(false);
-		comSingleSecSize->Enable(false);
+		const DiskParam *item = gDiskTypes.ItemPtr((size_t)comTemplate->GetClientData((wxUint32)index));
+		SetParamFromTemplate(item);
 	} else {
 		// manual
 		txtTracks->Enable(true);
@@ -380,7 +397,7 @@ void DiskParamBox::SetParamOfIndex(size_t index)
 		comSecSize->Enable(true);
 		txtSecIntl->Enable(true);
 		comNumbSec->Enable(true);
-		comDensity->Enable((disable_flags & DiskParamBox_Density) == 0);
+		if (comDensity) comDensity->Enable((disable_flags & DiskParamBox_Density) == 0);
 		radSingle[0]->Enable(true);
 		radSingle[1]->Enable(true);
 		radSingle[2]->Enable(true);
@@ -388,8 +405,46 @@ void DiskParamBox::SetParamOfIndex(size_t index)
 		txtSingleSectors->Enable(true);
 		comSingleSecSize->Enable(true);
 	}
-	txtDiskName->Enable((disable_flags & DiskParamBox_DiskName) == 0);
-	chkWprotect->Enable((disable_flags & DiskParamBox_WriteProtect) == 0);
+	if (txtDiskName) txtDiskName->Enable((disable_flags & DiskParamBox_DiskName) == 0);
+	if (chkWprotect) chkWprotect->Enable((disable_flags & DiskParamBox_WriteProtect) == 0);
+}
+
+void DiskParamBox::SetParamOfIndexFromParams(size_t index)
+{
+	const DiskParam *item = disk_params->Item(index);
+	SetParamFromTemplate(item);
+}
+
+void DiskParamBox::SetParamFromTemplate(const DiskParam *item)
+{
+	txtTracks->SetValue(wxString::Format(wxT("%d"), item->GetTracksPerSide()));
+	txtSides->SetValue(wxString::Format(wxT("%d"), item->GetSidesPerDisk()));
+	txtSectors->SetValue(wxString::Format(wxT("%d"), item->GetSectorsPerTrack()));
+	comSecSize->SetValue(wxString::Format(wxT("%d"), item->GetSectorSize()));
+	txtSecIntl->SetValue(wxString::Format(wxT("%d"), item->GetInterleave()));
+	comNumbSec->SetSelection(item->GetNumberingSector());
+	if (comDensity) comDensity->SetSelection(item->GetDensity());
+
+	int single_secs = 0;
+	int single_size = 0;
+	int single_pos = item->HasSingleDensity(&single_secs, &single_size);
+	radSingle[single_pos]->SetValue(true);
+	txtSingleSectors->SetValue(wxString::Format(wxT("%d"), single_secs));
+	comSingleSecSize->SetValue(wxString::Format(wxT("%d"), single_size));
+
+	txtTracks->Enable(false);
+	txtSides->Enable(false);
+	txtSectors->Enable(false);
+	comSecSize->Enable(false);
+	txtSecIntl->Enable(false);
+	comNumbSec->Enable(false);
+	if (comDensity) comDensity->Enable(false);
+	radSingle[0]->Enable(false);
+	radSingle[1]->Enable(false);
+	radSingle[2]->Enable(false);
+	radSingle[3]->Enable(false);
+	txtSingleSectors->Enable(false);
+	comSingleSecSize->Enable(false);
 }
 
 /// ディスクの情報をダイアログに設定
@@ -401,9 +456,9 @@ void DiskParamBox::SetParamFromDisk(const DiskD88Disk *disk)
 	comSecSize->SetValue(wxString::Format(wxT("%d"), disk->GetSectorSize()));
 	txtSecIntl->SetValue(wxString::Format(wxT("%d"), disk->GetInterleave()));
 	comNumbSec->SetSelection(disk->GetNumberingSector());
-	txtDiskName->SetValue(disk->GetName(true));
-	chkWprotect->SetValue(disk->IsWriteProtected());
-	comDensity->SetSelection(disk->GetDensity());
+	if (txtDiskName) txtDiskName->SetValue(disk->GetName(true));
+	if (chkWprotect) chkWprotect->SetValue(disk->IsWriteProtected());
+	if (comDensity) comDensity->SetSelection(disk->GetDensity());
 
 	int single_secs = 0;
 	int single_size = 0;
@@ -426,10 +481,16 @@ void DiskParamBox::SetParamFromDisk(const DiskD88Disk *disk)
 	comSingleSecSize->Enable(false);
 }
 
+bool DiskParamBox::GetParam(DiskParam &param)
+{
+	if (disk_params) return GetParamFromParams(param);
+	else return GetParamFromGlobals(param);
+}
+
 /// ダイアログのパラメータを取得
 /// @param [out] param
 /// @return true: テンプレートから false:手動設定
-bool DiskParamBox::GetParam(DiskParam &param)
+bool DiskParamBox::GetParamFromGlobals(DiskParam &param)
 {
 	size_t index = 0;
 	if (comTemplate && (index = comTemplate->GetSelection()) < (comTemplate->GetCount() - 1)) {
@@ -464,17 +525,30 @@ bool DiskParamBox::GetParam(DiskParam &param)
 		}
 		wxArrayString basic_types;
 		param.SetDiskParam(wxT(""), 0, basic_types
-			, GetSidesPerDisk(), GetTracksPerSide(), GetSectorsPerTrack(), GetSectorSize(), GetNumberingSector(), GetDensity(), GetInterleave(), sd, wxT(""));
+			, GetSidesPerDisk(), GetTracksPerSide(), GetSectorsPerTrack(), GetSectorSize(), GetNumberingSector(), GetDensity(), GetInterleave(), sd, wxT(""), wxT(""));
 		return false;
 	}
+}
+
+/// ダイアログのパラメータを取得
+/// @param [out] param
+/// @return true: テンプレートから false:手動設定
+bool DiskParamBox::GetParamFromParams(DiskParam &param)
+{
+	if (!comTemplate) return true;
+
+	size_t index = 0;
+	index = comTemplate->GetSelection();
+	param = *disk_params->Item(index);
+	return true;
 }
 
 /// パラメータをディスクにセット
 bool DiskParamBox::GetParamToDisk(DiskD88Disk &disk)
 {
-	disk.SetName(txtDiskName->GetValue());
-	disk.SetDensity(comDensity->GetSelection());
-	disk.SetWriteProtect(chkWprotect->GetValue());
+	disk.SetName(txtDiskName ? txtDiskName->GetValue() : wxT(""));
+	disk.SetDensity(comDensity ? comDensity->GetSelection() : 0);
+	disk.SetWriteProtect(chkWprotect ? chkWprotect->GetValue() : false);
 	return true;
 }
 
@@ -540,20 +614,20 @@ int DiskParamBox::GetNumberingSector() const
 /// ディスク名を返す
 wxString DiskParamBox::GetDiskName() const
 {
-	return txtDiskName->GetValue();
+	return txtDiskName ? txtDiskName->GetValue() : wxT("");
 }
 
 /// 密度を返す
 /// @return 0:2D 1:2DD 2:2HD
 int DiskParamBox::GetDensity() const
 {
-	return comDensity->GetSelection();
+	return comDensity ? comDensity->GetSelection() : 0;
 }
 
 /// ディスク書き込み禁止か
 bool DiskParamBox::IsWriteProtected() const
 {
-	return chkWprotect->GetValue();
+	return chkWprotect ? chkWprotect->GetValue() : false;
 }
 
 /// 単密度の種類を返す

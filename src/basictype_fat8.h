@@ -24,7 +24,7 @@ public:
 	/// FAT位置をセット
 	virtual void	SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FAT位置を返す
-	virtual wxUint32 GetGroupNumber(wxUint32 num);
+	virtual wxUint32 GetGroupNumber(wxUint32 num) const;
 	//@}
 
 	/// @name file size
@@ -40,15 +40,13 @@ public:
 	/// セクタデータを指定コードで埋める
 	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理 FAT予約済みをセット
-	virtual void	AdditionalProcessOnFormatted();
+	virtual bool	AdditionalProcessOnFormatted();
 	//@}
 
 	/// @name save / write
 	//@{
 	/// 最後のグループ番号を計算する
 	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
-	/// セーブ時にセクタがなかった時の処理
-	virtual bool	SetSkipMarkOnErrorSector(DiskBasicDirItem *item, wxUint32 prev_group, wxUint32 group, wxUint32 next_group);
 	//@}
 };
 

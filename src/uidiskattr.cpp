@@ -84,7 +84,7 @@ void L3DiskDiskAttr::SetAttr(DiskD88Disk *newdisk)
 {
 	disk = newdisk;
 	if (!disk) return;
-	SetAttrText(disk->GetAttrText());
+	SetAttrText(disk->GetDiskDescription());
 	btnChange->Enable(true);
 	SetDiskDensity(disk->GetDensityText());
 	SetWriteProtect(disk->IsWriteProtected());

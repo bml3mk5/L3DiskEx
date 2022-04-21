@@ -37,13 +37,15 @@ bool DiskBasicTypeOS9::CheckFat()
 }
 
 /// ディスクから各パラメータを取得
-bool DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
+/// @retval  0 正常
+/// @retval -1 エラー
+int DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 {
 	// Ident
 	DiskD88Sector *sector = basic->GetManagedSector(0);
 	os9_ident = (os9_ident_t *)sector->GetSectorBuffer();
 	if (!os9_ident) {
-		return false;
+		return -1;
 	}
 
 	int ival;
@@ -51,38 +53,38 @@ bool DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 	// total groups
 	ival = GET_OS9_LSN(os9_ident->DD_TOT);
 	if (ival < 1) {
-		return false;
+		return -1;
 	}
 	ival--;
 	basic->SetFatEndGroup(ival);
-	end_group = (wxUint32)ival;
+//	end_group = (wxUint32)ival;
 
 	// sectors per track
 	ival = wxUINT16_SWAP_ON_LE(os9_ident->DD_SPT);
 	if (ival == 0) {
-		return false;
+		return -1;
 	}
 	if (ival > basic->GetSectorsPerTrack()) {
-		return false;
+		return -1;
 	}
 	basic->SetSectorsPerTrackOnBasic(ival);
 
 	// sectors per group(cluster)
 	ival = wxUINT16_SWAP_ON_LE(os9_ident->DD_BIT);
 	if (ival == 0) {
-		return false;
+		return -1;
 	}
 	basic->SetSectorsPerGroup(ival);
-	secs_per_group = ival;
+//	secs_per_group = ival;
 
 	// root directory
 	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
 	if ((int)dir_fd_lsn > basic->GetFatEndGroup()) {
-		return false;
+		return -1;
 	}
 	sector = basic->GetManagedSector(dir_fd_lsn);
 	if (!sector) {
-		return false;
+		return -1;
 	}
 	directory_os9_fd_t *fdd = (directory_os9_fd_t *)sector->GetSectorBuffer();
 
@@ -91,7 +93,7 @@ bool DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 	basic->SetDirStartSector(dir_start_lsn + CalcDataStartSectorPos() + 1);
 	basic->SetDirEndSector(dir_start_lsn + CalcDataStartSectorPos() + 2);
 
-	return true;
+	return 0;
 }
 
 //
@@ -119,7 +121,7 @@ bool DiskBasicTypeOS9::CheckRootDirectory(int start_sector, int end_sector)
 		if (start_lsn == 0 && end_lsn == 0) {
 			break;
 		}
-		end_lsn = end_lsn * secs_per_group + start_lsn;
+		end_lsn = end_lsn * basic->GetSectorsPerGroup() + start_lsn;
 
 		for(wxUint32 lsn = start_lsn; lsn < end_lsn; lsn++) {
 			sector = basic->GetSectorFromGroup(lsn);
@@ -172,7 +174,7 @@ bool DiskBasicTypeOS9::AssignRootDirectory(int start_sector, int end_sector)
 		if (start_lsn == 0 && end_lsn == 0) {
 			break;
 		}
-		end_lsn = end_lsn * secs_per_group + start_lsn;
+		end_lsn = end_lsn * basic->GetSectorsPerGroup() + start_lsn;
 
 		for(wxUint32 lsn = start_lsn; lsn < end_lsn; lsn++) {
 			int trk_num = 0;
@@ -227,12 +229,12 @@ void DiskBasicTypeOS9::CalcDiskFreeSize()
 		}
 		wxUint8 *buf = sector->GetSectorBuffer();
 		int size = sector->GetSectorSize();
-		for(int pos = 0; pos < size && lsn <= end_group && bytes < map_bytes; pos++) {
-			for(int bit = 0; bit < 8 && lsn <= end_group && bytes < map_bytes; bit++) {
+		for(int pos = 0; pos < size && lsn <= basic->GetFatEndGroup() && bytes < map_bytes; pos++) {
+			for(int bit = 0; bit < 8 && lsn <= basic->GetFatEndGroup() && bytes < map_bytes; bit++) {
 				bool used = ((buf[pos] & (0x80 >> bit)) != 0);
 				if (!used) {
 					fat_availability.Add(FAT_AVAIL_FREE);
-					fsize += (secs_per_group * sector_size);
+					fsize += (basic->GetSectorsPerGroup() * basic->GetSectorSize());
 					grps++;
 				} else {
 					fat_availability.Add(FAT_AVAIL_USED);
@@ -271,7 +273,7 @@ void DiskBasicTypeOS9::SetGroupNumber(wxUint32 num, wxUint32 val)
 }
 
 /// グループ番号を得る
-wxUint32 DiskBasicTypeOS9::GetGroupNumber(wxUint32 num)
+wxUint32 DiskBasicTypeOS9::GetGroupNumber(wxUint32 num) const
 {
 	return num;
 }
@@ -583,13 +585,13 @@ void DiskBasicTypeOS9::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
-void DiskBasicTypeOS9::AdditionalProcessOnFormatted()
+bool DiskBasicTypeOS9::AdditionalProcessOnFormatted()
 {
 	// Ident
 	DiskD88Sector *sector = basic->GetManagedSector(0);
-	if (!sector) return;
+	if (!sector) return false;
 	os9_ident = (os9_ident_t *)sector->GetSectorBuffer();
-	if (!os9_ident) return;
+	if (!os9_ident) return false;
 
 	int total_lsn = basic->GetFatEndGroup() + 1;
 
@@ -656,7 +658,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnFormatted()
 	for(int lsn = map_lsn; lsn < root_start_lsn; lsn++) {
 		for(int sec = 0; sec < basic->GetSectorsPerGroup(); sec++) {
 			sector = basic->GetManagedSector(lsn * basic->GetSectorsPerGroup() + sec);
-			if (!sector) return;
+			if (!sector) return false;
 			sector->Fill(0xff);
 		}
 	}
@@ -669,7 +671,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnFormatted()
 	//
 
 	sector = basic->GetManagedSector(root_start_lsn * basic->GetSectorsPerGroup());
-	if (!sector) return;
+	if (!sector) return false;
 
 	DiskBasicDirItemOS9 *root_item = (DiskBasicDirItemOS9 *)dir->NewItem();
 	DiskBasicDirItemOS9FD *root_fd = &root_item->GetFD();
@@ -704,26 +706,8 @@ void DiskBasicTypeOS9::AdditionalProcessOnFormatted()
 
 	delete root_item;
 
-	return;
+	return true;
 }
-
-#if 0
-/// データの書き込み処理
-/// @param [in]	 item			ディレクトリアイテム
-/// @param [in]	 istream		ストリームデータ
-/// @param [out] buffer			セクタ内の書き込み先バッファ
-/// @param [in]  size			書き込み先バッファサイズ
-/// @param [in]  remain			残りのデータサイズ
-/// @param [in]  sector_num		セクタ番号
-/// @param [in]  group_num		現在のグループ番号
-/// @param [in]  next_group		次のグループ番号
-/// @param [in]  sector_end		最終セクタ番号
-/// @return 書き込んだバイト数
-int DiskBasicTypeOS9::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end)
-{
-	return 0;
-}
-#endif
 
 /// データの書き込み終了後の処理
 void DiskBasicTypeOS9::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
@@ -757,7 +741,7 @@ bool DiskBasicTypeOS9::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 	SetGroupNumber(item->GetStartGroup(), 0);
 
 	// ディレクトリサイズを更新
-	DiskBasicDirItem *dir_item = dir->FindFile(wxT("."), NULL, NULL);
+	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
 	if (dir_item) {
 		int dir_size = dir_item->GetFileSize() - (int)dir_item->GetDataSize();
 		dir_item->SetFileSize(dir_size);

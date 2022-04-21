@@ -23,7 +23,7 @@ public:
 	/// FAT位置をセット
 	void		SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FATオフセットを返す
-	wxUint32	GetGroupNumber(wxUint32 num);
+	wxUint32	GetGroupNumber(wxUint32 num) const;
 	/// 使用しているグループ番号か
 	bool		IsUsedGroupNumber(wxUint32 num);
 	/// 次のグループ番号を得る
@@ -59,11 +59,6 @@ public:
 	int			GetStartSectorFromGroup(wxUint32 group_num);
 	/// グループ番号から最終セクタ番号を得る
 	int			GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
-
-	/// サイド番号を逆転するか
-	bool		IsSideReversed(int sides_per_disk);
-	/// ディスク内のデータが反転しているか
-	bool		IsDataInverted();
 	//@}
 
 	/// @name directory
@@ -81,7 +76,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	void		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted();
 	//@}
 
 	/// @name data access (read / verify)

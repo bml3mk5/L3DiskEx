@@ -32,14 +32,13 @@ BEGIN_EVENT_TABLE(IntNameBox, wxDialog)
 END_EVENT_TABLE()
 
 IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption
-	, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int showitems)
+	, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags)
 		: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX, wxT(INTNAMEBOX_CLASSNAME))
 {
 	this->frame = frame;
 	this->item = item;
 	this->unique_number = basic->GetDir()->GetUniqueNumber();
 	this->basic = basic;
-	this->format_type = basic->GetFormatType();
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
@@ -48,7 +47,10 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 	mNameMaxLen = item->GetFileNameStrSize();
 
 	wxString file_name;
-	if (showitems & INTNAME_SPECIFY_FILE_NAME) {
+	if (show_flags & INTNAME_IMPORT_INTERNAL) {
+		// 内部でのインポート時
+		file_name = file_path;
+	} else if (show_flags & INTNAME_SPECIFY_FILE_NAME) {
 		// ファイル名の指定があるとき
 		if (!file_path.IsEmpty()) file_name = item->RemakeFileNameStr(file_path);
 	} else {
@@ -61,7 +63,7 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 	wxSize sz;
 
 	txtIntName = NULL;
-	if (showitems & INTNAME_SHOW_TEXT) {
+	if (show_flags & INTNAME_SHOW_TEXT) {
 		szrAll->Add(new wxStaticText(this, wxID_ANY, _("File Name In The Disk Image")), flags);
 		size.x = DEFAULT_TEXTWIDTH; size.y = -1;
 		if (item->IsFileNameEditable()) {
@@ -73,17 +75,7 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 		}
 		szrAll->Add(txtIntName, flags);
 	}
-	controls.Add(txtIntName);
 
-	int file_type_1 = 0;
-	int file_type_2 = 0;
-
-	if (showitems & INTNAME_INVALID_FILE_TYPE) {
-		item->SetFileTypeForAttrDialog(file_path, file_type_1, file_type_2);
-	} else {
-		file_type_1 = item->GetFileType1Pos();
-		file_type_2 = item->GetFileType2Pos();
-	}
 
 	user_data = 0;
 
@@ -91,9 +83,9 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 	txtExecAddr = NULL;
 	txtCDate = NULL;
 	txtCTime = NULL;
-	if (showitems & INTNAME_SHOW_ATTR) {
+	if (show_flags & INTNAME_SHOW_ATTR) {
 		// 属性の表示は機種依存
-		item->CreateControlsForAttrDialog(this, file_type_1, file_type_2, szrAll, flags, controls, &user_data);
+		item->CreateControlsForAttrDialog(this, show_flags, file_path, szrAll, flags);
 
 		// 開始アドレス、実行アドレス
 		if (item->HasAddress()) {
@@ -121,9 +113,6 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 			txtExecAddr->SetValue(wxString::Format(wxT("%x"), item->GetExecuteAddress()));
 		}
 
-		controls.Add(txtStartAddr);
-		controls.Add(txtExecAddr);
-
 		// 作成日付を表示
 		if (item->HasDateTime()) {
 			sz.Set(80, -1);
@@ -145,9 +134,6 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 			}
 			szrAll->Add(hbox, flags);
 		}
-
-		controls.Add(txtCDate);
-		controls.Add(txtCTime);
 	}
 
 	// プロパティの場合は詳細表示
@@ -155,7 +141,7 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 	txtGroups = NULL;
 	lstGroups = NULL;
 
-	if (showitems & INTNAME_SHOW_PROPERTY) {
+	if (show_flags & INTNAME_SHOW_PROPERTY) {
 		// ファイルサイズ
 		hbox = new wxBoxSizer(wxHORIZONTAL);
 		hbox->Add(new wxStaticText(this, wxID_ANY, _("File Size:")), flags);
@@ -188,8 +174,17 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 
 	SetSizerAndFit(szrAll);
 
-	SetDateTime(item->GetFileDateStr(), item->GetFileTimeStr());
+	if (show_flags & INTNAME_NEW_FILE) {
+		// 新規作成時、日付は現在日付をセット
+		SetDateTime(wxDateTime::Now());
+	} else {
+		// アイテム内の日付をセット
+		SetDateTime(item->GetFileDateStr(), item->GetFileTimeStr());
+	}
+
 	SetFileSize(item->GetFileSize());
+
+	item->InitializeForAttrDialog(this, show_flags, &user_data);
 
 	ChangedType1();
 }
@@ -224,8 +219,8 @@ void IntNameBox::OnChangeType1(wxCommandEvent& WXUNUSED(event))
 
 void IntNameBox::ChangedType1()
 {
-	if (controls.Count() > 1) {
-		item->ChangeTypeInAttrDialog(controls);
+	if (item) {
+		item->ChangeTypeInAttrDialog(this);
 	}
 }
 
@@ -255,7 +250,6 @@ void IntNameBox::SetValuesToDirItem()
 	if (!item) return;
 
 	item->SetFileNameStr(GetInternalName());
-	item->SetFileAttr(CalcFileType());
 	item->SetStartAddress(GetStartAddress());
 	item->SetExecuteAddress(GetExecuteAddress());
 	struct tm tm;
@@ -294,24 +288,6 @@ wxString IntNameBox::GetInternalName() const
 		item->ConvertFromFileNameStr(val);
 	}
 	return val;
-}
-
-/// 属性を返す(機種依存)
-int IntNameBox::CalcFileType()
-{
-	return item->CalcFileTypeFromPos(GetFileType1(), GetFileType2());
-}
-
-/// 属性1を返す(機種依存)
-int IntNameBox::GetFileType1() const
-{
-	return item->GetFileType1InAttrDialog(controls);
-}
-
-/// 属性2を返す(機種依存)
-int IntNameBox::GetFileType2() const
-{
-	return item->GetFileType2InAttrDialog(controls, &user_data);
 }
 
 /// 開始アドレスを返す
@@ -415,14 +391,6 @@ void IntNameBox::SetGroups(long val, DiskBasicGroups &vals)
 		}
 	}
 }
-
-#if 0
-void IntNameBox::SetHidden(bool val)
-{
-	if (!chkHidden) return;
-	chkHidden->SetValue(val);
-}
-#endif
 
 //
 //

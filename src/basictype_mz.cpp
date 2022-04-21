@@ -31,25 +31,28 @@ bool DiskBasicTypeMZ::CheckFat()
 	bool valid = true;
 
 	// FATエリア
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return false;
+	}
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
+	wxUint8 offset = basic->InvertUint8(b->offset);
+	wxUint8 mag = basic->InvertUint8(b->mag);
 	// オフセット(1バイト目)が16未満ならエラー
-	if ((b->offset ^ 0xff) < 16) {	// invert
+	if (offset < 16) {	// invert
 		valid = false;
 	}
 	if (valid) {
-		data_start_group = (b->offset ^ 0xff);
+		data_start_group = offset;
 	}
 
 	// クラスタ倍率(255バイト目)が16以上ならエラー
-	if ((b->mag ^ 0xff) >= 16) {	// invert
+	if (mag >= 16) {	// invert
 		valid = false;
 	}
 	if (valid) {
-		secs_per_group = (b->mag ^ 0xff) + 1;
-		basic->SetSectorsPerGroup(secs_per_group);
+//		secs_per_group = mag + 1;
+		basic->SetSectorsPerGroup(mag + 1);
 	}
 
 	return valid;
@@ -64,18 +67,19 @@ void DiskBasicTypeMZ::CalcDiskFreeSize()
 	fat_availability.Empty();
 
 	// FATエリア
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return;
+	}
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	int used_groups = (b->used ^ 0xffff);
+	int used_groups = basic->InvertUint16(b->used);	// invert
 //	int all_groups = (b->all ^ 0xffff);
 //	grps = all_groups - used_groups;
-//	fsize = grps * secs_per_group * sector_size;
+//	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
 
 	// 使用済みかチェック
 	int fsts;
-	for(wxUint32 gnum = 0; gnum <= end_group; gnum++) {
+	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup(); gnum++) {
 		if (gnum < data_start_group) {
 			used++;
 			fsts = FAT_AVAIL_SYSTEM;
@@ -89,10 +93,10 @@ void DiskBasicTypeMZ::CalcDiskFreeSize()
 		fat_availability.Add(fsts);
 	}
 
-	fsize = grps * secs_per_group * sector_size;
+	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
 	// 使用済みクラスタ数を更新
 	if (used_groups != used) {
-		b->used = (used ^ 0xffff);	// invert
+		b->used = basic->InvertUint16(used);	// invert
 	}
 
 	free_disk_size = (int)fsize;
@@ -104,7 +108,7 @@ void DiskBasicTypeMZ::CalcDiskFreeSize()
 /// @param [in] val 値
 void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
-	if (num > end_group) {
+	if (num > basic->GetFatEndGroup()) {
 		return;
 	}
 
@@ -116,19 +120,20 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 	pos = (pos >> 3) + 6;
 	int mask = 1 << (num & 7);
 
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return;
+	}
 	// FATには未使用使用テーブルがある
 	if (pos < fatbuf->size) {
-		wxUint8 bit = (fatbuf->buffer[pos] ^ 0xff);	// invert
+		wxUint8 bit = basic->InvertUint8(fatbuf->buffer[pos]);	// invert
 		bit = (val ? (bit | mask) : (bit & ~mask));
-		fatbuf->buffer[pos] = (bit ^ 0xff);	// invert
+		fatbuf->buffer[pos] = basic->InvertUint8(bit);	// invert
 	}
 
 	// FATの使用済み最終クラスタ数を更新
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	wxUint32 used_group = (b->used ^ 0xffff);	// invert
+	wxUint32 used_group = basic->InvertUint16(b->used);	// invert
 	if (val) {
 		// セットした時は最終クラスタ数を増やす
 		used_group++;
@@ -136,20 +141,21 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 		// クリアした時は最終クラスタ数を減らす
 		used_group--;
 	}
-	b->used = (used_group ^ 0xffff);	// invert
+	b->used = basic->InvertUint16(used_group);	// invert
 
 	myLog.SetDebug("DiskBasicTypeMZ::SetGroupNumber: g:%d v:%d pos:%d msk:%d used:%d"
 		, num, val, pos, mask, used_group);
 }
 
-wxUint32 DiskBasicTypeMZ::GetGroupNumber(wxUint32 num)
+wxUint32 DiskBasicTypeMZ::GetGroupNumber(wxUint32 num) const
 {
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return INVALID_GROUP_NUMBER;
+	}
 	// FATのオフセットを得る
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	wxUint32 offset = (b->offset ^ 0xff);	// invert
+	wxUint32 offset = basic->InvertUint8(b->offset);	// invert
 	if (offset > num) num = offset;
 	return num;
 }
@@ -160,7 +166,7 @@ bool DiskBasicTypeMZ::IsUsedGroupNumber(wxUint32 num)
 {
 	bool exist = false;
 
-	if (num > end_group) {
+	if (num > basic->GetFatEndGroup()) {
 		return false;
 	}
 
@@ -173,12 +179,13 @@ bool DiskBasicTypeMZ::IsUsedGroupNumber(wxUint32 num)
 	pos = (pos >> 3) + 6;
 	int mask = 1 << (num & 7);
 
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return true;
+	}
 	// FATには未使用使用テーブルがある
 	if (pos < fatbuf->size) {
-		if ((fatbuf->buffer[pos] ^ 0xff) & mask) {	// invert
+		if (basic->InvertUint8(fatbuf->buffer[pos]) & mask) {	// invert
 			exist = true;
 		}
 	}
@@ -194,8 +201,8 @@ wxUint32 DiskBasicTypeMZ::GetNextGroupNumber(wxUint32 num, int sector_pos)
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(trk_num, sid_num, sec_num);
 	if (!sector) return 0;
 	wxUint16 next_sec = *(wxUint16 *)(&sector->GetSectorBuffer()[sector->GetSectorSize()-2]);
-	next_sec ^= 0xffff;	// invert
-	return next_sec / secs_per_group;	
+	next_sec = basic->InvertUint16(next_sec);	// invert
+	return next_sec / basic->GetSectorsPerGroup();	
 }
 
 /// 空き位置を返す
@@ -204,14 +211,15 @@ wxUint32 DiskBasicTypeMZ::GetEmptyGroupNumber()
 {
 	wxUint32 new_num = INVALID_GROUP_NUMBER;
 
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	DiskBasicFatBuffers *fatbufs = &bufs->Item(0);
-	DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return new_num;
+	}
 	// FATの使用済み最終クラスタを得る
 	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	wxUint32 offset = (b->offset ^ 0xff);	// invert
-	wxUint32 used_group = (b->used ^ 0xffff);	// invert
-	wxUint32 all_group = (b->all ^ 0xffff);	// invert
+	wxUint32 offset = basic->InvertUint8(b->offset);	// invert
+	wxUint32 used_group = basic->InvertUint16(b->used);	// invert
+	wxUint32 all_group = basic->InvertUint16(b->all);	// invert
 
 	if (used_group < all_group) {
 		new_num = used_group;
@@ -234,7 +242,7 @@ wxUint32 DiskBasicTypeMZ::FindContinuousArea(wxUint32 group_size, wxUint32 &grou
 {
 	// 未使用が連続している位置をさがす
 	wxUint32 cnt = 0;
-	for(wxUint32 gnum = GetGroupNumber(0); gnum <= end_group && cnt < group_size; gnum++) {
+	for(wxUint32 gnum = GetGroupNumber(0); gnum <= basic->GetFatEndGroup() && cnt < group_size; gnum++) {
 		if (!IsUsedGroupNumber(gnum)) {
 			if (cnt == 0) {
 				group_start = gnum;
@@ -248,6 +256,9 @@ wxUint32 DiskBasicTypeMZ::FindContinuousArea(wxUint32 group_size, wxUint32 &grou
 }
 
 /// データサイズ分のグループを確保する
+/// @param [in]  item        ディレクトリアイテム
+/// @param [in]  data_size   確保するデータサイズ（バイト）
+/// @param [out] group_items 確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items)
 {
@@ -258,14 +269,14 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskB
 //	wxUint32 group_num = 0;
 	int remain = data_size;
 	bool is_chain = item->NeedChainInData();
-	bool is_brd = ((item->GetFileType() & FILE_TYPE_RANDOM_MASK) != 0);
-	int sec_size = sector_size;
+	bool is_brd = ((item->GetFileAttr() & FILE_TYPE_RANDOM_MASK) != 0);
+	int sec_size = basic->GetSectorSize();
 	if (is_chain) {
 		sec_size -= 2;
 	}
 
 	// 必要なグループ数
-	wxUint32 group_size = ((data_size - 1) / sec_size / secs_per_group) + 1;
+	wxUint32 group_size = ((data_size - 1) / sec_size / basic->GetSectorsPerGroup()) + 1;
 	if (is_chain || is_brd) {
 		group_size = 1;
 	}
@@ -291,7 +302,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskB
 			rc = -1;
 			return rc;
 		}
-		sector->Fill(0xff);	// invert
+		sector->Fill(basic->InvertUint8(0));	// invert
 
 		wxUint16 *brd_maps = NULL;
 		brd_maps = (wxUint16 *)sector->GetSectorBuffer();
@@ -302,7 +313,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskB
 
 		do {
 			// 連続した16セクタを確保できるかをさがす
-			group_size = 16 / secs_per_group;
+			group_size = 16 / basic->GetSectorsPerGroup();
 			wxUint32 bcnt = FindContinuousArea(group_size, group_start);
 			if (bcnt < group_size) {
 				// 十分な空きがない
@@ -311,14 +322,14 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskB
 			}
 
 			// 開始セクタ
-			wxUint32 sec_pos = group_start * secs_per_group;
-			sec_pos ^= 0xffff;	// invert
+			wxUint32 sec_pos = group_start * basic->GetSectorsPerGroup();
+			sec_pos = basic->InvertUint16(sec_pos);	// invert
 			brd_maps[brd_pos] = wxUINT16_SWAP_ON_BE(sec_pos);
 
 			// 領域を確保する
-			int block_remain = (16 * sector_size);
+			int block_remain = (16 * basic->GetSectorSize());
 			int block_size = 0;
-			rc = AllocateGroupsSub(item, group_start, block_remain, sector_size, group_items, block_size, groups);
+			rc = AllocateGroupsSub(item, group_start, block_remain, basic->GetSectorSize(), group_items, block_size, groups);
 			if (block_remain >= remain) {
 				file_size += (((remain + 31) / 32) * 32);
 				break;
@@ -326,7 +337,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskB
 			remain -= block_remain;
 			file_size += block_remain;
 			brd_pos++;
-		} while((brd_pos * 2) < sector_size);
+		} while((brd_pos * 2) < basic->GetSectorSize());
 
 	} else {
 		// BRD 以外
@@ -344,33 +355,33 @@ int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_st
 	wxUint32 group_num = group_start;
 	wxUint32 prev_group = 0;
 
-	int limit = end_group + 1;
+	int limit = basic->GetFatEndGroup() + 1;
 	while(remain > 0 && limit >= 0) {
 		// 使用しているか
 		bool used_group = IsUsedGroupNumber(group_num);
 		if (!used_group) {
-			if (prev_group > 0 && prev_group <= end_group) {
+			if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
 				// 使用済みにする
 				basic->GetNumsFromGroup(prev_group, group_num, sec_size, remain, group_items);
 				SetGroupNumber(prev_group, 1);
-				file_size += (sector_size * secs_per_group);
+				file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
 				groups++;
 			}
-			remain -= (sec_size * secs_per_group);
+			remain -= (sec_size * basic->GetSectorsPerGroup());
 			prev_group = group_num;
 		}
 		// 次のグループ
 		group_num++;
 		limit--;
 	}
-	if (prev_group > 0 && prev_group <= end_group) {
+	if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
 		// 使用済みにする
 		basic->GetNumsFromGroup(prev_group, 0, sec_size, remain, group_items);
 		SetGroupNumber(prev_group, 1);
-		file_size += (sector_size * secs_per_group);
+		file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
 		groups++;
 	}
-	if (prev_group > end_group) {
+	if (prev_group > basic->GetFatEndGroup()) {
 		// ファイルがオーバフローしている
 		rc = -2;
 	} else if (limit < 0) {
@@ -387,7 +398,15 @@ int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_st
 //}
 
 /// データの読み込み/比較処理
-/// @return >=0 : 処理したサイズ  -1:比較不一致
+/// @param [in] item          ディレクトリアイテム
+/// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
+/// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
+/// @param [in] sector_buffer セクタバッファ
+/// @param [in] sector_size   バッファイサイズ
+/// @param [in] remain_size   残りサイズ
+/// @param [in] sector_num    セクタ番号
+/// @param [in] sector_end    最終セクタ番号
+/// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
 int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
 	bool need_chain = item->NeedChainInData();
@@ -401,9 +420,7 @@ int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, 
 
 	if (ostream) {
 		// 書き出し
-		temp.SetData(sector_buffer, size);
-
-		mem_invert(temp.GetData(), temp.GetSize());
+		temp.SetData(sector_buffer, size, basic->IsDataInverted());
 
 		ostream->Write((const void *)temp.GetData(), temp.GetSize());
 	}
@@ -411,8 +428,7 @@ int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, 
 		// 読み込んで比較
 		temp.SetSize(size);
 		istream->Read((void *)temp.GetData(), temp.GetSize());
-
-		mem_invert(temp.GetData(), temp.GetSize());
+		temp.InvertData(basic->IsDataInverted());
 
 		if (memcmp(temp.GetData(), sector_buffer, temp.GetSize()) != 0) {
 			// データが異なる
@@ -426,34 +442,22 @@ int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, 
 int DiskBasicTypeMZ::GetStartSectorFromGroup(wxUint32 group_num)
 {
 	// MZ
-	return group_num * secs_per_group;
+	return group_num * basic->GetSectorsPerGroup();
 }
 
 /// グループ番号から最終セクタ番号を得る
 int DiskBasicTypeMZ::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size)
 {
 	// MZ
-	int end_sector = sector_start + secs_per_group - 1;
+	int end_sector = sector_start + basic->GetSectorsPerGroup() - 1;
 	return end_sector;
-}
-
-/// サイド番号を逆転するか
-bool DiskBasicTypeMZ::IsSideReversed(int sides_per_disk)
-{
-	return (sides_per_disk > 1);
-}
-
-/// ディスク内のデータが反転しているか
-bool DiskBasicTypeMZ::IsDataInverted()
-{
-	return true;
 }
 
 /// ルートディレクトリか
 bool DiskBasicTypeMZ::IsRootDirectory(wxUint32 group_num)
 {
 	// オフセット未満だったらルート
-	return ((wxUint32)(fat->Get(1) ^ 0xff) > group_num);	// invert
+	return ((wxUint32)(basic->InvertUint8(fat->Get(1))) > group_num);	// invert
 }
 
 /// サブディレクトリを作成した後の個別処理
@@ -503,23 +507,23 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 /// セクタデータを指定コードで埋める
 void DiskBasicTypeMZ::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
-	sector->Fill(basic->GetFillCodeOnFormat() ^ 0xff);
+	sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFormat()));
 }
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
-void DiskBasicTypeMZ::AdditionalProcessOnFormatted()
+bool DiskBasicTypeMZ::AdditionalProcessOnFormatted()
 {
 	// IPL
 	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
-		sector->Fill(basic->GetFillCodeOnFAT() ^ 0xff);	// invert
+		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		int len = (int)basic->GetIPLString().Length();
 		if (len > 0) {
 			wxUint8 buf[16];
 			if (len > 16) len = 16;
 			memcpy(buf, basic->GetIPLString().To8BitData(), len);
-			mem_invert(buf, len);
+			basic->InvertMem(buf, len);
 			sector->Copy(buf, len);
 		}
 	}
@@ -534,8 +538,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnFormatted()
 	// FATエリア
 	DiskBasicFatArea *fats = fat->GetDiskBasicFatArea();
 	for(size_t n = 0; n < fats->Count(); n++) {
-		DiskBasicFatBuffers *fatbufs = &fats->Item(n);
-		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
+		DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(n, 0);
 		wxUint8 *buf = fatbuf->buffer;
 		int size = fatbuf->size;
 
@@ -554,7 +557,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnFormatted()
 		fdat->mag = basic->GetSectorsPerGroup() - 1;
 
 		// invert
-		mem_invert(buf, size);
+		basic->InvertMem(buf, size);
 	}
 
 	// DIRエリア
@@ -572,7 +575,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnFormatted()
 	int index = 0;
 	for (int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {
 		basic->GetNumFromSectorPos(sec_pos - 1, trk_num, sid_num, sec_num);
-		sector = basic->GetDisk()->GetSector(trk_num, sid_num, sec_num);
+		sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (sector) {
 			wxUint8 *buf = sector->GetSectorBuffer();
 			int pos = 0;
@@ -587,9 +590,11 @@ void DiskBasicTypeMZ::AdditionalProcessOnFormatted()
 				index++;
 			}
 			// invert
-			mem_invert(buf, sector->GetSectorBufferSize());
+			basic->InvertMem(buf, sector->GetSectorBufferSize());
 		}
 	}
+
+	return true;
 }
 
 /// データの書き込み処理
@@ -631,18 +636,18 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 
 	// チェーン用のセクタ番号を書く
 	if (need_chain) {
-		wxUint16 next_sector = group_num * secs_per_group;
+		wxUint16 next_sector = group_num * basic->GetSectorsPerGroup();
 		// 次のデータがあるセクタ番号を入れる
 		if (sector_num < sector_end) {
 			next_sector++;
 		} else {
-			next_sector = (remain > size ? next_group * secs_per_group : 0);
+			next_sector = (remain > size ? next_group * basic->GetSectorsPerGroup() : 0);
 		}
-		*((wxUint16 *)&buffer[size]) = (next_sector ^ 0xffff);
+		*((wxUint16 *)&buffer[size]) = basic->InvertUint16(wxUINT16_SWAP_ON_BE(next_sector));
 	}
 
 	// 反転
-	mem_invert(buffer, size);
+	basic->InvertMem(buffer, size);
 
 	return len;
 }
@@ -650,7 +655,7 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 /// データの書き込み終了後の処理
 void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
-	if (!item || (item->GetFileType() & FILE_TYPE_DIRECTORY_MASK) == 0) return;
+	if (!item || (item->GetFileAttr() & FILE_TYPE_DIRECTORY_MASK) == 0) return;
 
 	// ディレクトリの場合は、下位にあるボリューム名も変更する
 	DiskD88Sector *sector = basic->GetSectorFromGroup(item->GetStartGroup());

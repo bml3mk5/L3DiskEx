@@ -40,6 +40,8 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Cannot verify."),
 	//	ERR_CANNOT_FORMAT
 	wxTRANSLATE("Cannot format."),
+	//	ERR_FORMATTING
+	wxTRANSLATE("Error occurred while formatting."),
 	//	ERR_FORMAT_UNSUPPORTED
 	wxTRANSLATE("Format process is unsupported."),
 	//	ERR_DELETE_UNSUPPORTED
@@ -52,6 +54,8 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Invalid structure exists in FAT area."),
 	//	ERR_IN_DIRECTORY_AREA
 	wxTRANSLATE("Invalid structure exists in directory area."),
+	//	ERR_IN_PARAMETER_AREA
+	wxTRANSLATE("Invalid structure exists in parameter area."),
 	//	ERR_FILENAME_EMPTY
 	wxTRANSLATE("File name is required."),
 
@@ -70,11 +74,13 @@ const char *gDiskBasicErrorMsgs[] = {
 	//	ERRV_NO_SECTOR_IN_TRACK  v:3
 	wxTRANSLATE("No sector exists in track. track:%d side:%d sector:%d"),
 	//	ERRV_INVALID_VALUE_IN  v:1
-	wxTRANSLATE("Invalid value in %s."),
+	wxTRANSLATE("Invalid value in %ls."),
+	// ERRV_CANNOT_EDIT_ENAME  v:1
+	wxTRANSLATE("Cannot edit the name of '%ls'."),
 	//	ERRV_CANNOT_DELETE v:1
-	wxTRANSLATE("Cannot delete '%s'."),
+	wxTRANSLATE("Cannot delete '%ls'."),
 	//	ERRV_CANNOT_DELETE_DIRECTORY v:1
-	wxTRANSLATE("Cannot delete '%s' which is not empty."),
+	wxTRANSLATE("Cannot delete '%ls' which is not empty."),
 	//	ERRV_END  v:1
 	wxTRANSLATE("Unknown error. code:%d"),
 	NULL

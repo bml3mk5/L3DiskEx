@@ -45,7 +45,7 @@ public:
 	void			SetFileAttr(int file_type);
 
 	/// 属性を返す
-	int				GetFileType();
+	int				GetFileAttr();
 
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType1Pos();
@@ -64,16 +64,19 @@ public:
 
 	// ダイアログ用
 
+#define ATTR_DIALOG_IDC_RADIO_TYPE1 51
+#define ATTR_DIALOG_IDC_RADIO_TYPE2 52
+
 	/// ダイアログ内の属性部分のレイアウトを作成
-	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data);
+	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
-	virtual void	ChangeTypeInAttrDialog(AttrControls &controls);
+	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// インポート時ダイアログ表示前にファイルの属性を設定
-	virtual void	SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2);
+	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const AttrControls &controls) const;
+	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 属性2を得る
-	virtual int		GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const;
+	virtual int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
 };
 
 //

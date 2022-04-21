@@ -24,7 +24,7 @@ public:
 	/// FAT位置をセット
 	void		SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FATオフセットを返す
-	wxUint32	GetGroupNumber(wxUint32 num);
+	wxUint32	GetGroupNumber(wxUint32 num) const;
 	/// 使用しているグループ番号か
 	bool		IsUsedGroupNumber(wxUint32 num);
 	/// 次のグループ番号を得る
@@ -39,8 +39,8 @@ public:
 	//@{
 	/// FATエリアをチェック
 	bool		CheckFat();
-	/// ディスクから各パラメータを取得
-	bool		ParseParamOnDisk(DiskD88Disk *disk);
+//	/// ディスクから各パラメータを取得
+//	int			ParseParamOnDisk(DiskD88Disk *disk);
 	//@}
 
 	/// @name check / assign directory area
@@ -85,12 +85,10 @@ public:
 
 	/// @name format
 	//@{
-	/// フォーマットできるか
-	bool		IsFormattable() const { return true; }
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	void		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted();
 	//@}
 
 	/// @name data access (read / verify)
@@ -101,23 +99,14 @@ public:
 
 	/// @name save / write
 	//@{
-	/// 書き込み可能か
-	bool		IsWritable() const { return true; }
 	/// ファイルをセーブする前の準備を行う
 	bool		PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo);
 	/// データの書き込み処理
 	int			WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end);
-//	/// データの書き込み終了後の処理
-//	void		AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
-
-//	/// ファイル名変更後の処理
-//	void		AdditionalProcessOnRenamedFile(DiskBasicDirItem *item);
 	//@}
 
 	/// @name delete
 	//@{
-	/// ファイルを削除できるか
-	bool		IsDeletable() const { return true; }
 	/// 指定したグループ番号のFAT領域を削除する
 	void		DeleteGroupNumber(wxUint32 group_num);
 	//@}

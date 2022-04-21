@@ -29,17 +29,18 @@ private:
 //	int fat_start_sector;		///< FAT領域の開始セクタ
 //	int fat_end_sector;			///< FAT領域の終了セクタ
 	int fat_start_pos;			///< FAT開始位置（バイト）
-	int fat_end_group;			///< FAT最大グループ番号
+	wxUint32 fat_end_group;		///< FAT最大グループ番号
 	int fat_side_number;		///< FAT領域のあるサイド番号
 	wxUint32 group_final_code;	///< 最終グループのコード(0xc0 - )
 	wxUint32 group_system_code;	///< システムで使用するコード(0xfe)
 	wxUint32 group_unused_code;	///< 未使用のコード(0xff)
 	wxArrayInt reserved_groups;	///< 予約済みグループ
-	int dir_start_sector;		///< ディレクトリ開始セクタ
-	int dir_end_sector;			///< ディレクトリ終了セクタ
-	int dir_entry_count;		///< ディレクトリエントリ数
+	int dir_start_sector;		///< ルートディレクトリ開始セクタ
+	int dir_end_sector;			///< ルートディレクトリ終了セクタ
+	int dir_entry_count;		///< ルートディレクトリエントリ数
 	int subdir_group_size;		///< サブディレクトリの初期グループ数
 	wxUint8 dir_space_code;		///< ディレクトリの空白
+	int dir_start_pos;			///< ルートディレクトリの開始位置（バイト）
 	int dir_start_pos_on_sec;	///< ディレクトリのセクタ毎の開始位置
 	int groups_per_dir_entry;	///< １ディレクトリエントリで指定できるグループ数 
 	int id_sector_pos;			///< ID領域のセクタ位置(0 - )
@@ -51,6 +52,8 @@ private:
 	wxUint8 fillcode_on_dir;	///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;		///< ファイル削除時にセットするコード
 	wxUint8 media_id;			///< メディアID
+	bool data_inverted;			///< データビットが反転してるか
+	bool side_reversed;			///< サイドが反転してるか
 	wxString basic_description;	///< 説明
 
 public:
@@ -68,7 +71,7 @@ public:
 		int					n_number_of_fats,
 		int					n_sectors_per_fat,
 		int					n_fat_start_pos,
-		int					n_fat_end_group,
+		wxUint32			n_fat_end_group,
 		int					n_fat_side_number,
 		const wxArrayInt &	n_reserved_groups,
 		wxUint32			n_group_final_code,
@@ -79,6 +82,7 @@ public:
 		int					n_dir_entry_count,
 		int					n_subdir_group_size,
 		wxUint8				n_dir_space_code,
+		int					n_dir_start_pos,
 		int					n_dir_start_pos_on_sec,
 		int					n_groups_per_dir_entry,
 		int					n_id_sector_pos,
@@ -90,6 +94,8 @@ public:
 		wxUint8				n_fillcode_on_dir,
 		wxUint8				n_delete_code,
 		wxUint8				n_media_id,
+		bool				n_data_inverted,
+		bool				n_side_reversed,
 		const wxString &	n_basic_description
 	);
 	virtual ~DiskBasicParam() {}
@@ -113,7 +119,7 @@ public:
 	int					GetFatStartSector() const	{ return (reserved_sectors + 1); }
 //	int					GetFatEndSector() const		{ return fat_end_sector; }
 	int					GetFatStartPos() const		{ return fat_start_pos; }
-	int					GetFatEndGroup() const		{ return fat_end_group; }
+	wxUint32			GetFatEndGroup() const		{ return fat_end_group; }
 	int					GetFatSideNumber() const	{ return fat_side_number; }
 	const wxArrayInt&	GetReservedGroups() const	{ return reserved_groups; }
 	wxUint32			GetGroupFinalCode() const	{ return group_final_code; }
@@ -124,6 +130,7 @@ public:
 	int					GetDirEntryCount() const	{ return dir_entry_count; }
 	int					GetSubDirGroupSize() const	{ return subdir_group_size; }
 	wxUint8				GetDirSpaceCode() const		{ return dir_space_code; }
+	int					GetDirStartPos() const		{ return dir_start_pos; }
 	int					GetDirStartPosOnSector() const	{ return dir_start_pos_on_sec; }
 	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
 	int					GetIdSectorPos() const		{ return id_sector_pos; }
@@ -135,6 +142,9 @@ public:
 	wxUint8				GetFillCodeOnDir() const	{ return fillcode_on_dir; }
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
 	wxUint8				GetMediaId() const			{ return media_id; }
+	bool				IsDataInverted() const		{ return data_inverted; }
+	bool				IsSideReversed() const		{ return side_reversed; }
+	int					GetReversedSideNumber(int side_num) const;
 
 	const wxString& GetBasicDescription()			{ return basic_description; }
 
@@ -148,7 +158,7 @@ public:
 //	void			SetFatStartSector(int val)		{ reserved_sectors = val - 1; }
 //	void			SetFatEndSector(int val)		{ fat_end_sector = val; }
 	void			SetFatStartPos(int val)			{ fat_start_pos = val; }
-	void			SetFatEndGroup(int val)			{ fat_end_group = val; }
+	void			SetFatEndGroup(wxUint32 val)	{ fat_end_group = val; }
 	void			SetReservedGroups(const wxArrayInt &val)	{ reserved_groups = val; }
 	void			SetGroupFinalCode(wxUint32 val)	{ group_final_code = val; }
 	void			SetGroupSystemCode(wxUint32 val) { group_system_code = val; }
@@ -163,11 +173,15 @@ public:
 	void			SetDirEntryCount(int val)		{ dir_entry_count = val; }
 	void			SetSubDirGroupSize(int val)		{ subdir_group_size = val; }
 	void			SetDirSpaceCode(wxUint8 val)	{ dir_space_code = val; }
+	void			SetDirStartPos(int val)			{ dir_start_pos = val; }
+	void			SetDirStartPosOnSector(int val)	{ dir_start_pos_on_sec = val; }
 	void			SetFillCodeOnFormat(wxUint8 val) { fillcode_on_format = val; }
 	void			SetFillCodeOnFAT(wxUint8 val)	{ fillcode_on_fat = val; }
 	void			SetFillCodeOnDir(wxUint8 val)	{ fillcode_on_dir = val; }
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
+	void			DataInverted(bool val)			{ data_inverted = val; }
+	void			SideReversed(bool val)			{ side_reversed = val; }
 
 	void			SetBasicDescription(const wxString &str) { basic_description = str; }
 };

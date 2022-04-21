@@ -130,13 +130,7 @@ void L3DiskRBPanel::ChangePanel(int num)
 	case 1:
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 		if (GetWindow1() == filelist) {
-//			rawpanel = new L3DiskRawPanel(frame, this);
 			ReplaceWindow(filelist, rawpanel);
-//			delete filelist;
-//			filelist = NULL;
-//			int pos = GetSashPosition();
-//			if (pos < 500) pos = 500;
-//			if (pos > 700) pos = 700;
 			SplitVertically(rawpanel, proppanel, 640);
 			rawpanel->Show();
 			filelist->Hide();
@@ -149,10 +143,7 @@ void L3DiskRBPanel::ChangePanel(int num)
 	default:
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 		if (GetWindow1() == rawpanel) {
-//			filelist = new L3DiskFileList(frame, this);
 			ReplaceWindow(rawpanel, filelist);
-//			delete rawpanel;
-//			rawpanel = NULL;
 			Unsplit(proppanel);
 			filelist->Show();
 			rawpanel->Hide();
@@ -178,36 +169,3 @@ L3DiskRawPanel *L3DiskRBPanel::GetRawPanel(bool inst) const
 	if (rawpanel && (inst || rawpanel->IsShown())) return rawpanel;
 	else return NULL;
 }
-
-#if 0
-void L3DiskRBPanel::SetFileListData(DiskD88Disk *disk, int side_num)
-{
-	if (filelist) filelist->SetFiles(disk, side_num);
-}
-void L3DiskRBPanel::ClearFileListData()
-{
-	if (filelist) filelist->ClearFiles();
-}
-//int L3DiskRBPanel::GetFileListSelectedRow()
-//{
-//	if (filelist) return filelist->GetSelectedRow();
-//	else return -2;
-//}
-
-void L3DiskRBPanel::SetBinDumpData(const wxUint8 *buf, size_t len)
-{
-	if (bindump) bindump->SetDatas(buf, len);
-}
-
-void L3DiskRBPanel::ClearBinDumpData()
-{
-	if (bindump) bindump->ClearDatas();
-}
-
-void L3DiskRBPanel::ClearData()
-{
-	ClearFileListData();
-//	ClearRawPanelData();
-	ClearBinDumpData();
-}
-#endif

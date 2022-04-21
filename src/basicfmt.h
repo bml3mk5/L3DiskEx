@@ -41,7 +41,7 @@ private:
 
 	int			data_start_sector;		///< グループ計算用 データ開始セクタ番号
 	int			skipped_track;			///< グループ計算する際にスキップするトラック番号
-	bool		reverse_side;			///< グループ計算する際にサイド番号を逆転するか
+//	bool		reverse_side;			///< グループ計算する際にサイド番号を逆転するか
 	int			char_code;				///< ファイルなどの文字コード
 	CharCodes	codes;
 
@@ -52,7 +52,7 @@ private:
 	/// BASIC種類を設定
 	void			CreateType();
 	/// 指定のDISK BASICでフォーマットされているかを解析＆チェック
-	bool			ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, bool is_formatting); 
+	int				ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, bool is_formatting); 
 
 public:
 	DiskBasic();
@@ -96,7 +96,7 @@ public:
 	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 
 	/// 指定ファイルのサイズをチェック
-	bool			CheckFile(const wxString &srcpath, int &file_size);
+	bool			CheckFile(const wxString &srcpath, int *file_size);
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxUint8 *buffer, size_t buflen);
 
@@ -112,12 +112,6 @@ public:
 	//@{
 	/// 書き込みできるか
 	bool			IsWritableIntoDisk();
-//	/// 指定ファイルをディスクイメージにセーブ
-//	bool			SaveFile(const wxString &srcpath, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem = NULL);
-//	/// バッファデータをディスクイメージにセーブ
-//	bool			SaveFile(const wxUint8 *buffer, size_t buflen, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem = NULL);
-//	/// ストリームデータをディスクイメージにセーブ
-//	bool			SaveFile(wxInputStream &istream, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem = NULL);
 	/// 指定ファイルをディスクイメージにセーブ
 	bool			SaveFile(const wxString &srcpath, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem = NULL);
 	/// バッファデータをディスクイメージにセーブ
@@ -138,9 +132,12 @@ public:
 	//@}
 	/// @name 属性変更
 	//@{
-	/// ファイル名や属性を更新
-	bool			RenameFile(DiskBasicDirItem *item, const wxString &newname, int file_type = -1, int start_addr = -1, int exec_addr = -1, const struct tm *tm = NULL, const AttrControls *controls = NULL);
-
+	/// ファイル名や属性を更新できるか
+	bool			CanRenameFile(DiskBasicDirItem *item);
+	/// ファイル名を更新
+	bool			RenameFile(DiskBasicDirItem *item, const wxString &newname);
+	/// 属性を更新
+	bool			ChangeAttr(DiskBasicDirItem *item, int start_addr, int exec_addr, const struct tm *tm);
 	//@}
 	/// @name フォーマット
 	//@{
@@ -186,9 +183,9 @@ public:
 	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
 	bool			CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, int &side_start, int &sector_start);
 	/// セクタ位置(トラック0,サイド0のセクタを0とした位置)からトラック、サイド、セクタの各番号を計算(グループ計算用)
-	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track, int &side, int &sector);
+	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track_num, int &side_num, int &sector_num);
 	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0のセクタを0とした位置)を計算(グループ計算用)
-	int				CalcSectorPosFromNumForGroup(int track, int side, int sector);
+	int				CalcSectorPosFromNumForGroup(int track_num, int side_num, int sector_num);
 	//@}
 	/// @name ユーティリティ
 	//@{
@@ -254,8 +251,18 @@ public:
 	/// セクタ数/トラックを設定(実際のディスクイメージと異なる場合があるため)
 	void			SetSectorsPerTrackOnBasic(int val) { sectors_on_basic = val; }
 
-	/// ディスク内のデータが反転しているか
-	bool			IsDataInverted();
+//	/// ディスク内のデータが反転しているか
+//	bool			IsDataInverted() const;
+	/// 必要ならデータを反転する
+	wxUint8			InvertUint8(wxUint8 val) const;
+	/// 必要ならデータを反転する
+	wxUint16		InvertUint16(wxUint16 val) const;
+	/// 必要ならデータを反転する
+	wxUint32		InvertUint32(wxUint32 val) const;
+	/// 必要ならデータを反転する
+	void			InvertMem(void *val, size_t len) const;
+	/// 必要ならデータを反転する
+	void			InvertMem(const wxUint8 *src, size_t len, wxUint8 *dst) const;
 	//@}
 	/// @name エラーメッセージ
 	//@{

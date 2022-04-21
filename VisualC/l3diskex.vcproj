@@ -302,6 +302,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_msdos.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_msx.cpp"
 				>
 			</File>
@@ -411,6 +415,10 @@
 			</File>
 			<File
 				RelativePath="..\src\rawparambox.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\rawtrackbox.cpp"
 				>
 			</File>
 			<File
@@ -572,6 +580,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_msdos.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_msx.h"
 				>
 			</File>
@@ -681,6 +693,10 @@
 			</File>
 			<File
 				RelativePath="..\src\rawparambox.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\rawtrackbox.h"
 				>
 			</File>
 			<File

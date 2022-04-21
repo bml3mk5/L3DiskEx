@@ -61,11 +61,22 @@ DiskDskParser::~DiskDskParser()
 }
 
 /// セクタデータの作成
-wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int track_number, int side_number, int sector_size, int sector_nums, void *user_data, DiskD88Track *track)
+wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int sector_nums, void *user_data, DiskD88Track *track)
 {
 	cpc_dsk_sector_t *id = (cpc_dsk_sector_t *)user_data;
 
+	int track_number = id->C;
+	int side_number = id->H;
 	int sector_number = id->R;
+	int sector_size = id->N;
+
+	if (sector_size > 7) {
+		// セクタサイズが大きすぎる
+		result->SetError(DiskResult::ERRV_SECTOR_SIZE, 0, track_number, side_number, sector_number, sector_size, id->data_length);
+		return 0;
+	}
+
+	sector_size = (128 << sector_size);
 
 	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
 	track->Add(sector);
@@ -97,11 +108,11 @@ wxUint32 DiskDskParser::ParseTrack(wxInputStream *istream, int track_size, int o
 	cpc_dsk_track_t track_header;
 	size_t len = istream->Read(&track_header, sizeof(track_header)).LastRead();
 	if (len != sizeof(track_header)) {
-		result->SetError(DiskResult::ERR_NO_FOUND_TRACK, 0);
+		result->SetError(DiskResult::ERR_NO_TRACK, 0);
 		return 0;
 	}
 	if (memcmp(track_header.ident, "Track-Info\r\n", sizeof(track_header.ident)) != 0) {
-		result->SetError(DiskResult::ERR_NO_FOUND_TRACK, 0);
+		result->SetError(DiskResult::ERR_NO_TRACK, 0);
 		return 0;
 	}
 
@@ -110,13 +121,21 @@ wxUint32 DiskDskParser::ParseTrack(wxInputStream *istream, int track_size, int o
 	wxUint32 d88_track_size = 0;
 	for(int pos = 0; pos < track_header.num_of_sectors && result->GetValid() >= 0; pos++) {
 		d88_track_size += ParseSector(istream
-			, track_header.track_number, track_header.side_number, 128 << track_header.sector_size, track_header.num_of_sectors
+			, track_header.num_of_sectors
 			, (void *)&track_header.sectors[pos], track);
+	}
+
+	if (result->GetValid() >= 0) {
+		// インターリーブの計算
+		track->CalcInterleave();
 	}
 
 	if (result->GetValid() >= 0) {
 		// トラックを追加
 		track->SetSize(d88_track_size);
+		// サイド番号は各セクタのID Hに合わせる
+		track->SetSideNumber(track->GetMajorIDH());
+
 		disk->Add(track);
 		disk->SetOffset(offset_pos, offset);
 	} else {

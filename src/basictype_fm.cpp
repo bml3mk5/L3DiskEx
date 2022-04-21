@@ -38,7 +38,7 @@ bool DiskBasicTypeFM::CheckFat()
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT,IDのセット
-void DiskBasicTypeFM::AdditionalProcessOnFormatted()
+bool DiskBasicTypeFM::AdditionalProcessOnFormatted()
 {
 	// FATエリア先頭に0を入れる
 	fat->Set(0, 0);
@@ -49,6 +49,8 @@ void DiskBasicTypeFM::AdditionalProcessOnFormatted()
 		sector->Fill(0);
 		sector->Copy(basic->GetIDString().To8BitData(), basic->GetIDString().Length());
 	}
+
+	return true;
 }
 
 /// データ領域の開始セクタを計算

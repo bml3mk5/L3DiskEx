@@ -55,6 +55,7 @@ OBJS=	utils.o \
 	basictype_fm.o \
 	basictype_l31s.o \
 	basictype_l32d.o \
+	basictype_msdos.o \
 	basictype_msx.o \
 	basictype_mz.o \
 	basictype_n88.o \
@@ -100,6 +101,7 @@ OBJS=	utils.o \
 	logging.o \
 	rawparambox.o \
 	rawexpbox.o \
+	rawtrackbox.o \
 	result.o \
 	sectorbox.o \
 	uibindump.o \

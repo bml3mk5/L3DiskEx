@@ -26,6 +26,7 @@ public:
 	DiskBasicGroupItem(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
 	~DiskBasicGroupItem() {}
 	void Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
+	static int Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2);
 };
 
 WX_DECLARE_OBJARRAY(DiskBasicGroupItem, DiskBasicGroupItems);
@@ -52,6 +53,8 @@ public:
 	const DiskBasicGroupItems &GetItems() const { return items; }
 	void SetSize(size_t val) { size = val; }
 	size_t GetSize() const { return size; }
+	/// グループ番号でソート
+	void SortItems();
 };
 
 /// FATエリアへのポインタを保持
@@ -120,7 +123,9 @@ public:
 	/// FAT領域を指定データで埋める
 	void Fill(wxUint8 code);
 
-	DiskBasicFatArea *GetDiskBasicFatArea() { return &bufs; }
+	DiskBasicFatArea	 *GetDiskBasicFatArea() { return &bufs; }
+	DiskBasicFatBuffers	 *GetDiskBasicFatBuffers(size_t idx);
+	DiskBasicFatBuffer	 *GetDiskBasicFatBuffer(size_t idx, size_t subidx);
 };
 
 #endif /* _BASICFAT_H_ */

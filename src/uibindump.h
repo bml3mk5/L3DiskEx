@@ -40,9 +40,6 @@ private:
 		IDM_VIEW_CHAR_SJIS,
 	};
 
-//	void RecreateToolbar();
-//	void PopulateToolbar(wxToolBar* toolBar);
-
 public:
     L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size);
 	~L3DiskBinDumpFrame();

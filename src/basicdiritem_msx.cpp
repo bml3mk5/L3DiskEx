@@ -33,7 +33,7 @@ wxString DiskBasicDirItemMSX::GetFileAttrStr()
 {
 	wxString attr;
 	// MSX-DOS
-	if (GetFileType() & FILE_TYPE_HIDDEN_MASK) {
+	if (GetFileAttr() & FILE_TYPE_HIDDEN_MASK) {
 		attr = wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_HIDDEN]);	// hidden
 	}
 	if (attr.IsEmpty()) {
@@ -59,17 +59,28 @@ wxString DiskBasicDirItemMSX::GetFileDateTimeTitle()
 
 #define IDC_CHECK_HIDDEN 52
 
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemMSX::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+}
+
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
 	wxCheckBox *chkHidden;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	chkHidden = new wxCheckBox(parent, IDC_CHECK_HIDDEN, wxGetTranslation(gTypeNameMS_l[TYPE_NAME_MS_HIDDEN]));
@@ -80,21 +91,22 @@ void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int fi
 	// event handler
 //	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
 
-	controls.Add(chkHidden);
+//	controls.Add(chkHidden);
 }
 
 /// 属性1を得る
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemMSX::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemMSX::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkHidden = (wxCheckBox *)controls.Item(1);
+	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
 
 	return chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
 }
 
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const AttrControls &controls, DiskBasicError &errinfo)
+bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
-	// 何もしない
+	DiskBasicDirItem::SetAttrInAttrDialog(parent, errinfo);
+
 	return true;
 }

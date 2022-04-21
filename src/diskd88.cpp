@@ -128,27 +128,22 @@ bool DiskD88Sector::Replace(DiskD88Sector *src_sector)
 }
 
 /// セクタのデータを埋める
-bool DiskD88Sector::Fill(wxUint8 code)
+bool DiskD88Sector::Fill(wxUint8 code, size_t len)
 {
 	if (!data) return false;
-	memset(data, code, header.size);
+	memset(data, code, len > header.size ? header.size : len);
 	SetModify();
 	return true;
 }
 
 /// セクタのデータを上書き
-bool DiskD88Sector::Copy(const wxUint8 *buf, size_t len)
+bool DiskD88Sector::Copy(const void *buf, size_t len)
 {
 	if (!data) return false;
 	if (len > header.size) len = header.size;
 	memcpy(data, buf, len);
 	SetModify();
 	return true;
-}
-/// セクタのデータを上書き
-bool DiskD88Sector::Copy(const char *buf, size_t len)
-{
-	return Copy((const wxUint8 *)buf, len);
 }
 
 /// 指定位置のセクタデータを返す
@@ -407,6 +402,45 @@ wxUint32 DiskD88Track::Shrink()
 	return newsize;
 }
 
+/// インターリーブを計算して設定
+void DiskD88Track::CalcInterleave()
+{
+	if (!sectors) return;
+
+	size_t count = sectors->Count();
+	if (count == 1) {
+		SetInterleave(1);
+		return;
+	}
+
+	int start = sectors->Item(0)->GetSectorNumber();
+	int next = start + 1;
+	int state = 0;
+	int intl = 0;
+	for(size_t sec_pos = 0; sec_pos < count; sec_pos++) {
+		DiskD88Sector *s = sectors->Item(sec_pos);
+		switch(state) {
+		case 1:
+			intl++;
+			if (s->GetSectorNumber() == next) {
+				state = 2;
+				sec_pos = count;
+			}
+			break;
+		default:
+			if (s->GetSectorNumber() == start) {
+				state = 1;
+				intl = 0;
+			}
+			break;
+		}
+	}
+	if (intl <= 0) {
+		intl = 1;
+	}
+	SetInterleave(intl);
+}
+
 /// 指定セクタ番号のセクタを返す
 DiskD88Sector *DiskD88Track::GetSector(int sector_number)
 {
@@ -421,6 +455,22 @@ DiskD88Sector *DiskD88Track::GetSector(int sector_number)
 		}
 	}
 	return sector;
+}
+
+/// トラック内のもっともらしいID Hを返す
+wxUint8	DiskD88Track::GetMajorIDH() const
+{
+	wxUint8 id = 0;
+	IntHashMap map;
+
+	if (sectors) {
+		for(size_t pos=0; pos<sectors->Count(); pos++) {
+			DiskD88Sector *s = sectors->Item(pos);
+			IntHashMapUtil::IncleaseValue(map, s->GetIDH());
+		}
+		id = IntHashMapUtil::GetMaxKeyOnMaxValue(map);
+	}
+	return id;
 }
 
 /// トラック内のすべてのID Cを変更
@@ -1077,21 +1127,27 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 		disk_type = disk_param->GetDiskType();
 		basic_types = disk_param->GetBasicTypes();
 		this->singles = singles;
+		density_name = disk_param->GetDensityName();
+		description = disk_param->GetDescription();
 	}
 	return disk_param;
 }
 
+#if 0
 /// ディスクパラメータを文字列にフォーマットして返す
 wxString DiskD88Disk::GetAttrText() const
 {
 	wxString str;
 
-	str = disk_type_name;
+	str = density_name;
 	str += wxT("  ");
-	str += wxString::Format(_("%dSide(s) %dTracks/Side %dSectors/Track %dbytes/Sector Interleave:%d"), sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave);
+	str += wxString::Format(_("%dTracks, %dSectors, %dbytes/Sector, Interleave:%d"), tracks_per_side, sectors_per_track, sector_size, interleave);
+	str += wxT(" ");
+	str += description;
 
 	return str;
 }
+#endif
 
 /// 書き込み禁止かどうかを返す
 bool DiskD88Disk::IsWriteProtected() const

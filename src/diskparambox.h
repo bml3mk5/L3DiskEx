@@ -24,12 +24,16 @@ class wxCheckBox;
 class wxRadioButton;
 
 class DiskParam;
+class DiskParamPtrs;
 class DiskD88Disk;
 
 #define DiskParamBox_DiskName		0x01
 #define DiskParamBox_Density		0x02
 #define DiskParamBox_WriteProtect	0x04
-#define DiskParamBox_Flags_All		0x07
+#define DiskParamBox_Disk_All		0x07
+#define DiskParamBox_Category		0x10
+#define DiskParamBox_Template		0x20
+#define DiskParamBox_Temp_All		0x30
 
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
@@ -52,13 +56,15 @@ private:
 	wxComboBox *comSingleSecSize;
 
 	wxUint32 disable_flags;
+	const DiskParamPtrs *disk_params;
 
 	wxArrayString type_names;
 
 	int FindTemplate(DiskD88Disk *disk);
+	void SetParamFromTemplate(const DiskParam *item);
 
 public:
-	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, bool use_template, wxUint32 disable_flags = 0);
+	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, wxUint32 disable_flags = 0);
 
 	enum {
 		IDC_COMBO_CATEGORY = 1,
@@ -94,9 +100,15 @@ public:
 
 	// properties
 	void SetTemplateValues();
+	void SetTemplateValuesFromGlobals();
+	void SetTemplateValuesFromParams();
 	void SetParamOfIndex(size_t index);
+	void SetParamOfIndexFromGlobals(size_t index);
+	void SetParamOfIndexFromParams(size_t index);
 	void SetParamFromDisk(const DiskD88Disk *disk);
 	bool GetParam(DiskParam &param);
+	bool GetParamFromGlobals(DiskParam &param);
+	bool GetParamFromParams(DiskParam &param);
 	bool GetParamToDisk(DiskD88Disk &disk);
 	wxString GetCategory() const;
 	int GetTracksPerSide() const;

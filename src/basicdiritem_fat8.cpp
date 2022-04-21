@@ -72,7 +72,7 @@ void DiskBasicDirItemFAT8::SetFileAttr(int file_type)
 	}
 }
 
-int DiskBasicDirItemFAT8::GetFileType()
+int DiskBasicDirItemFAT8::GetFileAttr()
 {
 	int t1 = GetFileType1();
 	int val = (t1 >= TYPE_NAME_1_BASIC && t1 <= TYPE_NAME_1_MACHINE ? 1 << t1 : 0);
@@ -157,7 +157,7 @@ void DiskBasicDirItemFAT8::CalcFileSize()
 			calc_file_size += (basic->GetSectorSize() * (next_group - basic->GetGroupFinalCode() + 1));
 			calc_groups++;
 			working = false;
-		} else if (next_group > (wxUint32)basic->GetFatEndGroup()) {
+		} else if (next_group > basic->GetFatEndGroup()) {
 			// グループ番号がおかしい
 			rc = false;
 		} else {
@@ -205,7 +205,7 @@ void DiskBasicDirItemFAT8::GetAllGroups(DiskBasicGroups &group_items)
 //			file_size += (sector_size * (next_group - group_final_code + 1));
 //			groups++;
 			working = false;
-		} else if (next_group > (wxUint32)basic->GetFatEndGroup()) {
+		} else if (next_group > basic->GetFatEndGroup()) {
 			// グループ番号がおかしい
 			rc = false;
 		} else {
@@ -237,27 +237,51 @@ void DiskBasicDirItemFAT8::GetAllGroups(DiskBasicGroups &group_items)
 #include <wx/sizer.h>
 #include "intnamebox.h"
 
-#define IDC_RADIO_TYPE1 51
-#define IDC_RADIO_TYPE2 52
+/// ダイアログ用に属性を設定する
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemFAT8::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+	if (show_flags & INTNAME_INVALID_FILE_TYPE) {
+		// 外部からインポート時
+		// 拡張子で属性を設定する
+		wxString ext = name.Right(4).Upper();
+		if (ext == wxT(".BAS")) {
+			file_type_1 = TYPE_NAME_1_BASIC;
+			file_type_2 = TYPE_NAME_2_BINARY;
+		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
+			file_type_1 = TYPE_NAME_1_DATA;
+			file_type_2 = TYPE_NAME_2_ASCII;
+		} else if (ext == wxT(".BIN")) {
+			file_type_1 = TYPE_NAME_1_MACHINE;
+			file_type_2 = TYPE_NAME_2_BINARY;
+		}
+	}
+}
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemFAT8::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemFAT8::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
 	wxRadioBox *radType1;
 	wxRadioBox *radType2;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxArrayString types1;
 	for(size_t i=0; i<=TYPE_NAME_1_MACHINE; i++) {
 		types1.Add(wxGetTranslation(gTypeName1[i]));
 	}
-	radType1 = new wxRadioBox(parent, IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 0, wxRA_SPECIFY_COLS);
+	radType1 = new wxRadioBox(parent, ATTR_DIALOG_IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 0, wxRA_SPECIFY_COLS);
 	radType1->SetSelection(file_type_1);
 	sizer->Add(radType1, flags);
 
@@ -266,33 +290,20 @@ void DiskBasicDirItemFAT8::CreateControlsForAttrDialog(IntNameBox *parent, int f
 		types2.Add(wxGetTranslation(gTypeName2[i]));
 	}
 
-	if (format_type == FORMAT_TYPE_L3S1_2D) {
-		// 2D
-		if (file_type_2 == TYPE_NAME_2_RANDOM) {
-			// 1Sから2Dへのコピーでランダムアクセスのデータはアスキーとする。
-			file_type_2 = TYPE_NAME_2_ASCII;
-		}
-		types2.RemoveAt(TYPE_NAME_2_RANDOM);
-	}
-
-	radType2 = new wxRadioBox(parent, IDC_RADIO_TYPE2, _("Data Type"), wxDefaultPosition, wxDefaultSize, types2, 0, wxRA_SPECIFY_ROWS);
+	radType2 = new wxRadioBox(parent, ATTR_DIALOG_IDC_RADIO_TYPE2, _("Data Type"), wxDefaultPosition, wxDefaultSize, types2, 0, wxRA_SPECIFY_ROWS);
 	radType2->SetSelection(file_type_2);
 	sizer->Add(radType2, flags);
 
 	// event handler
-	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
-
-
-	controls.Add(radType1);
-	controls.Add(radType2);
+	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, ATTR_DIALOG_IDC_RADIO_TYPE1);
 }
 
 /// 属性を変更した際に呼ばれるコールバック
-void DiskBasicDirItemFAT8::ChangeTypeInAttrDialog(AttrControls &controls)
+void DiskBasicDirItemFAT8::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
-	wxTextCtrl *txtIntName = (wxTextCtrl *)controls.Item(0);
-	wxRadioBox *radType1 = (wxRadioBox *)controls.Item(1);
-	wxRadioBox *radType2 = (wxRadioBox *)controls.Item(2);
+	wxTextCtrl *txtIntName = (wxTextCtrl *)parent->FindWindow(IntNameBox::IDC_TEXT_INTNAME);
+	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE1);
+	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
 
 	int selected_idx = 0;
 	if (radType1) {
@@ -334,41 +345,20 @@ void DiskBasicDirItemFAT8::ChangeTypeInAttrDialog(AttrControls &controls)
 	}
 }
 
-/// ダイアログ用に属性を設定する
-/// インポート時ダイアログ表示前にファイルの属性を設定
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemFAT8::SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2)
-{
-	// 拡張子で属性を設定する
-	wxString ext = name.Right(4).Upper();
-	if (ext == wxT(".BAS")) {
-		file_type_1 = TYPE_NAME_1_BASIC;
-		file_type_2 = TYPE_NAME_2_BINARY;
-	} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-		file_type_1 = TYPE_NAME_1_DATA;
-		file_type_2 = TYPE_NAME_2_ASCII;
-	} else if (ext == wxT(".BIN")) {
-		file_type_1 = TYPE_NAME_1_MACHINE;
-		file_type_2 = TYPE_NAME_2_BINARY;
-	}
-}
-
 /// 属性1を得る
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemFAT8::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemFAT8::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxRadioBox *radType1 = (wxRadioBox *)controls.Item(1);
+	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE1);
 
 	return radType1->GetSelection();
 }
 
 /// 属性2を得る
 /// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemFAT8::GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const
+int DiskBasicDirItemFAT8::GetFileType2InAttrDialog(const IntNameBox *parent) const
 {
-	wxRadioBox *radType2 = (wxRadioBox *)controls.Item(2);
+	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
 
 	return radType2->GetSelection();
 }

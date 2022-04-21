@@ -46,7 +46,7 @@ public:
 	/// FAT位置をセット
 	void		SetGroupNumber(wxUint32 num, wxUint32 val);
 	/// FATオフセットを返す
-	wxUint32	GetGroupNumber(wxUint32 num);
+	wxUint32	GetGroupNumber(wxUint32 num) const;
 	/// 使用しているグループ番号か
 	bool		IsUsedGroupNumber(wxUint32 num);
 	/// 次のグループ番号を得る
@@ -62,7 +62,7 @@ public:
 	/// FATエリアをチェック
 	bool		CheckFat();
 	/// ディスクから各パラメータを取得
-	bool		ParseParamOnDisk(DiskD88Disk *disk);
+	int			ParseParamOnDisk(DiskD88Disk *disk);
 	//@}
 
 	/// @name disk size
@@ -79,6 +79,8 @@ public:
 	//@{
 	/// データサイズ分のグループを確保する
 	int			AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items);
+	/// グループをつなげる
+	int			ChainGroups(wxUint32 group_num, wxUint32 append_group_num);
 
 	/// グループ番号から開始セクタ番号を得る
 	int			GetStartSectorFromGroup(wxUint32 group_num);
@@ -96,12 +98,10 @@ public:
 
 	/// @name format
 	//@{
-	/// フォーマットできるか
-	bool		IsFormattable() const { return false; }
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	void		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted();
 	//@}
 
 	/// @name data access (read / verify)
@@ -112,23 +112,23 @@ public:
 
 	/// @name save / write
 	//@{
-	/// 書き込み可能か
-	bool		IsWritable() const { return false; }
 	/// データの書き込み処理
 	int			WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end);
-	/// データの書き込み終了後の処理
-	void		AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
+//	/// データの書き込み終了後の処理
+//	void		AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
 
-	/// ファイル名変更後の処理
-	void		AdditionalProcessOnRenamedFile(DiskBasicDirItem *item);
+//	/// ファイル名変更後の処理
+//	void		AdditionalProcessOnRenamedFile(DiskBasicDirItem *item);
 	//@}
 
 	/// @name delete
 	//@{
-	/// ファイルを削除できるか
-	bool		IsDeletable() const { return false; }
 	/// 指定したグループ番号のFAT領域を削除する
 	void		DeleteGroupNumber(wxUint32 group_num);
+	/// ファイル削除後の処理
+	bool		AdditionalProcessOnDeletedFile(DiskBasicDirItem *item);
+	/// 空きエリアのチェインを作り直す
+	void		RemakeChainOnFreeArea();
 	//@}
 };
 

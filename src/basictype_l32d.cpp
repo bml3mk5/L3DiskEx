@@ -40,7 +40,7 @@ wxUint32 DiskBasicTypeL32D::GetEmptyGroupNumber()
 	// トラック当たりのグループ数
 	wxUint32 grps_per_trk = basic->GetSectorsPerTrackOnBasic() * 2 / basic->GetSectorsPerGroup();
 	// 最大グループ数
-	wxUint32 max_group = end_group + 1 - managed_start_group;
+	wxUint32 max_group = basic->GetFatEndGroup() + 1 - managed_start_group;
 	if (max_group < managed_start_group) max_group = managed_start_group;
 	max_group = max_group * 2 - 1;
 
@@ -53,11 +53,11 @@ wxUint32 DiskBasicTypeL32D::GetEmptyGroupNumber()
 		} else {
 			num = managed_start_group + (i4 * grps_per_trk) + (i % grps_per_trk);
 		}
-		if (end_group < num) {
+		if (basic->GetFatEndGroup() < num) {
 			continue;
 		}
 		wxUint32 gnum = GetGroupNumber(num);
-		if (gnum == group_unused_code) {
+		if (gnum == basic->GetGroupUnusedCode()) {
 			new_num = num;
 			break;
 		}

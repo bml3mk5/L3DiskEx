@@ -41,6 +41,7 @@ public:
 	bool TrackListExists() const;
 	/// トラックリストの選択行を返す
 	int GetTrackListSelectedRow() const;
+
 	/// セクタリストにデータを設定する
 	void SetSectorListData(DiskD88Track *track);
 	/// セクタリストをクリアする
@@ -109,6 +110,8 @@ public:
 	//@{
 	/// トラックリストを選択
 	void OnListItemSelected(wxListEvent& event);
+	/// トラックリストをダブルクリック
+	void OnListActivated(wxListEvent &event);
 	/// トラックリスト右クリック
 	void OnContextMenu(wxContextMenuEvent& event);
 	/// トラックをエクスポート選択
@@ -131,10 +134,14 @@ public:
 	void OnModifySectorSizeOnTrack(wxCommandEvent& event);
 	/// 現在のトラック以下を削除選択
 	void OnDeleteTracksBelow(wxCommandEvent& event);
+	/// トラックプロパティ選択
+	void OnPropertyTrack(wxCommandEvent& event);
 	/// キー押下
 	void OnChar(wxKeyEvent& event);
 	//@}
 
+	/// 選択
+	void SelectData(int row);
 	/// トラックリストをセット
 	void SetTracks(DiskD88Disk *newdisk, int newsidenum);
 	/// トラックリストをセット
@@ -168,6 +175,8 @@ public:
 	void ModifyIDonDisk(int type_num);
 	/// ディスク上の密度を一括変更
 	void ModifyDensityOnDisk();
+	/// トラック情報を表示
+	void ShowTrackAttr();
 
 	/// ディスクを返す
 	DiskD88Disk *GetDisk() const { return disk; }
@@ -198,6 +207,7 @@ public:
 		IDM_MODIFY_SECTORS_TRACK,
 		IDM_MODIFY_SIZE_TRACK,
 		IDM_DELETE_TRACKS_BELOW,
+		IDM_PROPERTY_TRACK,
 	};
 
 	wxDECLARE_EVENT_TABLE();

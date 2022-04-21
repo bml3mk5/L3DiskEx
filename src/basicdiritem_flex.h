@@ -73,12 +73,8 @@ public:
 
 	/// 属性を設定
 	void			SetFileAttr(int file_type);
-//	/// ディレクトリをクリア ファイル新規作成時
-//	void			ClearData();
-//	/// ディレクトリを初期化 未使用にする
-//	void			InitialData();
 	/// 属性を返す
-	int				GetFileType();
+	int				GetFileAttr();
 
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType1Pos();
@@ -100,6 +96,10 @@ public:
 	void			SetStartGroup(wxUint32 val);
 	/// 最初のグループ番号を返す
 	wxUint32		GetStartGroup() const;
+	/// 最後のグループ番号をセット(機種依存)
+	void			SetLastGroup(wxUint32 val);
+	/// 最後のグループ番号を返す(機種依存)
+	wxUint32		GetLastGroup() const;
 
 	/// アイテムが日時を持っているか
 	bool			HasDateTime() const { return true; }
@@ -121,26 +121,44 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-	/// 書き込み/上書き禁止か
-	bool			IsWriteProtected();
+//	/// 書き込み/上書き禁止か
+//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
 	bool			IsDeletable();
 	/// ファイル名を編集できるか
 	bool			IsFileNameEditable();
 
 
+	/// 最初のトラック番号をセット
+	void			SetStartTrack(wxUint8 val);
+	/// 最初のセクタ番号をセット
+	void			SetStartSector(wxUint8 val);
+	/// 最初のトラック番号を返す
+	wxUint8			GetStartTrack() const;
+	/// 最初のセクタ番号を返す
+	wxUint8			GetStartSector() const;
+	/// 最後のトラック番号をセット
+	void			SetLastTrack(wxUint8 val);
+	/// 最後のセクタ番号をセット
+	void			SetLastSector(wxUint8 val);
+	/// 最後のトラック番号を返す
+	wxUint8			GetLastTrack() const;
+	/// 最後のセクタ番号を返す
+	wxUint8			GetLastSector() const;
+
+
 	/// @name プロパティダイアログ用
 	//@{
 	/// ダイアログ内の属性部分のレイアウトを作成
-	void	CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data);
+	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
-	void	ChangeTypeInAttrDialog(AttrControls &controls);
+	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2);
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const AttrControls &controls) const;
+	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const;
+	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
 	//@}
 };
 

@@ -43,6 +43,7 @@
 			<DiskTypeHint>1DD MS9</DiskTypeHint>
 			<DiskTypeHint>2DD MS8</DiskTypeHint>
 			<DiskTypeHint>1DD MS8</DiskTypeHint>
+			<DiskTypeHint>2D</DiskTypeHint>
 		</Format>
 		<Description>DSK file</Description>
 	</FileType>

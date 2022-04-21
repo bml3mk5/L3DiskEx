@@ -59,7 +59,6 @@ private:
 	L3DiskFileList *filelist;
 	L3DiskRawPanel *rawpanel;
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-//	L3DiskBinDump  *bindump;
 	wxPanel *proppanel;
 #endif
 
@@ -70,13 +69,6 @@ public:
 
 	L3DiskFileList *GetFileListPanel(bool inst = false) const;
 	L3DiskRawPanel *GetRawPanel(bool inst = false) const;
-
-#ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-//	L3DiskBinDump *GetBinDumpPanel() const { return bindump; }
-//	void SetBinDumpData(const wxUint8 *buf, size_t len);
-//	void ClearBinDumpData();
-//	void ClearData();
-#endif
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskRBPanel);

@@ -125,7 +125,7 @@ private:
 
 	Config *ini;
 
-	//
+	/// DISKイメージ
 	DiskD88 d88;
 
 	/// パネル全体を返す

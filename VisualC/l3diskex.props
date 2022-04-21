@@ -4,8 +4,13 @@
     <DevelopDir>D:\Devel\vc\</DevelopDir>
     <wxWidgetsDir>$(DevelopDir)wxWidgets-3.1.0\</wxWidgetsDir>
     <wxWidgetsIncludeDir>$(wxWidgetsDir)include\msvc\;$(wxWidgetsDir)include\</wxWidgetsIncludeDir>
-    <wxWidgetsLibDirWin32>$(wxWidgetsDir)lib\vc_lib\</wxWidgetsLibDirWin32>
-    <wxWidgetsLibDirX64>$(wxWidgetsDir)lib\vc_x64_lib\</wxWidgetsLibDirX64>
+    <wxWidgetsStaticDefs>
+    </wxWidgetsStaticDefs>
+    <wxWidgetsDynamicDefs>WXUSINGDLL</wxWidgetsDynamicDefs>
+    <wxWidgetsStaticLibDirWin32>$(wxWidgetsDir)lib\vc_lib\</wxWidgetsStaticLibDirWin32>
+    <wxWidgetsStaticLibDirX64>$(wxWidgetsDir)lib\vc_x64_lib\</wxWidgetsStaticLibDirX64>
+    <wxWidgetsDynamicLibDirWin32>$(wxWidgetsDir)lib\vc_dll\</wxWidgetsDynamicLibDirWin32>
+    <wxWidgetsDynamicLibDirX64>$(wxWidgetsDir)lib\vc_x64_dll\</wxWidgetsDynamicLibDirX64>
     <wxWidgetsLibsDebug>wxbase31ud.lib</wxWidgetsLibsDebug>
     <wxWidgetsLibsRelease>wxbase31u.lib</wxWidgetsLibsRelease>
   </PropertyGroup>
@@ -22,11 +27,23 @@
     <BuildMacro Include="wxWidgetsIncludeDir">
       <Value>$(wxWidgetsIncludeDir)</Value>
     </BuildMacro>
-    <BuildMacro Include="wxWidgetsLibDirWin32">
-      <Value>$(wxWidgetsLibDirWin32)</Value>
+    <BuildMacro Include="wxWidgetsStaticDefs">
+      <Value>$(wxWidgetsStaticDefs)</Value>
     </BuildMacro>
-    <BuildMacro Include="wxWidgetsLibDirX64">
-      <Value>$(wxWidgetsLibDirX64)</Value>
+    <BuildMacro Include="wxWidgetsDynamicDefs">
+      <Value>$(wxWidgetsDynamicDefs)</Value>
+    </BuildMacro>
+    <BuildMacro Include="wxWidgetsStaticLibDirWin32">
+      <Value>$(wxWidgetsStaticLibDirWin32)</Value>
+    </BuildMacro>
+    <BuildMacro Include="wxWidgetsStaticLibDirX64">
+      <Value>$(wxWidgetsStaticLibDirX64)</Value>
+    </BuildMacro>
+    <BuildMacro Include="wxWidgetsDynamicLibDirWin32">
+      <Value>$(wxWidgetsDynamicLibDirWin32)</Value>
+    </BuildMacro>
+    <BuildMacro Include="wxWidgetsDynamicLibDirX64">
+      <Value>$(wxWidgetsDynamicLibDirX64)</Value>
     </BuildMacro>
     <BuildMacro Include="wxWidgetsLibsDebug">
       <Value>$(wxWidgetsLibsDebug)</Value>

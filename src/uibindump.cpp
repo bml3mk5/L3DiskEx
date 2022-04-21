@@ -67,47 +67,6 @@ L3DiskBinDumpFrame::~L3DiskBinDumpFrame()
 	parent->BinDumpWindowClosed();
 }
 
-#if 0
-void L3DiskBinDumpFrame::RecreateToolbar()
-{
-	// delete and recreate the toolbar
-	wxToolBar *toolBar = GetToolBar();
-	long style = toolBar ? toolBar->GetWindowStyle() : TOOLBAR_STYLE;
-	delete toolBar;
-
-	SetToolBar(NULL);
-
-	style &= ~(wxTB_HORIZONTAL | wxTB_VERTICAL | wxTB_BOTTOM | wxTB_RIGHT | wxTB_HORZ_LAYOUT);
-	style |= wxTB_TOP;
-	style &= ~wxTB_NO_TOOLTIPS;
-	style |= wxTB_HORZ_LAYOUT;
-	style |= wxTB_TEXT;
-	style |= wxTB_NOICONS;
-
-	toolBar = CreateToolBar(style, IDT_TOOLBAR);
-
-	PopulateToolbar(toolBar);
-}
-
-void L3DiskBinDumpFrame::PopulateToolbar(wxToolBar* toolBar)
-{
-	// Set up toolbar
-	toolBar->AddRadioTool(IDM_VIEW_CHAR_ASCII, _("Ascii"), wxNullBitmap, wxNullBitmap,
-		_("Show a dump using Ascii charactor."));
-	toolBar->AddRadioTool(IDM_VIEW_CHAR_SJIS, _("Shift JIS"), wxNullBitmap, wxNullBitmap,
-		_("Show a dump using Shift JIS Kanji codes."));
-	toolBar->AddSeparator();
-	toolBar->AddCheckTool(IDM_VIEW_INVERT, _("Invert Datas"), wxNullBitmap, wxNullBitmap,
-		_("Show a dump inverting datas."));
-
-	// after adding the buttons to the toolbar, must call Realize() to reflect
-	// the changes
-	toolBar->Realize();
-	int m_rows = 1;
-	toolBar->SetRows(toolBar->IsVertical() ? (int)toolBar->GetToolsCount() / m_rows : m_rows);
-}
-#endif
-
 void L3DiskBinDumpFrame::OnClose(wxCommandEvent& WXUNUSED(event))
 {
 	Close();
@@ -167,12 +126,6 @@ void L3DiskBinDumpFrame::ToggleControl(int id, bool checked)
 	if (menubar) {
 		menubar->Check(id, checked);
 	}
-#if 0
-	wxToolBar *toolbar = GetToolBar();
-	if (toolbar) {
-		toolbar->ToggleTool(id, checked);
-	}
-#endif
 }
 
 void L3DiskBinDumpFrame::ShowDataFontDialog()
@@ -378,39 +331,6 @@ void L3DiskBinDump::AppendBuffer(const wxUint8 *buf, size_t len)
 
 void L3DiskBinDump::OnSize(wxSizeEvent& event)
 {
-#if 0
-	wxSize sz, cszH, cszA;
-	wxPoint pt = GetViewStart();
-	int sx, sy;
-	GetScrollPixelsPerUnit(&sx, &sy);
-	sz = GetClientSize();
-	cszH = txtHex->GetSize();
-	cszA = txtAsc->GetSize();
-
-	/*
-	int xx = pt.x * sx + sz.x;
-
-	if (xx > min_x) {
-		if (pt.x > 0) {
-			Scroll((min_x - sz.x) / sx, 0);
-		}
-	}
-	 */
-
-	int yy = pt.y * sy + sz.y;
-	
-//	if (yy > min_y) {
-//		if (pt.y > 0) {
-//			Scroll(0, (min_y - sz.y) / sy);
-//		} else {
-//			cszH.y = sz.y;
-//			cszA.y = sz.y;
-//		}
-//	}
-
-//	txtHex->SetSize(cszH);
-//	txtAsc->SetSize(cszA);
-#endif
 }
 
 void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)

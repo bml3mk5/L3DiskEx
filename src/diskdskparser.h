@@ -24,7 +24,7 @@ private:
 	int			is_extended;
 
 	/// セクタデータの作成
-	wxUint32 ParseSector(wxInputStream *istream, int track_number, int side_number, int sector_size, int sector_nums, void *user_data, DiskD88Track *track);
+	wxUint32 ParseSector(wxInputStream *istream, int sector_nums, void *user_data, DiskD88Track *track);
 	/// トラックデータの作成
 	wxUint32 ParseTrack(wxInputStream *istream, int track_size, int offset_pos, wxUint32 offset, DiskD88Disk *disk);
 	/// ディスクの解析

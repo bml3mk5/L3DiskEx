@@ -180,7 +180,7 @@ wxString FormatHMStr(const struct tm *tm)
 
 int ToInt(const wxString &val)
 {
-	long lval;
+	long lval = 0;
 	wxString h = val.Left(2).Lower();
 	if (h == wxT("0x")) {
 		val.Mid(2).ToLong(&lval, 16);
@@ -190,6 +190,15 @@ int ToInt(const wxString &val)
 		val.ToLong(&lval);
 	}
 	return (int)lval;
+}
+
+bool ToBool(const wxString &val)
+{
+	bool bval = false;
+	if (val == wxT("1") || val.Upper() == wxT("TRUE")) {
+		bval = true;
+	}
+	return bval;
 }
 
 wxString Escape(const wxString &src)

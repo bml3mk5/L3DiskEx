@@ -15,9 +15,9 @@
 class Params
 {
 protected:
-	wxString mFilePath;
-	wxString mExportFilePath;
-	wxArrayString mRecentFiles;
+	wxString	mFilePath;			///< ファイルパス
+	wxString	mExportFilePath;	///< エクスポート先パス
+	wxArrayString mRecentFiles;		///< 最近使用したファイル
 
 public:
 	Params();
@@ -25,13 +25,13 @@ public:
 
 	/// @name properties
 	//@{
-	void SetFilePath(const wxString &val);
-	wxString &GetFilePath() { return mFilePath; }
-	void SetExportFilePath(const wxString &val);
-	wxString &GetExportFilePath();
-	void AddRecentFile(const wxString &val);
-	wxString &GetRecentFile();
-	void GetRecentFiles(wxArrayString &vals);
+	void			SetFilePath(const wxString &val);
+	const wxString &GetFilePath() const { return mFilePath; }
+	void			SetExportFilePath(const wxString &val);
+	const wxString &GetExportFilePath() const;
+	void			AddRecentFile(const wxString &val);
+	const wxString &GetRecentFile() const;
+	const wxArrayString &GetRecentFiles() const;
 	//@}
 };
 

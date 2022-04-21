@@ -256,7 +256,7 @@ size_t DiskBasicDirItemOS9::EncodeString(wxUint8 *dst, size_t dlen, const char *
 }
 
 /// ファイル名を得る
-void DiskBasicDirItemOS9::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen)
+void DiskBasicDirItemOS9::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
 {
 	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
 
@@ -327,22 +327,7 @@ void DiskBasicDirItemOS9::SetFileAttr(int file_type)
 	SetFileType1(val);
 }
 
-#if 0
-/// ディレクトリをクリア ファイル新規作成時
-void DiskBasicDirItemOS9::ClearData()
-{
-	if (!data) return;
-	memset(data, 0, sizeof(directory_os9_t));
-}
-
-/// ディレクトリを初期化 未使用にする
-void DiskBasicDirItemOS9::InitialData()
-{
-	ClearData();
-}
-#endif
-
-int DiskBasicDirItemOS9::GetFileType()
+int DiskBasicDirItemOS9::GetFileAttr()
 {
 	int val = 0;
 	int type1 = GetFileType1();
@@ -359,7 +344,7 @@ int DiskBasicDirItemOS9::GetFileType()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemOS9::GetFileType1Pos()
 {
-	return GetFileType();
+	return GetFileAttr();
 }
 
 // 属性からリストの位置を返す(プロパティダイアログ用)
@@ -625,17 +610,12 @@ wxUint32 DiskBasicDirItemOS9::GetExtraGroup() const
 	return GET_OS9_LSN(data->os9.DE_LSN);
 }
 
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemOS9::IsWriteProtected()
-{
-	return false;
-}
 bool DiskBasicDirItemOS9::IsDeletable()
 {
 	bool valid = true;
-	int attr = GetFileType();
+	int attr = GetFileAttr();
 	if (attr & FILE_TYPE_DIRECTORY_MASK) {
-		wxString name =	GetFileNameStr();
+		wxString name =	GetFileNamePlainStr();
 		if (name == wxT(".") || name == wxT("..")) {
 			// ディレクトリ ".", ".."は削除不可
 			valid = false;
@@ -688,16 +668,43 @@ void DiskBasicDirItemOS9::SetModify()
 #define IDC_CHECK_USR_READ	58
 #define IDC_TEXT_CREATEDATE	59
 
+/// ダイアログ用に属性を設定する
+/// ダイアログ表示前にファイルの属性を設定
+/// @param [in] show_flags      ダイアログ表示フラグ
+/// @param [in]  name           ファイル名
+/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
+/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
+void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
+{
+	if (show_flags & INTNAME_NEW_FILE) {
+		// 外部からインポート時
+		// -- --R -wr
+		file_type_1 = ((
+			FILETYPE_MASK_OS9_PUBLIC_READ |
+			FILETYPE_MASK_OS9_USER_WRITE |
+			FILETYPE_MASK_OS9_USER_READ
+		) << FILETYPE_OS9_PERMISSION_POS);
+	}
+	if (show_flags & INTNAME_IMPORT_INTERNAL) {
+		// 内部からインポート時
+		// 作成日付を設定
+		struct tm tm;
+		wxDateTime::GetTmNow(&tm);
+		SetCDate(&tm);
+	}
+}
+
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
-/// @param [in] file_type_1    ファイル属性1 GetFileType1Pos() / インポート時 SetFileTypeForAttrDialog()で設定
-/// @param [in] file_type_2    ファイル属性2 GetFileType2Pos() / インポート時 SetFileTypeForAttrDialog()で設定
+/// @param [in] show_flags     ダイアログ表示フラグ
+/// @param [in] file_path      外部からインポート時のファイルパス
 /// @param [in] sizer
 /// @param [in] flags
-/// @param [in,out] controls   [0]: wxTextCtrl::txtIntNameで予約済み [1]からユーザ設定
-/// @param [in,out] user_data  ユーザ定義データ
-void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int file_type_1, int file_type_2, wxBoxSizer *sizer, wxSizerFlags &flags, AttrControls &controls, int *user_data)
+void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
+	int file_type_1 = GetFileType1Pos();
+	int file_type_2 = GetFileType2Pos();
+
 	wxCheckBox *chkDirectory;
 	wxCheckBox *chkSharable;
 
@@ -709,6 +716,8 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int fi
 	wxCheckBox *chkUsrRead;
 
 	wxTextCtrl *txtCDate;
+
+	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
@@ -765,51 +774,39 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int fi
 	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CREATEDATE, GetCDateStr(), wxDefaultPosition, sz, 0, date_validate);
 	hbox->Add(txtCDate, flags);
 	sizer->Add(hbox, flags);
+}
 
-	controls.Add(chkDirectory);
-	controls.Add(chkSharable);
-	controls.Add(chkPubExec);
-	controls.Add(chkPubWrite);
-	controls.Add(chkPubRead);
-	controls.Add(chkUsrExec);
-	controls.Add(chkUsrWrite);
-	controls.Add(chkUsrRead);
-	controls.Add(txtCDate);
+/// ダイアログ内の値を設定
+void DiskBasicDirItemOS9::InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data)
+{
+	if (!(showitems & INTNAME_SHOW_ATTR)) return;
+	if (!(showitems & INTNAME_NEW_FILE)) return;
+
+	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CREATEDATE);
+	wxTextCtrl *txtMDate = (wxTextCtrl *)parent->FindWindow(IntNameBox::IDC_TEXT_CDATE);
+	if (txtCDate && txtMDate) {
+		txtCDate->SetValue(txtMDate->GetValue());
+	}
 }
 
 /// 属性を変更した際に呼ばれるコールバック
-void DiskBasicDirItemOS9::ChangeTypeInAttrDialog(AttrControls &controls)
+void DiskBasicDirItemOS9::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
-}
-
-/// ダイアログ用に属性を設定する
-/// インポート時ダイアログ表示前にファイルの属性を設定
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2)
-{
-	// -- --R -wr
-	file_type_1 = ((
-		FILETYPE_MASK_OS9_PUBLIC_READ |
-		FILETYPE_MASK_OS9_USER_WRITE |
-		FILETYPE_MASK_OS9_USER_READ
-	) << FILETYPE_OS9_PERMISSION_POS);
 }
 
 /// 属性1を得る
 /// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemOS9::GetFileType1InAttrDialog(const AttrControls &controls) const
+int DiskBasicDirItemOS9::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxCheckBox *chkDirectory = (wxCheckBox *)controls.Item(1);
-	wxCheckBox *chkSharable = (wxCheckBox *)controls.Item(2);
+	wxCheckBox *chkDirectory = (wxCheckBox *)parent->FindWindow(IDC_CHECK_DIRECTORY);
+	wxCheckBox *chkSharable = (wxCheckBox *)parent->FindWindow(IDC_CHECK_NONSHARE);
 
-	wxCheckBox *chkPubExec = (wxCheckBox *)controls.Item(3);
-	wxCheckBox *chkPubWrite = (wxCheckBox *)controls.Item(4);
-	wxCheckBox *chkPubRead = (wxCheckBox *)controls.Item(5);
-	wxCheckBox *chkUsrExec = (wxCheckBox *)controls.Item(6);
-	wxCheckBox *chkUsrWrite = (wxCheckBox *)controls.Item(7);
-	wxCheckBox *chkUsrRead = (wxCheckBox *)controls.Item(8);
+	wxCheckBox *chkPubExec = (wxCheckBox *)parent->FindWindow(IDC_CHECK_PUB_EXEC);
+	wxCheckBox *chkPubWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_PUB_WRITE);
+	wxCheckBox *chkPubRead = (wxCheckBox *)parent->FindWindow(IDC_CHECK_PUB_READ);
+	wxCheckBox *chkUsrExec = (wxCheckBox *)parent->FindWindow(IDC_CHECK_USR_EXEC);
+	wxCheckBox *chkUsrWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_USR_WRITE);
+	wxCheckBox *chkUsrRead = (wxCheckBox *)parent->FindWindow(IDC_CHECK_USR_READ);
 
 	int val = 0;
 	val |= (chkDirectory->GetValue() ? FILE_TYPE_DIRECTORY_MASK : 0);
@@ -826,15 +823,17 @@ int DiskBasicDirItemOS9::GetFileType1InAttrDialog(const AttrControls &controls) 
 
 /// 属性2を得る
 /// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemOS9::GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const
+int DiskBasicDirItemOS9::GetFileType2InAttrDialog(const IntNameBox *parent) const
 {
 	return 0;
 }
 
 /// 機種依存の属性を設定する
-bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const AttrControls &controls, DiskBasicError &errinfo)
+bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
-	wxTextCtrl *txtCDate = (wxTextCtrl *)controls.Item(9);
+	DiskBasicDirItem::SetAttrInAttrDialog(parent, errinfo);
+
+	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CREATEDATE);
 
 	struct tm tm;
 	if (txtCDate) {
