@@ -535,6 +535,7 @@ void L3DiskList::SetDataOnItemNode(const L3DiskListItem &node, SetDataOnItemNode
 
 	// サブディレクトリの場合
 	if (typenum == CD_TYPENUM_NODE_DIR) {
+		frame->AttachDiskBasicOnFileList(disk, sidenum);
 		if (flag == NODE_SELECTED) {
 			frame->ChangeDirectory(disk, sidenum, cd->GetDiskBasicDirItem(), true);
 		} else {

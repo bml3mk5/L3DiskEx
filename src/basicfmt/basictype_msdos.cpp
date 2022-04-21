@@ -185,8 +185,8 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 		ditem->SetFileNamePlain(data.GetVolumeName());
 		ditem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_VOLUME_MASK);
 		TM tm;
-		wxDateTime::GetTmNow(tm);
-		ditem->SetFileCreateDateTime(tm);
+		tm.Now();
+		ditem->SetFileModifyDateTime(tm);
 		delete ditem;
 	}
 
@@ -295,6 +295,8 @@ void DiskBasicTypeMSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 		newitem->SetStartGroup(0, 0);
 	}
 	newitem->SetFileCreateDateTime(item->GetFileCreateDateTime());
+	newitem->SetFileModifyDateTime(item->GetFileModifyDateTime());
+	newitem->SetFileAccessDateTime(item->GetFileAccessDateTime());
 	newitem->SetFileNamePlain(wxT(".."));
 	newitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK);
 

@@ -143,7 +143,7 @@ public:
 	virtual bool	HasCreateDate() const { return true; }
 	virtual bool	HasCreateTime() const { return true; }
 	/// @brief アイテムの時間設定を無視することができるか
-	virtual bool	CanIgnoreDateTime() const { return true; }
+	virtual enDateTime CanIgnoreDateTime() const { return DATETIME_ALL; }
 	/// @brief 日付を返す
 	virtual void	GetFileCreateDate(TM &tm) const;
 	/// @brief 時間を返す

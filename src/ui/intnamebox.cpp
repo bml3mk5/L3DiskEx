@@ -139,7 +139,9 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 	if (show_flags & INTNAME_SHOW_ATTR) {
 		// 属性の表示は機種依存
 		item->CreateControlsForAttrDialog(this, show_flags, file_path, szrAll, border);
+	}
 
+	if (show_flags & INTNAME_SHOW_ATTR) {
 		// 開始アドレス、終了アドレス、実行アドレス
 		int rows;
 		if (item->HasAddress()) {
@@ -175,14 +177,16 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 				txtExecAddr->SetEditable(item->IsAddressEditable() && addr >= 0);
 			}
 		}
+	}
 
+	int rows_of_datetime = 0;
+	if (item->HasCreateDateTime()) rows_of_datetime++;
+	if (item->HasModifyDateTime()) rows_of_datetime++;
+	if (item->HasAccessDateTime()) rows_of_datetime++;
+
+	if (show_flags & INTNAME_SHOW_ATTR) {
 		// 日付表示部分
-
-		rows = 0;
-		if (item->HasCreateDateTime()) rows++;
-		if (item->HasModifyDateTime()) rows++;
-		if (item->HasAccessDateTime()) rows++;
-		if (rows > 0) {
+		if (rows_of_datetime > 0) {
 			szrG = new wxFlexGridSizer(3, 4, 4);
 		}
 
@@ -192,19 +196,19 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 			case 0:
 				// 作成日付を表示
 				CreateDateTime(this, IDC_TEXT_CDATE, IDC_TEXT_CTIME, item->GetFileCreateDateTimeTitle()
-						, item->HasCreateDateTime(), item->HasCreateDate(), item->HasCreateTime(), item->CanIgnoreDateTime()
+						, item->HasCreateDateTime(), item->HasCreateDate(), item->HasCreateTime(), (item->CanIgnoreDateTime() & DiskBasicDirItem::DATETIME_CREATE) != 0
 						, tsize, atitle, szrG, txtCDate, txtCTime);
 				break;
 			case 1:
 				// 変更日付を表示
 				CreateDateTime(this, IDC_TEXT_MDATE, IDC_TEXT_MTIME, item->GetFileModifyDateTimeTitle()
-						, item->HasModifyDateTime(), item->HasModifyDate(), item->HasModifyTime(), item->CanIgnoreDateTime()
+						, item->HasModifyDateTime(), item->HasModifyDate(), item->HasModifyTime(), (item->CanIgnoreDateTime() & DiskBasicDirItem::DATETIME_MODIFY) != 0
 						, tsize, atitle, szrG, txtMDate, txtMTime);
 				break;
 			case 2:
 				// アクセス日付を表示
 				CreateDateTime(this, IDC_TEXT_ADATE, IDC_TEXT_ATIME, item->GetFileAccessDateTimeTitle()
-						, item->HasAccessDateTime(), item->HasAccessDate(), item->HasAccessTime(), item->CanIgnoreDateTime()
+						, item->HasAccessDateTime(), item->HasAccessDate(), item->HasAccessTime(), (item->CanIgnoreDateTime() & DiskBasicDirItem::DATETIME_ACCESS) != 0
 						, tsize, atitle, szrG, txtADate, txtATime);
 				break;
 			default:
@@ -212,23 +216,56 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 			}
 		}
 
-		// 日時を無視するか
-		if (rows > 0) {
+		if (rows_of_datetime > 0) {
 			szrAll->Add(szrG, border);
 			szrG = NULL;
+		}
+	} else {
+		// 日付表示部分
+		DiskBasicDirItem::enDateTime ignore_type = item->CanIgnoreDateTime();
+		if (ignore_type && rows_of_datetime > 0) {
+			szrAll->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL), border);
+		}
+	}
 
-			if (item->CanIgnoreDateTime()) {
+	{
+		// 日時を無視するか
+		DiskBasicDirItem::enDateTime ignore_type = item->CanIgnoreDateTime();
+		if (rows_of_datetime > 0) {
+			wxString smsg;
+			if ((ignore_type & DiskBasicDirItem::DATETIME_ALL) == DiskBasicDirItem::DATETIME_ALL) {
+					smsg += _("all date");
+			} else {
+				if (ignore_type & DiskBasicDirItem::DATETIME_CREATE) {
+					if (!smsg.IsEmpty()) smsg += _(" and ");
+					smsg += item->GetFileCreateDateTimeTitle();
+				}
+				if (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) {
+					if (!smsg.IsEmpty()) smsg += _(" and ");
+					smsg += item->GetFileModifyDateTimeTitle();
+				}
+				if (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) {
+					if (!smsg.IsEmpty()) smsg += _(" and ");
+					smsg += item->GetFileAccessDateTimeTitle();
+				}
+			}
+
+			if (ignore_type) {
 				hbox = new wxBoxSizer(wxHORIZONTAL);
 				hbox->Add(new wxStaticText(this, wxID_ANY, wxT("    ")), atitle);
-				chkIgnoreDate = new wxCheckBox(this, IDC_CHK_IGNORE_DATE, _("Ignore date and time."));
+				wxString msg = wxString::Format(_("Ignore %s."), smsg);
+				chkIgnoreDate = new wxCheckBox(this, IDC_CHK_IGNORE_DATE, msg);
 				chkIgnoreDate->SetValue(gConfig.DoesIgnoreDateTime());
 				ChangedIgnoreDate(chkIgnoreDate->GetValue());
 				hbox->Add(chkIgnoreDate, atitle);
 				szrAll->Add(hbox, wxSizerFlags().Expand().Border(wxBOTTOM, 4));
 			}
 		}
+	}
 
-		//
+	//
+
+	if (show_flags & INTNAME_SHOW_ATTR) {
 
 		szrG = new wxFlexGridSizer(3, 4, 4);
 
@@ -294,14 +331,14 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 
 	SetSizerAndFit(szrAll);
 
-	if (show_flags & INTNAME_NEW_FILE) {
-		// 新規作成時、日付は現在日付をセット
-		TM tm_now;
-		wxDateTime::GetTmNow(tm_now);
-		SetCreateDateTime(tm_now);
-		SetModifyDateTime(tm_now);
-		SetAccessDateTime(tm_now);
-	} else if (date_time != NULL) {
+//	if (show_flags & INTNAME_NEW_FILE) {
+//		// 新規作成時、日付は現在日付をセット
+//		TM tm_now;
+//		wxDateTime::GetTmNow(tm_now);
+//		SetCreateDateTime(tm_now);
+//		SetModifyDateTime(tm_now);
+//		SetAccessDateTime(tm_now);
+	if (date_time != NULL) {
 		// 日時は引数のものを指定
 		if ((show_flags & INTNAME_SPECIFY_CDATE_TIME) != 0) SetCreateDateTime(date_time->GetCreateDateTime());
 		if ((show_flags & INTNAME_SPECIFY_MDATE_TIME) != 0) SetModifyDateTime(date_time->GetModifyDateTime());
@@ -447,23 +484,25 @@ void IntNameBox::OnChangeIgnoreDate(wxCommandEvent& event)
 /// 日付を無視するにチェック
 void IntNameBox::ChangedIgnoreDate(bool check)
 {
+	DiskBasicDirItem::enDateTime ignore_type = item->CanIgnoreDateTime();
+
 	if (txtCDate) {
-		txtCDate->Enable(!check);
+		txtCDate->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0));
 	}
 	if (txtCTime) {
-		txtCTime->Enable(!check);
+		txtCTime->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0));
 	}
 	if (txtMDate) {
-		txtMDate->Enable(!check);
+		txtMDate->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0));
 	}
 	if (txtMTime) {
-		txtMTime->Enable(!check);
+		txtMTime->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0));
 	}
 	if (txtADate) {
-		txtADate->Enable(!check);
+		txtADate->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0));
 	}
 	if (txtATime) {
-		txtATime->Enable(!check);
+		txtATime->Enable(!(check && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0));
 	}
 }
 

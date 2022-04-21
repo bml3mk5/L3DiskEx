@@ -49,6 +49,8 @@ int _wsystem(const wchar_t *);
 #endif
 #endif
 
+class wxDateTime;
+
 /// 時間構造体を保持するクラス
 class TM
 {
@@ -68,10 +70,14 @@ public:
 	void AllZero();
 	/// 時間構造体を得る
 	struct tm *Get() { return &tm; }
+	/// 時間構造体を得る
+	void Get(wxDateTime &dst) const;
 	/// 時間構造体を設定
 	void Set(const struct tm *val) { tm = *val; }
 	/// 時間構造体を設定
 	void Set(const TM &src) { tm = src.tm; }
+	/// 時間構造体を設定
+	void Set(const wxDateTime &src);
 	/// 時間構造体を代入
 	TM &operator=(const TM &src);
 	/// 時間構造体を返す

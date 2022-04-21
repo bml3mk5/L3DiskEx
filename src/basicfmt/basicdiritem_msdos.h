@@ -224,6 +224,8 @@ public:
 	virtual bool 	HasCreateDateTime() const { return true; }
 	virtual bool 	HasCreateDate() const { return true; }
 	virtual bool 	HasCreateTime() const { return true; }
+	/// @brief アイテムの時間設定を無視することができるか
+	virtual enDateTime CanIgnoreDateTime() const { return DATETIME_CREATE_ACCESS; }
 	/// @brief 作成日付を返す
 	virtual void	GetFileCreateDate(TM &tm) const;
 	/// @brief 作成時間を返す

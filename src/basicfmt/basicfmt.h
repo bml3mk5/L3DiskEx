@@ -260,7 +260,7 @@ public:
 	/// サブディレクトリの作成できるか
 	bool			CanMakeDirectory() const;
 	/// サブディレクトリの作成
-	int				MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem = NULL);
+	int				MakeDirectory(const wxString &filename, bool ignore_datetime, DiskBasicDirItem **nitem = NULL);
 	/// ディレクトリのサイズを拡張
 	bool			ExpandDirectory(DiskBasicDirItem *dir_item);
 	//@}

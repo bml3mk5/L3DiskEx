@@ -477,8 +477,19 @@ public:
 	virtual bool	HasAccessDate() const { return false; }
 	/// @brief アイテムがアクセス時間を持っているか
 	virtual bool	HasAccessTime() const { return false; }
+	///
+	enum enDateTime {
+		DATETIME_NONE = 0,
+		DATETIME_CREATE = 0x01,
+		DATETIME_MODIFY = 0x02,
+		DATETIME_CREATE_MODIFY = 0x03,
+		DATETIME_ACCESS = 0x04,
+		DATETIME_CREATE_ACCESS = 0x05,
+		DATETIME_MODIFY_ACCESS = 0x06,
+		DATETIME_ALL = 0x07
+	};
 	/// @brief アイテムの時間設定を無視することができるか
-	virtual bool	CanIgnoreDateTime() const { return false; }
+	virtual enDateTime CanIgnoreDateTime() const { return DATETIME_NONE; }
 	/// @brief 作成日付を得る
 	virtual void	GetFileCreateDate(TM &tm) const;
 	/// @brief 作成時間を得る
@@ -549,6 +560,10 @@ public:
 	virtual int		GetFileDateTimeOrder(int idx) const;
 	/// @brief 日時を返す（ファイルリスト用）
 	virtual wxString GetFileDateTimeStr() const;
+	/// @brief 日時を指定ファイルに書き込む
+	virtual void	WriteFileDateTime(const wxString &path) const;
+	/// @brief 指定ファイルから日時を読み込む
+	virtual void	ReadFileDateTime(const wxString &path, DiskBasicDirItemAttr &date_time) const;
 	//@}
 
 	/// @name 開始アドレス、実行アドレス

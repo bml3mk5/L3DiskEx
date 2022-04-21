@@ -31,9 +31,11 @@ protected:
 	bool		mTrimUnusedData;	///< 未使用データを切り落とすか
 	bool		mShowDeletedFile;	///< 削除したファイルを表示するか
 	bool		mAddExtExport;		///< エクスポート時に属性から拡張子を追加するか
+	bool		mCurrentDateExport;	///< エクスポート時に現在日時を設定するか
 	bool		mDecideAttrImport;	///< インポート時に拡張子で属性を決定したら拡張子を削除するか
 	bool		mSkipImportDialog;	///< インポートダイアログを抑制するか
 	bool		mIgnoreDateTime;	///< インポートやプロパティ変更時に日時を無視するか
+	bool		mCurrentDateImport;	///< インポート時に現在日時を設定するか
 	bool		mShowInterDirItem;	///< プロパティで内部データをリストで表示するか
 	int			mWindowWidth;		///< ウィンドウ幅
 	int			mWindowHeight;		///< ウィンドウ高さ
@@ -72,12 +74,16 @@ public:
 	bool			IsShownDeletedFile() const { return mShowDeletedFile; }
 	void			AddExtensionExport(bool val) { mAddExtExport = val; }
 	bool			IsAddExtensionExport() const { return mAddExtExport; }
+	void			SetCurrentDateExport(bool val) { mCurrentDateExport = val; }
+	bool			IsSetCurrentDateExport() const { return mCurrentDateExport; }
 	void			DecideAttrImport(bool val) { mDecideAttrImport = val; }
 	bool			IsDecideAttrImport() const { return mDecideAttrImport; }
 	void			SkipImportDialog(bool val) { mSkipImportDialog = val; }
 	bool			IsSkipImportDialog() const { return mSkipImportDialog; }
 	void			IgnoreDateTime(bool val) { mIgnoreDateTime = val; }
 	bool			DoesIgnoreDateTime() const { return mIgnoreDateTime; }
+	void			SetCurrentDateImport(bool val) { mCurrentDateImport = val; }
+	bool			IsSetCurrentDateImport() const { return mCurrentDateImport; }
 	void			ShowInterDirItem(bool val) { mShowInterDirItem = val; }
 	bool			DoesShowInterDirItem() const { return mShowInterDirItem; }
 	void			SetWindowWidth(int val) { mWindowWidth = val; }

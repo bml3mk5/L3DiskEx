@@ -185,6 +185,22 @@ TM &TM::operator=(const TM &src)
 	tm = src.tm;
 	return *this;
 }
+/// 時間構造体を得る
+void TM::Get(wxDateTime &dst) const
+{
+	dst.Set(tm);
+}
+/// 時間構造体を設定
+void TM::Set(const wxDateTime &src)
+{
+	wxDateTime::Tm wtm = src.GetTm();
+	tm.tm_year = wtm.year - 1900;
+	tm.tm_mon = wtm.mon;
+	tm.tm_mday = wtm.mday;
+	tm.tm_hour = wtm.hour;
+	tm.tm_min = wtm.min;
+	tm.tm_sec = wtm.sec;
+}
 /// 現在日時を得る
 TM &TM::Now()
 {

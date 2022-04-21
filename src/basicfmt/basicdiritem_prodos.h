@@ -306,7 +306,7 @@ public:
 	/// @brief アイテムが更新時間を持っているか
 	virtual bool	HasModifyTime() const { return HasModifyDateTime(); }
 	/// @brief アイテムの時間設定を無視することができるか
-	virtual bool	CanIgnoreDateTime() const { return true; }
+	virtual enDateTime CanIgnoreDateTime() const { return DATETIME_ALL; }
 	/// @brief 作成日付を得る
 	virtual void	GetFileCreateDate(TM &tm) const;
 	/// @brief 作成時間を得る

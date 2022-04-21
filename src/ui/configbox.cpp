@@ -73,6 +73,14 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	szrH->Add(chkAddExtExport, flags);
 	bszr->Add(szrH, flags);
 
+	// エクスポート時に現在日時を設定する
+
+	szrH = new wxBoxSizer(wxHORIZONTAL);
+	chkDateExport = new wxCheckBox(this, IDC_CHECK_DATE_EXPORT, _("Set current date and time to exported file."));
+	chkDateExport->SetValue(ini->IsSetCurrentDateExport());
+	szrH->Add(chkDateExport, flags);
+	bszr->Add(szrH, flags);
+
 	szrAll->Add(bszr, flags);
 
 	// インポート時
@@ -93,6 +101,14 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	chkDecAttrImport = new wxCheckBox(this, IDC_CHECK_DEC_ATTR_IMPORT, _("Trim extension in filename when decided file attribute by extension."));
 	chkDecAttrImport->SetValue(ini->IsDecideAttrImport());
 	szrH->Add(chkDecAttrImport, flags);
+	bszr->Add(szrH, flags);
+
+	// インポート時に現在日時を設定する
+
+	szrH = new wxBoxSizer(wxHORIZONTAL);
+	chkDateImport = new wxCheckBox(this, IDC_CHECK_DATE_IMPORT, _("Set current date and time to importing file."));
+	chkDateImport->SetValue(ini->IsSetCurrentDateImport());
+	szrH->Add(chkDateImport, flags);
 	bszr->Add(szrH, flags);
 
 	// インポートやプロパティ変更時に日時を無視する
@@ -232,8 +248,10 @@ void ConfigBox::CommitData()
 	ini->TrimUnusedData(chkTrimData->GetValue());
 	ini->ShowDeletedFile(chkShowDelFile->GetValue());
 	ini->AddExtensionExport(chkAddExtExport->GetValue());
+	ini->SetCurrentDateExport(chkDateExport->GetValue());
 	ini->SkipImportDialog(chkSuppImport->GetValue());
 	ini->DecideAttrImport(chkDecAttrImport->GetValue());
+	ini->SetCurrentDateImport(chkDateImport->GetValue());
 	ini->IgnoreDateTime(chkIgnoreDate->GetValue());
 	if (chkTempFolder->IsChecked()) {
 		ini->ClearTemporaryFolder();

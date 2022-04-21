@@ -1410,6 +1410,10 @@ bool L3DiskFileList::ExportDataFile(DiskBasicDirItem *item, const wxString &path
 	m_sc_export = frame->StartStatusCounter(1, start_msg);
 	// ロード
 	bool valid = basic->LoadFile(item, path);
+	// 日付を反映
+	if (valid) {
+		item->WriteFileDateTime(path);
+	}
 	frame->IncreaseStatusCounter(m_sc_export);
 	frame->FinishStatusCounter(m_sc_export, end_msg);
 	if (!valid) {
@@ -1549,8 +1553,12 @@ int L3DiskFileList::ExportDataFiles(DiskBasicDirItems *dir_items, const wxString
 			sts |= ExportDataFiles(item->GetChildren(), full_data_name, full_attr_name, file_object, depth + 1);
 		} else {
 			// ファイルの場合
-			sts |= (basic->LoadFile(item, full_data_name) ? 0 : -1);
-
+			bool rc = basic->LoadFile(item, full_data_name);
+			sts |= (rc ? 0 : -1);
+			// 日付を反映
+			if (rc) {
+				item->WriteFileDateTime(full_data_name);
+			}
 			// 属性情報をXMLで出力
 			if (attr_exists) {
 				item->WriteFileAttrToXml(full_attr_name);
@@ -1881,11 +1889,9 @@ int L3DiskFileList::ImportDataFile(const wxString &full_data_path, const wxStrin
 			sts = 1;
 		}
 	} else {
-		TM tm;
-		tm.Now();
-		date_time.SetCreateDateTime(tm);
-		date_time.SetModifyDateTime(tm);
-		date_time.SetAccessDateTime(tm);
+		// ファイルから日付を得る
+		temp_item->ReadFileDateTime(full_data_path, date_time);
+		style |= INTNAME_SPECIFY_CDATE_TIME | INTNAME_SPECIFY_MDATE_TIME | INTNAME_SPECIFY_ADATE_TIME;
 	}
 	if (sts == 0) {
 		// ダイアログ表示
@@ -1974,9 +1980,15 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(DiskBasicDirItem *temp_item, 
 				}
 			} else {
 				// 内部からインポート時
-				if (!gConfig.DoesIgnoreDateTime()) {
+				bool ignore_datetime = gConfig.DoesIgnoreDateTime();
+				DiskBasicDirItem::enDateTime ignore_type = temp_item->CanIgnoreDateTime();
+				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0)) {
 					date_time.SetCreateDateTime(temp_item->GetFileCreateDateTime());
+				}
+				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0)) {
 					date_time.SetModifyDateTime(temp_item->GetFileModifyDateTime());
+				}
+				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0)) {
 					date_time.SetAccessDateTime(temp_item->GetFileAccessDateTime());
 				}
 			}
@@ -2599,7 +2611,10 @@ void L3DiskFileList::ShowMakeDirectoryDialog()
 	if (ans == wxID_OK) {
 		wxString dirname;
 		dlg.GetInternalName(dirname);
-		sts = basic->MakeDirectory(dirname);
+		if (temp_item->CanIgnoreDateTime()) {
+			gConfig.IgnoreDateTime(dlg.DoesIgnoreDateTime(gConfig.DoesIgnoreDateTime()));
+		}
+		sts = basic->MakeDirectory(dirname, gConfig.DoesIgnoreDateTime());
 		if (sts != 0) {
 			basic->ShowErrorMessage();
 		} else {
@@ -2632,7 +2647,7 @@ bool L3DiskFileList::MakeDirectory(const wxString &name, const wxString &title, 
 		delete pre_item;
 	}
 	while (sts > 0) {
-		sts = basic->MakeDirectory(dir_name, nitem);
+		sts = basic->MakeDirectory(dir_name, gConfig.DoesIgnoreDateTime(), nitem);
 		if (sts == 1) {
 			// 同じ名前があるのでダイアログ表示
 			basic->ClearErrorMessage();
@@ -2649,6 +2664,9 @@ bool L3DiskFileList::MakeDirectory(const wxString &name, const wxString &title, 
 				sts = -1;
 			} else {
 				dlg.GetInternalName(dir_name);
+				if (temp_item->CanIgnoreDateTime()) {
+					gConfig.IgnoreDateTime(dlg.DoesIgnoreDateTime(gConfig.DoesIgnoreDateTime()));
+				}
 			}
 			delete temp_item;
 		}

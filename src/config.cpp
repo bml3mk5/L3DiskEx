@@ -26,6 +26,7 @@ Params::Params()
 	mTrimUnusedData = true;
 	mShowDeletedFile = false;
 	mAddExtExport = true;
+	mCurrentDateExport = false;
 	mDecideAttrImport = true;
 	mSkipImportDialog = false;
 	mIgnoreDateTime = false;
@@ -159,10 +160,14 @@ void Config::Load()
 	ini->Read(wxT("ShowDeletedFile"), &mShowDeletedFile);
 	// エクスポート時に属性から拡張子を追加するか
 	ini->Read(wxT("AddExtensionWhenExport"), &mAddExtExport);
+	// エクスポート時に現在日時を設定するか
+	ini->Read(wxT("SetCurrentDateTimeWhenExport"), &mCurrentDateExport);
 	// インポート時に拡張子で属性を決定したら拡張子を削除するか
 	ini->Read(wxT("DeleteExtensionWhenImport"), &mDecideAttrImport);
 	// インポートやプロパティ変更時に日時を無視するか
 	ini->Read(wxT("IgnoreDateTime"), &mIgnoreDateTime);
+	// インポート時に現在日時を設定するか
+	ini->Read(wxT("SetCurrentDateTimeWhenImport"), &mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Read(wxT("ShowInterDirItem"), &mShowInterDirItem);
 	// ウィンドウ幅
@@ -233,10 +238,14 @@ void Config::Save()
 	ini->Write(wxT("ShowDeletedFile"), mShowDeletedFile);
 	// エクスポート時に属性から拡張子を追加するか
 	ini->Write(wxT("AddExtensionWhenExport"), mAddExtExport);
+	// エクスポート時に現在日時を設定するか
+	ini->Write(wxT("SetCurrentDateTimeWhenExport"), mCurrentDateExport);
 	// インポート時に拡張子で属性を決定したら拡張子を削除するか
 	ini->Write(wxT("DeleteExtensionWhenImport"), mDecideAttrImport);
 	// インポートやプロパティ変更時に日時を無視するか
 	ini->Write(wxT("IgnoreDateTime"), mIgnoreDateTime);
+	// インポート時に現在日時を設定するか
+	ini->Write(wxT("SetCurrentDateTimeWhenImport"), mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Write(wxT("ShowInterDirItem"), mShowInterDirItem);
 	// ウィンドウ幅

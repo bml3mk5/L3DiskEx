@@ -46,6 +46,13 @@
 #include "../utils.h"
 
 
+#ifdef DeleteFile
+#undef DeleteFile
+#endif
+#ifdef GetCurrentDirectory
+#undef GetCurrentDirectory
+#endif
+
 //#define DEBUG_DISK_FULL_TEST 1
 
 //////////////////////////////////////////////////////////////////////
@@ -1381,9 +1388,15 @@ bool DiskBasic::ChangeAttr(DiskBasicDirItem *item, DiskBasicDirItemAttr &attr)
 		item->SetExecuteAddress(attr.GetExecuteAddress());
 	}
 	// 日時更新
-	if (!attr.DoesIgnoreDateTime()) {
+	bool ignore_datetime = attr.DoesIgnoreDateTime();
+	DiskBasicDirItem::enDateTime ignore_type = item->CanIgnoreDateTime();
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0)) {
 		item->SetFileCreateDateTime(attr.GetCreateDateTime());
+	}
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0)) {
 		item->SetFileModifyDateTime(attr.GetModifyDateTime());
+	}
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0)) {
 		item->SetFileAccessDateTime(attr.GetAccessDateTime());
 	}
 	// 他の属性
@@ -1547,9 +1560,10 @@ bool DiskBasic::CanMakeDirectory() const
 
 /// サブディレクトリの作成
 /// @param [in] filename  ディレクトリ名
+/// @param [in] ignore_datetime 日時は設定しないか
 /// @param [out] nitem    作成したディレクトリアイテム
 /// @return 1:同じ名前がある -1:その他エラー
-int DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem)
+int DiskBasic::MakeDirectory(const wxString &filename, bool ignore_datetime, DiskBasicDirItem **nitem)
 {
 	if (!CanMakeDirectory()) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_MAKE_DIRECTORY);
@@ -1579,7 +1593,19 @@ int DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem)
 	// ファイル名＆属性を設定
 	pitem->SetFileNameStr(dir_name.GetName());
 	pitem->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_DIRECTORY_MASK, 0);
-	pitem->SetFileCreateDateTime(TM::GetNow());
+	// 日時設定
+	TM tm;
+	DiskBasicDirItem::enDateTime ignore_type = pitem->CanIgnoreDateTime();
+	tm.Now();
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0)) {
+		pitem->SetFileCreateDateTime(tm);
+	}
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0)) {
+		pitem->SetFileModifyDateTime(tm);
+	}
+	if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0)) {
+		pitem->SetFileAccessDateTime(tm);
+	}
 
 	// 新しいディレクトリアイテムを確保
 	while((item = dir->GetEmptyItemOnCurrent(pitem, &next_item)) == NULL) {

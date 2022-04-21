@@ -28,8 +28,10 @@ private:
 	wxCheckBox *chkTrimData;
 	wxCheckBox *chkShowDelFile;
 	wxCheckBox *chkAddExtExport;
+	wxCheckBox *chkDateExport;
 	wxCheckBox *chkSuppImport;
 	wxCheckBox *chkDecAttrImport;
+	wxCheckBox *chkDateImport;
 	wxCheckBox *chkIgnoreDate;
 	wxTextCtrl *txtTempFolder;
 	wxCheckBox *chkTempFolder;
@@ -44,8 +46,10 @@ public:
 		IDC_CHECK_TRIM_DATA = 1,
 		IDC_CHECK_SHOW_DELFILE,
 		IDC_CHECK_ADD_EXT_EXPORT,
+		IDC_CHECK_DATE_EXPORT,
 		IDC_CHECK_SUPP_IMPORT,
 		IDC_CHECK_DEC_ATTR_IMPORT,
+		IDC_CHECK_DATE_IMPORT,
 		IDC_CHECK_IGNORE_DATE,
 		IDC_TEXT_TEMP_FOLDER,
 		IDC_BUTTON_TEMP_FOLDER,

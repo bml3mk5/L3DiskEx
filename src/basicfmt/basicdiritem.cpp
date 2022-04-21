@@ -1893,6 +1893,85 @@ bool DiskBasicDirItem::ReadFileAttrFromXml(const wxString &path, DiskBasicDirIte
 	return true;
 }
 
+/// 日時を指定ファイルに書き込む
+void DiskBasicDirItem::WriteFileDateTime(const wxString &path) const
+{
+	if (!(HasCreateDateTime() || HasModifyDateTime() || HasAccessDateTime())) {
+		return;
+	}
+	wxFileName fn(path);
+	if (!fn.Exists()) {
+		return;
+	}
+	if (gConfig.IsSetCurrentDateExport()) {
+		return;
+	}
+	wxDateTime dtAcc, dtMod, dtCre;
+	wxDateTime *pAcc, *pMod, *pCre;
+	TM tm;
+	pAcc = HasAccessDateTime() ? &dtAcc : NULL;
+	pMod = HasModifyDateTime() ? &dtMod : NULL;
+	pCre = HasCreateDateTime() ? &dtCre : NULL;
+	if (pAcc) {
+		GetFileAccessDateTime(tm);
+		pAcc->Set(*tm);
+	}
+	if (pMod) {
+		GetFileModifyDateTime(tm);
+		pMod->Set(*tm);
+	}
+	if (pCre) {
+		GetFileCreateDateTime(tm);
+		pCre->Set(*tm);
+	}
+	if (pCre && !pMod) {
+		pMod = pCre;
+	}
+	fn.SetTimes(pAcc, pMod, pCre);
+}
+
+/// 指定ファイルから日時を読み込む
+void DiskBasicDirItem::ReadFileDateTime(const wxString &path, DiskBasicDirItemAttr &date_time) const
+{
+	TM tm;
+	if (!(HasCreateDateTime() || HasModifyDateTime() || HasAccessDateTime())) {
+		return;
+	}
+	tm.Now();
+	date_time.SetCreateDateTime(tm);
+	date_time.SetModifyDateTime(tm);
+	date_time.SetAccessDateTime(tm);
+	if (gConfig.IsSetCurrentDateImport()){
+		return;
+	}
+	wxFileName fn(path);
+	if (!fn.Exists()) {
+		return;
+	}
+	wxDateTime dtAcc, dtMod, dtCre;
+	wxDateTime *pAcc, *pMod, *pCre;
+	wxDateTime::Tm wtm;
+	pAcc = HasAccessDateTime() ? &dtAcc : NULL;
+	pMod = HasModifyDateTime() ? &dtMod : NULL;
+	pCre = HasCreateDateTime() ? &dtCre : NULL;
+	fn.GetTimes(pAcc, &dtMod, pCre);
+	if (pCre && !pMod) {
+		pCre = &dtMod;
+	}
+	if (pAcc) {
+		tm.Set(*pAcc);
+		date_time.SetAccessDateTime(tm);
+	}
+	if (pMod) {
+		tm.Set(*pMod);
+		date_time.SetModifyDateTime(tm);
+	}
+	if (pCre) {
+		tm.Set(*pCre);
+		date_time.SetCreateDateTime(tm);
+	}
+}
+
 /// 使用中のアイテムか
 bool DiskBasicDirItem::IsUsed() const
 {
