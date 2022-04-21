@@ -43,9 +43,9 @@ public:
 
 	/// ディレクトリアイテムを新規に作成
 	DiskBasicDirItem *NewItem();
-	/// ディレクトリアイテムを新規に作成
+	/// ディレクトリアイテムを新規に作成してアサインする
 	DiskBasicDirItem *NewItem(DiskD88Sector *newsec, wxUint8 *newdata);
-	/// ディレクトリアイテムを新規に作成
+	/// ディレクトリアイテムを新規に作成してアサインする
 	DiskBasicDirItem *NewItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse);
 	/// ディレクトリアイテムを新規に作成してアサインする
 	DiskBasicDirItem *AssignItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse);
@@ -62,9 +62,9 @@ public:
 	/// 全ディレクトアイテムをクリア
 	void		Empty();
 
-	/// 同じファイル名が既に存在するか
+	/// 現在のディレクトリ内に同じファイル名が既に存在するか
 	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
-	/// 同じファイル名が既に存在するか
+	/// 現在のディレクトリ内に同じファイル名が既に存在するか
 	DiskBasicDirItem *FindFile(const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// ルートディレクトリのチェック
 	bool		CheckRoot(DiskBasicType *type, int start_sector, int end_sector);

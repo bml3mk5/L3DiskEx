@@ -657,7 +657,7 @@ bool DiskBasicDirItemMZ::IsWriteProtected()
 {
 	return (data->mz.type2 & 1) == 0;
 }
-bool DiskBasicDirItemMZ::IsDeleteable()
+bool DiskBasicDirItemMZ::IsDeletable()
 {
 	// ボリューム番号は削除できない
 	return ((GetFileType1() & FILETYPE_MZ_VOL) == 0);

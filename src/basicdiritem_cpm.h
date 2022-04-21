@@ -7,6 +7,8 @@
 
 #include "basicdiritem.h"
 
+#define SECTOR_UNIT_CPM		128
+
 /// CP/M属性名
 extern const char *gTypeNameCPM[];
 enum en_type_name_cpm {
@@ -54,8 +56,12 @@ private:
 	void	SetFileExt(const wxUint8 *fileext, int length);
 
 	int group_width;	///< グループ番号の幅(1 = 8ビット, 2 = 16ビット)
+	int group_entries;	///< グループ番号のエントリ数(8 or 16)
 
 	DiskBasicDirItemCPM *next_item;	///< 次のエクステントがある場合
+
+	/// 拡張子からバイナリかどうかを判断する
+	int		GetFileTypeByExt(int val, const wxString &ext) const;
 
 public:
 	DiskBasicDirItemCPM(DiskBasic *basic);
@@ -110,10 +116,15 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-	/// 書き込み/上書き禁止か
-	bool			IsWriteProtected();
+	/// ファイルの終端コードをチェックする必要があるか
+	bool			NeedCheckEofCode();
+	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
+	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
+
+//	/// 書き込み/上書き禁止か
+//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
-	bool			IsDeleteable();
+	bool			IsDeletable();
 	/// ファイル名を編集できるか
 	bool			IsFileNameEditable();
 
@@ -122,6 +133,8 @@ public:
 	void		SetGroupWidth(int val) { group_width = val; }
 	/// グループ番号の幅を返す(1 = 8ビット, 2 = 16ビット)
 	int			GetGroupWidth() const { return group_width; }
+	/// グループ番号のエントリ数を返す
+	int			GetGroupEntries() const { return group_entries; }
 	/// グループ番号をセット
 	void		SetGroup(int pos, wxUint32 val);
 	/// グループ番号を返す
@@ -130,6 +143,8 @@ public:
 	wxUint8		GetExtentNumber() const;
 	/// レコード番号を返す
 	wxUint8		GetRecordNumber() const;
+	/// ファイルサイズからエクステント番号とレコード番号をセット
+	void		CalcExtentAndRecordNumber(int val);
 	/// 次のアイテムをセット
 	void		SetNextItem(DiskBasicDirItem *val) { next_item = (DiskBasicDirItemCPM *)val; }
 	/// 次のアイテムを返す

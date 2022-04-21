@@ -20,36 +20,6 @@ DiskD88Writer::~DiskD88Writer()
 {
 }
 
-#if 0
-/// ストリームの内容をファイルに保存
-int DiskD88Writer::Save(DiskD88 *image, wxOutputStream *ostream)
-{
-	result->Clear();
-
-	DiskD88File *file = image->GetFile();
-	if (!file) {
-		result->SetError(DiskResult::ERR_NO_DATA);
-		return result->GetValid();
-	}
-
-	DiskD88Disks *disks = file->GetDisks();
-	if (!disks || disks->Count() <= 0) {
-		result->SetError(DiskResult::ERR_NO_DISK);
-		return result->GetValid();
-	}
-	for(size_t disk_num = 0; disk_num < disks->Count(); disk_num++) {
-		DiskD88Disk *disk = disks->Item(disk_num);
-		SaveDisk(disk, ostream); 
-	}
-
-	if (result->GetValid() >= 0) {
-		file->ClearModify();
-	}
-
-	return result->GetValid();
-}
-#endif
-
 /// ストリームの内容をファイルに保存
 /// @param [in,out] image ディスクイメージ
 /// @param [in]     disk_number ディスク番号(0-) / -1のときは全体 
@@ -100,10 +70,11 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 		return result->GetValid();
 	}
 
-	// ヘッダオフセットが古い場合再計算する
-	if ((size_t)disk->GetOffsetStart() < sizeof(d88_header_t)) {
+	// ヘッダオフセットが古い場合や、ディスクサイズが一致しない場合、再計算する
+	size_t new_size = disk->CalcSizeWithoutHeader();
+	if (new_size != disk->GetSizeWithoutHeader() || (size_t)disk->GetOffsetStart() < sizeof(d88_header_t)) {
 		disk->SetOffsetStart(sizeof(d88_header_t));
-		size_t new_size = disk->Shrink();
+		new_size = disk->Shrink();
 		disk->SetSizeWithoutHeader((wxUint32)new_size);
 	}
 
@@ -154,7 +125,7 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *
 	SingleDensities singles;
 	singles.Add(new SingleDensity(-1, -1, disk->GetSectorsPerTrack(), 128));
 	wxArrayString basic_types;
-	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, disk->GetInterleave(), singles, wxT(""));
+	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""));
 
 	DiskD88File tmpfile;
 	DiskD88Creator cr("", param, false, &tmpfile, *result);

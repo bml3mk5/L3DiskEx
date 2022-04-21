@@ -1,5 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <DiskBasicTypes version="2.0">
+	<DiskBasicFormat type="0" name="L3-1S">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="1" name="L3S1-2D">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="2" name="FM">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="3" name="MSDOS">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="4" name="MSX">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="5" name="N88">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="6" name="X1HU">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="7" name="MZ">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="8" name="FLEX">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="9" name="OS9">
+	</DiskBasicFormat>
+	<DiskBasicFormat type="10" name="CPM">
+	</DiskBasicFormat>
+
 	<DiskBasicCategory name="L3S1">
 		<Description>HITACHI LEVEL-3/S1 DISK BASIC</Description>
 		<Description lang="ja">日立 LEVEL-3/S1 DISK BASIC</Description>
@@ -30,6 +53,7 @@
 		<Description>FLEX</Description>
 		<Description lang="ja">FLEX</Description>
 	</DiskBasicCategory>
+-->
 	<DiskBasicCategory name="OS9">
 		<Description>OS-9</Description>
 		<Description lang="ja">OS-9</Description>
@@ -38,7 +62,7 @@
 		<Description>CP/M</Description>
 		<Description lang="ja">CP/M</Description>
 	</DiskBasicCategory>
--->
+
 	<DiskBasicType name="L3-1S" category="L3S1">
 		<FormatType>0</FormatType>
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -557,6 +581,7 @@
 		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
 		<IPLString>\x01</IPLString>
 		<VolumeString>\x01</VolumeString>
+		<SubDirGroupSize>4</SubDirGroupSize>
 		<Description>MZ DISK BASIC (5inch 2D, 40tracks)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="MZ-2DD" category="MZ">
@@ -616,34 +641,84 @@
 		<DeleteCodeOnDir>0xff</DeleteCodeOnDir>
 		<Description>FLEX (2D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="FLEX-2HD" category="FLEX">
+		<FormatType>8</FormatType>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATEndGroup>4003</FATEndGroup>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>26</DirEndSector>
+		<DirSpaceCode>0</DirSpaceCode>
+		<DirStartPositionOnSector>16</DirStartPositionOnSector>
+		<FillCodeOnFormat>0x40</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0xff</DeleteCodeOnDir>
+		<Description>FLEX (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="OS9-1D" category="OS9">
+		<FormatType>9</FormatType>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<FATEndGroup>623</FATEndGroup>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>11</DirEndSector>
+		<DirSpaceCode>0</DirSpaceCode>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<SubDirGroupSize>8</SubDirGroupSize>
+		<Description>OS-9 (1D)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="OS9-2D" category="OS9">
 		<FormatType>9</FormatType>
 		<SectorsPerGroup>1</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>16</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
-		<FATEndGroup>639</FATEndGroup>
+		<FATEndGroup>1247</FATEndGroup>
 		<DirStartSector>4</DirStartSector>
-		<DirEndSector>10</DirEndSector>
+		<DirEndSector>11</DirEndSector>
 		<DirSpaceCode>0</DirSpaceCode>
 		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
-		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (2D)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="OS9-2HD" category="OS9">
+	<DiskBasicType name="OS9-2DD" category="OS9">
 		<FormatType>9</FormatType>
 		<SectorsPerGroup>1</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>16</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
-		<FATEndGroup>1279</FATEndGroup>
+		<FATEndGroup>2559</FATEndGroup>
 		<DirStartSector>4</DirStartSector>
-		<DirEndSector>16</DirEndSector>
+		<DirEndSector>11</DirEndSector>
 		<DirSpaceCode>0</DirSpaceCode>
 		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
-		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<SubDirGroupSize>8</SubDirGroupSize>
+		<Description>OS-9 (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="OS9-2HD" category="OS9">
+		<FormatType>9</FormatType>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<FATEndGroup>3951</FATEndGroup>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>11</DirEndSector>
+		<DirSpaceCode>0</DirSpaceCode>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM88-2D" category="CPM">
@@ -656,7 +731,7 @@
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>16</DirEndSector>
 		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
 		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
 		<Description>CP/M for PC-8801 (2D)</Description>
 	</DiskBasicType>
@@ -670,7 +745,7 @@
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>8</DirEndSector>
 		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
 		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
 		<Description>CP/M for X1 (2D)</Description>
 	</DiskBasicType>
@@ -684,8 +759,50 @@
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>16</DirEndSector>
 		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
 		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
 		<Description>CP/M for MZ-2500 (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM88-2HD" category="CPM">
+		<FormatType>10</FormatType>
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<FATEndGroup>242</FATEndGroup>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
+		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
+		<Description>CP/M for PC-8801 (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM68-2HD" category="CPM">
+		<FormatType>10</FormatType>
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATEndGroup>496</FATEndGroup>
+		<DirStartSector>17</DirStartSector>
+		<DirEndSector>50</DirEndSector>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
+		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
+		<Description>CP/M 68K (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM98-2HD" category="CPM">
+		<FormatType>10</FormatType>
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<FATEndGroup>493</FATEndGroup>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>32</DirEndSector>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0xe5</FillCodeOnDir>
+		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
+		<Description>CP/M for PC-9801 (2HD)</Description>
 	</DiskBasicType>
 </DiskBasicTypes>

@@ -17,6 +17,12 @@ private:
 	DiskBasicTypeL31S(const DiskBasicType &src) : DiskBasicTypeFAT8F(src) {}
 public:
 	DiskBasicTypeL31S(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
+
+	/// @name check / assign FAT area
+	//@{
+	/// FATエリアをチェック
+	bool	CheckFat();
+	//@}
 };
 
 #endif /* _BASICTYPE_L31S_H_ */

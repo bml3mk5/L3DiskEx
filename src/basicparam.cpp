@@ -43,6 +43,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_subdir_group_size,
 	wxUint8				n_dir_space_code,
 	int					n_dir_start_pos_on_sec,
+	int					n_groups_per_dir_entry,
 	int					n_id_sector_pos,
 	const wxString &	n_id_string,
 	const wxString &	n_ipl_string,
@@ -77,6 +78,7 @@ DiskBasicParam::DiskBasicParam(
 	subdir_group_size = n_subdir_group_size;
 	dir_space_code = n_dir_space_code;
 	dir_start_pos_on_sec = n_dir_start_pos_on_sec;
+	groups_per_dir_entry = n_groups_per_dir_entry;
 	id_sector_pos = n_id_sector_pos;
 	id_string = n_id_string;
 	ipl_string = n_ipl_string;
@@ -113,6 +115,7 @@ void DiskBasicParam::ClearBasicParam()
 	subdir_group_size	 = 0;
 	dir_space_code		 = 0x20;
 	dir_start_pos_on_sec = 0;
+	groups_per_dir_entry = 0;
 	id_sector_pos		 = 0;
 	id_string.Empty();
 	ipl_string.Empty();
@@ -149,6 +152,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	subdir_group_size = src.subdir_group_size;
 	dir_space_code = src.dir_space_code;
 	dir_start_pos_on_sec = src.dir_start_pos_on_sec;
+	groups_per_dir_entry = src.groups_per_dir_entry;
 	id_sector_pos = src.id_sector_pos;
 	id_string = src.id_string;
 	ipl_string = src.ipl_string;
@@ -240,15 +244,6 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 	// start processing the XML file
 	if (doc.GetRoot()->GetName() != "DiskBasicTypes") return false;
 
-#if 0
-	wxXmlNode *prolog = doc.GetDocumentNode()->GetChildren();
-	while (prolog) {
-	    if (prolog->GetType() == wxXML_PI_NODE && prolog->GetName() == "DiskType") {
-	        wxString pi = prolog->GetContent();
-		}
-	}
-#endif
-
 	wxXmlNode *item = doc.GetRoot()->GetChildren();
 	while (item) {
 		if (item->GetName() == "DiskBasicType") {
@@ -273,6 +268,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int subdir_group_size	 = 1;
 			int dir_space_code		 = 0x20;
 			int dir_start_pos_on_sec = 0;
+			int groups_per_dir_entry = 0;
 			int fill_code_on_format	 = 0;
 			int fill_code_on_fat	 = 0;
 			int fill_code_on_dir	 = 0;
@@ -362,6 +358,9 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
 					wxString str = itemnode->GetNodeContent();
 					dir_start_pos_on_sec = L3DiskUtils::ToInt(str);
+				} else if (itemnode->GetName() == "GroupsPerDirEntry") {
+					wxString str = itemnode->GetNodeContent();
+					groups_per_dir_entry = L3DiskUtils::ToInt(str);
 				} else if (itemnode->GetName() == "SubDirGroupSize") {
 					wxString str = itemnode->GetNodeContent();
 					subdir_group_size = L3DiskUtils::ToInt(str);
@@ -434,6 +433,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				subdir_group_size,
 				dir_space_code,
 				dir_start_pos_on_sec,
+				groups_per_dir_entry,
 				id_sector_pos,
 				id_string,
 				ipl_string,

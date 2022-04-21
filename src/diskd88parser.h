@@ -22,7 +22,8 @@ private:
 	short			mod_flags;
 	DiskResult		*result;
 
-	wxUint32 ParseSector(wxInputStream *istream, int disk_number, int track_number, int &sector_nums, DiskD88Track *track);
+	void	 PreParseSectors(wxInputStream *istream, int disk_number, int &track_number, int &side_number, int &sector_nums, int &sector_size);
+	wxUint32 ParseSector(wxInputStream *istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskD88Track *track);
 	wxUint32 ParseTrack(wxInputStream *istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, DiskD88Disk *disk);
 	wxUint32 ParseDisk(wxInputStream *istream, size_t start_pos, int disk_number);
 

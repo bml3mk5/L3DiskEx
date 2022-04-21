@@ -18,6 +18,7 @@ const char *gTypeNameFLEX[] = {
 	wxTRANSLATE("Undeletable"),
 	wxTRANSLATE("Write Only"),
 	wxTRANSLATE("Hidden"),
+	wxTRANSLATE("Random Access"),
 	NULL
 };
 
@@ -76,6 +77,18 @@ int	DiskBasicDirItemFLEX::GetFileType1() const
 void DiskBasicDirItemFLEX::SetFileType1(int val)
 {
 	data->flex.type = (val & 0xff);
+}
+
+/// 属性２を返す
+int	DiskBasicDirItemFLEX::GetFileType2() const
+{
+	return data->flex.random_access;
+}
+
+/// 属性２を設定
+void DiskBasicDirItemFLEX::SetFileType2(int val)
+{
+	data->flex.random_access = (val & 0xff);
 }
 
 /// 使用しているアイテムか
@@ -147,6 +160,10 @@ void DiskBasicDirItemFLEX::SetFileAttr(int file_type)
 	if (file_type & FILE_TYPE_HIDDEN_MASK) {
 		val |= FILETYPE_MASK_FLEX_HIDDEN;
 	}
+	if (file_type & FILE_TYPE_RANDOM_MASK) {
+		int val2 = (file_type >> FILETYPE_FLEX_RANDOM_POS);
+		SetFileType2(val2 ? val2 : 0x02);
+	}
 
 	SetFileType1(val);
 }
@@ -182,6 +199,10 @@ int DiskBasicDirItemFLEX::GetFileType()
 	if (type1 & FILETYPE_MASK_FLEX_HIDDEN) {
 		val |= FILE_TYPE_HIDDEN_MASK;
 	}
+	if (GetFileType2() != 0) {
+		val |= FILE_TYPE_RANDOM_MASK;
+		val |= (GetFileType2() << FILETYPE_FLEX_RANDOM_POS);
+	}
 	return val;
 }
 
@@ -194,12 +215,12 @@ int DiskBasicDirItemFLEX::GetFileType1Pos()
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemFLEX::GetFileType2Pos()
 {
-	return 0;
+	return GetFileType2();
 }
 
 int	DiskBasicDirItemFLEX::CalcFileTypeFromPos(int pos1, int pos2)
 {
-	return pos1;
+	return (pos1 | pos2);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
@@ -223,6 +244,10 @@ wxString DiskBasicDirItemFLEX::GetFileAttrStr()
 		if (!str.IsEmpty()) str += wxT(", ");
 		str += wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_HIDDEN]);
 	}
+	if (GetFileType2() != 0) {
+		if (!str.IsEmpty()) str += wxT(", ");
+		str += wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_RANDOM]);
+	}
 	return str;
 }
 
@@ -239,8 +264,11 @@ void DiskBasicDirItemFLEX::CalcFileSize()
 {
 	if (!used) return;
 
+	// セクタ先頭4バイトを除く
+	int sec_size = (basic->GetSectorSize() - 4);
+
 	// ファイルサイズ
-	file_size = wxUINT16_SWAP_ON_LE(data->flex.total_sectors) * basic->GetSectorSize();
+	file_size = wxUINT16_SWAP_ON_LE(data->flex.total_sectors) * sec_size;
 
 	int calc_file_size = 0;
 	int calc_groups = 0;
@@ -248,7 +276,7 @@ void DiskBasicDirItemFLEX::CalcFileSize()
 //	int calc_last_sector = 0;
 	bool rc = true;
 
-	DiskD88Disk *disk = basic->GetDisk();
+//	DiskD88Disk *disk = basic->GetDisk();
 	directory_flex_t *d = &data->flex;
 
 	int track_num  = d->start_track;
@@ -256,9 +284,7 @@ void DiskBasicDirItemFLEX::CalcFileSize()
 
 	int limit = basic->GetFatEndGroup() + 1;
 	while(limit >= 0) {
-		int side_num = (sector_num - 1) / basic->GetSectorsPerTrackOnBasic();
-		sector_num = ((sector_num - 1) % basic->GetSectorsPerTrackOnBasic()) + 1;
-		DiskD88Sector *sector = disk->GetSector(track_num, side_num, sector_num);
+		DiskD88Sector *sector = basic->GetSector(track_num, sector_num);
 		if (!sector) {
 			// error
 			rc = false;
@@ -268,7 +294,7 @@ void DiskBasicDirItemFLEX::CalcFileSize()
 		track_num = p->next_track;
 		sector_num = p->next_sector;
 
-		calc_file_size += (sector->GetSectorSize() - 4);
+		calc_file_size += sec_size;
 		calc_groups++;
 
 		if (track_num == 0 || sector_num == 0) {
@@ -299,7 +325,7 @@ void DiskBasicDirItemFLEX::GetAllGroups(DiskBasicGroups &group_items)
 {
 //	bool rc = true;
 
-	DiskD88Disk *disk = basic->GetDisk();
+//	DiskD88Disk *disk = basic->GetDisk();
 	directory_flex_t *d = &data->flex;
 
 	int track_num  = d->start_track;
@@ -309,9 +335,7 @@ void DiskBasicDirItemFLEX::GetAllGroups(DiskBasicGroups &group_items)
 
 	int limit = basic->GetFatEndGroup() + 1;
 	while((track_num != 0 || sector_num != 0) && limit >= 0) {
-		int side_num = (sector_num - 1) / basic->GetSectorsPerTrackOnBasic();
-		int ssec_num = ((sector_num - 1) % basic->GetSectorsPerTrackOnBasic()) + 1;
-		DiskD88Sector *sector = disk->GetSector(track_num, side_num, ssec_num);
+		DiskD88Sector *sector = basic->GetSector(track_num, sector_num);
 		if (!sector) {
 			// error
 //			rc = false;
@@ -324,6 +348,7 @@ void DiskBasicDirItemFLEX::GetAllGroups(DiskBasicGroups &group_items)
 		wxUint32 gnum = (wxUint32)basic->GetSectorPosFromNum(track_num, sector_num);
 		wxUint32 next_gnum = (wxUint32)basic->GetSectorPosFromNum(next_track_num, next_sector_num);
 
+		int side_num = ((sector_num - 1) / basic->GetSectorsPerTrackOnBasic());
 		group_items.Add(gnum, next_gnum, track_num, side_num, sector_num, sector_num);
 
 //		file_size += (sector->GetSectorSize() - 4);
@@ -408,7 +433,7 @@ bool DiskBasicDirItemFLEX::IsWriteProtected()
 {
 	return false;
 }
-bool DiskBasicDirItemFLEX::IsDeleteable()
+bool DiskBasicDirItemFLEX::IsDeletable()
 {
 	return false;
 }
@@ -432,6 +457,7 @@ bool DiskBasicDirItemFLEX::IsFileNameEditable()
 #define IDC_CHECK_UNDELETE 52
 #define IDC_CHECK_WRITEONLY 53
 #define IDC_CHECK_HIDDEN   54
+#define IDC_CHECK_RANDOM   55
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -447,6 +473,7 @@ void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int f
 	wxCheckBox *chkUndelete;
 	wxCheckBox *chkWriteOnly;
 	wxCheckBox *chkHidden;
+	wxCheckBox *chkRandom;
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	chkReadOnly = new wxCheckBox(parent, IDC_CHECK_READONLY, wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_READ_ONLY]));
@@ -461,12 +488,19 @@ void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int f
 	chkHidden = new wxCheckBox(parent, IDC_CHECK_HIDDEN, wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_HIDDEN]));
 	chkHidden->SetValue((file_type_1 & FILE_TYPE_HIDDEN_MASK) != 0);
 	staType4->Add(chkHidden, flags);
+	chkRandom = new wxCheckBox(parent, IDC_CHECK_RANDOM, wxGetTranslation(gTypeNameFLEX[TYPE_NAME_FLEX_RANDOM]));
+	chkRandom->SetValue((file_type_1 & FILE_TYPE_RANDOM_MASK) != 0);
+	staType4->Add(chkRandom, flags);
 	sizer->Add(staType4, flags);
+
+	// ユーザ定義データ(ランダムファイル属性値)
+	*user_data = (file_type_1 & FILETYPE_FLEX_RANDOM_MASK);
 
 	controls.Add(chkReadOnly);
 	controls.Add(chkUndelete);
 	controls.Add(chkWriteOnly);
 	controls.Add(chkHidden);
+	controls.Add(chkRandom);
 }
 
 /// 属性を変更した際に呼ばれるコールバック
@@ -504,5 +538,8 @@ int DiskBasicDirItemFLEX::GetFileType1InAttrDialog(const AttrControls &controls)
 /// @return CalcFileTypeFromPos()のpos2に渡す値
 int DiskBasicDirItemFLEX::GetFileType2InAttrDialog(const AttrControls &controls, const int *user_data) const
 {
-	return 0;
+	wxCheckBox *chkRandom = (wxCheckBox *)controls.Item(5);
+
+	// ユーザ定義データ(ランダムファイル属性値)
+	return (chkRandom->GetValue() ? (FILE_TYPE_RANDOM_MASK | *user_data) : 0);
 }

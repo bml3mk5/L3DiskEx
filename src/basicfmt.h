@@ -58,7 +58,7 @@ public:
 	DiskBasic();
 	~DiskBasic();
 
-	/// @name for user interface
+	/// @name 解析
 	//@{
 	/// 指定したディスクがDISK BASICかを解析する
 	int				ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting);
@@ -75,6 +75,9 @@ public:
 	/// 現在選択しているディスクのFATとルートディレクトリをアサイン
 	bool			AssignFatAndDirectory();
 
+	//@}
+	/// @name 読み出し
+	//@{
 //	/// 指定したファイル名のファイルをロード
 //	bool			LoadFile(const wxString &filename, const wxString &dstpath);
 	/// 指定したディレクトリ位置のファイルをロード
@@ -86,18 +89,29 @@ public:
 	bool			VerifyFile(DiskBasicDirItem *item, const wxString &srcpath);
 	/// ディスクデータにアクセス（ロード/ベリファイで使用）
 	bool			AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream);
-
-	/// 同じファイル名が既に存在するか
+	//@}
+	/// @name 比較・チェック
+	//@{
+	/// 同じファイル名のアイテムをさがす
 	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
-
-	/// 書き込みできるか
-	bool			IsWritableIntoDisk();
 
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxString &srcpath, int &file_size);
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxUint8 *buffer, size_t buflen);
 
+	/// DISK BASICで使用できる残りディスクサイズ
+	bool			HasFreeDiskSize(int size);
+	/// DISK BASICで使用できる残りディスクサイズを返す
+	int				GetFreeDiskSize() const;
+
+	/// FATエリアの空き状況を取得
+	void			GetFatAvailability(wxUint32 *offset, const wxArrayInt **arr) const;
+	//@}
+	/// @name 書き込み
+	//@{
+	/// 書き込みできるか
+	bool			IsWritableIntoDisk();
 //	/// 指定ファイルをディスクイメージにセーブ
 //	bool			SaveFile(const wxString &srcpath, const wxString &filename, int file_type, int start_addr, int exec_addr, const struct tm *tm, DiskBasicDirItem **nitem = NULL);
 //	/// バッファデータをディスクイメージにセーブ
@@ -110,7 +124,9 @@ public:
 	bool			SaveFile(const wxUint8 *buffer, size_t buflen, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem = NULL);
 	/// ストリームデータをディスクイメージにセーブ
 	bool			SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem = NULL);
-
+	//@}
+	/// @name 削除
+	//@{
 	/// ファイルを削除できるか
 	bool			IsDeletableFiles();
 	/// 指定したファイルを削除できるか
@@ -119,77 +135,80 @@ public:
 	bool			DeleteItem(DiskBasicDirItem *item, bool clearmsg = true);
 	/// ファイルを削除
 	bool			DeleteItem(DiskBasicDirItem *item, const DiskBasicGroups &group_items);
-
+	//@}
+	/// @name 属性変更
+	//@{
 	/// ファイル名や属性を更新
 	bool			RenameFile(DiskBasicDirItem *item, const wxString &newname, int file_type = -1, int start_addr = -1, int exec_addr = -1, const struct tm *tm = NULL, const AttrControls *controls = NULL);
 
+	//@}
+	/// @name フォーマット
+	//@{
 	/// DISK BASIC用にフォーマットされているか
 	bool			IsFormatted() const;
 	/// DISK BASIC用にフォーマットできるか
 	bool			IsFormattable();
 	/// ディスクを論理フォーマット
 	bool			FormatDisk();
-
+	//@}
+	/// @name ディレクトリ操作
+	//@{
 	/// ディレクトリを変更
 	bool			ChangeDirectory(DiskBasicDirItem *item);
 	/// サブディレクトリの作成できるか
 	bool			CanMakeDirectory() const;
 	/// サブディレクトリの作成
 	bool			MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem = NULL);
-
+	//@}
+	/// @name ディレクトリアイテム操作
+	//@{
 	/// ディレクトリアイテムの作成 使用後はdeleteすること
 	DiskBasicDirItem *CreateDirItem();
 	/// ディレクトリアイテムの作成 使用後はdeleteすること
 	DiskBasicDirItem *CreateDirItem(DiskD88Sector *sector, wxUint8 *data);
-
-//	/// 指定ディレクトリのすべてのグループを取得
-//	void			GetAllGroups(DiskBasicDirItem *item, DiskBasicGroups &group_items);
-
-	/// グループ番号から開始セクタを返す
-	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num);
-	/// グループ番号から開始セクタを返す
-	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num);
+	/// ディレクトリのアイテムを取得
+	DiskBasicDirItem *GetDirItem(size_t pos);
 	/// ディレクトリアイテムの位置から開始セクタを返す
 	DiskD88Sector	*GetSectorFromPosition(size_t position, wxUint32 *start_group);
 	/// ディレクトリアイテムの位置から属している全グループを返す
 	bool			GetGroupsFromPosition(size_t position, DiskBasicGroups &group_items);
-
-	/// 管理エリアのサイド番号、セクタ番号、トラックを得る
-	DiskD88Track	*GetManagedTrack(int sector_pos, int *side, int *sector);
-	/// 管理エリアのサイド番号、セクタ番号、セクタポインタを得る
-	DiskD88Sector	*GetManagedSector(int sector_pos, int *side, int *sector);
-
-	/// DISK BASICで使用できる残りディスクサイズ
-	bool			HasFreeDiskSize(int size);
 	//@}
-
-	/// @name properties
+	/// @name グループ番号
 	//@{
-	/// DISK BASICで使用できる残りディスクサイズを返す
-	int				GetFreeDiskSize() const;
-	/// DISK使用可能か
-	bool			CanUse() const { return (disk != NULL); }
-	/// DISKイメージを返す
-	DiskD88Disk		*GetDisk() const { return disk; }
-	/// 選択中のサイドを返す
-	int				GetSelectedSide() const { return selected_side; }
-	/// DISK BASICの説明を取得
-	const wxString &GetDescription();
-	/// FATエリアの空き状況を取得
-	void			GetFatAvailability(wxUint32 *offset, const wxArrayInt **arr) const;
-
-	DiskBasicFat	*GetFat() { return fat; }
-	DiskBasicDir	*GetDir() { return dir; }
-	DiskBasicType	*GetType() { return type; }
-	/// ディレクトリのアイテムを取得
-	DiskBasicDirItem *GetDirItem(size_t pos);
-	DiskBasicError	&GetErrinfo() { return errinfo; }
+	/// グループ番号から開始セクタを返す
+	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num);
+	/// グループ番号から開始セクタを返す
+	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num);
+//	/// 指定ディレクトリのすべてのグループを取得
+//	void			GetAllGroups(DiskBasicDirItem *item, DiskBasicGroups &group_items);
+	/// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
+	bool			GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_size, int remain_size, DiskBasicGroups &items, int *end_sector = NULL);
+	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
+	bool			CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, int &side_start, int &sector_start);
+	/// セクタ位置(トラック0,サイド0のセクタを0とした位置)からトラック、サイド、セクタの各番号を計算(グループ計算用)
+	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track, int &side, int &sector);
+	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0のセクタを0とした位置)を計算(グループ計算用)
+	int				CalcSectorPosFromNumForGroup(int track, int side, int sector);
 	//@}
+	/// @name ユーティリティ
+	//@{
+	/// 管理エリアのサイド番号、セクタ番号、トラックを得る
+	DiskD88Track	*GetManagedTrack(int sector_pos, int *side_num = NULL, int *sector_num = NULL);
+	/// 管理エリアのトラック番号、サイド番号、セクタ番号、セクタポインタを得る
+	DiskD88Sector	*GetManagedSector(int sector_pos, int *track_num = NULL, int *side_num = NULL, int *sector_num = NULL);
+
+	/// トラックを返す
+	DiskD88Track	*GetTrack(int track_num, int side_num);
+	/// セクタ返す
+	DiskD88Sector	*GetSector(int track_num, int side_num, int sector_num);
+	/// セクタ返す
+	DiskD88Sector	*GetSector(int track_num, int sector_num, int *side_num = NULL);
 
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラックを返す
 	DiskD88Track	*GetTrackFromSectorPos(int sector_pos, int &sector_num);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
 	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos);
+
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
 	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
@@ -198,16 +217,9 @@ public:
 	int				GetSectorPosFromNum(int track, int side, int sector_num);
 	/// トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
 	int				GetSectorPosFromNum(int track, int sector_num);
-	/// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
-	bool			GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_size, int remain_size, DiskBasicGroups &items, int *end_sector = NULL);
-	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
-	bool			CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, int &side_start, int &sector_start);
-
-	/// セクタ位置(トラック0,サイド0のセクタを0とした位置)からトラック、サイド、セクタの各番号を計算(グループ計算用)
-	void			CalcNumFromSectorPosForGroup(int sector_pos, int &track, int &side, int &sector);
-	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0のセクタを0とした位置)を計算(グループ計算用)
-	int				CalcSectorPosFromNumForGroup(int track, int side, int sector);
-
+	//@}
+	/// @name キャラクターコード
+	//@{
 	/// キャラクターコードの文字体系を設定
 	void			SetCharCode(int val);
 	/// 現在のキャラクターコードの文字体系を返す
@@ -215,19 +227,27 @@ public:
 	/// キャラクターコードの文字体系
 	CharCodes		&GetCharCodes() { return codes; }
 
-	/// 文字列をバイト列に変換
-	/// 文字コードは機種依存
+	/// 文字列をバイト列に変換 文字コードは機種依存
 	bool			ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len);
-	/// バイト列を文字列に変換
-	/// 文字コードは機種依存
+	/// バイト列を文字列に変換 文字コードは機種依存
 	void			ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst);
-
-	/// エラーメッセージ
-	const wxArrayString &GetErrorMessage(int maxrow = 20);
-	/// エラー有無
-	int				GetErrorLevel(void) const;
-	/// エラーメッセージを表示
-	void			ShowErrorMessage();
+	//@}
+	/// @name プロパティ
+	//@{
+	/// DISK使用可能か
+	bool			CanUse() const { return (disk != NULL); }
+	/// DISKイメージを返す
+	DiskD88Disk		*GetDisk() const { return disk; }
+	/// 選択中のサイドを返す
+	int				GetSelectedSide() const { return selected_side; }
+	/// DISK BASICの説明を取得
+	const wxString &GetDescription();
+	/// FATクラス
+	DiskBasicFat	*GetFat() { return fat; }
+	/// DIRクラス
+	DiskBasicDir	*GetDir() { return dir; }
+	/// TYPEクラス
+	DiskBasicType	*GetType() { return type; }
 
 	/// セクタ数/トラックを返す(実際のディスクイメージと異なる場合があるため)
 	int				GetSectorsPerTrackOnBasic() const { return sectors_on_basic; }
@@ -236,6 +256,18 @@ public:
 
 	/// ディスク内のデータが反転しているか
 	bool			IsDataInverted();
+	//@}
+	/// @name エラーメッセージ
+	//@{
+	/// エラーメッセージ
+	const wxArrayString &GetErrorMessage(int maxrow = 20);
+	/// エラー有無
+	int				GetErrorLevel(void) const;
+	/// エラー情報
+	DiskBasicError	&GetErrinfo() { return errinfo; }
+	/// エラーメッセージを表示
+	void			ShowErrorMessage();
+	//@}
 };
 
 #endif /* _BASICFMT_H_ */

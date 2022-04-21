@@ -48,6 +48,9 @@ public:
 	/// セクタリストの選択行を返す
 	int GetSectorListSelectedRow() const;
 
+	/// トラックリストとセクタリストを更新
+	void RefreshAllData();
+
 	/// クリップボードからペースト
 	bool PasteFromClipboard();
 	/// トラックからエクスポートダイアログ表示
@@ -133,9 +136,13 @@ public:
 	//@}
 
 	/// トラックリストをセット
-	void SetData(DiskD88Disk *newdisk, int newsidenum);
+	void SetTracks(DiskD88Disk *newdisk, int newsidenum);
+	/// トラックリストをセット
+	void SetTracks();
+	/// トラックリストを再セット
+	void RefreshTracks();
 	/// トラックリストをクリア
-	void ClearData();
+	void ClearTracks();
 
 	/// トラックリスト上のポップアップメニュー表示
 	void ShowPopupMenu();

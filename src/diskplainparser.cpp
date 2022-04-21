@@ -23,9 +23,9 @@ DiskPlainParser::~DiskPlainParser()
 }
 
 /// セクタデータの解析
-wxUint32 DiskPlainParser::ParseSector(wxInputStream *istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, DiskD88Track *track)
+wxUint32 DiskPlainParser::ParseSector(wxInputStream *istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool single_density, DiskD88Track *track)
 {
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
+	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, single_density);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -44,13 +44,13 @@ wxUint32 DiskPlainParser::ParseSector(wxInputStream *istream, int disk_number, i
 }
 
 /// トラックデータの解析
-wxUint32 DiskPlainParser::ParseTrack(wxInputStream *istream, int offset_pos, wxUint32 offset, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, DiskD88Disk *disk)
+wxUint32 DiskPlainParser::ParseTrack(wxInputStream *istream, int offset_pos, wxUint32 offset, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, bool single_density, DiskD88Disk *disk)
 {
 	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
 
 	wxUint32 track_size = 0;
 	for(int sector_number = 1; sector_number <= sector_nums && result->GetValid() >= 0; sector_number++) {
-		track_size += ParseSector(istream, disk_number, track_number, side_number, sector_number, sector_nums, sector_size, track);
+		track_size += ParseSector(istream, disk_number, track_number, side_number, sector_number, sector_nums, sector_size, single_density, track);
 	}
 
 	if (result->GetValid() >= 0) {
@@ -66,15 +66,18 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream *istream, int offset_pos, wxU
 }
 
 /// ディスクデータの解析
-wxUint32 DiskPlainParser::ParseDisk(wxInputStream *istream, int disk_number, int track_nums, int side_nums, int sector_nums, int sector_size)
+wxUint32 DiskPlainParser::ParseDisk(wxInputStream *istream, int disk_number, const DiskParam *disk_param)
 {
 	DiskD88Disk *disk = new DiskD88Disk(file);
 
 	wxUint32 offset = (int)sizeof(d88_header_t);
 	int offset_pos = 0;
-	for(int track_num = 0; track_num < track_nums && result->GetValid() >= 0; track_num++) {
-		for(int side_num = 0; side_num < side_nums && result->GetValid() >= 0; side_num++) {
-			offset += ParseTrack(istream, offset_pos, offset, disk_number, track_num, side_num, sector_nums, sector_size, disk); 
+	for(int track_num = 0; track_num < disk_param->GetTracksPerSide() && result->GetValid() >= 0; track_num++) {
+		for(int side_num = 0; side_num < disk_param->GetSidesPerDisk() && result->GetValid() >= 0; side_num++) {
+			int sector_nums = disk_param->GetSectorsPerTrack();
+			int sector_size = disk_param->GetSectorSize();
+			bool single_density = disk_param->FindSingleDensity(track_num, side_num, &sector_nums, &sector_size);
+			offset += ParseTrack(istream, offset_pos, offset, disk_number, track_num, side_num, sector_nums, sector_size, single_density, disk); 
 			offset_pos++;
 			if (offset_pos >= DISKD88_MAX_TRACKS) {
 				result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, offset);
@@ -112,7 +115,7 @@ int DiskPlainParser::Parse(wxInputStream *istream, const wxArrayString *disk_hin
 			wxString hint = disk_hints->Item(i);
 			DiskParam *param = gDiskTypes.Find(hint);
 			if (param) {
-				int disk_size_hint = param->GetTracksPerSide() * param->GetSidesPerDisk() * param->GetSectorsPerTrack() * param->GetSectorSize();
+				int disk_size_hint = param->CalcDiskSize();
 				if (istream->GetLength() == disk_size_hint) {
 					// ファイルサイズが一致
 					disk_param = param;
@@ -128,10 +131,7 @@ int DiskPlainParser::Parse(wxInputStream *istream, const wxArrayString *disk_hin
 
 	ParseDisk(istream
 		, 0
-		, disk_param->GetTracksPerSide()
-		, disk_param->GetSidesPerDisk()
-		, disk_param->GetSectorsPerTrack()
-		, disk_param->GetSectorSize());
+		, disk_param);
 
 	return result->GetValid();
 }

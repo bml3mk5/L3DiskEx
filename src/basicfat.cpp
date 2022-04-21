@@ -42,31 +42,38 @@ DiskBasicGroups::DiskBasicGroups()
 {
 	size = 0;
 }
+/// 追加
 void DiskBasicGroups::Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end)
 {
 	items.Add(DiskBasicGroupItem(n_group, n_next, n_track, n_side, n_start, n_end));
 }
+/// 追加
 void DiskBasicGroups::Add(const DiskBasicGroupItem &item)
 {
 	items.Add(item);
 }
+/// クリア
 void DiskBasicGroups::Empty()
 {
 	items.Empty();
 	size = 0;
 }
+/// アイテム数
 size_t DiskBasicGroups::Count() const
 {
 	return items.Count();
 }
+/// 最終アイテム
 DiskBasicGroupItem &DiskBasicGroups::Last() const
 {
 	return items.Last();
 }
+/// アイテム
 DiskBasicGroupItem &DiskBasicGroups::Item(size_t idx) const
 {
 	return items.Item(idx);
 }
+/// アイテム
 DiskBasicGroupItem *DiskBasicGroups::ItemPtr(size_t idx) const
 {
 	return &items.Item(idx);

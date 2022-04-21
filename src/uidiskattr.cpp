@@ -39,8 +39,8 @@ L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
 
 	size.x = 80;
 	comDensity = new wxComboBox(this, IDC_COM_DENSITY, wxT(""), wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
-	for(int i=0; !gDiskDensity[i].IsEmpty(); i++) {
-		comDensity->Append(gDiskDensity[i]);
+	for(int i=0; gDiskDensity[i] != NULL; i++) {
+		comDensity->Append(wxGetTranslation(gDiskDensity[i]));
 	}
 	comDensity->SetSelection(0);
 	hbox->Add(comDensity, flagsW);

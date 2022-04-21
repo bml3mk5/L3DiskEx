@@ -27,8 +27,6 @@ public:
 	DiskD88Writer(DiskResult *result);
 	~DiskD88Writer();
 
-//	/// ストリームの内容をファイルに保存
-//	int Save(DiskD88 *image, wxOutputStream *ostream);
 	/// ストリームの内容をファイルに保存
 	int SaveDisk(DiskD88 *image, int disk_number, int side_number, wxOutputStream *ostream);
 };

@@ -31,15 +31,30 @@ enum en_file_type_mask_os9 {
 /// File Descriptorエリアのポインタ
 class DiskBasicDirItemOS9FD
 {
-public:
+private:
 	DiskD88Sector		*sector;
 	directory_os9_fd_t	*fd;
+	bool				fd_ownmake;
+	union {
+		os9_date_t	date;
+		os9_cdate_t	cdate;
+	} zero_data;
+
+	DiskBasicDirItemOS9FD(const DiskBasicDirItemOS9FD &src);
 
 public:
 	DiskBasicDirItemOS9FD();
-	~DiskBasicDirItemOS9FD() {}
+	~DiskBasicDirItemOS9FD();
+	/// 代入
+	DiskBasicDirItemOS9FD &operator=(const DiskBasicDirItemOS9FD &src);
+	/// 複製
+	void Dup(const DiskBasicDirItemOS9FD &src);
 	/// ポインタをセット
 	void Set(DiskD88Sector *n_sector, directory_os9_fd_t *n_fd);
+	/// FDのメモリ確保
+	void Alloc();
+	/// FDをクリア
+	void Clear();
 	/// 有効か
 	bool IsValid() const { return (fd != NULL); }
 	/// 属性を返す
@@ -50,8 +65,18 @@ public:
 	wxUint32 GetLSN(int idx) const;
 	/// セグメントのセクタ数を返す
 	wxUint16 GetSIZ(int idx) const;
+	/// セグメントにLSNを設定
+	void SetLSN(int idx, wxUint32  val);
+	/// セグメントにセクタ数を設定
+	void SetSIZ(int idx, wxUint16 val);
 	/// ファイルサイズを返す
 	wxUint32 GetSIZ() const;
+	/// ファイルサイズを設定
+	void SetSIZ(wxUint32 val);
+	/// リンク数を返す
+	wxUint8 GetLNK() const;
+	/// リンク数を設定
+	void SetLNK(wxUint8 val);
 	/// 更新日付を返す
 	const os9_date_t &GetDAT() const;
 	/// 更新日付をセット
@@ -106,6 +131,8 @@ public:
 	DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
 	DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
+	/// 複製
+	void			Dup(const DiskBasicDirItem &src);
 	/// ディレクトリアイテムのチェック
 	bool			Check(bool &last);
 
@@ -137,6 +164,8 @@ public:
 
 	/// ファイルサイズをセット
 	void			SetFileSize(int val);
+	/// ファイルサイズを返す
+	int				GetFileSize();
 	/// ファイルサイズとグループ数を計算する
 	void			CalcFileSize();
 	/// 指定ディレクトリのすべてのグループを取得
@@ -180,16 +209,25 @@ public:
 	/// 書き込み/上書き禁止か
 	bool			IsWriteProtected();
 	/// アイテムを削除できるか
-	bool			IsDeleteable();
+	bool			IsDeletable();
 	/// ファイル名を編集できるか
 	bool			IsFileNameEditable();
 
+	/// アイテムをコピー
+	void			CopyItem(const DiskBasicDirItem &src);
+
 	/// FDセクタのポインタを返す
 	DiskBasicDirItemOS9FD &GetFD() { return fd; }
+	/// FDセクタのポインタを返す
+	const DiskBasicDirItemOS9FD &GetFD() const { return fd; }
 
 	/// アイテムの属するセクタを変更済みにする
 	void			SetModify();
 
+	/// 文字列の最後のMSBをセット
+	static size_t	EncodeString(wxUint8 *dst, size_t dlen, const char *src, size_t slen);
+	/// 文字列の最後のMSBをクリア
+	static size_t	DecodeString(char *dst, size_t dlen, const wxUint8 *src, size_t slen);
 
 	/// @name プロパティダイアログ用
 	//@{

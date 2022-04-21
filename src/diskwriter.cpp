@@ -64,14 +64,6 @@ bool DiskWriter::IsOk() const
 	return ostream ? ostream->IsOk() : false;
 }
 
-#if 0
-/// エラーメッセージを得る
-const wxArrayString &DiskWriter::GetErrorMessages()
-{
-	return result->GetMessages();
-}
-#endif
-
 // 拡張子をさがす
 int DiskWriter::SaveDiskByExt(int disk_number, int side_number, bool &support)
 {

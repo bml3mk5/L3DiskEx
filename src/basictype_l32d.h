@@ -20,6 +20,8 @@ public:
 
 	/// @name access to FAT area
 	//@{
+	/// FATエリアをチェック
+	bool		CheckFat();
 	/// 空きFAT位置を返す
 	wxUint32	GetEmptyGroupNumber();
 	//@}

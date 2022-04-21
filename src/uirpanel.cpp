@@ -137,7 +137,7 @@ void L3DiskRBPanel::ChangePanel(int num)
 //			int pos = GetSashPosition();
 //			if (pos < 500) pos = 500;
 //			if (pos > 700) pos = 700;
-			SplitVertically(rawpanel, proppanel, 600);
+			SplitVertically(rawpanel, proppanel, 640);
 			rawpanel->Show();
 			filelist->Hide();
 		}

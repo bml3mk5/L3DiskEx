@@ -112,7 +112,7 @@ public:
 	/// ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
 	/// アイテムを削除できるか
-	virtual bool	IsDeleteable() { return true; }
+	virtual bool	IsDeletable() { return true; }
 	/// 削除
 	virtual bool	Delete(wxUint8 code);
 	/// ENDマークがあるか(一度も使用していないか)
@@ -229,11 +229,11 @@ public:
 	virtual bool	HasDateTime() const { return false; }
 	virtual bool	HasDate() const { return false; }
 	virtual bool	HasTime() const { return false; }
-	/// 日付を返す
+	/// 日付を得る
 	virtual void	GetFileDate(struct tm *tm);
-	/// 時間を返す
+	/// 時間を得る
 	virtual void	GetFileTime(struct tm *tm);
-	/// 日時を返す
+	/// 日時を得る
 	virtual void	GetFileDateTime(struct tm *tm);
 	/// 日付を返す
 	virtual wxString GetFileDateStr();

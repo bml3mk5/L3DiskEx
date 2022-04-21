@@ -20,6 +20,10 @@
 #include "diskresult.h"
 #include "utils.h"
 
+extern const char *fileicon_normal_xpm[];
+extern const char *foldericon_close_xpm[];
+extern const char *labelicon_normal_xpm[];
+
 
 #ifndef USE_DND_ON_TOP_PANEL
 // ドラッグアンドドロップ時のフォーマットID
@@ -184,7 +188,8 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	model->DecRef();
 
 //	listColumns[LISTCOL_NAME] = list->AppendTextEditColumn(_("File Name"), 160, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE );
-	listColumns[LISTCOL_NAME] = list->AppendTextColumn(_("File Name"), wxDATAVIEW_CELL_EDITABLE, 160, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE );
+//	listColumns[LISTCOL_NAME] = list->AppendTextColumn(_("File Name"), wxDATAVIEW_CELL_EDITABLE, 160, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE );
+	listColumns[LISTCOL_NAME] = list->AppendIconTextColumn(_("File Name"), wxDATAVIEW_CELL_EDITABLE, 160, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE );
 	listColumns[LISTCOL_ATTR] = list->AppendTextColumn(_("Attributes"), wxDATAVIEW_CELL_INERT, 150, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE );
 	listColumns[LISTCOL_SIZE] = list->AppendTextColumn(_("Size"), wxDATAVIEW_CELL_INERT, 60, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
 	listColumns[LISTCOL_GROUPS] = list->AppendTextColumn(_("Groups"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
@@ -330,10 +335,9 @@ void L3DiskFileList::OnFileNameEditedDone(wxDataViewEvent& event)
 	wxDataViewItem listitem = event.GetItem();
 
 	wxVariant vari = event.GetValue();
-
-	wxString newname = vari.GetString();
-
-	RenameDataFile(listitem, newname);
+	wxDataViewIconText newname;
+	newname << vari;
+	RenameDataFile(listitem, newname.GetText());
 }
 
 /// リスト上で右クリック
@@ -533,8 +537,17 @@ void L3DiskFileList::RefreshFiles()
 		if (!item->IsUsedAndVisible()) continue;
 		wxVector<wxVariant> data;
 		long lval;
-
-		data.push_back( item->GetFileNameStr() );	// ファイル名
+		wxIcon icon;
+		int file_type = item->GetFileType();
+		if ((file_type & (FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_VOLUME_MASK)) == FILE_TYPE_DIRECTORY_MASK) {
+			icon = wxIcon(foldericon_close_xpm);
+		} else if ((file_type & (FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_VOLUME_MASK)) == FILE_TYPE_VOLUME_MASK) {
+			icon = wxIcon(labelicon_normal_xpm);
+		} else {
+			icon = wxIcon(fileicon_normal_xpm);
+		}
+//		data.push_back( item->GetFileNameStr() );	// ファイル名
+		data.push_back( wxVariant(wxDataViewIconText(item->GetFileNameStr(), icon)) );	// ファイル名とアイコン
 		data.push_back( item->GetFileAttrStr() );	// ファイル属性
 		lval = item->GetFileSize();
 		data.push_back( lval >= 0 ? wxNumberFormatter::ToString(lval) : wxT("---") );	// ファイルサイズ
@@ -562,8 +575,10 @@ void L3DiskFileList::RefreshFiles()
 
 	btnChange->Enable(true);
 
+#ifndef __WXGTK__
 //	list->Scroll(0, 0);
 	list->ScrollWindow(0, 0);
+#endif
 
 	// FAT空き状況を確認
 	if (frame->GetFatAreaFrame()) {
@@ -865,10 +880,10 @@ bool L3DiskFileList::DragDataSourceForExternal()
 #endif
 		dragSource.DoDragDrop();
 
-#ifdef __WXMSW__
-		// macでは別プロセスで動くようなのでここで削除しない。
-		ReleaseFileObject(tmp_dir_name);
-#endif
+//#ifdef __WXMSW__
+//		// macでは別プロセスで動くようなのでここで削除しない。
+//		ReleaseFileObject(tmp_dir_name);
+//#endif
 	}
 	return sts;
 }

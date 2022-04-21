@@ -50,14 +50,14 @@ L3DiskRawPanel::L3DiskRawPanel(L3DiskFrame *parentframe, wxWindow *parentwindow)
 /// トラックリストにデータを設定する
 void L3DiskRawPanel::SetTrackListData(DiskD88Disk *disk, int side_num)
 {
-	lpanel->SetData(disk, side_num);
+	lpanel->SetTracks(disk, side_num);
 	frame->UpdateMenuAndToolBarRawDisk(this);
 }
 
 /// トラックリストをクリアする
 void L3DiskRawPanel::ClearTrackListData()
 {
-	lpanel->ClearData();
+	lpanel->ClearTracks();
 	frame->UpdateMenuAndToolBarRawDisk(this);
 }
 
@@ -91,6 +91,13 @@ void L3DiskRawPanel::ClearSectorListData()
 int L3DiskRawPanel::GetSectorListSelectedRow() const
 {
 	return rpanel->GetSelectedRow();
+}
+
+/// トラックリストとセクタリストを更新
+void L3DiskRawPanel::RefreshAllData()
+{
+	lpanel->RefreshTracks();
+	rpanel->RefreshSectors();
 }
 
 /// クリップボードからペースト
@@ -214,9 +221,9 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 	disk = NULL;
 	side_number = -1;
 
-	AppendColumn(_("Num"), wxLIST_FORMAT_LEFT, 42);
-	AppendColumn(_("Track"), wxLIST_FORMAT_LEFT, 32);
-	AppendColumn(_("Side"), wxLIST_FORMAT_LEFT, 32);
+	AppendColumn(_("Num"), wxLIST_FORMAT_RIGHT, 42);
+	AppendColumn(_("Track"), wxLIST_FORMAT_RIGHT, 32);
+	AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, 32);
 	AppendColumn(_("Offset"), wxLIST_FORMAT_RIGHT, 60);
 
 	// popup menu
@@ -368,13 +375,32 @@ void L3DiskRawTrack::OnChar(wxKeyEvent& event)
 }
 
 /// トラックリストをセット
-void L3DiskRawTrack::SetData(DiskD88Disk *newdisk, int newsidenum)
+void L3DiskRawTrack::SetTracks(DiskD88Disk *newdisk, int newsidenum)
 {
 	if (!newdisk) return;
 
 	disk = newdisk;
 	side_number = newsidenum;
 
+	SetTracks();
+
+	// セクタリストはクリア
+	parent->ClearSectorListData();
+}
+
+/// トラックリストを再セット
+void L3DiskRawTrack::RefreshTracks()
+{
+	long sel_pos = GetFirstSelected();
+	long foc_pos = GetFocusedItem();
+	SetTracks();
+	if (foc_pos >= 0) Focus(foc_pos);
+	if (sel_pos >= 0) Select(sel_pos);
+}
+
+/// トラックリストを再セット
+void L3DiskRawTrack::SetTracks()
+{
 	DeleteAllItems();
 
 	int sides = disk->GetSidesPerDisk();
@@ -397,13 +423,10 @@ void L3DiskRawTrack::SetData(DiskD88Disk *newdisk, int newsidenum)
 		SetItemData(row, pos);
 		row++;
 	}
-
-	// セクタリストはクリア
-	parent->ClearSectorListData();
 }
 
 /// トラックリストをクリア
-void L3DiskRawTrack::ClearData()
+void L3DiskRawTrack::ClearTracks()
 {
 	DeleteAllItems();
 
@@ -1004,16 +1027,17 @@ L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *paren
 	AssociateModel(model);
 	model->DecRef();
 
-	AppendTextColumn(_("C"), wxDATAVIEW_CELL_INERT, 32);
-	AppendTextColumn(_("H"), wxDATAVIEW_CELL_INERT, 32);
-	AppendTextColumn(_("R"), wxDATAVIEW_CELL_INERT, 32);
-	AppendTextColumn(_("N"), wxDATAVIEW_CELL_INERT, 32);
+	AppendTextColumn(_("C"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
+	AppendTextColumn(_("H"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
+	AppendTextColumn(_("R"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
+	AppendTextColumn(_("N"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT);
 //	AppendToggleColumn(_("Deleted"), wxDATAVIEW_CELL_ACTIVATABLE, 32);
 //	AppendToggleColumn(_("SingleDensity"), wxDATAVIEW_CELL_ACTIVATABLE, 32);
 	AppendTextColumn(_("Deleted"), wxDATAVIEW_CELL_INERT, 36, wxALIGN_CENTER);
 	AppendTextColumn(_("SingleDensity"), wxDATAVIEW_CELL_INERT, 36, wxALIGN_CENTER);
 	AppendTextColumn(_("NumOfSectors"), wxDATAVIEW_CELL_INERT, 72, wxALIGN_RIGHT);
 	AppendTextColumn(_("Size"), wxDATAVIEW_CELL_INERT, 72, wxALIGN_RIGHT);
+	AppendTextColumn(wxT(""), wxDATAVIEW_CELL_INERT, 4);
 
 	// popup menu
 	menuPopup = new wxMenu;
@@ -1232,6 +1256,7 @@ void L3DiskRawSector::RefreshSectors()
 		data.push_back(sector->IsSingleDensity() ? wxT("*") : wxEmptyString);
 		data.push_back(wxString::Format(wxT("%d"),sector->GetSectorsPerTrack()));
 		data.push_back(wxString::Format(wxT("%d"),sector->GetSectorBufferSize()));
+		data.push_back(wxT(""));
 
 		AppendItem( data );
 	}
@@ -1587,7 +1612,7 @@ void L3DiskRawSector::ModifyIDonTrack(int type_num)
 			}
 
 			// リストを更新
-			RefreshSectors();
+			parent->RefreshAllData();
 		}
 	}
 }

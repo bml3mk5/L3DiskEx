@@ -30,6 +30,7 @@
 	<FileType ext="2hd">
 		<Format type="plain">
 			<DiskTypeHint>2HD</DiskTypeHint>
+			<DiskTypeHint>2HD S1</DiskTypeHint>
 			<DiskTypeHint>2HD 98</DiskTypeHint>
 			<DiskTypeHint>2HD AT</DiskTypeHint>
 		</Format>

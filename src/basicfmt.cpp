@@ -244,35 +244,37 @@ DiskBasicDirItem *DiskBasic::GetDirItem(size_t pos)
 }
 
 /// 管理エリアのサイド番号、セクタ番号、トラックを得る
-/// @param [in]  sector_pos セクタ位置(0 - )
-/// @param [out] side       サイド番号 Nullable
-/// @param [out] sector     セクタ番号 Nullable
+/// @param [in]  sector_pos セクタ位置(管理トラックのサイド0,セクタ1を 0 した通し番号)
+/// @param [out] side_num   サイド番号 Nullable
+/// @param [out] sector_num セクタ番号 Nullable
 /// @return トラックデータ
-DiskD88Track *DiskBasic::GetManagedTrack(int sector_pos, int *side, int *sector)
+DiskD88Track *DiskBasic::GetManagedTrack(int sector_pos, int *side_num, int *sector_num)
 {
 	int track_num = GetManagedTrackNumber();
 //	int side_nums = GetSidesOnBasic();
-	int track0_num, side_num, sec_num;
+	int track0_num, side0_num, sec_num;
 
-	GetNumFromSectorPos(sector_pos, track0_num, side_num, sec_num);
+	GetNumFromSectorPos(sector_pos, track0_num, side0_num, sec_num);
 	track_num += track0_num;
-	if (side) *side = side_num;
-	if (sector) *sector = sec_num;
+	if (side_num) *side_num = side0_num;
+	if (sector_num) *sector_num = sec_num;
 
-	return disk->GetTrack(track_num, side_num);
+	return disk->GetTrack(track_num, side0_num);
 }
 
-/// 管理エリアのサイド番号、セクタ番号、セクタポインタを得る
-/// @param [in] sector_pos  セクタ位置(0 - )
-/// @param [out] side       サイド番号 Nullable
-/// @param [out] sector     セクタ番号 Nullable
+/// 管理エリアのトラック番号、サイド番号、セクタ番号、セクタポインタを得る
+/// @param [in] sector_pos  セクタ位置(管理トラックのサイド0,セクタ1を 0 した通し番号)
+/// @param [out] track_num  トラック番号 Nullable
+/// @param [out] side_num   サイド番号 Nullable
+/// @param [out] sector_num セクタ番号 Nullable
 /// @return セクタデータ
-DiskD88Sector *DiskBasic::GetManagedSector(int sector_pos, int *side, int *sector)
+DiskD88Sector *DiskBasic::GetManagedSector(int sector_pos, int *track_num, int *side_num, int *sector_num)
 {
 	int sec_num;
-	DiskD88Track *track = GetManagedTrack(sector_pos, side, &sec_num);
+	DiskD88Track *track = GetManagedTrack(sector_pos, side_num, &sec_num);
 	if (!track) return NULL;
-	if (sector) *sector = sec_num;
+	if (track_num) *track_num = track->GetTrackNumber();
+	if (sector_num) *sector_num = sec_num;
 	return track->GetSector(sec_num);
 }
 
@@ -473,7 +475,7 @@ bool DiskBasic::AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOut
 	return rc;
 }
 
-/// 同じファイル名が既に存在するか
+/// 同じファイル名のアイテムをさがす
 /// @param [in]  filename     ファイル名
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
@@ -505,7 +507,9 @@ bool DiskBasic::IsWritableIntoDisk()
 	return true;
 }
 
-/// 指定ファイルのサイズをチェック
+/// 指定ファイルのサイズでディスクに書き込めるかをチェック
+/// @param [in]  srcpath    ファイルパス
+/// @param [out] file_size  ファイルのサイズを返す
 bool DiskBasic::CheckFile(const wxString &srcpath, int &file_size)
 {
 	bool sts = true;
@@ -537,7 +541,9 @@ bool DiskBasic::CheckFile(const wxString &srcpath, int &file_size)
 	return sts;
 }
 
-/// 指定ファイルのサイズをチェック
+/// 指定データのサイズでディスクに書き込めるかをチェック
+/// @param [in]  buffer  データ
+/// @param [in]  buflen  データサイズ
 bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
 {
 	bool sts = true;
@@ -675,7 +681,7 @@ bool DiskBasic::SaveFile(const wxUint8 *buffer, size_t buflen, const DiskBasicDi
 
 /// ストリームデータをディスクイメージにセーブ
 /// @param [in] istream   ストリームバッファ
-/// @param [in]  pitem    ファイル名、属性を持っているディレクトリアイテム
+/// @param [in]  pitem    ファイル名、属性を持っている仮ディレクトリアイテム
 /// @param [out] nitem    作成したディレクトリアイテム
 /// @return false:エラーあり
 bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem)
@@ -702,6 +708,14 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	// ファイル名属性を設定
 	item->ClearData();
 	item->CopyItem(*pitem);
+
+	// ファイルをセーブする前の準備を行う
+	if (!type->PrepareToSaveFile(istream, pitem, item, errinfo)) {
+		// 削除する
+		if (!this->DeleteItem(item, false)) {
+			return false;
+		}
+	}
 
 	// 残りサイズ
 	int sizeremain = (int)istream.GetLength();
@@ -829,7 +843,7 @@ bool DiskBasic::IsDeletableFile(DiskBasicDirItem *item, DiskBasicGroups &group_i
 		return false;
 	}
 	if (item) {
-		if (!item->IsDeleteable()) {
+		if (!item->IsDeletable()) {
 			errinfo.SetError(DiskBasicError::ERRV_CANNOT_DELETE, item->GetFileNameStr().wc_str());
 			return false;
 		}
@@ -848,7 +862,7 @@ bool DiskBasic::IsDeletableFile(DiskBasicDirItem *item, DiskBasicGroups &group_i
 }
 
 /// ファイルを削除
-/// @param [in] item        ディレクトリアイテム
+/// @param [in] item         ディレクトリアイテム
 /// @param [in]  clearmsg    エラーメッセージのバッファをクリアするか
 bool DiskBasic::DeleteItem(DiskBasicDirItem *item, bool clearmsg)
 {
@@ -875,6 +889,12 @@ bool DiskBasic::DeleteItem(DiskBasicDirItem *item, const DiskBasicGroups &group_
 
 	// ディレクトリエントリを削除
 	item->Delete(GetDeleteCode());
+
+	// 削除時の追加処理
+	if (!type->AdditionalProcessOnDeletedFile(item)) {
+		errinfo.SetError(DiskBasicError::ERRV_CANNOT_DELETE, item->GetFileNameStr().wc_str());
+		return false;
+	}
 
 	item->Refresh();
 	item->SetModify();
@@ -973,6 +993,8 @@ bool DiskBasic::FormatDisk()
 		return false;
 	}
 
+	dir->SetFormatType(GetFormatType());
+
 	bool rc = true;
 	// セクタを埋める
 	for(size_t track_pos=0; track_pos<tracks->Count(); track_pos++) {
@@ -1055,6 +1077,7 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	}
 
 	wxString dir_name = filename;
+	// サブディレクトリを作成する前にディレクトリ名を編集する
 	if (!type->PreProcessOnMakingDirectory(dir_name)) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_MAKE_DIRECTORY);
 		return false;
@@ -1084,6 +1107,14 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	item->SetFileNameStr(dir_name);
 	item->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
 	item->SetFileDateTime(wxDateTime::GetTmNow());
+
+	// ディレクトリを作成する前の準備を行う
+	if (!type->PrepareToMakeDirectory(item)) {
+		// 削除する
+		if (!this->DeleteItem(item, false)) {
+			return false;
+		}
+	}
 
 	int sizeremain = GetSectorsPerGroup() * GetSectorSize() * GetSubDirGroupSize();
 	int file_size = 0;
@@ -1172,13 +1203,15 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	return true;
 }
 
-/// ディレクトリアイテムの作成 使用後はdeleteすること
+/// ディレクトリアイテムの作成
+/// @attention 使用後はdeleteすること
 DiskBasicDirItem *DiskBasic::CreateDirItem()
 {
 	return dir->NewItem();
 }
 
-/// ディレクトリアイテムの作成 使用後はdeleteすること
+/// ディレクトリアイテムの作成
+/// @attention 使用後はdeleteすること
 /// @param [in] sector  セクタデータ
 /// @param [out] data   ディレクトリデータのある位置
 /// @return ディレクトリアイテム
@@ -1187,7 +1220,41 @@ DiskBasicDirItem *DiskBasic::CreateDirItem(DiskD88Sector *sector, wxUint8 *data)
 	return dir->NewItem(sector, data);
 }
 
+/// トラックを返す
+/// @param [in] track_num  トラック番号
+/// @param [in] side_num   サイド番号
+/// @return トラックデータ
+DiskD88Track *DiskBasic::GetTrack(int track_num, int side_num)
+{
+	return disk->GetTrack(track_num, side_num);
+}
+
+/// セクタ返す
+/// @param [in] track_num  トラック番号
+/// @param [in] side_num   サイド番号
+/// @param [in] sector_num セクタ番号
+/// @return セクタデータ
+DiskD88Sector *DiskBasic::GetSector(int track_num, int side_num, int sector_num)
+{
+	return disk->GetSector(track_num, side_num, sector_num);
+}
+
+/// セクタ返す
+/// @param [in] track_num  トラック番号
+/// @param [in] sector_num セクタ番号(サイド0～1の通し番号)
+/// @param [out] side_num  サイド番号
+/// @return セクタデータ
+DiskD88Sector *DiskBasic::GetSector(int track_num, int sector_num, int *side_num)
+{
+	int sid_num = (sector_num - 1) / sectors_on_basic;
+	sector_num = ((sector_num - 1) % sectors_on_basic) + 1;
+	if (side_num) *side_num = sid_num;
+	if (numbering_sector == 1) sector_num += (sectors_on_basic * sid_num);
+	return disk->GetSector(track_num, sid_num, sector_num);
+}
+
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラックを返す
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] sector_pos  セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
 /// @param [out] sector_num セクタ番号
 /// @return トラックデータ
@@ -1206,6 +1273,7 @@ DiskD88Track *DiskBasic::GetTrackFromSectorPos(int sector_pos, int &sector_num)
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] sector_pos  セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
 /// @return セクタデータ
 DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos)
@@ -1224,6 +1292,7 @@ DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos)
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] sector_pos  セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
 /// @param [out] track_num  トラック番号
 /// @param [out] side_num   サイド番号
@@ -1240,9 +1309,15 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &side_nu
 		side_num = (sector_pos / sectors_on_basic) % GetSidesOnBasic();
 	}
 	sector_num = (sector_pos % sectors_on_basic) + 1;
+
+	if (numbering_sector == 1) {
+		// トラックごとに連番の場合
+		sector_num += (side_num * sectors_on_basic);
+	}
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] sector_pos  セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
 /// @param [out] track_num  トラック番号
 /// @param [out] sector_num セクタ番号
@@ -1259,6 +1334,7 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_
 }
 
 /// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] track_num  トラック番号
 /// @param [in] side_num   サイド番号
 /// @param [in] sector_num セクタ番号
@@ -1271,12 +1347,19 @@ int  DiskBasic::GetSectorPosFromNum(int track_num, int side_num, int sector_num)
 		sector_pos = track_num * sectors_on_basic + sector_num - 1;
 	} else {
 		// 2D, 2HD
-		sector_pos = track_num * sectors_on_basic * GetSidesOnBasic() + (side_num % GetSidesOnBasic()) * sectors_on_basic + sector_num - 1;
+		sector_pos = track_num * sectors_on_basic * GetSidesOnBasic();
+		sector_pos += (side_num % GetSidesOnBasic()) * sectors_on_basic;
+		if (numbering_sector == 1) {
+			sector_pos += ((sector_num - 1) % sectors_on_basic);
+		} else {
+			sector_pos += (sector_num - 1);
+		}
 	}
 	return sector_pos;
 }
 
 /// トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] track_num  トラック番号
 /// @param [in] sector_num セクタ番号
 /// @return セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
@@ -1294,6 +1377,7 @@ int  DiskBasic::GetSectorPosFromNum(int track_num, int sector_num)
 }
 
 /// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
+/// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
 /// @param [in] group_num     グループ番号
 /// @param [in] next_group    次のグループ番号
 /// @param [in] sector_size   セクタサイズ
@@ -1340,6 +1424,7 @@ bool DiskBasic::GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int se
 }
 
 /// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
+/// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
 /// @param [in] group_num     グループ番号
 /// @param [out] track_start  トラック番号
 /// @param [out] side_start   サイド番号
@@ -1362,7 +1447,8 @@ bool DiskBasic::CalcStartNumFromGroupNum(wxUint32 group_num, int &track_start, i
 	return true;
 }
 
-/// セクタ位置(トラック0,サイド0のセクタを0とした位置)からトラック、サイド、セクタの各番号を計算(グループ計算用)
+/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を計算(グループ計算用)
+/// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
 /// @param [in] sector_pos : セクタ位置(トラック0,サイド0のセクタを0とした位置)
 /// @param [out] track     : トラック番号
 /// @param [out] side      : サイド番号
@@ -1380,7 +1466,8 @@ void DiskBasic::CalcNumFromSectorPosForGroup(int sector_pos, int &track, int &si
 	if (reverse_side) side = GetSidesOnBasic() - side - 1;
 }
 
-/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0のセクタを0とした位置)を計算(グループ計算用)
+/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を計算(グループ計算用)
+/// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
 /// @param [in] track  : トラック番号
 /// @param [in] side   : サイド番号
 /// @param [in] sector : セクタ番号
@@ -1420,6 +1507,11 @@ DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num)
 }
 
 /// グループ番号から開始セクタを返す
+/// @note 管理エリアがあれば飛ばす、開始グループ番号のオフセット分を引く などの機種依存を考慮
+/// @param [in]  group_num : グループ番号
+/// @param [out] track_num : トラック番号
+/// @param [out] side_num  : サイド番号
+/// @return                : セクタ
 DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num)
 {
 	int sector_start = 1;
@@ -1469,14 +1561,12 @@ void DiskBasic::SetCharCode(int val)
 	codes.SetMap(str);
 }
 
-/// 文字列をバイト列に変換
-/// 文字コードは機種依存
+/// 文字列をバイト列に変換 文字コードは機種依存
 bool DiskBasic::ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len)
 {
 	return codes.ConvToChars(src, dst, len);
 }
-/// バイト列を文字列に変換
-/// 文字コードは機種依存
+/// バイト列を文字列に変換 文字コードは機種依存
 void DiskBasic::ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst)
 {
 	codes.ConvToString(src, len, dst);

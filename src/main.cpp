@@ -33,7 +33,11 @@
 #include "res/fd_5inch_16_delete.xpm"
 #include "res/fd_5inch_16_export.xpm"
 #include "res/fd_5inch_16_import.xpm"
+#include "res/foldericon_open.xpm"
+#include "res/foldericon_close.xpm"
+#include "res/fileicon_normal.xpm"
 #include "res/fileicon_delete.xpm"
+#include "res/labelicon_normal.xpm"
 
 #define L3DISK_TRANS \
 	_("can't open file '%s'") \
@@ -1990,7 +1994,7 @@ L3DiskPanel::L3DiskPanel(L3DiskFrame *parent)
 #ifdef USE_DND_ON_TOP_PANEL
 	// drag and drop
 	if (!L3DiskPanelDataFormat) {
-		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATA"));
+		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATAV2"));
 	}
 	SetDropTarget(new L3DiskPanelDropTarget(parent, this));
 #endif

@@ -53,29 +53,13 @@ CharCodeMap::~CharCodeMap()
 	}
 	list.Empty();
 }
-#if 0 
-bool CharCodeMap::FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar)
-{
-	bool match = false;
-	for(size_t i=0; i<list.Count(); i++) {
-		CharCode *itm = list.Item(i);
-		if (itm->code[0] == src) {
-			dst += itm->str;
-			match = true;
-			break;
-		}
-	}
-	if (!match) {
-		if (0x20 <= src && src <= 0x7e) {
-			dst += wxString((char)src, 1);
-			match = true;
-		} else {
-			dst += unknownchar;
-		}
-	}
-	return match;
-}
-#endif
+
+/// 文字コードが文字変換テーブルにあるか
+/// @param [in]  src         : 文字コード(1～2バイト)
+/// @param [in]  remain      : srcの残りバイト数
+/// @param [out] dst         : 文字列
+/// @param [in]  unknownchar : 変換できない場合に置き換える文字
+/// @return 変換したバイト数
 size_t CharCodeMap::FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar)
 {
 	bool match = false;
@@ -157,12 +141,13 @@ void CharCodeMapMB::Initialize()
 {
 	cs = new wxCSConv((wxFontEncoding)font_encoding);
 }
-#if 0
-bool CharCodeMapMB::FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar)
-{
-	return false;
-}
-#endif
+
+/// 文字コード１文字を(SJIS)を文字列に変換する
+/// @param [in]  src         : 文字コード(1～2バイト)
+/// @param [in]  remain      : srcの残りバイト数
+/// @param [out] dst         : 文字列
+/// @param [in]  unknownchar : 変換できない場合に置き換える文字
+/// @return 変換したバイト数
 size_t CharCodeMapMB::FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar)
 {
 	wxUint8 c[4],cc[4];
@@ -195,34 +180,8 @@ size_t CharCodeMapMB::FindString(const wxUint8 *src, size_t remain, wxString &ds
 		}
 	}
 
-#if 0
-	wxString wc = wxString((const char *)c, *cs);
-	int wcl = (int)wc.length();
-	if (wcl == 0) {
-		// 多分 変換できていない
-		dst += unknownchar;
-		pos++;
-	} else if (wcl == 1) {
-		// 変換できている
-		dst += wc;
-		wxCharBuffer cc = wc.mb_str(*cs);
-		// 1バイト文字 or 2バイト文字 かどうかをチェック
-		wxUint8 cc1 = (wxUint8)cc[(size_t)1];
-		if (remain > 1 && c[1] == cc1) {
-			// 2バイト文字を変換している
-			pos++;
-		}
-		pos++;
-	} else {
-		// 変換できている
-		// 2バイト文字
-		dst += wc;
-		pos += 2;
-	}
-#endif
-
 	wchar_t wc[4];
-	size_t len = cs->ToWChar(wc, 4, (const char *)c, 2);
+	size_t len = cs->ToWChar(wc, 4, (const char *)c, remain > 1 ? 2 : remain);
 	if (len == wxCONV_FAILED) {
 		// 1文字で変換できるか
 		len = cs->ToWChar(wc, 4, (const char *)c, 1);
@@ -374,6 +333,10 @@ CharCodes::~CharCodes()
 {
 }
 
+/// 文字コードを文字列に変換する
+/// @param [in]  src         : 文字コード列
+/// @param [in]  len         : srcバイト数
+/// @param [out] dst         : 文字列
 void CharCodes::ConvToString(const wxUint8 *src, size_t len, wxString &dst)
 {
 //	cache = maps[0];
@@ -385,6 +348,11 @@ void CharCodes::ConvToString(const wxUint8 *src, size_t len, wxString &dst)
 	}
 }
 
+/// 文字列を文字コードに変換する
+/// @param [in]  src         : 文字列
+/// @param [out] dst         : 文字コード列
+/// @param [in]  len         : dstバッファイサイズ
+/// @return  false : 変換できなかった
 bool CharCodes::ConvToChars(const wxString &src, wxUint8 *dst, size_t len)
 {
 	bool rc = true;
@@ -397,13 +365,12 @@ bool CharCodes::ConvToChars(const wxString &src, wxUint8 *dst, size_t len)
 	return rc;
 }
 
-#if 0
-bool CharCodes::FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar)
-{
-	return cache->FindString(src, dst, unknownchar);
-}
-#endif
-
+/// 文字コードが文字変換テーブルにあるか
+/// @param [in]  src         : 文字コード(1～2バイト)
+/// @param [in]  len         : srcのバイト数
+/// @param [out] dst         : 文字列
+/// @param [in]  unknownchar : 変換できない場合に置き換える文字
+/// @return 変換したバイト数
 size_t CharCodes::FindString(const wxUint8 *src, size_t len, wxString &dst, wxUint8 unknownchar)
 {
 	return cache->FindString(src, len, dst, unknownchar);

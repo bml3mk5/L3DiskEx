@@ -171,9 +171,9 @@ typedef struct st_os9_lsn {
 
 #define GET_OS9_LSN(lsn) (((wxUint32)(lsn.h) << 16) | ((wxUint32)(lsn.m) << 8) | lsn.l)
 #define SET_OS9_LSN(lsn, val) { \
-	lsn.h = ((val & 0xff0000) >> 16); \
-	lsn.m = ((val & 0xff00) >> 8); \
-	lsn.l = (val & 0xff); \
+	lsn.h = (((val) & 0xff0000) >> 16); \
+	lsn.m = (((val) & 0xff00) >> 8); \
+	lsn.l = ((val) & 0xff); \
 }
 
 /// OS-9 Segment

@@ -18,6 +18,7 @@ _("'%s' should only contain ASCII characters.")
 #include <wx/arrstr.h>
 
 class wxComboBox;
+class wxChoice;
 class wxTextCtrl;
 class wxCheckBox;
 class wxRadioButton;
@@ -34,18 +35,19 @@ class DiskD88Disk;
 class DiskParamBox : public wxDialog
 {
 private:
-	wxComboBox *comCategory;
-	wxComboBox *comTemplate;
+	wxChoice   *comCategory;
+	wxChoice   *comTemplate;
 	wxTextCtrl *txtTracks;
 	wxTextCtrl *txtSides;
 	wxTextCtrl *txtSectors;
 	wxComboBox *comSecSize;
 	wxTextCtrl *txtSecIntl;
+	wxChoice   *comNumbSec;
 
 	wxTextCtrl *txtDiskName;
-	wxComboBox *comDensity;
+	wxChoice   *comDensity;
 	wxCheckBox *chkWprotect;
-	wxRadioButton *radSingle[3];
+	wxRadioButton *radSingle[4];
 	wxTextCtrl *txtSingleSectors;
 	wxComboBox *comSingleSecSize;
 
@@ -65,12 +67,15 @@ public:
 		IDC_TEXT_SIDES,
 		IDC_TEXT_SECTORS,
 		IDC_COMBO_SECSIZE,
+		IDC_TEXT_INTERLEAVE,
+		IDC_COMBO_NUMBSEC,
 		IDC_TEXT_DISKNAME,
 		IDC_COMBO_DENSITY,
 		IDC_CHK_WPROTECT,
 		IDC_RADIO_SINGLE_NONE,
 		IDC_RADIO_SINGLE_ALL,
 		IDC_RADIO_SINGLE_T00,
+		IDC_RADIO_SINGLE_T0A,
 		IDC_TEXT_SINGLE_SECTORS,
 		IDC_COMBO_SINGLE_SECSIZE,
 	};
@@ -94,18 +99,18 @@ public:
 	bool GetParam(DiskParam &param);
 	bool GetParamToDisk(DiskD88Disk &disk);
 	wxString GetCategory() const;
-	int GetTracksPerSide();
-	int GetSidesPerDisk();
-	int GetSectorsPerTrack();
-	int GetSectorSize();
-	int GetInterleave();
+	int GetTracksPerSide() const;
+	int GetSidesPerDisk() const;
+	int GetSectorsPerTrack() const;
+	int GetSectorSize() const;
+	int GetInterleave() const;
+	int GetNumberingSector() const;
 	wxString GetDiskName() const;
-	int GetDensity();
-	bool IsWriteProtected();
-	int  GetSingleNumber();
-	int  GetSingleSectorsPerTrack();
-	int  GetSingleSectorSize();
-//	void SetDisableFlags(wxUint32 val);
+	int GetDensity() const;
+	bool IsWriteProtected() const;
+	int  GetSingleNumber() const;
+	int  GetSingleSectorsPerTrack() const;
+	int  GetSingleSectorSize() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

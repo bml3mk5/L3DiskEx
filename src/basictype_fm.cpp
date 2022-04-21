@@ -25,6 +25,13 @@ bool DiskBasicTypeFM::CheckFat()
 		if (!(sector && id == sector->Get(0))) {
 			valid = false;
 		}
+		// FAT先頭エリアのチェック
+		sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+		if (!sector) {
+			valid = false;
+		} else if (sector->Get(0) != 0 || sector->Get(1) != 0xff) {
+			valid = false;
+		}
 	}
 	return valid;
 }

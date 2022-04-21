@@ -13,6 +13,7 @@
 DiskBasicTypeFLEX::DiskBasicTypeFLEX(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
 	: DiskBasicType(basic, fat, dir)
 {
+	flex_sir = NULL;
 }
 
 /// エリアをチェック
@@ -22,7 +23,13 @@ bool DiskBasicTypeFLEX::CheckFat()
 
 	// SIR area
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(0, 0, 3);
+	if (!sector) {
+		return false;
+	}
 	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
+	if (!flex) {
+		return false;
+	}
 
 	for(size_t i=0; i<sizeof(flex->reserved0); i++) {
 		if (flex->reserved0[i]) {
@@ -30,13 +37,20 @@ bool DiskBasicTypeFLEX::CheckFat()
 			break;
 		}
 	}
+	if (flex->max_track == 0 || flex->max_sector == 0) {
+		valid = false;
+	}
 
 	if (!valid) return valid;
 
-	// DIRエリアの幅チェック
+	flex_sir = flex;
+
+	// DIRエリアのチェインをチェック
 	int dir_cnt = 0;
-	for(int sec_pos = basic->GetDirStartSector() - 1; sec_pos <= basic->GetDirEndSector() - 1; sec_pos++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec_pos);
+	int dir_sta_sec = basic->GetDirStartSector() - 1;
+	int dir_end_sec = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic() - 1;
+	sector = basic->GetSectorFromSectorPos(dir_sta_sec);
+	for(int sec_pos = dir_sta_sec; sec_pos <= dir_end_sec; sec_pos++) {
 		if (!sector) {
 			valid = false;
 			break;
@@ -48,10 +62,11 @@ bool DiskBasicTypeFLEX::CheckFat()
 		if (p->next_track == 0 && p->next_sector == 0) {
 			break;
 		}
+		sector = basic->GetSector(p->next_track, p->next_sector);
 	}
 	// DIRエリアの使用セクタが少ない場合
 	int dir_end = basic->GetDirStartSector() + dir_cnt - 1;
-	if (valid && dir_end < basic->GetDirEndSector()) {
+	if (valid && dir_end < (dir_end_sec + 1)) {
 		basic->SetDirEndSector(dir_end);
 	}
 
@@ -61,11 +76,14 @@ bool DiskBasicTypeFLEX::CheckFat()
 /// ディスクから各パラメータを取得
 bool DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk)
 {
-	DiskD88Sector *sector = disk->GetSector(0, 0, 3);
-	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
+	if (!flex_sir) {
+		DiskD88Sector *sector = disk->GetSector(0, 0, 3);
+		flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
+		flex_sir = flex;
+	}
 
-	if (flex->max_sector > 0) {
-		basic->SetSectorsPerTrackOnBasic(flex->max_sector / basic->GetSidesOnBasic());
+	if (flex_sir->max_sector > 0) {
+		basic->SetSectorsPerTrackOnBasic(flex_sir->max_sector / basic->GetSidesOnBasic());
 	}
 
 	return true;
@@ -81,22 +99,20 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize()
 	fat_availability.Add(FAT_AVAIL_USED, basic->GetFatEndGroup() + 1);
 
 	// SIR area
-	DiskD88Disk *disk = basic->GetDisk();
-	DiskD88Sector *sector = disk->GetSector(0, 0, 3);
-	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
+//	DiskD88Disk *disk = basic->GetDisk();
+	DiskD88Sector *sector = NULL;
+//	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
 
-	int track_num  = flex->free_start_track;
-	int sector_num = flex->free_start_sector;
+	int track_num  = flex_sir->free_start_track;
+	int sector_num = flex_sir->free_start_sector;
 
 	while(track_num != 0 || sector_num != 0) {
-		int side_num = (sector_num - 1) / basic->GetSectorsPerTrackOnBasic();
-		sector_num = ((sector_num - 1) % basic->GetSectorsPerTrackOnBasic()) + 1;
-		sector = disk->GetSector(track_num, side_num, sector_num);
+		sector = basic->GetSector(track_num, sector_num);
 		if (!sector) {
 			// error
 			break;
 		}
-		int sector_pos = basic->GetSectorPosFromNum(track_num, side_num, sector_num);
+		int sector_pos = basic->GetSectorPosFromNum(track_num, sector_num);
 		if (sector_pos < (int)fat_availability.Count()) {
 			fat_availability.Item(sector_pos) = FAT_AVAIL_FREE;
 		}
@@ -105,7 +121,8 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize()
 		track_num = p->next_track;
 		sector_num = p->next_sector;
 
-		fsize += sector->GetSectorSize();
+		// セクタ先頭4バイトは除く
+		fsize += (sector->GetSectorSize() - 4);
 		grps++;
 	}
 

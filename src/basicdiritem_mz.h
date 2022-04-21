@@ -147,7 +147,7 @@ public:
 	/// 書き込み/上書き禁止か
 	bool			IsWriteProtected();
 	/// アイテムを削除できるか
-	bool			IsDeleteable();
+	bool			IsDeletable();
 	/// ファイル名を編集できるか
 	bool			IsFileNameEditable();
 	/// データをチェインする必要があるか（非連続データか）

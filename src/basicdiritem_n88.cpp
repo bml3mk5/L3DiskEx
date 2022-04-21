@@ -305,7 +305,7 @@ int DiskBasicDirItemN88::RecalcFileSizeOnSave(wxInputStream *istream, int file_s
 	if (NeedCheckEofCode()) {
 		// ファイルの最終が終端記号で終わっているかを調べる
 		// ただし、ファイルサイズがクラスタサイズと合うなら終端記号は不要
-		if ((file_size % basic->GetSectorsPerGroup()) != 0) {
+		if ((file_size % (basic->GetSectorSize() * basic->GetSectorsPerGroup())) != 0) {
 			file_size = CheckEofCode(istream, file_size);
 		}
 	}

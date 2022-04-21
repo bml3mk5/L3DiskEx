@@ -14,6 +14,7 @@ enum en_type_name_flex {
 	TYPE_NAME_FLEX_UNDELETE = 1,
 	TYPE_NAME_FLEX_WRITE_ONLY = 2,
 	TYPE_NAME_FLEX_HIDDEN = 3,
+	TYPE_NAME_FLEX_RANDOM = 4,
 };
 enum en_file_type_mask_flex {
 	FILETYPE_MASK_FLEX_READ_ONLY = 0x80,
@@ -21,6 +22,8 @@ enum en_file_type_mask_flex {
 	FILETYPE_MASK_FLEX_WRITE_ONLY = 0x20,
 	FILETYPE_MASK_FLEX_HIDDEN = 0x10,
 };
+#define FILETYPE_FLEX_RANDOM_MASK	0xff00000
+#define FILETYPE_FLEX_RANDOM_POS	20
 
 /// ディレクトリ１アイテム FLEX
 class DiskBasicDirItemFLEX : public DiskBasicDirItem
@@ -41,6 +44,10 @@ private:
 	int		GetFileType1() const;
 	/// 属性１のセット
 	void	SetFileType1(int val);
+	/// 属性２を返す
+	int		GetFileType2() const;
+	/// 属性２のセット
+	void	SetFileType2(int val);
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
@@ -117,7 +124,7 @@ public:
 	/// 書き込み/上書き禁止か
 	bool			IsWriteProtected();
 	/// アイテムを削除できるか
-	bool			IsDeleteable();
+	bool			IsDeletable();
 	/// ファイル名を編集できるか
 	bool			IsFileNameEditable();
 

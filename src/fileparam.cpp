@@ -100,15 +100,6 @@ bool FileTypes::Load(const wxString &data_path, const wxString &locale_name)
 	// start processing the XML file
 	if (doc.GetRoot()->GetName() != "FileTypes") return false;
 
-#if 0
-	wxXmlNode *prolog = doc.GetDocumentNode()->GetChildren();
-	while (prolog) {
-	    if (prolog->GetType() == wxXML_PI_NODE && prolog->GetName() == "FileType") {
-	        wxString pi = prolog->GetContent();
-		}
-	}
-#endif
-
 	wxXmlNode *item = doc.GetRoot()->GetChildren();
 	while (item) {
 		if (item->GetName() == "FileFormatType") {
@@ -232,22 +223,6 @@ void FileTypes::MakeWildcard()
 	wcard_for_save += wxT(" (*.*)|*.*");
 
 }
-
-#if 0
-int FileTypes::IndexOf(const wxString &n_ext)
-{
-	int match = -1;
-	wxString ext = n_ext.Lower();
-	for(size_t i=0; i<types.Count(); i++) {
-		FileParam *item = &types[i];
-		if (ext == item->GetExt()) {
-			match = (int)i;
-			break;
-		}
-	}
-	return match;
-}
-#endif
 
 FileParam *FileTypes::FindExt(const wxString &n_ext)
 {

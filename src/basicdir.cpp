@@ -81,7 +81,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	}
 	return item;
 }
-/// ディレクトリアイテムを新規に作成
+/// ディレクトリアイテムを新規に作成してアサインする
+/// @param [in] newsec  セクタ
+/// @param [in] newdata セクタ内のバッファ
 DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 {
 	DiskBasicDirItem *item;
@@ -125,7 +127,14 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 	}
 	return item;
 }
-/// ディレクトリアイテムを新規に作成
+/// ディレクトリアイテムを新規に作成してアサインする
+/// @param [in] newnum   通し番号
+/// @param [in] newtrack トラック番号
+/// @param [in] newside  サイド番号
+/// @param [in] newsec   セクタ
+/// @param [in] newpos   セクタ内での位置
+/// @param [in] newdata  セクタ内のバッファ
+/// @param [out] unuse   未使用か   
 DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse)
 {
 	DiskBasicDirItem *item;
@@ -177,6 +186,7 @@ DiskBasicDirItem *DiskBasicDir::AssignItem(int newnum, int newtrack, int newside
 	return item;
 }
 /// ディレクトリアイテムのポインタを返す
+/// @param [in] idx インデックス
 DiskBasicDirItem *DiskBasicDir::ItemPtr(size_t idx)
 {
 	if (idx >= items.Count()) return NULL;
@@ -232,7 +242,7 @@ void DiskBasicDir::Empty()
 
 	unique_number++;
 }
-/// 同じファイル名が既に存在するか
+/// 現在のディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  filename     ファイル名
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
@@ -258,7 +268,7 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const wxString &filename, DiskBasicDirI
 	return match_item;
 }
 
-/// 同じファイル名が既に存在するか
+/// 現在のディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  target_item  検索対象アイテム
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
@@ -285,9 +295,9 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem &target_item, Di
 }
 
 /// ルートディレクトリのチェック
-/// @param [in] type         DISK BASIC 種類
-/// @param [in] start_sector 開始セクタ番号
-/// @param [in] end_sector   終了セクタ番号
+/// @param [in] type          DISK BASIC 種類
+/// @param [in] start_sector  開始セクタ番号
+/// @param [in] end_sector    終了セクタ番号
 bool DiskBasicDir::CheckRoot(DiskBasicType *type, int start_sector, int end_sector)
 {
 	return type->CheckRootDirectory(start_sector, end_sector);
@@ -308,6 +318,7 @@ bool DiskBasicDir::AssignRoot(DiskBasicType *type, int start_sector, int end_sec
 	}
 	return valid;
 }
+
 /// ルートディレクトリをアサイン
 /// @param [in] type        DISK BASIC 種類
 bool DiskBasicDir::AssignRoot(DiskBasicType *type)
@@ -344,10 +355,13 @@ void DiskBasicDir::ClearRoot()
 }
 
 /// ルートディレクトリ領域を指定コードで埋める
+/// @param [in] start_sector 開始セクタ番号
+/// @param [in] end_sector   終了セクタ番号
+/// @param [in] code         埋めるコード
 void DiskBasicDir::Fill(int start_sector, int end_sector, wxUint8 code)
 {
 	for(int sec_pos = start_sector; sec_pos <= end_sector; sec_pos++) {
-		DiskD88Sector *sector = basic->GetManagedSector(sec_pos - 1, NULL, NULL);
+		DiskD88Sector *sector = basic->GetManagedSector(sec_pos - 1);
 		if (!sector) {
 			break;
 		}

@@ -24,7 +24,7 @@ size_t str_shrink(void *, size_t);
 // ignore warning
 #ifndef __GNUC__
 //#pragma warning(disable:4482)
-#pragma warning(disable:4996)
+//#pragma warning(disable:4996)
 #endif
 
 #else

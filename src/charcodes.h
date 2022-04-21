@@ -50,7 +50,7 @@ public:
 	int GetFontEncoding() const { return font_encoding; }
 	void SetFontEncoding(int val) { font_encoding = val; }
 
-//	virtual bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字コードが文字変換テーブルにあるか
 	virtual size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
 	virtual bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
@@ -71,7 +71,7 @@ public:
 
 	void Initialize();
 
-//	bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字コード１文字を(SJIS)を文字列に変換する
 	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
 	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
@@ -104,10 +104,12 @@ public:
 	CharCodes();
 	~CharCodes();
 
+	/// 文字コードを文字列に変換する
 	void ConvToString(const wxUint8 *src, size_t len, wxString &dst);
+	/// 文字列を文字コードに変換する
 	bool ConvToChars(const wxString &src, wxUint8 *dst, size_t len);
 
-//	bool FindString(wxUint8 src, wxString &dst, wxUint8 unknownchar = '_');
+	/// 文字コードが文字変換テーブルにあるか
 	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
 	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);

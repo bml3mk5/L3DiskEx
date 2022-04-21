@@ -10,11 +10,12 @@
 #include <wx/filename.h>
 #include <wx/mstream.h>
 #include <wx/dynarray.h>
+#include <wx/hashmap.h>
 #include "diskparam.h"
 #include "diskresult.h"
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD
-extern const wxString gDiskDensity[];
+extern const char *gDiskDensity[];
 
 #define DISKD88_MAX_TRACKS	164
 
@@ -50,11 +51,24 @@ typedef struct st_d88_sector_header {
 } d88_sector_header_t;
 #pragma pack()
 
+
+WX_DECLARE_HASH_MAP( int, int, wxIntegerHash, wxIntegerEqual, IntHashMap );
+
+/// ハッシュを扱うクラス
+class IntHashMapUtil
+{
+public:
+	static void IncleaseValue(IntHashMap &hash_map, int key);
+	static int GetMaxKeyOnMaxValue(IntHashMap &hash_map);
+	static int MaxValue(int src, int value);
+	static int MinValue(int src, int value);
+};
+
 /// セクタデータへのポインタを保持するクラス
 class DiskD88Sector
 {
 private:
-	int num;	///< sector number(ID Rと同じ)
+	int num;		///< sector number(ID Rと同じ)
 	bool deleted;	///< deleted mark
 	d88_sector_header_t header;
 	wxUint8 *data;
@@ -200,6 +214,8 @@ public:
 
 	/// オフセットを返す
 	int		GetOffsetPos() const { return offset_pos; }
+	/// トラック内の最小セクタ番号を返す
+	int		GetMinSectorNumber() const;
 	/// トラック内の最大セクタ番号を返す
 	int		GetMaxSectorNumber() const;
 	/// トラック内の最大セクタサイズを返す
@@ -291,6 +307,8 @@ public:
 	void	DeleteTracks(int start_offset_pos, int end_offset_pos, int side_number);
 	/// オフセットの再計算＆ディスクサイズ変更
 	size_t	Shrink();
+	/// ディスクサイズ計算（ディスクヘッダ分を除く）
+	size_t	CalcSizeWithoutHeader();
 
 	/// ディスク番号を返す
 	int		GetNumber() const { return num; }

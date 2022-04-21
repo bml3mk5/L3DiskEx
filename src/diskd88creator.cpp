@@ -69,7 +69,12 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 	// create sectors
 	wxUint32 track_size = 0;
 	for(sector_pos = 0; sector_pos < sector_max && result->GetValid() >= 0; sector_pos++) {
-		track_size += CreateSector(track_number, side_number, sector_nums[sector_pos], sector_size, sector_max, single_density, track);
+		int sector_offset = 0;
+		if (param->GetNumberingSector() == 1) {
+			// 連番にする場合
+			sector_offset = side_number * sector_max;
+		}
+		track_size += CreateSector(track_number, side_number, sector_nums[sector_pos] + sector_offset, sector_size, sector_max, single_density, track);
 	}
 
 	if (result->GetValid() >= 0) {

@@ -31,6 +31,7 @@ class DiskBasic;
 class DiskBasicFat;
 class DiskBasicDir;
 class DiskBasicDirItem;
+class DiskBasicError;
 
 /// DISK BASIC 機種依存 個別の処理テンプレート
 class DiskBasicType
@@ -117,7 +118,7 @@ public:
 	void			ClearDiskFreeSize();
 	/// 残りディスクサイズを得る(CalcDiskFreeSize()で計算した結果)
 	int				GetFreeDiskSize() const { return free_disk_size; }
-	/// 残りグループを得る(CalcDiskFreeSize()で計算した結果)
+	/// 残りグループ数を得る(CalcDiskFreeSize()で計算した結果)
 	int				GetFreeGroupSize() const { return free_groups; }
 	/// FATの空き状況を配列で返す
 	void			GetFatAvailability(wxUint32 *offset, const wxArrayInt **arr) const;
@@ -151,6 +152,8 @@ public:
 	virtual bool	CanMakeDirectory() const { return false; }
 	/// サブディレクトリを作成する前の個別処理
 	virtual bool	PreProcessOnMakingDirectory(wxString &dir_name) { return true; }
+	/// サブディレクトリを作成する前の準備を行う
+	virtual bool	PrepareToMakeDirectory(DiskBasicDirItem *item) { return true; }
 	/// サブディレクトリを作成した後の個別処理
 	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num) {}
 	//@}
@@ -179,6 +182,8 @@ public:
 	virtual bool	IsWritable() const { return true; }
 	/// 最後のグループ番号を計算する
 	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
+	/// ファイルをセーブする前の準備を行う
+	virtual bool	PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo) { return true; }
 	/// セーブ時にセクタがなかった時の処理
 	virtual bool	SetSkipMarkOnErrorSector(DiskBasicDirItem *item, wxUint32 prev_group, wxUint32 group, wxUint32 next_group);
 	/// データの書き込み処理
@@ -195,7 +200,11 @@ public:
 	/// ファイルを削除できるか
 	virtual bool	IsDeletable() const { return true; }
 	/// 指定したグループ番号のFAT領域を削除する
+	virtual void	DeleteGroups(const DiskBasicGroups &group_items);
+	/// 指定したグループ番号のFAT領域を削除する
 	virtual void	DeleteGroupNumber(wxUint32 group_num);
+	/// ファイル削除後の処理
+	virtual bool	AdditionalProcessOnDeletedFile(DiskBasicDirItem *item) { return true; }
 	//@}
 
 	/// @name property

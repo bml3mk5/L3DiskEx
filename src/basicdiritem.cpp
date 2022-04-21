@@ -40,6 +40,7 @@ DiskBasicDirItem &DiskBasicDirItem::operator=(const DiskBasicDirItem &src)
 	return *this;
 }
 /// ディレクトリアイテムを作成 DATAは内部で確保
+/// @param [in] basic  DISK BASIC
 DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic)
 {
 	this->basic = basic;
@@ -62,6 +63,9 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic)
 	this->visible = true;
 }
 /// ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
+/// @param [in] basic  DISK BASIC
+/// @param [in] sector セクタ
+/// @param [in] data   セクタ内のディレクトリエントリ
 DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
 {
 	this->basic = basic;
@@ -83,6 +87,14 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *sector, wxUi
 	this->visible = true;
 }
 /// ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
+/// @param [in] basic  DISK BASIC
+/// @param [in] num    通し番号
+/// @param [in] track  トラック番号
+/// @param [in] side   サイド番号
+/// @param [in] sector セクタ
+/// @param [in] secpos セクタ内のディレクトリエントリの位置
+/// @param [in] data   セクタ内のディレクトリエントリ
+/// @param [out] unuse 未使用か
 DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 {
 	this->basic = basic;
@@ -103,6 +115,7 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int num, int track, int sid
 	this->used = false;
 	this->visible = true;
 }
+/// デストラクタ
 DiskBasicDirItem::~DiskBasicDirItem()
 {
 	if (ownmake_data) {
@@ -150,6 +163,7 @@ bool DiskBasicDirItem::Check(bool &last)
 
 /// 削除
 /// @param [in] code : 削除コード(デフォルト0)
+/// @return true:OK
 bool DiskBasicDirItem::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
@@ -169,6 +183,9 @@ void DiskBasicDirItem::Refresh()
 //
 
 /// ファイル名を格納する位置を返す
+/// @param [out] len    バッファサイズ
+/// @param [out] invert データを反転する必要があるか
+/// @return 格納先バッファポインタ
 wxUint8 *DiskBasicDirItem::GetFileNamePos(size_t &len, bool *invert) const
 {
 	len = 0;
@@ -176,6 +193,8 @@ wxUint8 *DiskBasicDirItem::GetFileNamePos(size_t &len, bool *invert) const
 }
 
 /// 拡張子を格納する位置を返す
+/// @param [out] len    バッファサイズ
+/// @return 格納先バッファポインタ
 wxUint8 *DiskBasicDirItem::GetFileExtPos(size_t &len) const
 {
 	len = 0;
@@ -192,6 +211,7 @@ void DiskBasicDirItem::SetFileNameStr(const wxString &filename)
 }
 
 /// ファイル名をそのまま設定
+/// @param [in]  filename   ファイル名(Unicode)
 void DiskBasicDirItem::SetFileNamePlain(const wxString &filename)
 {
 	wxUint8 name[FILENAME_BUFSIZE];
@@ -200,6 +220,7 @@ void DiskBasicDirItem::SetFileNamePlain(const wxString &filename)
 }
 
 /// 拡張子を設定
+/// @param [in]  fileext    拡張子(Unicode)
 void DiskBasicDirItem::SetFileExt(const wxString &fileext)
 {
 	wxUint8 ext[FILEEXT_BUFSIZE];
@@ -208,6 +229,7 @@ void DiskBasicDirItem::SetFileExt(const wxString &fileext)
 }
 
 /// ファイル名をコピー
+/// @param [in]  src ディレクトリアイテム
 void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 {
 	wxUint8 sname[FILENAME_BUFSIZE], dname[FILENAME_BUFSIZE];
@@ -235,6 +257,8 @@ void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 }
 
 /// ファイル名を設定
+/// @param [in]  filename ファイル名
+/// @param [in]  length   長さ
 void DiskBasicDirItem::SetFileName(const wxUint8 *filename, int length)
 {
 	wxUint8 *n;
@@ -251,6 +275,8 @@ void DiskBasicDirItem::SetFileName(const wxUint8 *filename, int length)
 }
 
 /// 拡張子を設定
+/// @param [in]  fileext  拡張子
+/// @param [in]  length   長さ
 void DiskBasicDirItem::SetFileExt(const wxUint8 *fileext, int length)
 {
 	wxUint8 *e;
@@ -266,6 +292,7 @@ void DiskBasicDirItem::SetFileExt(const wxUint8 *fileext, int length)
 }
 
 /// ファイル名を返す 名前 + "." + 拡張子
+/// @return ファイル名
 wxString DiskBasicDirItem::GetFileNameStr()
 {
 	wxUint8 name[FILENAME_BUFSIZE], ext[FILEEXT_BUFSIZE];
@@ -341,12 +368,14 @@ void DiskBasicDirItem::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, si
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
+/// @return 文字列
 wxString DiskBasicDirItem::InvalidateChars()
 {
 	return wxT("\"\\/:;");
 }
 
 /// 同じファイル名か
+/// @param [in] filename ファイル名
 bool DiskBasicDirItem::IsSameFileName(const wxString &filename)
 {
 	if (!IsUsedAndVisible()) return false;
@@ -399,6 +428,7 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem &src)
 }
 
 /// ファイル名＋拡張子のサイズ
+/// @return サイズ
 int DiskBasicDirItem::GetFileNameStrSize()
 {
 	int l = GetFileExtSize();
@@ -408,7 +438,12 @@ int DiskBasicDirItem::GetFileNameStrSize()
 }
 
 /// ファイルパスから内部ファイル名を生成する
+///
 /// エクスプローラからインポート時のダイアログを出す前
+/// 拡張子がない機種では拡張子はとり除かれる
+///
+/// @param [in] filepath ファイルパス
+/// @return ファイル名
 wxString DiskBasicDirItem::RemakeFileNameStr(const wxString &filepath)
 {
 	wxString newname;
@@ -432,7 +467,12 @@ wxString DiskBasicDirItem::RemakeFileNameStr(const wxString &filepath)
 }
 
 /// 内部ファイル名からコード変換して文字列を返す
+///
 /// コピー、このアプリからインポート時のダイアログを出す前
+///
+/// @param [in] src    ファイル名
+/// @param [in] srclen ファイル名長さ
+/// @return ファイル名
 wxString DiskBasicDirItem::RemakeFileName(const wxUint8 *src, size_t srclen)
 {
 	wxString dst;
@@ -442,7 +482,9 @@ wxString DiskBasicDirItem::RemakeFileName(const wxUint8 *src, size_t srclen)
 }
 
 /// ファイル名を変換して内部ファイル名にする "."で拡張子と分別 大文字変換（機種依存）
+///
 /// ダイアログ入力後のファイル名文字列を変換する
+///
 /// @param [in]  filename   ファイル名(Unicode)
 /// @param [out] nativename 内部ファイル名バッファ
 /// @param [in]  length     バッファサイズ
@@ -474,7 +516,7 @@ void DiskBasicDirItem::ToNativeFileNameFromStr(const wxString &filename, wxUint8
 /// @param [in,out] nlen     上記バッファサイズ / 文字列長さを返す
 /// @param [out]    ext      内部拡張子名バッファ
 /// @param [in,out] elen     上記バッファサイズ / 文字列長さを返す
-/// @return true OK
+/// @return true OK / false 変換できない文字がある
 bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen)
 {
 	char tmp[FILENAME_BUFSIZE];
@@ -504,7 +546,11 @@ bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name,
 	return valid;
 }
 
-/// 文字列をコード変換して内部ファイル名にする
+/// 文字列をコード変換して内部ファイル名(名前)にする
+/// @param [in]   src     ファイル名(Unicode)
+/// @param [out]  dst     内部ファイル名バッファ
+/// @param [in]   len     上記バッファサイズ
+/// @return true OK / false 変換できない文字がある
 bool DiskBasicDirItem::ToNativeName(const wxString &src, wxUint8 *dst, size_t len)
 {
 	wxUint8 tmp[FILENAME_BUFSIZE];
@@ -527,7 +573,11 @@ bool DiskBasicDirItem::ToNativeName(const wxString &src, wxUint8 *dst, size_t le
 	return valid;
 }
 
-/// 文字列をコード変換して内部ファイル名にする
+/// 文字列をコード変換して内部ファイル名(拡張子)にする
+/// @param [in]   src     ファイル名(Unicode)
+/// @param [out]  dst     内部ファイル名バッファ
+/// @param [in]   len     上記バッファサイズ
+/// @return true OK / false 変換できない文字がある
 bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len)
 {
 	wxUint8 tmp[FILEEXT_BUFSIZE];
@@ -550,7 +600,13 @@ bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len
 	return valid;
 }
 
-/// 文字列をバッファにコピー あまりはfillでパディング
+/// 文字列をバッファにコピー 余りはfillで埋める
+/// @param [in]   src     ファイル名
+/// @param [in]   flen    ファイル名長さ
+/// @param [in]   fill    余り部分を埋める文字
+/// @param [out]  dst     出力先バッファ
+/// @param [in]   len     上記バッファサイズ
+/// @return true OK / false 出力先バッファが足りない
 bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, char fill, wxUint8 *dst, size_t len)
 {
 	size_t l;
@@ -563,6 +619,13 @@ bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, char fill, wxUin
 }
 
 /// 文字列をバッファにコピー "."で拡張子とを分ける
+/// @param [in]   src     ファイル名
+/// @param [in]   flen    ファイル名長さ
+/// @param [in]   elen    拡張子長さ
+/// @param [in]   fill    余り部分をサプレスする文字
+/// @param [out]  dst     出力先バッファ
+/// @param [in]   len     上記バッファサイズ
+/// @return true OK / false 出力先バッファが足りない
 bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, size_t elen, char fill, wxUint8 *dst, size_t len)
 {
 	size_t l;
@@ -590,38 +653,27 @@ bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, size_t elen, cha
 //
 
 /// 属性を設定
-/// @param [in] file_type : -1のときは設定しない
+/// @param [in] file_type : enum #en_file_type_mask の値の組み合わせ -1のときは設定しない
 void DiskBasicDirItem::SetFileAttr(int file_type)
 {
 }
 
 /// 属性を返す
-/// bit 0 : BASIC
-/// bit 1 : Data
-/// bit 2 : Machine
-/// bit 3 : Ascii
-/// bit 4 : Binary
-/// bit 5 : Random access
-/// bit 6 : Encrypted
-/// bit 7 : Read after Write
-/// bit 8 : Read Only
-/// bit 9 : System
-/// bit10 : Hidden
-/// bit11 : Volume
-/// bit12 : Directory
-/// bit13 : Archive
+/// @return enum #en_file_type_mask の値の組み合わせ
 int DiskBasicDirItem::GetFileType()
 {
 	return 0;
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
+/// @return 文字列
 wxString DiskBasicDirItem::GetFileAttrStr()
 {
 	return wxT("");
 }
 
 /// 通常のファイルか ディレクトリ削除でのチェックで使用
+/// @return true 通常のファイル
 bool DiskBasicDirItem::IsNormalFile()
 {
 	int type = GetFileType();
@@ -641,6 +693,7 @@ bool DiskBasicDirItem::IsNormalFile()
 }
 
 /// ディレクトリか
+/// @return true ディレクトリ
 bool DiskBasicDirItem::IsDirectory()
 {
 	int type = GetFileType();
@@ -648,41 +701,52 @@ bool DiskBasicDirItem::IsDirectory()
 }
 
 /// ファイルサイズをセット
+/// @param [in] val サイズ
 void DiskBasicDirItem::SetFileSize(int val)
 {
 	file_size = val;
 }
 
+/// ファイルサイズを返す
+/// @return サイズ
 int DiskBasicDirItem::GetFileSize()
 {
 	return file_size;
 }
 
+/// グループ数をセット
+/// @param [in] val 数
 void DiskBasicDirItem::SetGroupSize(int val)
 {
 	groups = val;
 }
 
+/// グループ数を返す
+/// @return 数
 int DiskBasicDirItem::GetGroupSize()
 {
 	return groups;
 }
 
 /// 最初のグループ番号をセット
+/// @param [in] val 番号
 void DiskBasicDirItem::SetStartGroup(wxUint32 val)
 {
 }
 /// 最初のグループ番号を返す
+/// @return 番号
 wxUint32 DiskBasicDirItem::GetStartGroup() const
 {
 	return 0;
 }
 
 /// 追加のグループ番号をセット(機種依存)
+/// @param [in] val 番号
 void DiskBasicDirItem::SetExtraGroup(wxUint32 val)
 {
 }
 /// 追加のグループ番号を返す(機種依存)
+/// @return 番号
 wxUint32 DiskBasicDirItem::GetExtraGroup() const
 {
 	return INVALID_GROUP_NUMBER;
@@ -693,7 +757,8 @@ wxUint32 DiskBasicDirItem::GetExtraGroup() const
 //	return 0;
 //}
 
-/// 日付を返す
+/// 日付を得る
+/// @param [out] tm 日付
 void DiskBasicDirItem::GetFileDate(struct tm *tm)
 {
 	tm->tm_year = 0;
@@ -701,7 +766,8 @@ void DiskBasicDirItem::GetFileDate(struct tm *tm)
 	tm->tm_mday = 0;
 }
 
-/// 時間を返す
+/// 時間を得る
+/// @param [out] tm 時間
 void DiskBasicDirItem::GetFileTime(struct tm *tm)
 {
 	tm->tm_hour = 0;
@@ -709,7 +775,8 @@ void DiskBasicDirItem::GetFileTime(struct tm *tm)
 	tm->tm_sec = 0;
 }
 
-/// 日時を返す
+/// 日時を得る
+/// @param [out] tm 日時
 void DiskBasicDirItem::GetFileDateTime(struct tm *tm)
 {
 	GetFileDate(tm);
@@ -717,6 +784,7 @@ void DiskBasicDirItem::GetFileDateTime(struct tm *tm)
 }
 
 /// 日時をセット
+/// @param [in] tm 日時
 void DiskBasicDirItem::SetFileDateTime(const struct tm *tm)
 {
 	SetFileDate(tm);
@@ -724,21 +792,28 @@ void DiskBasicDirItem::SetFileDateTime(const struct tm *tm)
 }
 
 /// 日付のタイトル名（ダイアログ用）
+/// @return タイトル文字列
 wxString DiskBasicDirItem::GetFileDateTimeTitle()
 {
 	return _("Created Date:");
 }
 
+/// ファイルの日付を文字列にして返す
+/// @return 日付文字列
 wxString DiskBasicDirItem::GetFileDateStr()
 {
 	return wxT("");
 }
 
+/// ファイルの時間を文字列にして返す
+/// @return 時間文字列
 wxString DiskBasicDirItem::GetFileTimeStr()
 {
 	return wxT("");
 }
 
+/// ファイルの日時を文字列にして返す
+/// @return 日時文字列 ない場合"---"
 wxString DiskBasicDirItem::GetFileDateTimeStr()
 {
 	wxString str = GetFileDateStr();
@@ -749,6 +824,9 @@ wxString DiskBasicDirItem::GetFileDateTimeStr()
 }
 
 /// ファイルの終端コードをチェックして必要なサイズを返す
+/// @param [in] istream   入力ストリーム
+/// @param [in] file_size 入力ストリームの元のデータサイズ
+/// @return 終端コードを付加したサイズ（元のサイズ+1）
 int DiskBasicDirItem::CheckEofCode(wxInputStream *istream, int file_size)
 {
 	// ファイルの最終が終端記号で終わっているかを調べる
@@ -769,12 +847,14 @@ void DiskBasicDirItem::SetModify()
 }
 
 /// ディレクトリアイテムのサイズ
+/// @return サイズ
 size_t DiskBasicDirItem::GetDataSize()
 {
 	return sizeof(directory_t);
 }
 
 /// アイテムへのポインタを設定
+/// @param [in] val ディレクトリアイテム
 void DiskBasicDirItem::SetDataPtr(directory_t *val)
 {
 	if (ownmake_data) {
@@ -785,6 +865,7 @@ void DiskBasicDirItem::SetDataPtr(directory_t *val)
 }
 
 /// アイテムをコピー
+/// @param [in] val ディレクトリアイテム
 /// @return false コピー先なし
 bool DiskBasicDirItem::CopyData(const directory_t *val)
 {
@@ -794,7 +875,7 @@ bool DiskBasicDirItem::CopyData(const directory_t *val)
 }
 
 /// ファイル名、属性をコピー
-/// @param [in] src ソース
+/// @param [in] src ディレクトリアイテム
 void DiskBasicDirItem::CopyItem(const DiskBasicDirItem &src)
 {
 	// データはコピーする
@@ -804,6 +885,7 @@ void DiskBasicDirItem::CopyItem(const DiskBasicDirItem &src)
 }
 
 /// 内部メモリを確保してアイテムをコピー
+/// @param [in] val ディレクトリアイテム
 void DiskBasicDirItem::CloneData(const directory_t *val)
 {
 	if (!ownmake_data) {

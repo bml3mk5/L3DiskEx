@@ -6,6 +6,7 @@
 #define _MY_LOGGING_H_
 
 #include "common.h"
+#include <stdarg.h>
 
 class wxFFile;
 

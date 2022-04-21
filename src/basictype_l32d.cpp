@@ -13,6 +13,23 @@ DiskBasicTypeL32D::DiskBasicTypeL32D(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 {
 }
 
+/// FATエリアをチェック
+bool DiskBasicTypeL32D::CheckFat()
+{
+	bool valid = DiskBasicType::CheckFat();
+
+	if (valid) {
+		// FAT先頭エリアのチェック
+		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+		if (!sector) {
+			valid = false;
+		} else if (!(sector->Get(0) == 0 || sector->Get(0) == 0xff)) {
+			valid = false;
+		}
+	}
+	return valid;
+}
+
 /// 空き位置を返す
 /// @return 0xff:空きなし
 wxUint32 DiskBasicTypeL32D::GetEmptyGroupNumber()

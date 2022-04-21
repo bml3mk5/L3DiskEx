@@ -32,7 +32,6 @@ private:
 
 public:
 	DiskWriter(DiskD88 *image, const wxString &path, DiskResult *result);
-//	DiskWriter(wxOutputStream *stream);
 	~DiskWriter();
 
 	/// 出力先を開く
@@ -44,9 +43,6 @@ public:
 	int Save(const wxString &file_format = wxEmptyString);
 	/// ストリームの内容をファイルに保存
 	int SaveDisk(int disk_number, int side_number, const wxString &file_format = wxEmptyString);
-
-//	/// エラーメッセージを得る
-//	const wxArrayString &GetErrorMessages();
 };
 
 #endif /* _DISK_WRITER_H_ */

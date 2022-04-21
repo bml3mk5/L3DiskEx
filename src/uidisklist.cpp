@@ -157,6 +157,7 @@ void L3DiskList::OnSelectionChanged(wxDataViewEvent& event)
 }
 
 /// アイテム編集開始
+/// @attention このイベントは発生しない！？
 void L3DiskList::OnStartEditing(wxDataViewEvent& event)
 {
 #if 0
@@ -333,11 +334,13 @@ void L3DiskList::ChangeSelection(wxDataViewItem &item)
 		frame->ClearBinDumpData();
 		frame->ClearFatAreaData();
 		frame->UpdateMenuAndToolBarDiskList(this);
+		Expand(item);
 		return;
 	}
 
 	// 右パネルにファイル名一覧を設定
 	selected_disk = true;
+	frame->ClearFatAreaData();
 	frame->SetFileListData(disk, subnum);
 	frame->SetRawPanelData(disk, subnum);
 	frame->ClearBinDumpData();

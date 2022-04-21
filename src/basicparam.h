@@ -41,6 +41,7 @@ private:
 	int subdir_group_size;		///< サブディレクトリの初期グループ数
 	wxUint8 dir_space_code;		///< ディレクトリの空白
 	int dir_start_pos_on_sec;	///< ディレクトリのセクタ毎の開始位置
+	int groups_per_dir_entry;	///< １ディレクトリエントリで指定できるグループ数 
 	int id_sector_pos;			///< ID領域のセクタ位置(0 - )
 	wxString id_string;			///< ID領域の先頭コード
 	wxString ipl_string;		///< IPL領域の先頭コード
@@ -50,7 +51,7 @@ private:
 	wxUint8 fillcode_on_dir;	///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;		///< ファイル削除時にセットするコード
 	wxUint8 media_id;			///< メディアID
-	wxString basic_description;
+	wxString basic_description;	///< 説明
 
 public:
 	DiskBasicParam();
@@ -79,6 +80,7 @@ public:
 		int					n_subdir_group_size,
 		wxUint8				n_dir_space_code,
 		int					n_dir_start_pos_on_sec,
+		int					n_groups_per_dir_entry,
 		int					n_id_sector_pos,
 		const wxString &	n_id_string,
 		const wxString &	n_ipl_string,
@@ -99,7 +101,7 @@ public:
 	void				CalcDirStartEndSector(int sector_size);
 
 	const wxString&		GetBasicTypeName() const	{ return basic_type_name; }
-	const wxString&		GetBasicCategoryName() const { return basic_category_name; }
+	const wxString&		GetBasicCategoryName() const	{ return basic_category_name; }
 	DiskBasicFormatType	GetFormatType() const		{ return format_type; }
 	int					GetSectorsPerGroup() const	{ return sectors_per_group; }
 	int					GetSidesOnBasic() const		{ return sides_on_basic; }
@@ -122,7 +124,8 @@ public:
 	int					GetDirEntryCount() const	{ return dir_entry_count; }
 	int					GetSubDirGroupSize() const	{ return subdir_group_size; }
 	wxUint8				GetDirSpaceCode() const		{ return dir_space_code; }
-	int					GetDirStartPosOnSector() const { return dir_start_pos_on_sec; }
+	int					GetDirStartPosOnSector() const	{ return dir_start_pos_on_sec; }
+	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
 	int					GetIdSectorPos() const		{ return id_sector_pos; }
 	const wxString&		GetIDString() const			{ return id_string; }
 	const wxString&		GetIPLString() const		{ return ipl_string; }
@@ -151,6 +154,7 @@ public:
 	void			SetGroupSystemCode(wxUint32 val) { group_system_code = val; }
 	void			SetGroupUnusedCode(wxUint32 val) { group_unused_code = val; }
 	void			SetDirStartSector(int val)		{ dir_start_sector = val; }
+	void			SetGroupsPerDirEntry(int val)	{ groups_per_dir_entry = val; }
 	void			SetIDSectorPos(int val)			{ id_sector_pos = val; }
 	void			SetIDString(const wxString &str)		{ id_string = str; }
 	void			SetIPLString(const wxString &str)		{ ipl_string = str; }

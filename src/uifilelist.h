@@ -7,6 +7,7 @@
 
 #include "common.h"
 #include <wx/string.h>
+#include <wx/panel.h>
 #include <wx/dataview.h>
 #include <wx/clntdata.h>
 #include <wx/radiobut.h>

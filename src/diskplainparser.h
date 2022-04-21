@@ -24,9 +24,9 @@ private:
 	short			mod_flags;
 	DiskResult		*result;
 
-	wxUint32 ParseSector(wxInputStream *istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, DiskD88Track *track);
-	wxUint32 ParseTrack(wxInputStream *istream, int offset_pos, wxUint32 offset, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, DiskD88Disk *disk);
-	wxUint32 ParseDisk(wxInputStream *istream, int disk_number, int track_nums, int side_nums, int sector_nums, int sector_size);
+	wxUint32 ParseSector(wxInputStream *istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool single_density, DiskD88Track *track);
+	wxUint32 ParseTrack(wxInputStream *istream, int offset_pos, wxUint32 offset, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, bool single_density, DiskD88Disk *disk);
+	wxUint32 ParseDisk(wxInputStream *istream, int disk_number, const DiskParam *disk_param);
 
 public:
 	DiskPlainParser(DiskD88File *file, short mod_flags, DiskResult *result);

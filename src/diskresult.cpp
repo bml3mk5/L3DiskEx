@@ -49,10 +49,16 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] Invalid id H in track %d. id[C:%d H:%d R:%d]"),
 	//	ERRV_ID_SECTOR  v:6
 	wxTRANSLATE("[Disk%d] Invalid id R in track %d. id[C:%d H:%d R:%d] num of sector:%d"),
+	//	ERRV_ID_NUM_OF_SECTOR  v:2
+	wxTRANSLATE("[Disk%d] Mismatch number of sector in track %d and side %d."),
 	//	ERRV_SECTOR_SIZE  v:6
 	wxTRANSLATE("[Disk%d] Invalid sector size in sector. id[C:%d H:%d R:%d N:%d] sector size:%d"),
 	//	ERRV_DUPLICATE_TRACK  v:4
 	wxTRANSLATE("[Disk%d] Duplicate track %d and side %d. Side number change to %d."),
+	//	ERRV_DUPLICATE_SECTOR  v:3
+	wxTRANSLATE("[Disk%d] Duplicate sector %d. [track:%d side:%d]"),
+	// ERRV_NO_SECTOR  v:3
+	wxTRANSLATE("[Disk%d] No found sector %d. [track:%d side:%d]"),
 	//	ERRV_IGNORE_DATA  v:4
 	wxTRANSLATE("[Disk%d] Deleted data found. This sector is ignored. id[C:%d H:%d R:%d]"),
 	//	ERRV_END  v:1

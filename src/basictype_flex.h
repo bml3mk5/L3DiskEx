@@ -34,6 +34,8 @@ typedef struct st_flex_sir {
 class DiskBasicTypeFLEX : public DiskBasicType
 {
 private:
+	flex_sir_t *flex_sir;	///< SIRエリア
+
 	DiskBasicTypeFLEX() : DiskBasicType() {}
 	DiskBasicTypeFLEX(const DiskBasicType &src) : DiskBasicType(src) {}
 public:

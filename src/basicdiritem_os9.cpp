@@ -35,12 +35,55 @@ DiskBasicDirItemOS9FD::DiskBasicDirItemOS9FD()
 {
 	sector = NULL;
 	fd = NULL;
+	fd_ownmake = false;
+	memset(&zero_data, 0, sizeof(zero_data));
+}
+DiskBasicDirItemOS9FD::~DiskBasicDirItemOS9FD()
+{
+	if (fd_ownmake) delete fd;
+}
+DiskBasicDirItemOS9FD::DiskBasicDirItemOS9FD(const DiskBasicDirItemOS9FD &src)
+{
+}
+/// 代入
+DiskBasicDirItemOS9FD &DiskBasicDirItemOS9FD::operator=(const DiskBasicDirItemOS9FD &src)
+{
+	this->Dup(src);
+	return *this;
+}
+/// 複製
+void DiskBasicDirItemOS9FD::Dup(const DiskBasicDirItemOS9FD &src)
+{
+	sector = src.sector;
+	if (src.fd_ownmake) {
+		fd = new directory_os9_fd_t;
+		memcpy(&fd, src.fd, sizeof(directory_os9_fd_t));
+	} else {
+		fd = src.fd;
+	}
+	fd_ownmake = src.fd_ownmake;
 }
 /// ポインタをセット
 void DiskBasicDirItemOS9FD::Set(DiskD88Sector *n_sector, directory_os9_fd_t *n_fd)
 {
 	sector = n_sector;
+	if (fd_ownmake) delete fd;
 	fd = n_fd;
+	fd_ownmake = false;
+}
+/// FDのメモリを確保
+void DiskBasicDirItemOS9FD::Alloc()
+{
+	if (fd_ownmake) delete fd;
+	fd = new directory_os9_fd_t;
+	fd_ownmake = true;
+	memset(fd, 0, sizeof(directory_os9_fd_t));
+}
+/// FDをクリア
+void DiskBasicDirItemOS9FD::Clear()
+{
+	if (sector) sector->Fill(0);
+	else if (fd) memset(fd, 0, sizeof(directory_os9_fd_t));
 }
 /// 属性を返す
 wxUint8 DiskBasicDirItemOS9FD::GetATT() const
@@ -55,27 +98,52 @@ void DiskBasicDirItemOS9FD::SetATT(wxUint8 val)
 /// セグメントのLSNを返す
 wxUint32 DiskBasicDirItemOS9FD::GetLSN(int idx) const
 {
-	return GET_OS9_LSN(fd->FD_SEG[idx].LSN);
+	return fd ? GET_OS9_LSN(fd->FD_SEG[idx].LSN) : 0;
 }
 /// セグメントのセクタ数を返す
 wxUint16 DiskBasicDirItemOS9FD::GetSIZ(int idx) const
 {
-	return wxUINT16_SWAP_ON_LE(fd->FD_SEG[idx].SIZ);
+	return fd ? wxUINT16_SWAP_ON_LE(fd->FD_SEG[idx].SIZ) : 0;
+}
+/// セグメントにLSNを設定
+void DiskBasicDirItemOS9FD::SetLSN(int idx, wxUint32 val)
+{
+	if (fd) SET_OS9_LSN(fd->FD_SEG[idx].LSN, val);
+}
+/// セグメントにセクタ数を設定
+void DiskBasicDirItemOS9FD::SetSIZ(int idx, wxUint16 val)
+{
+	if (fd) fd->FD_SEG[idx].SIZ = wxUINT16_SWAP_ON_LE(val);
 }
 /// ファイルサイズを返す
 wxUint32 DiskBasicDirItemOS9FD::GetSIZ() const
 {
-	return wxUINT32_SWAP_ON_LE(fd->FD_SIZ);
+	return fd ? wxUINT32_SWAP_ON_LE(fd->FD_SIZ) : 0;
+}
+/// ファイルサイズを設定
+void DiskBasicDirItemOS9FD::SetSIZ(wxUint32 val)
+{
+	if (fd) fd->FD_SIZ = wxUINT32_SWAP_ON_LE(val);
+}
+/// リンク数を返す
+wxUint8 DiskBasicDirItemOS9FD::GetLNK() const
+{
+	return fd ? fd->FD_LNK : 0;
+}
+/// リンク数を設定
+void DiskBasicDirItemOS9FD::SetLNK(wxUint8 val)
+{
+	if (fd) fd->FD_LNK = val;
 }
 /// 更新日付を返す
 const os9_date_t &DiskBasicDirItemOS9FD::GetDAT() const
 {
-	return fd->FD_DAT;
+	return fd ? fd->FD_DAT : zero_data.date;
 }
 /// 更新日付をセット
 void DiskBasicDirItemOS9FD::SetDAT(const os9_date_t &val)
 {
-	fd->FD_DAT = val;
+	if (fd) fd->FD_DAT = val;
 }
 /// 更新日付をセット
 void DiskBasicDirItemOS9FD::SetDAT(const os9_cdate_t &val)
@@ -87,12 +155,12 @@ void DiskBasicDirItemOS9FD::SetDAT(const os9_cdate_t &val)
 /// 作成日付を返す
 const os9_cdate_t &DiskBasicDirItemOS9FD::GetDCR() const
 {
-	return fd->FD_DCR;
+	return fd ? fd->FD_DCR : zero_data.cdate;
 }
 /// 作成日付をセット
 void DiskBasicDirItemOS9FD::SetDCR(const os9_cdate_t &val)
 {
-	fd->FD_DCR = val;
+	if (fd) fd->FD_DCR = val;
 }
 // 更新にする
 void DiskBasicDirItemOS9FD::SetModify()
@@ -106,6 +174,7 @@ void DiskBasicDirItemOS9FD::SetModify()
 DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
+	fd.Alloc();
 }
 DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
 	: DiskBasicDirItem(basic, sector, data)
@@ -164,18 +233,26 @@ bool DiskBasicDirItemOS9::CheckUsed(bool unuse)
 /// ファイル名を設定
 void DiskBasicDirItemOS9::SetFileName(const wxUint8 *filename, int length)
 {
-	DiskBasicDirItem::SetFileName(filename, length);
-
 	size_t l;
 	wxUint8 *n = GetFileNamePos(l);
+	EncodeString(n, l, (const char *)filename, length);
+}
+
+/// 文字列の最後のMSBをセット
+size_t DiskBasicDirItemOS9::EncodeString(wxUint8 *dst, size_t dlen, const char *src, size_t slen)
+{
+	memset(dst, 0, dlen);
+	size_t len = dlen > slen ? slen : dlen;
+	memcpy(dst, src, len);
 
 	// 文字列の最後にMSBをセット
-	for(int i = (int)l - 1; i >= 0; i--) {
-		if (n[i] != 0) {
-			n[i] |= 0x80;
+	for(int i = (int)len - 1; i >= 0; i--) {
+		if (dst[i] != 0) {
+			dst[i] |= 0x80;
 			break;
 		}
 	}
+	return len;
 }
 
 /// ファイル名を得る
@@ -184,16 +261,30 @@ void DiskBasicDirItemOS9::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext,
 	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
 
 	// 文字列の最後はMSBがセットされているのでクリア
-	if (nlen > 0) {
-		int last = (int)nlen;
-		for(int n = last - 1; n >= 0; n--) {
-			if (name[n] & 0x80) {
-				name[n] &= 0x7f;
-				last = n + 1;
-			}
-		}
-		name[last] = 0;
+	DecodeString((char *)name, nlen, name, nlen);
+}
+
+/// 文字列のMSBをクリア
+size_t DiskBasicDirItemOS9::DecodeString(char *dst, size_t dlen, const wxUint8 *src, size_t slen)
+{
+	size_t len = dlen > slen ? slen : dlen;
+
+	// 文字列のMSBをクリア
+	for(size_t i = 0; i < len; i++) {
+		dst[i] = (src[i] & 0x7f);
 	}
+	for(size_t i = dlen; i < len; i++) {
+		dst[i] = 0;
+	}
+	return len;
+}
+
+/// 複製
+void DiskBasicDirItemOS9::Dup(const DiskBasicDirItem &src)
+{
+	DiskBasicDirItem::Dup(src);
+	const DiskBasicDirItemOS9 *psrc = (const DiskBasicDirItemOS9 *)&src;
+	fd.Dup(psrc->fd);
 }
 
 /// 削除
@@ -310,7 +401,16 @@ wxString DiskBasicDirItemOS9::GetFileAttrStr()
 /// ファイルサイズをセット
 void DiskBasicDirItemOS9::SetFileSize(int val)
 {
+	fd.SetSIZ(val);
 	file_size = val;
+}
+
+/// ファイルサイズを返す
+int DiskBasicDirItemOS9::GetFileSize()
+{
+	int size = (int)fd.GetSIZ();
+	if (size == 0) size = file_size;
+	return size;
 }
 
 /// ファイルサイズとグループ数を計算する
@@ -530,14 +630,33 @@ bool DiskBasicDirItemOS9::IsWriteProtected()
 {
 	return false;
 }
-bool DiskBasicDirItemOS9::IsDeleteable()
+bool DiskBasicDirItemOS9::IsDeletable()
 {
-	return false;
+	bool valid = true;
+	int attr = GetFileType();
+	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+		wxString name =	GetFileNameStr();
+		if (name == wxT(".") || name == wxT("..")) {
+			// ディレクトリ ".", ".."は削除不可
+			valid = false;
+		}
+	}
+	return valid;
 }
 /// ファイル名を編集できるか
 bool DiskBasicDirItemOS9::IsFileNameEditable()
 {
 	return true;
+}
+/// アイテムをコピー
+void DiskBasicDirItemOS9::CopyItem(const DiskBasicDirItem &src)
+{
+	DiskBasicDirItem::CopyItem(src);
+	const DiskBasicDirItemOS9FD *src_fd = &((const DiskBasicDirItemOS9 &)src).GetFD();
+	fd.SetATT(src_fd->GetATT());
+	fd.SetSIZ(src_fd->GetSIZ());
+	fd.SetDAT(src_fd->GetDAT());
+	fd.SetDCR(src_fd->GetDCR());
 }
 
 /// アイテムの属するセクタを変更済みにする
@@ -567,7 +686,7 @@ void DiskBasicDirItemOS9::SetModify()
 #define IDC_CHECK_USR_EXEC	56
 #define IDC_CHECK_USR_WRITE	57
 #define IDC_CHECK_USR_READ	58
-#define IDC_TEXT_CDATE		59
+#define IDC_TEXT_CREATEDATE	59
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -643,7 +762,7 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int fi
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	hbox->Add(new wxStaticText(parent, wxID_ANY, _("Created Date:")), stflags);
-	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CDATE, GetCDateStr(), wxDefaultPosition, sz, 0, date_validate);
+	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CREATEDATE, GetCDateStr(), wxDefaultPosition, sz, 0, date_validate);
 	hbox->Add(txtCDate, flags);
 	sizer->Add(hbox, flags);
 
@@ -670,6 +789,12 @@ void DiskBasicDirItemOS9::ChangeTypeInAttrDialog(AttrControls &controls)
 /// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
 void DiskBasicDirItemOS9::SetFileTypeForAttrDialog(const wxString &name, int &file_type_1, int &file_type_2)
 {
+	// -- --R -wr
+	file_type_1 = ((
+		FILETYPE_MASK_OS9_PUBLIC_READ |
+		FILETYPE_MASK_OS9_USER_WRITE |
+		FILETYPE_MASK_OS9_USER_READ
+	) << FILETYPE_OS9_PERMISSION_POS);
 }
 
 /// 属性1を得る

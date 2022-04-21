@@ -74,7 +74,7 @@ void DiskBasicTypeN88::AdditionalProcessOnFormatted()
 		SetGroupNumber(grps[i], group_system_code);
 	}
 	// IDをクリア
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetDirEndSector(), NULL, NULL);
+	DiskD88Sector *sector = basic->GetManagedSector(basic->GetDirEndSector());
 	if (sector) {
 		sector->Fill(0);
 	}
