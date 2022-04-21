@@ -233,6 +233,8 @@ public:
 
 	/// トラック番号を返す
 	int		GetTrackNumber() const { return trk_num; }
+	/// トラック番号を設定
+	void	SetTrackNumber(int val) { trk_num = val; }
 	/// サイド番号を返す
 	int		GetSideNumber() const { return sid_num; }
 	/// サイド番号を設定
@@ -266,6 +268,8 @@ public:
 	/// 指定位置のセクタを返す
 	DiskD88Sector  *GetSectorByIndex(int pos);
 
+	/// トラック内のもっともらしいID Cを返す
+	wxUint8	GetMajorIDC() const;
 	/// トラック内のもっともらしいID Hを返す
 	wxUint8	GetMajorIDH() const;
 

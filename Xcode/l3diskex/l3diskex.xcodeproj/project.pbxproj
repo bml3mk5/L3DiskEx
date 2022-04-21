@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D90CD25C246865CF0036A2A0 /* diskimdparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D90CD25A246865CF0036A2A0 /* diskimdparser.cpp */; };
+		D915D170275648F30064A305 /* diskhfeparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D915D16E275648F30064A305 /* diskhfeparser.cpp */; };
 		D9218E53247E9AA80019B283 /* basicdiritem_apledos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9218E4F247E9AA80019B283 /* basicdiritem_apledos.cpp */; };
 		D9218E54247E9AA80019B283 /* basictype_apledos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9218E51247E9AA80019B283 /* basictype_apledos.cpp */; };
 		D92E92FA247926A700FD3BB1 /* diskstrparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92E92F8247926A700FD3BB1 /* diskstrparser.cpp */; };
@@ -193,6 +194,8 @@
 /* Begin PBXFileReference section */
 		D90CD25A246865CF0036A2A0 /* diskimdparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskimdparser.cpp; sourceTree = "<group>"; };
 		D90CD25B246865CF0036A2A0 /* diskimdparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskimdparser.h; sourceTree = "<group>"; };
+		D915D16E275648F30064A305 /* diskhfeparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskhfeparser.cpp; sourceTree = "<group>"; };
+		D915D16F275648F30064A305 /* diskhfeparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskhfeparser.h; sourceTree = "<group>"; };
 		D9218E4F247E9AA80019B283 /* basicdiritem_apledos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_apledos.cpp; sourceTree = "<group>"; };
 		D9218E50247E9AA80019B283 /* basicdiritem_apledos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_apledos.h; sourceTree = "<group>"; };
 		D9218E51247E9AA80019B283 /* basictype_apledos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_apledos.cpp; sourceTree = "<group>"; };
@@ -797,6 +800,8 @@
 				D9C4D01624275975004521A2 /* diskfdiparser.h */,
 				D9D50B3D248FDA2D0075885C /* diskg64parser.cpp */,
 				D9D50B3E248FDA2D0075885C /* diskg64parser.h */,
+				D915D16E275648F30064A305 /* diskhfeparser.cpp */,
+				D915D16F275648F30064A305 /* diskhfeparser.h */,
 				D90CD25A246865CF0036A2A0 /* diskimdparser.cpp */,
 				D90CD25B246865CF0036A2A0 /* diskimdparser.h */,
 				D9C4D01724275975004521A2 /* diskparser.cpp */,
@@ -1054,6 +1059,7 @@
 				D9367048249F52FF0074FFC7 /* basicdiritem_amiga.cpp in Sources */,
 				D9C4D07324275986004521A2 /* uicdtreectrl.cpp in Sources */,
 				D9C4D06924275986004521A2 /* diskreplacebox.cpp in Sources */,
+				D915D170275648F30064A305 /* diskhfeparser.cpp in Sources */,
 				D9C4CFDF24275965004521A2 /* basicdiritem_n88.cpp in Sources */,
 				D9C4D07924275986004521A2 /* uifilelist.cpp in Sources */,
 				D9C4CFDC24275965004521A2 /* basicdiritem_mz_base.cpp in Sources */,

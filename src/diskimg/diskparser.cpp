@@ -19,6 +19,7 @@
 #include "diskg64parser.h"
 #include "disk2mgparser.h"
 #include "diskadcparser.h"
+#include "diskhfeparser.h"
 #include "../diskd88.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -218,6 +219,11 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 		DiskADCParser ps(file, mod_flags, result);
 		rc = ps.Parse(*stream, disk_param);
 		support = true;
+	} else if (type == wxT("hfe")) {
+		// HxC HFE 形式
+		DiskHfeParser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream);
+		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
 		DiskPlainParser ps(file, mod_flags, result);
@@ -300,6 +306,11 @@ int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hi
 		// Apple Disk Copy 4 形式
 		DiskADCParser ps(file, mod_flags, result);
 		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	} else if (type == wxT("hfe")) {
+		// HxC HFE 形式
+		DiskHfeParser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ

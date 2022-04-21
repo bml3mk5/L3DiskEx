@@ -413,6 +413,9 @@
     <ClCompile Include="..\src\basicfmt\basictype_amiga.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskhfeparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\main.h">
@@ -795,6 +798,9 @@
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basicdiritem_amiga.h">
       <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskhfeparser.h">
+      <Filter>Header Files\diskimg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

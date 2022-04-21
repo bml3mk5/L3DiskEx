@@ -45,7 +45,37 @@ double DiskBasicTypeCPM::ParseParamOnDisk(bool is_formatting)
 	if((1 << (basic->GetGroupWidth() * 8)) <= (int)basic->GetFatEndGroup()) {
 		return -1.0;
 	}
-	return 1.0;
+
+	// セクタ０
+	DiskD88Sector *sector = basic->GetSector(0, 0, 1);
+	if (!sector) {
+		return -1.0;
+	}
+
+	// 最初のセクタに識別文字がある場合はその文字列が含まれるかで判断
+	double valid_ratio = 0.5;
+	int found = -1;
+	wxCharBuffer istr;
+	for(int i=0; i<1; i++) {
+		found = -1;
+		switch(i) {
+		case 0:
+			istr = basic->GetVariousStringParam(wxT("IdentString")).To8BitData();
+			break;
+		case 1:
+			istr = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
+			break;
+		}
+		if (istr.length() > 0) {
+			found = sector->Find(istr.data(), istr.length());
+		}
+		if (found >= 0) {
+			valid_ratio = 1.0;
+			break;
+		}
+	}
+
+	return valid_ratio;
 }
 
 /// エリアをチェック

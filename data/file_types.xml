@@ -52,6 +52,10 @@
 		<Description>Apple Disk Copy 4 format file</Description>
 		<Description lang="ja">Apple Disk Copy 4 形式ファイル</Description>
 	</FileFormatType>
+	<FileFormatType name="hfe">
+		<Description>HxC HFE format file</Description>
+		<Description lang="ja">HxC HFE形式ファイル</Description>
+	</FileFormatType>
 
 	<FileType ext="d88">
 		<Format type="d88" />
@@ -179,6 +183,10 @@
 			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
 		</Format>
 		<Description>HDM file</Description>
+	</FileType>
+	<FileType ext="hfe">
+		<Format type="hfe" />
+		<Description>HFE file</Description>
 	</FileType>
 	<FileType ext="imd">
 		<Format type="imd" />

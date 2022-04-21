@@ -3,7 +3,7 @@
 #
 CC=g++
 
-APPLICATION_VERSION=0.5.2
+APPLICATION_VERSION=0.5.3
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
@@ -151,6 +151,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCDISKIMGDIR)/diskg64parser.o \
 	$(SRCDISKIMGDIR)/disk2mgparser.o \
 	$(SRCDISKIMGDIR)/diskadcparser.o \
+	$(SRCDISKIMGDIR)/diskhfeparser.o \
 	$(SRCDISKIMGDIR)/diskparser.o \
 	$(SRCDISKIMGDIR)/diskd88writer.o \
 	$(SRCDISKIMGDIR)/diskplainwriter.o \

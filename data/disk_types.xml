@@ -1203,6 +1203,7 @@
 			<Type>CPM68-2HD</Type>
 			<Type>CPM98-2HD</Type>
 			<Type>CPMFM-2HD</Type>
+			<Type>CPMSORD-2HD</Type>
 			<Type>CPMS1-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
@@ -1226,6 +1227,27 @@
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 is single density [Level3/S1 FLEX]</Description>
 		<Description lang="ja">トラック0は単密度 [レベル3/S1 FLEX]</Description>
+	</DiskType>
+	<DiskType name="2HD-77-26-2-S0">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>2</Interleave>
+		<SingleDensity track="0" side="0" />
+		<DiskBasicTypes>
+			<Type>CPM88-2HD</Type>
+			<Type>CPM68-2HD</Type>
+			<Type>CPM98-2HD</Type>
+			<Type>CPMSORD-2HD</Type>
+			<Type>CPMFM-2HD</Type>
+			<Type>CPMS1-2HD</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD/8inch2D</DensityName>
+		<DensityName lang="ja">2HD/8インチ2D</DensityName>
+		<Description>, Track0 and side0 is single density</Description>
+		<Description lang="ja">トラック0,サイド0は単密度</Description>
 	</DiskType>
 	<DiskType name="2HD-77-26-5-S0">
 		<SidesPerDisk>2</SidesPerDisk>

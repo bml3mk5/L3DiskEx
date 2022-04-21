@@ -1860,6 +1860,17 @@
 		<DirEndSector>16</DirEndSector>
 		<Description>CP/M-86 for FM (2HD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="CPMSORD-2HD" type="10" category="CPM">
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<FillCodeOnFormat>0x40</FillCodeOnFormat>
+		<IdentString type="string">\x40\x40\x40\x40\x40\x40\x40\x40</IdentString>
+		<Description>CP/M for SORD (2HD)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="CPM86-1HD-AT" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>

@@ -1,7 +1,7 @@
 
 # L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2020 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2021 All Rights Reserved.
 
 ==============================================================================
 
@@ -36,8 +36,8 @@
     cp_exefile.sh .......... binフォルダ下に実行ファイル＆リソースをコピー
     l3diskex.doxy .......... Doxygen用設定ファイル
 
- + *.cpp ... BOM*付き*のUTF-8エンコードファイル
- + *.h ..... BOM*付き*のUTF-8エンコードファイル
+ + *.cpp ... BOM *付き* のUTF-8エンコードファイル
+ + *.h ..... BOM *付き* のUTF-8エンコードファイル
 
 
 ## ビルドに必要なライブラリ

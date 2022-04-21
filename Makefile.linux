@@ -142,6 +142,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCDISKIMGDIR)/diskg64parser.o \
 	$(SRCDISKIMGDIR)/disk2mgparser.o \
 	$(SRCDISKIMGDIR)/diskadcparser.o \
+	$(SRCDISKIMGDIR)/diskhfeparser.o \
 	$(SRCDISKIMGDIR)/diskparser.o \
 	$(SRCDISKIMGDIR)/diskd88writer.o \
 	$(SRCDISKIMGDIR)/diskplainwriter.o \

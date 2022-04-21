@@ -124,6 +124,7 @@
     <ClCompile Include="..\src\diskimg\diskdskparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskfdiparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskg64parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskhfeparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskimdparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskplainparser.cpp" />
@@ -251,6 +252,7 @@
     <ClInclude Include="..\src\diskimg\diskdskparser.h" />
     <ClInclude Include="..\src\diskimg\diskfdiparser.h" />
     <ClInclude Include="..\src\diskimg\diskg64parser.h" />
+    <ClInclude Include="..\src\diskimg\diskhfeparser.h" />
     <ClInclude Include="..\src\diskimg\diskimdparser.h" />
     <ClInclude Include="..\src\diskimg\diskparser.h" />
     <ClInclude Include="..\src\diskimg\diskplainparser.h" />

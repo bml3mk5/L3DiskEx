@@ -741,6 +741,22 @@ DiskD88Sector *DiskD88Track::GetSectorByIndex(int pos)
 	return sector;
 }
 
+/// トラック内のもっともらしいID Cを返す
+wxUint8	DiskD88Track::GetMajorIDC() const
+{
+	wxUint8 id = 0;
+	IntHashMap map;
+
+	if (sectors) {
+		for(size_t pos=0; pos<sectors->Count(); pos++) {
+			DiskD88Sector *s = sectors->Item(pos);
+			IntHashMapUtil::IncleaseValue(map, s->GetIDC());
+		}
+		id = IntHashMapUtil::GetMaxKeyOnMaxValue(map);
+	}
+	return id;
+}
+
 /// トラック内のもっともらしいID Hを返す
 wxUint8	DiskD88Track::GetMajorIDH() const
 {
