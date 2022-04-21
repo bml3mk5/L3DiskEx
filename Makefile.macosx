@@ -3,7 +3,7 @@
 #
 CC=g++
 
-APPLICATION_VERSION=0.4.6
+APPLICATION_VERSION=0.4.7
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
@@ -135,6 +135,7 @@ OBJS=	utils.o \
 	disktd0parser.o \
 	diskdimparser.o \
 	diskvfdparser.o \
+	diskimdparser.o \
 	diskparser.o \
 	diskd88writer.o \
 	diskplainwriter.o \

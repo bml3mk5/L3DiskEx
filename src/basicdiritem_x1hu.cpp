@@ -648,10 +648,10 @@ void DiskBasicDirItemX1HU::InitializeForAttrDialog(IntNameBox *parent, int show_
 	if ((show_flags & INTNAME_NEW_FILE) == 0) {
 		struct tm tm;
 		GetFileDateTime(&tm);
-		parent->IgnoreDateTime(
+		parent->IgnoreDateTime(gConfig.DoesIgnoreDateTime()	|| (
 			tm.tm_mon == -1 && ((tm.tm_mday == 0 && tm.tm_hour == 0 && tm.tm_min == 0)
 			|| (tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61))
-		);
+		));
 	}
 }
 

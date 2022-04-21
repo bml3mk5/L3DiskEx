@@ -127,6 +127,7 @@ TM::TM()
 TM::~TM()
 {
 }
+/// 時間構造体を初期化
 void TM::Clear()
 {
 	tm.tm_year = -1;
@@ -139,6 +140,7 @@ void TM::Clear()
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 }
+/// 時間構造体を代入
 TM &TM::operator=(const TM &src)
 {
 	tm = src.tm;

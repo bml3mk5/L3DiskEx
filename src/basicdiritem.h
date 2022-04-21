@@ -291,6 +291,8 @@ public:
 	DiskBasicGroupItem *GetGroup(size_t idx) const;
 	/// @brief チェイン用のセクタをセット(機種依存)
 	virtual void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
+	/// @brief チェイン用のセクタをセット(機種依存)
+	virtual void	SetChainSector(DiskD88Sector *sector, wxUint32 num, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
 	/// @brief チェイン用のセクタにグループ番号をセット(機種依存)
 	virtual void	AddChainGroupNumber(int idx, wxUint32 val) {}
 	//@}

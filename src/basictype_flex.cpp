@@ -92,22 +92,25 @@ double DiskBasicTypeFLEX::CheckFat(bool is_formatting)
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-/// @retval 1.0 正常
-double DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFLEX::ParseParamOnDisk(bool is_formatting)
 {
 	if (is_formatting) return 0;
 
 	if (!flex_sir) {
-		DiskD88Sector *sector = disk->GetSector(0, 0, 3);
+		DiskD88Sector *sector = basic->GetSector(0, 0, 3);
 		flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
 		flex_sir = flex;
 	}
 
+	myLog.SetInfo("FLEX: sir.max_track: %d", (int)flex_sir->max_track);
 	if (flex_sir->max_track > 0) {
 		basic->SetTracksPerSideOnBasic(flex_sir->max_track + 1);
 	}
+	myLog.SetInfo("FLEX: sir.max_sector: %d", (int)flex_sir->max_sector);
 	if (flex_sir->max_sector > 0) {
 		basic->SetSectorsPerTrackOnBasic(flex_sir->max_sector / basic->GetSidesPerDiskOnBasic());
 	}

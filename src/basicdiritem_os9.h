@@ -37,6 +37,7 @@ private:
 	DiskBasic			*basic;
 	DiskD88Sector		*sector;
 	directory_os9_fd_t	*fd;
+	wxUint32			mylsn;
 	bool				fd_ownmake;
 	union {
 		os9_date_t	date;
@@ -55,13 +56,17 @@ public:
 	void Dup(const DiskBasicDirItemOS9FD &src);
 #endif
 	/// @brief ポインタをセット
-	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, directory_os9_fd_t *n_fd);
+	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd);
 	/// @brief FDのメモリ確保
 	void Alloc();
 	/// @brief FDをクリア
 	void Clear();
 	/// @brief 有効か
 	bool IsValid() const { return (fd != NULL); }
+	/// @brief 自分のLSNを返す
+	wxUint32 GetMyLSN() const { return mylsn; }
+	/// @brief 自分のLSNを設定
+	void SetMyLSN(wxUint32 val) { mylsn = val; }
 	/// @brief 属性を返す
 	wxUint8 GetATT() const;
 	/// @brief 属性をセット
@@ -179,7 +184,7 @@ public:
 	void	GetExtraGroups(wxArrayInt &arr) const;
 
 	/// @brief チェイン用のセクタをセット
-	void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
+	void	SetChainSector(DiskD88Sector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 
 	/// @brief アイテムが日時を持っているか
 	bool	HasDateTime() const { return true; }

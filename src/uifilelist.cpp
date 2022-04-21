@@ -1946,7 +1946,9 @@ bool L3DiskFileList::SetDirItemFromIntNameDialog(DiskBasicDirItem *item, IntName
 
 	// パラメータを設定に反映
 	gConfig.SkipImportDialog(dlg.IsSkipDialog(gConfig.IsSkipImportDialog()));
-	gConfig.IgnoreDateTime(dlg.DoesIgnoreDateTime(gConfig.DoesIgnoreDateTime()));
+	if (item->CanIgnoreDateTime()) {
+		gConfig.IgnoreDateTime(dlg.DoesIgnoreDateTime(gConfig.DoesIgnoreDateTime()));
+	}
 
 	// 属性をアイテムに反映
 	wxString newname;
@@ -1956,7 +1958,7 @@ bool L3DiskFileList::SetDirItemFromIntNameDialog(DiskBasicDirItem *item, IntName
 	attr.Renameable(rename);
 	attr.SetFileName(newname, item->GetOptionalNameInAttrDialog(&dlg));
 
-	attr.IgnoreDateTime(gConfig.DoesIgnoreDateTime());
+	attr.IgnoreDateTime(item->CanIgnoreDateTime() && gConfig.DoesIgnoreDateTime());
 	dlg.GetDateTime(&tm);
 	attr.SetDateTime(0, &tm);
 	attr.SetStartAddress(dlg.GetStartAddress());

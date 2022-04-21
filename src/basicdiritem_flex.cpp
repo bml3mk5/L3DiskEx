@@ -92,15 +92,15 @@ void DiskBasicDirItemFLEX::SetFileType2(int val)
 /// 使用しているアイテムか
 bool DiskBasicDirItemFLEX::CheckUsed(bool unuse)
 {
-	return (m_data->flex.name[0] != 0 && m_data->flex.name[0] != 0xff);
+	return (m_data->flex.name[0] != 0 && (m_data->flex.name[0] & 0x80) == 0);
 }
 
 /// 削除
 /// @param [in] code : 削除コード(デフォルト0)
 bool DiskBasicDirItemFLEX::Delete(wxUint8 code)
 {
-	// 削除はエントリの先頭にコードを入れるだけ
-	m_data->flex.name[0] = code;
+	// 削除はエントリのMSBをセットするだけ
+	m_data->flex.name[0] |= 0x80;
 	Used(false);
 	return true;
 }

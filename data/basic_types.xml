@@ -192,6 +192,7 @@
 		<FillCodeOnFAT>0x00</FillCodeOnFAT>
 		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
 		<FileNameCharacters>
+			<ValidFirstCharSet>.</ValidFirstCharSet>
 			<ValidFirstCodeRange first="0x41" last="0x5a" />
 			<ValidFirstCodeRange first="0x61" last="0x7a" />
 			<ValidCharSet>._</ValidCharSet>
@@ -1335,6 +1336,15 @@
 		<DirEndSector>26</DirEndSector>
 		<Description>FLEX (2HD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="FLEX-2HD-36" type="8" category="FLEX">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>36</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>36</DirEndSector>
+		<Description>FLEX (2HD, 36sectors)</Description>
+		<Description lang="ja">FLEX (2HD, 36セクタ)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="FLEX-HDD" type="8" category="FLEX">
 		<SidesPerDisk>1</SidesPerDisk>
 		<SectorsPerTrack>255</SectorsPerTrack>
@@ -1388,6 +1398,15 @@
 		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (2DD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="OS9-2DD-16" type="9" category="OS9">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>11</DirEndSector>
+		<SubDirGroupSize>8</SubDirGroupSize>
+		<Description>NitrOS-9 (2DD, 16sectors)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="OS9-2DD-18" type="9" category="OS9">
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>18</SectorsPerTrack>
@@ -1395,7 +1414,7 @@
 		<DirStartSector>4</DirStartSector>
 		<DirEndSector>11</DirEndSector>
 		<SubDirGroupSize>8</SubDirGroupSize>
-		<Description>NitrOS-9 (2DD)</Description>
+		<Description>NitrOS-9 (2DD, 18sectors)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="OS9-2HD" type="9" category="OS9">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1405,6 +1424,24 @@
 		<DirEndSector>11</DirEndSector>
 		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="OS9-2HD-36" type="9" category="OS9">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>36</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>11</DirEndSector>
+		<SubDirGroupSize>8</SubDirGroupSize>
+		<Description>OS-9 (2HD, 36sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="OS9-HDD" type="9" category="OS9">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>64</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>11</DirEndSector>
+		<SubDirGroupSize>8</SubDirGroupSize>
+		<Description>OS-9 (HDD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM86-1D-512-2" type="10" category="CPM">
 		<SectorsPerGroup>2</SectorsPerGroup>
@@ -1441,6 +1478,15 @@
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>4</DirEndSector>
 		<Description>CP/M-86 (2D, 4groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM68-2D-512-2" type="10" category="CPM">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>3</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>8</DirEndSector>
+		<Description>CP/M 68K (2D, 2groups)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM68-2D-512-4" type="10" category="CPM">
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -1545,23 +1591,43 @@
 		<GroupWidth>2</GroupWidth>
 		<Description>Personal CP/M for MZ-2500 (2DD)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM68-1HS" type="10" category="CPM">
+	<DiskBasicType name="CPM-1HS" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>
 		<SectorsPerTrack>26</SectorsPerTrack>
 		<ManagedTrackNumber>2</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>16</DirEndSector>
-		<Description>CP/M 68K (1HS)</Description>
+		<Description>CP/M (1HS)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM68-2HS" type="10" category="CPM">
+	<DiskBasicType name="CPM-1HS-6" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<SectorSkew>6</SectorSkew>
+		<Description>CP/M (1HS, sector skew 6)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM-2HS" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>26</SectorsPerTrack>
 		<ManagedTrackNumber>2</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>16</DirEndSector>
-		<Description>CP/M 68K (2HS)</Description>
+		<Description>CP/M (2HS)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM-2HS-6" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<SectorSkew>6</SectorSkew>
+		<Description>CP/M (2HS, sector skew 6)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM88-2HD" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
@@ -1599,7 +1665,7 @@
 		<DirStartSector>27</DirStartSector>
 		<DirEndSector>50</DirEndSector>
 		<GroupWidth>2</GroupWidth>
-		<Description>CP/M 68K for S1 (2HD)</Description>
+		<Description>CP/M for S1 (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPMFM-2HD" type="10" category="CPM">
 		<SectorsPerGroup>16</SectorsPerGroup>
@@ -1659,6 +1725,7 @@
 		<ManagedTrackNumber>2</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>16</DirEndSector>
+		<SectorSkew>3</SectorSkew>
 		<Description>Sony Filer for SMC-777 (1DD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="FP-2D" type="13" category="FP">

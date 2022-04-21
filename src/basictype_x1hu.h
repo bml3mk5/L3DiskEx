@@ -46,7 +46,7 @@ public:
 	/// @brief FATエリアをチェック
 	double 		CheckFat(bool is_formatting);
 	/// @brief @brief ディスクから各パラメータを取得＆必要なパラメータを計算
-	double		ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	double		ParseParamOnDisk(bool is_formatting);
 	//@}
 
 	/// @name disk size

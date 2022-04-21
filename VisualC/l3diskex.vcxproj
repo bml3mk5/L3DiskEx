@@ -116,6 +116,7 @@
     <ClCompile Include="..\src\diskdimparser.cpp" />
     <ClCompile Include="..\src\diskdskparser.cpp" />
     <ClCompile Include="..\src\diskfdiparser.cpp" />
+    <ClCompile Include="..\src\diskimdparser.cpp" />
     <ClCompile Include="..\src\diskparam.cpp" />
     <ClCompile Include="..\src\diskparambox.cpp" />
     <ClCompile Include="..\src\diskparser.cpp" />
@@ -229,6 +230,7 @@
     <ClInclude Include="..\src\diskdimparser.h" />
     <ClInclude Include="..\src\diskdskparser.h" />
     <ClInclude Include="..\src\diskfdiparser.h" />
+    <ClInclude Include="..\src\diskimdparser.h" />
     <ClInclude Include="..\src\diskparam.h" />
     <ClInclude Include="..\src\diskparambox.h" />
     <ClInclude Include="..\src\diskparser.h" />

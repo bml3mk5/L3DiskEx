@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D90CD25924685E630036A2A0 /* diskimdparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D90CD25724685E630036A2A0 /* diskimdparser.cpp */; };
 		D9106E8D2193334C00DF05E9 /* basicdiritem_tfdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9106E892193334B00DF05E9 /* basicdiritem_tfdos.cpp */; };
 		D9106E8E2193334C00DF05E9 /* basictype_tfdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9106E8B2193334B00DF05E9 /* basictype_tfdos.cpp */; };
 		D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D916204E1BF261BC00DB06A7 /* rawparambox.cpp */; };
@@ -174,6 +175,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D90CD25724685E630036A2A0 /* diskimdparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskimdparser.cpp; sourceTree = "<group>"; };
+		D90CD25824685E630036A2A0 /* diskimdparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskimdparser.h; sourceTree = "<group>"; };
 		D9106E892193334B00DF05E9 /* basicdiritem_tfdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_tfdos.cpp; sourceTree = "<group>"; };
 		D9106E8A2193334B00DF05E9 /* basicdiritem_tfdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_tfdos.h; sourceTree = "<group>"; };
 		D9106E8B2193334B00DF05E9 /* basictype_tfdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_tfdos.cpp; sourceTree = "<group>"; };
@@ -647,6 +650,8 @@
 				D99171A1213296F10086F44F /* diskdskparser.h */,
 				D96F292121DCA83B0075ACAF /* diskfdiparser.cpp */,
 				D96F292221DCA83B0075ACAF /* diskfdiparser.h */,
+				D90CD25724685E630036A2A0 /* diskimdparser.cpp */,
+				D90CD25824685E630036A2A0 /* diskimdparser.h */,
 				D9AA50721E4C8A9300F68374 /* diskparam.cpp */,
 				D9AA50731E4C8A9300F68374 /* diskparam.h */,
 				D9C49E851BF1BDB100831032 /* diskparambox.cpp */,
@@ -896,6 +901,7 @@
 				D9A3F3DC2143EC160090DA99 /* basictype_flex.cpp in Sources */,
 				D96F292521DCA83B0075ACAF /* basicdiritem_sdos.cpp in Sources */,
 				D99171B2213296F10086F44F /* basicdiritem_x1hu.cpp in Sources */,
+				D90CD25924685E630036A2A0 /* diskimdparser.cpp in Sources */,
 				D99171B5213296F10086F44F /* basicparam.cpp in Sources */,
 				D96E4600240FC4E000731891 /* basictype_fat16.cpp in Sources */,
 				D9DA0AD02189981800649C28 /* basicdiritem_xdos.cpp in Sources */,

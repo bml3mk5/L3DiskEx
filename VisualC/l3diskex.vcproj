@@ -214,6 +214,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_falcom.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_fat8.cpp"
 				>
 			</File>
@@ -234,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_hu68k.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_l31s.cpp"
 				>
 			</File>
@@ -242,7 +250,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_losa.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_magical.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_mdos.cpp"
 				>
 			</File>
 			<File
@@ -330,11 +346,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_falcom.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_fat12.cpp"
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_fat16.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_fat8.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat_base.cpp"
 				>
 			</File>
 			<File
@@ -354,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_hu68k.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_l31s.cpp"
 				>
 			</File>
@@ -363,6 +395,10 @@
 			</File>
 			<File
 				RelativePath="..\src\basictype_magical.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_mdos.cpp"
 				>
 			</File>
 			<File
@@ -434,6 +470,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskcqmparser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskd88.cpp"
 				>
 			</File>
@@ -450,11 +490,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskdimparser.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskdskparser.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\diskfdiparser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskimdparser.cpp"
 				>
 			</File>
 			<File
@@ -483,6 +531,14 @@
 			</File>
 			<File
 				RelativePath="..\src\diskresult.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\disktd0parser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskvfdparser.cpp"
 				>
 			</File>
 			<File
@@ -612,6 +668,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_falcom.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_fat8.h"
 				>
 			</File>
@@ -632,6 +692,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_hu68k.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_l31s.h"
 				>
 			</File>
@@ -640,7 +704,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_losa.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_magical.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_mdos.h"
 				>
 			</File>
 			<File
@@ -728,11 +800,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_falcom.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_fat12.h"
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_fat16.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_fat8.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_fat_base.h"
 				>
 			</File>
 			<File
@@ -752,6 +836,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_hu68k.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_l31s.h"
 				>
 			</File>
@@ -761,6 +849,10 @@
 			</File>
 			<File
 				RelativePath="..\src\basictype_magical.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_mdos.h"
 				>
 			</File>
 			<File
@@ -832,6 +924,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskcqmparser.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskd88.h"
 				>
 			</File>
@@ -848,11 +944,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskdimparser.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskdskparser.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\diskfdiparser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskimdparser.h"
 				>
 			</File>
 			<File
@@ -881,6 +985,14 @@
 			</File>
 			<File
 				RelativePath="..\src\diskresult.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\disktd0parser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskvfdparser.h"
 				>
 			</File>
 			<File

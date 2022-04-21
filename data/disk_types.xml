@@ -338,11 +338,12 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>MSDOS-2D</Type>
-			<Type>CPM86-1D-512-2</Type>
 			<Type>CPM86-2D-512-2</Type>
-			<Type>CPM86-1D-512-4</Type>
 			<Type>CPM86-2D-512-4</Type>
+			<Type>CPM68-2D-512-2</Type>
 			<Type>CPM68-2D-512-4</Type>
+			<Type>CPM86-1D-512-2</Type>
+			<Type>CPM86-1D-512-4</Type>
 		</DiskBasicTypes>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
@@ -830,12 +831,12 @@
 		<Density>0x10</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
-			<Type>MSX-1DD8</Type>
 			<Type>MSX-2DD8</Type>
-			<Type>CPM86-1DD-8-512-4</Type>
+			<Type>MSX-1DD8</Type>
 			<Type>CPM86-2DD-8-512-4</Type>
-			<Type>CPM86-1DD-8-512-8</Type>
 			<Type>CPM86-2DD-8-512-8</Type>
+			<Type>CPM86-1DD-8-512-4</Type>
+			<Type>CPM86-1DD-8-512-8</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
@@ -894,6 +895,7 @@
 			<Type p="major">MZ-2DD</Type>
 			<Type>N66-1DD</Type>
 			<Type>OS9-2DD</Type>
+			<Type>OS9-2DD-16</Type>
 			<Type>TFDOS-2DD-INV</Type>
 			<Type>TFDOS-2DD</Type>
 			<Type>CPMMZ-2DD</Type>
@@ -1018,6 +1020,40 @@
 		<Description>, Track0 and side0 is single density [X-DOS]</Description>
 		<Description lang="ja">トラック0,サイド0は単密度 [X-DOS用]</Description>
 	</DiskType>
+	<DiskType name="1HS-77-26-1">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<SingleDensity track="ALL" side="ALL" />
+		<DiskBasicTypes>
+			<Type>CPM-1HS</Type>
+			<Type>CPM-1HS-6</Type>
+		</DiskBasicTypes>
+		<DensityName>8inch1S</DensityName>
+		<DensityName lang="ja">8インチ1S</DensityName>
+		<Description></Description>
+		<Description lang="ja"></Description>
+	</DiskType>
+	<DiskType name="1HS-77-26-6">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>6</Interleave>
+		<SingleDensity track="ALL" side="ALL" />
+		<DiskBasicTypes>
+			<Type>CPM-1HS</Type>
+			<Type>CPM-1HS-6</Type>
+		</DiskBasicTypes>
+		<DensityName>8inch1S</DensityName>
+		<DensityName lang="ja">8インチ1S</DensityName>
+		<Description></Description>
+		<Description lang="ja"></Description>
+	</DiskType>
 	<DiskType name="2HS-77-26-1">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>77</TracksPerSide>
@@ -1027,8 +1063,10 @@
 		<Interleave>1</Interleave>
 		<SingleDensity track="ALL" side="ALL" />
 		<DiskBasicTypes>
-			<Type>CPM68-1HS</Type>
-			<Type>CPM68-2HS</Type>
+			<Type>CPM-2HS</Type>
+			<Type>CPM-2HS-6</Type>
+			<Type>CPM-1HS</Type>
+			<Type>CPM-1HS-6</Type>
 		</DiskBasicTypes>
 		<DensityName>8inch2S</DensityName>
 		<DensityName lang="ja">8インチ2S</DensityName>
@@ -1044,8 +1082,10 @@
 		<Interleave>6</Interleave>
 		<SingleDensity track="ALL" side="ALL" />
 		<DiskBasicTypes>
-			<Type>CPM68-1HS</Type>
-			<Type>CPM68-2HS</Type>
+			<Type>CPM-2HS</Type>
+			<Type>CPM-2HS-6</Type>
+			<Type>CPM-1HS</Type>
+			<Type>CPM-1HS-6</Type>
 		</DiskBasicTypes>
 		<DensityName>8inch2S</DensityName>
 		<DensityName lang="ja">8インチ2S</DensityName>
@@ -1244,6 +1284,47 @@
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>[PC-AT DOS]</Description>
 		<Description lang="ja">[PC-AT DOS用]</Description>
+	</DiskType>
+	<DiskType name="2HD-80-36-1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>36</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>OS9-2HD-36</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+	</DiskType>
+	<DiskType name="2HD-80-36-1-FL">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>36</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<NumberingSector>track</NumberingSector>
+		<DiskBasicTypes>
+			<Type>FLEX-2HD-36</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+		<Description>[FLEX]</Description>
+	</DiskType>
+	<DiskType name="HDD-OS9">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>255</TracksPerSide>
+		<SectorsPerTrack>64</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>OS9-HDD</Type>
+		</DiskBasicTypes>
+		<DensityName>HDD</DensityName>
+		<Description>[OS-9]</Description>
 	</DiskType>
 	<DiskType name="HDD-FL">
 		<SidesPerDisk>1</SidesPerDisk>

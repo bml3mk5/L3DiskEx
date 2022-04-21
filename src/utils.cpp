@@ -30,6 +30,8 @@ TempData::~TempData()
 	delete data;
 }
 
+/// バッファを(再)確保
+/// @param[in] val バッファサイズ
 void TempData::SetSize(size_t val)
 {
 	if (val > alloc_size) {
@@ -41,6 +43,10 @@ void TempData::SetSize(size_t val)
 	size = val;
 }
 
+/// バッファにデータをセット
+/// @param[in] data データ
+/// @param[in] len  データサイズ
+/// @param[in] invert データを反転するか
 void TempData::SetData(const wxUint8 *data, size_t len, bool invert)
 {
 	SetSize(len);
@@ -50,6 +56,9 @@ void TempData::SetData(const wxUint8 *data, size_t len, bool invert)
 	}
 }
 
+/// バッファにデータをセット
+/// @param[in] pos  データ位置
+/// @param[in] val  データ
 void TempData::Set(size_t pos, wxUint8 val)
 {
 	if (pos < size) {
@@ -58,6 +67,8 @@ void TempData::Set(size_t pos, wxUint8 val)
 }
 
 /// 一致するバイトデータを置換
+/// @param[in] src  置換対象データ
+/// @param[in] dst  置換するデータ
 void TempData::Replace(wxUint8 src, wxUint8 dst)
 {
 	for(size_t pos=0; pos<size; pos++) {
@@ -65,6 +76,8 @@ void TempData::Replace(wxUint8 src, wxUint8 dst)
 	}
 }
 
+/// データを反転
+/// @param[in] invert 反転するか
 void TempData::InvertData(bool invert)
 {
 	if (invert) {
@@ -76,6 +89,12 @@ void TempData::InvertData(bool invert)
 //
 //
 
+/// バイナリダンプ
+/// @param[in]  buffer  元データ
+/// @param[in]  bufsize 元データの長さ
+/// @param[out] str     ダンプした文字列
+/// @param[in]  invert  データを反転するか
+/// @return ダンプ行数
 int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert)
 {
 	int rows = 0;
@@ -107,6 +126,13 @@ int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool inve
 	return rows;
 }
 
+/// アスキーダンプ
+/// @param[in]  buffer  元データ
+/// @param[in]  bufsize 元データの長さ
+/// @param[in]  char_code キャラクターコード マップID
+/// @param[out] str     ダンプした文字列
+/// @param[in]  invert  データを反転するか
+/// @return ダンプ行数
 int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert)
 {
 	wxUint16 inv = invert ? 0xff : 0;
@@ -146,6 +172,13 @@ int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, const wxString &char_code
 	return 0;
 }
 
+/// テキストダンプ
+/// @param[in]  buffer  元データ
+/// @param[in]  bufsize 元データの長さ
+/// @param[in]  char_code キャラクターコード マップID
+/// @param[out] str     ダンプした文字列
+/// @param[in]  invert  データを反転するか
+/// @return ダンプ行数
 int Dump::Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert)
 {
 	wxUint16 inv = invert ? 0xff : 0;
@@ -211,6 +244,10 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code,
 	return row;
 }
 
+/// 時間構造体を日時データに変換(MS-DOS)
+/// @param[in]  tm   時間構造体
+/// @param[out] date 日付データ
+/// @param[out] time 時間データ
 void ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time)
 {
 	date[0] = (tm->tm_year & 0xff);
@@ -221,6 +258,10 @@ void ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time)
 	time[1] = (tm->tm_min & 0xff);
 	time[2] = (tm->tm_sec & 0xff);
 }
+/// 日時データを構造体に変換(MS-DOS)
+/// @param[in]  date 日付データ
+/// @param[in]  time 時間データ
+/// @param[out] tm   時間構造体
 void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, struct tm *tm)
 {
 	tm->tm_year = (int)date[0] | ((int)date[1] & 0xf) << 8;
@@ -232,6 +273,10 @@ void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, struct tm *tm)
 	tm->tm_min = time[1];
 	tm->tm_sec = time[2];
 }
+/// 日付文字列を構造体に変換
+/// @param[in]  date 日付文字列
+/// @param[out] tm   時間構造体
+/// @return 変換できた:true
 bool ConvDateStrToTm(const wxString &date, struct tm *tm)
 {
 	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
@@ -264,6 +309,10 @@ bool ConvDateStrToTm(const wxString &date, struct tm *tm)
 	}
 	return valid;
 }
+/// 時間文字列を構造体に変換
+/// @param[in]  time 時間文字列
+/// @param[out] tm   時間構造体
+/// @return 変換できた:true
 bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
 {
 	wxRegEx re1("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
@@ -308,6 +357,10 @@ bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
 	return valid;
 }
 /// BCD形式の日付を変換
+/// @param[in]  yy 年
+/// @param[in]  mm 月
+/// @param[in]  dd 日
+/// @param[out] tm 時間構造体
 void ConvYYMMDDToTm(wxUint8 yy, wxUint8 mm, wxUint8 dd, struct tm *tm)
 {
 	tm->tm_year = (yy >> 4) * 10 + (yy & 0xf);
@@ -317,6 +370,10 @@ void ConvYYMMDDToTm(wxUint8 yy, wxUint8 mm, wxUint8 dd, struct tm *tm)
 	tm->tm_mday = (dd >> 4) * 10 + (dd & 0xf);
 }
 /// BCD形式の日付に変換
+/// @param[in]  tm 時間構造体
+/// @param[out] yy 年
+/// @param[out] mm 月
+/// @param[out] dd 日
 void ConvTmToYYMMDD(const struct tm *tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
 {
 	yy = (wxUint8)(((tm->tm_year / 10) % 10) << 4) + (tm->tm_year % 10);
@@ -324,6 +381,8 @@ void ConvTmToYYMMDD(const struct tm *tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
 	dd = (wxUint8)((tm->tm_mday / 10) << 4) + (tm->tm_mday % 10);
 }
 /// 日付を文字列で返す
+/// @param[in] tm 時間構造体
+/// @return "YYYY/MM/DD" or "----/--/--"
 wxString FormatYMDStr(const struct tm *tm)
 {
 	wxString str;
@@ -335,6 +394,8 @@ wxString FormatYMDStr(const struct tm *tm)
 	return str;
 }
 /// 時分秒を文字列で返す
+/// @param[in] tm 時間構造体
+/// @return "HH:MI:SS" or "--:--:--"
 wxString FormatHMSStr(const struct tm *tm)
 {
 	wxString str;
@@ -346,6 +407,8 @@ wxString FormatHMSStr(const struct tm *tm)
 	return str;
 }
 /// 時分を文字列で返す
+/// @param[in] tm 時間構造体
+/// @return "HH:MI" or "--:--"
 wxString FormatHMStr(const struct tm *tm)
 {
 	wxString str;
@@ -355,6 +418,8 @@ wxString FormatHMStr(const struct tm *tm)
 	return str;
 }
 
+/// 文字列をint値に変換
+/// @param[in] val 文字列
 int ToInt(const wxString &val)
 {
 	long lval = 0;
@@ -369,6 +434,9 @@ int ToInt(const wxString &val)
 	return (int)lval;
 }
 
+/// 文字列をbool値に変換
+/// "1","TRUE","true" => true
+/// @param[in] val 文字列
 bool ToBool(const wxString &val)
 {
 	bool bval = false;
@@ -381,6 +449,8 @@ bool ToBool(const wxString &val)
 /// エスケープ文字を展開
 /// @note \\\\                \\ そのもの
 /// @note \\x[0-9a-f][0-9a-f] 16進数で指定
+/// @param[in]  src 文字列
+/// @param[out] dst 展開後文字列
 void DecodeEscape(const wxString &src, wxString &dst)
 {
 	wxString str = src;
@@ -407,6 +477,9 @@ void DecodeEscape(const wxString &src, wxString &dst)
 /// エスケープ文字を展開
 /// @note \\\\                \\ そのもの
 /// @note \\x[0-9a-f][0-9a-f] 16進数で指定
+/// @param[in]  src 文字列
+/// @param[out] dst 展開後文字列
+/// @param[in]  len dstのバッファ長さ
 void DecodeEscape(const wxString &src, wxUint8 *dst, size_t len)
 {
 	wxString str = src;
@@ -435,6 +508,9 @@ void DecodeEscape(const wxString &src, wxUint8 *dst, size_t len)
 }
 
 /// 文字をエスケープ
+/// 英数字以外を"\x00"のように変換
+/// @param[in] src 文字列
+/// @param[in] len 文字列長さ
 wxString EncodeEscape(const wxUint8 *src, size_t len)
 {
 	wxString rstr;
@@ -456,7 +532,8 @@ wxString EncodeEscape(const wxUint8 *src, size_t len)
 const wxString gSystemInvalidChars = wxT("%\\/:*?\"<>|");
 
 /// ファイル名を展開
-/// %xxを実際の文字に変換
+/// "%xx"を実際の文字に変換
+/// @param[in] src ファイル名
 wxString DecodeFileName(const wxString &src)
 {
 	wxString dst;
@@ -482,7 +559,8 @@ wxString DecodeFileName(const wxString &src)
 }
 
 /// ファイル名をエスケープ
-/// %\/:*?"<>| を %xxに変換する
+/// %\/:*?"<>| を "%%xx"に変換する
+/// @param[in] src ファイル名
 wxString EncodeFileName(const wxString &src)
 {
 	wxString str;
@@ -497,6 +575,10 @@ wxString EncodeFileName(const wxString &src)
 	return str;
 }
 
+/// サイド番号を文字列にする
+/// @param[in] side_number サイド番号(0,1)
+/// @param[in] each_sides  数字で返す場合true
+/// @return "0","1" or "A","B"
 wxString GetSideNumStr(int side_number, bool each_sides)
 {
 	wxString str;
@@ -510,6 +592,10 @@ wxString GetSideNumStr(int side_number, bool each_sides)
 	return str;
 }
 
+/// サイド番号を文字列にする
+/// @param[in] side_number サイド番号(0,1)
+/// @param[in] each_sides  数字で返す場合true
+/// @return "side 0" or "side A"
 wxString GetSideStr(int side_number, bool each_sides)
 {
 	wxString str;
@@ -523,6 +609,10 @@ wxString GetSideStr(int side_number, bool each_sides)
 	return str;
 }
 
+/// リストの中に一致する文字列があるか
+/// @param[in] list リスト(NULL終り)
+/// @param[in] substr 文字列
+/// @return 一致する位置 or -1
 int IndexOf(const char *list[], const wxString &substr)
 {
 	int match = -1;
@@ -535,6 +625,8 @@ int IndexOf(const char *list[], const wxString &substr)
 	return match;
 }
 
+/// 大文字の方が多いか
+/// @param[in] str 文字列
 bool IsUpperString(const wxString &str)
 {
 	size_t len = str.Length();
@@ -549,6 +641,25 @@ bool IsUpperString(const wxString &str)
 		}
 	}
 	return (u > l); 
+}
+
+/// 2^nかどうか
+/// @param[in] val 値
+/// @param[in] digit チェックする桁数
+bool IsPowerOfTwo(wxUint32 val, int digit)
+{
+	bool valid = true;
+
+	while(digit > 0) {
+		if (val & 1) {
+			val >>= 1;
+			valid = (val == 0);
+			break;
+		}
+		val >>= 1;
+		digit--;
+	}
+	return valid;
 }
 
 }; /* namespace L3DiskUtils */

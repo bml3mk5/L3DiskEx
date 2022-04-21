@@ -127,6 +127,7 @@ wxUint32 DiskVFDParser::ParseTrack(wxInputStream &istream, void *user_data, int 
 
 	// トラック作成
 	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	disk->SetMaxTrackNumber(track_number);
 
 	wxUint32 d88_track_size = 0;
 	for(int sec = 0; sec < 26 && result->GetValid() >= 0; sec++) {

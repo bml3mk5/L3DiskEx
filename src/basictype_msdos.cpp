@@ -48,17 +48,16 @@ double DiskBasicTypeMSDOS::CheckFat(bool is_formatting)
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-/// @retval 1.0  正常
-/// @retval <1.0 警告あり
-/// @retval <0.0 エラーあり
-double DiskBasicTypeMSDOS::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeMSDOS::ParseParamOnDisk(bool is_formatting)
 {
 	double valid_ratio = 1.0;
 
 	if (!basic->GetVariousBoolParam(wxT("IgnoreParameter"))) {
-		valid_ratio = ParseMSDOSParamOnDisk(disk, is_formatting);
+		valid_ratio = ParseMSDOSParamOnDisk(basic->GetDisk(), is_formatting);
 	} else {
 		if (basic->GetFatEndGroup() == 0) {
 			int max_grp_on_prm = (basic->GetSidesPerDiskOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;

@@ -1650,6 +1650,9 @@ bool L3DiskFrame::OpenDataFile(const wxString &path, const wxString &file_format
 	// open disk
 	int rc = d88.Open(path, file_format, param_hint);
 	if (rc >= 0) {
+		//
+		wxFileName fn(path);
+		myLog.SetInfo("Opened the disk image: %s", fn.GetFullName().t_str());
 		// update window
 		UpdateDataOnWindow(path, false);
 		valid = true;

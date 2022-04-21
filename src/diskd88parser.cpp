@@ -197,6 +197,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 	}
 
 	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	disk->SetMaxTrackNumber(track_number);
 
 	// sectors
 	wxUint32 sector_total_size = 0;
@@ -418,7 +419,6 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 			}
 
 			ParseTrack(istream, start_pos, curr->GetNum(), curr->GetOffset(), disk_number, curr->GetSize(), disk);
-			disk->SetMaxTrackNumber(curr->GetNum());
 		}
 
 		if (result->GetValid() >= 0) {

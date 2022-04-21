@@ -90,7 +90,11 @@ double DiskBasicTypeX1HU::CheckFat(bool is_formatting)
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-double DiskBasicTypeX1HU::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeX1HU::ParseParamOnDisk(bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		wxUint32 end_grp = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() - 1;

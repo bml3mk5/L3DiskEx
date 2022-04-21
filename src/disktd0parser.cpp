@@ -213,6 +213,7 @@ int DiskTD0Parser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 
 	// トラックの作成
 	DiskD88Track *track = new DiskD88Track(disk, h_track.track_num, h_track.side_num, offset_pos, 1);
+	disk->SetMaxTrackNumber(h_track.track_num);
 
 	wxUint32 d88_track_size = 0;
 	for(int pos = 0; pos < h_track.num_of_sectors && result->GetValid() >= 0; pos++) {

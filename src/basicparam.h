@@ -289,6 +289,7 @@ private:
 	int dir_start_pos_on_sec;			///< ディレクトリのセクタ毎の開始位置
 	int group_width;					///< グループ幅（バイト）
 	int groups_per_dir_entry;			///< １ディレクトリエントリで指定できるグループ数
+	int sector_skew;					///< ソフトウェアセクタスキュー(セクタ間隔)
 	L3Attributes special_attrs;			///< 特別な属性
 	L3Attributes attrs_by_extension;	///< 拡張子と属性の関係
 	wxUint8 fillcode_on_format;			///< フォーマット時に埋めるコード
@@ -393,6 +394,8 @@ public:
 	int					GetGroupWidth() const		{ return group_width; }
 	/// １ディレクトリエントリで指定できるグループ数 
 	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
+	/// ソフトウェアセクタスキュー(セクタ間隔)
+	int					GetSectorSkew() const		{ return sector_skew; }
 	/// 特別な属性
 	const L3Attributes& GetSpecialAttributes() const { return special_attrs; }
 	/// 拡張子と属性の関係
@@ -498,6 +501,8 @@ public:
 	void			SetGroupWidth(int val)			{ group_width = val; }
 	/// １ディレクトリエントリで指定できるグループ数 
 	void			SetGroupsPerDirEntry(int val)	{ groups_per_dir_entry = val; }
+	/// ソフトウェアセクタスキュー(セクタ間隔)
+	void			SetSectorSkew(int val)			{ sector_skew = val; }
 	/// ルートディレクトリ終了セクタ
 	void			SetDirEndSector(int val)		{ dir_end_sector = val; }
 	/// ルートディレクトリエントリ数

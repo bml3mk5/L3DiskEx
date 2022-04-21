@@ -32,6 +32,10 @@
 		<Description>Virtual98 FDD format file</Description>
 		<Description lang="ja">Virtual98 FDD形式ファイル</Description>
 	</FileFormatType>
+	<FileFormatType name="imd">
+		<Description>IMageDisk IMD format file</Description>
+		<Description lang="ja">IMageDisk IMD形式ファイル</Description>
+	</FileFormatType>
 
 	<FileType ext="d88">
 		<Format type="d88" />
@@ -133,5 +137,9 @@
 			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
 		</Format>
 		<Description>XDF file</Description>
+	</FileType>
+	<FileType ext="imd">
+		<Format type="imd" />
+		<Description>IMD file</Description>
 	</FileType>
 </FileTypes>

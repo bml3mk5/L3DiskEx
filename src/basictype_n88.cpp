@@ -53,7 +53,11 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-double DiskBasicTypeN88::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeN88::ParseParamOnDisk(bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();

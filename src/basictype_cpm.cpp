@@ -18,18 +18,66 @@
 DiskBasicTypeCPM::DiskBasicTypeCPM(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
 	: DiskBasicType(basic, fat, dir)
 {
+	CreateSectorSkewMap();
+}
+
+DiskBasicTypeCPM::~DiskBasicTypeCPM()
+{
+	DeleteSectorSkewMap();
+}
+
+/// ソフトセクタスキューに基づいてマップを作成
+void DiskBasicTypeCPM::CreateSectorSkewMap()
+{
+	// システムはソフトセクタスキュー(仮想的インターリーブ)を持っている
+	int linter = basic->GetSectorSkew();
+	int secs = basic->GetSectorsPerTrackOnBasic();
+
+	ltop_map = new wxUint8[secs];
+	ptol_map = new wxUint8[secs];
+
+	memset(ltop_map, 0, secs);
+	memset(ptol_map, 0, secs);
+
+	int psec = 1;
+	for(int lsec = 1; lsec <= secs; lsec++) {
+		if (psec > secs) {
+			psec -= secs;
+			for(int limit = secs; ptol_map[psec-1] != 0 && limit > 0; limit--) {
+				psec++;
+			}
+		}
+		ltop_map[lsec - 1] = (wxUint8)psec;
+		ptol_map[psec - 1] = (wxUint8)lsec;
+		psec += linter;
+	}
+}
+
+/// ソフトセクタスキューマップを削除
+void DiskBasicTypeCPM::DeleteSectorSkewMap()
+{
+	delete [] ltop_map; ltop_map = NULL;
+	delete [] ptol_map; ptol_map = NULL;
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @retval 1.0>      正常
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
 /// @retval 0.0 - 1.0 警告あり
 /// @retval <0.0      エラーあり
-double DiskBasicTypeCPM::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+double DiskBasicTypeCPM::ParseParamOnDisk(bool is_formatting)
 {
 	// 最終グループ番号
 	if (basic->GetFatEndGroup() == 0) {
 		wxUint32 max_group = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup() - 1;
 		basic->SetFatEndGroup(max_group);
+	}
+
+	if (is_formatting) return 1.0;
+
+	// 最終グループ番号が最大値を超えていないか？
+	if((1 << (basic->GetGroupWidth() * 8)) <= (int)basic->GetFatEndGroup()) {
+		return -1.0;
 	}
 	return 1.0;
 }
@@ -329,6 +377,86 @@ int DiskBasicTypeCPM::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_gr
 int DiskBasicTypeCPM::CalcDataStartSectorPos()
 {
 	return GetSectorPosFromNumS(basic->GetManagedTrackNumber(), basic->GetDirStartSector());
+}
+
+/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
+/// @param [in] sector_pos    セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
+/// @param [out] track_num    トラック番号
+/// @param [out] side_num     サイド番号
+/// @param [out] sector_num   セクタ番号
+/// @param [out] div_num      分割番号
+/// @param [out] div_nums     分割数
+void DiskBasicTypeCPM::GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num, int *div_nums)
+{
+	int selected_side = basic->GetSelectedSide();
+	int numbering_sector = basic->GetNumberingSector();
+	int sectors_per_track = basic->GetSectorsPerTrackOnBasic();
+	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
+
+	if (selected_side >= 0) {
+		// 1S
+		track_num = sector_pos / sectors_per_track;
+		side_num = selected_side;
+	} else {
+		// 2D, 2HD
+		track_num = sector_pos / sectors_per_track / sides_per_disk;
+		side_num = (sector_pos / sectors_per_track) % sides_per_disk;
+	}
+	sector_num = (sector_pos % sectors_per_track) + 1;
+
+	// マッピング
+	sector_num = ltop_map[sector_num - 1];
+
+	if (numbering_sector == 1) {
+		// トラックごとに連番の場合
+		sector_num += (side_num * sectors_per_track);
+	}
+
+	// サイド番号を逆転するか
+	side_num = basic->GetReversedSideNumber(side_num);
+
+	if (div_num)  *div_num = 0;
+	if (div_nums) *div_nums = 1;
+}
+
+/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
+/// @param [in] track_num   トラック番号
+/// @param [in] side_num    サイド番号
+/// @param [in] sector_num  セクタ番号
+/// @param [in] div_num     分割番号
+/// @param [in] div_nums    分割数
+/// @return セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
+int  DiskBasicTypeCPM::GetSectorPosFromNum(int track_num, int side_num, int sector_num, int div_num, int div_nums)
+{
+	int selected_side = basic->GetSelectedSide();
+	int numbering_sector = basic->GetNumberingSector();
+	int sectors_per_track = basic->GetSectorsPerTrackOnBasic();
+	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
+	int sector_pos;
+
+	// サイド番号を逆転するか
+	side_num = basic->GetReversedSideNumber(side_num);
+
+	// 連番の場合
+	if (numbering_sector == 1) {
+		sector_num = ((sector_num - 1) % sectors_per_track) + 1;
+	}
+
+	// マッピング
+	sector_num = ptol_map[sector_num - 1];
+
+	if (selected_side >= 0) {
+		// 1S
+		sector_pos = track_num * sectors_per_track + sector_num - 1;
+	} else {
+		// 2D, 2HD
+		sector_pos = track_num * sectors_per_track * sides_per_disk;
+		sector_pos += (side_num % sides_per_disk) * sectors_per_track;
+		sector_pos += (sector_num - 1);
+	}
+	return sector_pos;
 }
 
 /// ルートディレクトリか

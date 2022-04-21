@@ -272,9 +272,9 @@ public:
 	/// @name グループ番号
 	//@{
 	/// グループ番号から開始セクタを返す
-	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num);
+	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int *div_num = NULL, int *div_nums = NULL);
 	/// グループ番号から開始セクタを返す
-	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num);
+	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num, int *div_num = NULL, int *div_nums = NULL);
 	/// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
 	bool			GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_size, int remain_size, DiskBasicGroups &items, int *end_sector = NULL);
 	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
@@ -304,6 +304,8 @@ public:
 
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラックを返す
 	DiskD88Track	*GetTrackFromSectorPos(int sector_pos, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
+	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
+	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int &track_num, int &side_num, int *div_num = NULL, int *div_nums = NULL);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
 	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int *div_num = NULL, int *div_nums = NULL);
 	//@}

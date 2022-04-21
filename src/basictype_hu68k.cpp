@@ -19,18 +19,17 @@ DiskBasicTypeHU68K::DiskBasicTypeHU68K(DiskBasic *basic, DiskBasicFat *fat, Disk
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
 /// @retval 1.0  正常
 /// @retval <1.0 警告あり
 /// @retval <0.0 エラーあり
-double DiskBasicTypeHU68K::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+double DiskBasicTypeHU68K::ParseParamOnDisk(bool is_formatting)
 {
 	if (is_formatting) return 0;
 
 	double valid_ratio = 1.0;
 	if (!basic->GetVariousBoolParam(wxT("IgnoreParameter"))) {
-		valid_ratio = ParseMSDOSParamOnDisk(disk, is_formatting);
+		valid_ratio = ParseMSDOSParamOnDisk(basic->GetDisk(), is_formatting);
 	}
 	if (valid_ratio >= 0.0) {
 		// セクタ０

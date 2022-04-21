@@ -40,18 +40,62 @@ typedef struct st_os9_ident {
 } os9_ident_t;
 #pragma pack()
 
+//
+class OS9AllocBuffer
+{
+private:
+	int		 size;
+	wxUint8	*buffer;
+
+public:
+	OS9AllocBuffer();
+	OS9AllocBuffer(wxUint8 *newbuf, int newsize);
+	~OS9AllocBuffer() {}
+	wxUint8 *GetBuffer() { return buffer; }
+	int GetSize() const { return size; }
+	void SetBit(wxUint32 pos, wxUint32 bit, bool val);
+	bool IsBitSet(wxUint32 pos, wxUint32 bit) const;
+};
+
+WX_DECLARE_OBJARRAY(OS9AllocBuffer, ArrayOS9AllocBuffer);
+
+/// OS-9 Allocation Map
+class OS9AllocMap : public ArrayOS9AllocBuffer
+{
+private:
+	wxUint32 map_bytes;	///< ビットマップサイズ(bytes)
+	wxUint32 map_start_lsn;	///< 開始LSN
+	wxUint32 end_lsn;	///< 最終LSN
+	wxUint32 sector_size;	///< セクタサイズ
+	int secs_per_bit;	///< 1ビット当たりのセクタ数
+
+	bool GetPosInMap(wxUint32 lsn, size_t &idx, wxUint32 &pos, wxUint32 &bit) const;
+
+public:
+	OS9AllocMap();
+	~OS9AllocMap();
+	bool AllocMap(DiskBasic *basic, wxUint32 n_map_start_lsn, wxUint32 n_map_bytes);
+	void MakeAvailable(DiskBasicAvailabillity &fat, wxUint32 &grps, wxUint32 &fsize);
+	void SetLSN(wxUint32 lsn, bool val);
+	bool IsUsedLSN(wxUint32 lsn) const;
+	wxUint32 FindEmpty() const;
+};
+
 /** @class DiskBasicTypeOS9
 
 @brief OS-9の処理
 
 DiskBasicParam
 @li SubDirGroupSize : サブディレクトリの初期グループ(LSN)数
+@li GroupWidth      : ビットマップ1ビットのセクタ数(DD_BIT)
 
 */
 class DiskBasicTypeOS9 : public DiskBasicType
 {
 private:
 	os9_ident_t *os9_ident;	///< Identification Sector
+
+	OS9AllocMap alloc_map;	///< Allocation Map
 
 	DiskBasicTypeOS9() : DiskBasicType() {}
 	DiskBasicTypeOS9(const DiskBasicType &src) : DiskBasicType(src) {}
@@ -81,7 +125,7 @@ public:
 	/// @brief ルートディレクトリをアサイン
 	bool		AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
-	double		ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	double		ParseParamOnDisk(bool is_formatting);
 	//@}
 
 	/// @name check / assign directory area

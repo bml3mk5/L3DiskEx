@@ -38,7 +38,7 @@ public:
 	/// @name check / assign FAT area
 	//@{
 	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
-	virtual double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	virtual double	ParseParamOnDisk(bool is_formatting);
 	/// @brief FATエリアをチェック
 	virtual double 	CheckFat(bool is_formatting);
 	//@}

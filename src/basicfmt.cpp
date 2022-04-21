@@ -37,6 +37,7 @@
 #include "basictype_smc.h"
 #include "basictype_hu68k.h"
 #include "basictype_falcom.h"
+#include "logging.h"
 #include "utils.h"
 
 
@@ -299,6 +300,8 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, const DiskBasicParam
 	disk = newdisk;
 	formatted = false;
 
+	myLog.SetInfo("Parsing Disk #%d ...", newdisk->GetNumber());
+
 	wxString hint = newdisk->GetFile()->GetBasicTypeHint();
 	DiskParamNames types = newdisk->GetBasicTypes();
 //	const DiskBasicParam *match = newdisk->GetDiskBasicParam();
@@ -325,7 +328,9 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, const DiskBasicParam
 			match = gDiskBasicTemplates.FindType(hint, types.Item(n).GetName());
 			if (match) {
 				// フォーマットされているか？
+				myLog.SetInfo("Parsing format: %s", match->GetBasicTypeName().t_str());
 				valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
+				myLog.SetInfo("  Result => %.2f", valid_ratio);
 				if (valid_ratio >= 0.0) {
 					// 候補にする
 					valid_params.Add(match);
@@ -339,11 +344,16 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, const DiskBasicParam
 			// それらしいものを候補とする
 			int idx = MaxRatio(valid_ratios);
 			if (idx < 0) idx = 0;
-			valid_ratio = ParseFormattedDisk(newdisk, valid_params.Item(idx), is_formatting);
+			match = valid_params.Item(idx);
+			myLog.SetInfo("Decided format: %s", match->GetBasicTypeName().t_str());
+			valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
+			myLog.SetInfo("  Result => %.2f", valid_ratio);
 		}
 	} else {
 		// すでにフォーマット済み
+		myLog.SetInfo("Known format: %s", match->GetBasicTypeName().t_str());
 		valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
+		myLog.SetInfo("  Result => %.2f", valid_ratio);
 	}
 	if (valid_ratio >= 0.6) {
 		errinfo.Clear();
@@ -381,7 +391,7 @@ double DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam 
 	CreateType();
 
 	// 必要ならディスク上のパラメータを解析
-	double prm_valid_ratio = type->ParseParamOnDisk(disk, is_formatting);
+	double prm_valid_ratio = type->ParseParamOnDisk(is_formatting);
 	if (prm_valid_ratio < 0.0) {
 		errinfo.SetError(DiskBasicError::ERR_IN_PARAMETER_AREA);
 	} else if (prm_valid_ratio < 1.0) {		
@@ -1773,6 +1783,24 @@ DiskD88Track *DiskBasic::GetTrackFromSectorPos(int sector_pos, int &sector_num, 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
 /// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
 /// @param [in] sector_pos    セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
+/// @param [out] track_num    トラック番号
+/// @param [out] side_num     サイド番号
+/// @param [out] div_num      分割番号
+/// @param [out] div_nums     分割数
+/// @return セクタデータ
+DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos, int &track_num, int &side_num, int *div_num, int *div_nums)
+{
+	int sector_num = 1;
+
+	// セクタ番号からトラック番号、サイド番号、セクタ番号を計算
+	type->GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num, div_num, div_nums);
+
+	return disk->GetSector(track_num, side_num, sector_num);
+}
+
+/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
+/// @note セクタ位置は、機種によらずトラック0,サイド0,セクタ1を0とした通し番号
+/// @param [in] sector_pos    セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)
 /// @param [out] div_num      分割番号
 /// @param [out] div_nums     分割数
 /// @return セクタデータ
@@ -1780,12 +1808,8 @@ DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos, int *div_num, i
 {
 	int track_num = 0;
 	int side_num = 0;
-	int sector_num = 1;
 
-	// セクタ番号からトラック番号、サイド番号、セクタ番号を計算
-	type->GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num, div_num, div_nums);
-
-	return disk->GetSector(track_num, side_num, sector_num);
+	return GetSectorFromSectorPos(sector_pos, track_num, side_num, div_num, div_nums);
 }
 
 /// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
@@ -1946,12 +1970,15 @@ int  DiskBasic::CalcSectorPosFromNumTForGroup(int track_num, int sector_num)
 }
 
 /// グループ番号から開始セクタを返す
-DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num)
+/// @param [in]  group_num : グループ番号
+/// @param [out] div_num   : 分割番号
+/// @param [out] div_nums  : 分割数
+DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num, int *div_num, int *div_nums)
 {
 	int track_num = 0;
 	int side_num = 0;
 
-	return GetSectorFromGroup(group_num, track_num, side_num);
+	return GetSectorFromGroup(group_num, track_num, side_num, div_num, div_nums);
 }
 
 /// グループ番号から開始セクタを返す
@@ -1959,13 +1986,15 @@ DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num)
 /// @param [in]  group_num : グループ番号
 /// @param [out] track_num : トラック番号
 /// @param [out] side_num  : サイド番号
+/// @param [out] div_num   : 分割番号
+/// @param [out] div_nums  : 分割数
 /// @return                : セクタ
-DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num)
+DiskD88Sector *DiskBasic::GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num, int *div_num, int *div_nums)
 {
 	int sector_start = 1;
 
 	// グループ番号からトラック番号、サイド番号、セクタ番号を計算
-	if (!CalcStartNumFromGroupNum(group_num, track_num, side_num, sector_start)) return NULL;
+	if (!CalcStartNumFromGroupNum(group_num, track_num, side_num, sector_start, div_num, div_nums)) return NULL;
 
 	return disk->GetSector(track_num, side_num, sector_start);
 }

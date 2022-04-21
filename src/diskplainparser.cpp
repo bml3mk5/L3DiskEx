@@ -84,6 +84,7 @@ wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, i
 wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxUint32 offset, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_nums, int sector_size, bool single_density, bool is_dummy_side, DiskD88Disk *disk)
 {
 	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	disk->SetMaxTrackNumber(track_number);
 
 	wxUint32 track_size = 0;
 	int sector_offset = 0;
@@ -264,6 +265,7 @@ void DiskPlainParser::CalcParamFromSize(int disk_size, DiskParam &disk_param)
 		secs1024,
 		NULL
 	};
+
 	// トラック数はディスクサイズで
 	int max_tracks = 41;
 	int min_tracks = 40;
@@ -314,6 +316,28 @@ void DiskPlainParser::CalcParamFromSize(int disk_size, DiskParam &disk_param)
 			}
 		}
 	}
+
+	// 候補がない
+	if (!desided) {
+		// ディスクサイズで割り切れる値を候補にする
+		for(int sides = 2; sides >= 1; sides--) {
+			ival = desided_all_sectors % sides;
+			if (ival == 0) {
+				desided_sides = sides;
+				desided_all_sectors = desided_all_sectors / sides;
+				break;
+			}
+		}
+		// セクタ数、トラック数はダミー
+		for(int s = 1; s < 16; s++) {
+			if ((desided_all_sectors / s) < 10000) {
+				desided_tracks = desided_all_sectors / s;
+				desided_sectors = s;
+				break;
+			}
+		}
+	}
+
 	disk_param.SetDiskParam(
 		desided_sides,
 		desided_tracks,

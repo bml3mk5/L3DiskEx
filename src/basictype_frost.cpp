@@ -59,10 +59,11 @@ wxUint32 DiskBasicTypeFROST::GetNextEmptyGroupNumber(wxUint32 curr_group)
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-/// @retval 1.0 正常
-double DiskBasicTypeFROST::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFROST::ParseParamOnDisk(bool is_formatting)
 {
 	// １トラック当たりのグループ数を計算する
 	if (basic->GetGroupsPerTrack() == 0) {

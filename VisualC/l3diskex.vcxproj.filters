@@ -356,6 +356,9 @@
     <ClCompile Include="..\src\diskvfdparser.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\diskimdparser.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\main.h">
@@ -698,6 +701,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\diskvfdparser.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimdparser.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

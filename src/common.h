@@ -48,6 +48,7 @@ int _wsystem(const wchar_t *);
 #endif
 #endif
 
+/// 時間構造体を保持するクラス
 class TM
 {
 private:
@@ -55,9 +56,13 @@ private:
 public:
 	TM();
 	~TM();
+	/// 時間構造体を初期化
 	void Clear();
+	/// 時間構造体を得る
 	struct tm *Get() { return &tm; }
+	/// 時間構造体を設定
 	void Set(const struct tm *val) { tm = *val; }
+	/// 時間構造体を代入
 	TM &operator=(const TM &src);
 };
 

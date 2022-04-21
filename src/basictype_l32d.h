@@ -29,7 +29,7 @@ public:
 	/// @name access to FAT area
 	//@{
 	/// ディスクから各パラメータを取得＆必要なパラメータを計算
-	double		ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	double		ParseParamOnDisk(bool is_formatting);
 	/// FATエリアをチェック
 	double 		CheckFat(bool is_formatting);
 	/// 空きFAT位置を返す

@@ -26,8 +26,17 @@ protected:
 	DiskBasicTypeCPM() : DiskBasicType() {}
 	DiskBasicTypeCPM(const DiskBasicType &src) : DiskBasicType(src) {}
 
+	wxUint8 *ltop_map;	///< ソフトセクタスキュー 論理セクタ番号 -> 物理セクタ番号
+	wxUint8 *ptol_map;	///< ソフトセクタスキュー 物理セクタ番号 -> 論理セクタ番号
+
+	/// @brief ソフトセクタスキューに基づいてマップを作成
+	void CreateSectorSkewMap();
+	/// @brief ソフトセクタスキューマップを削除
+	void DeleteSectorSkewMap();
+
 public:
 	DiskBasicTypeCPM(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
+	virtual ~DiskBasicTypeCPM();
 
 	/// @name access to FAT area
 	//@{
@@ -48,7 +57,7 @@ public:
 	/// @name check / assign FAT area
 	//@{
 	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
-	virtual double	ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	virtual double	ParseParamOnDisk(bool is_formatting);
 	/// @brief FATエリアをチェック
 	virtual double 	CheckFat(bool is_formatting);
 	//@}
@@ -83,6 +92,11 @@ public:
 
 	/// @brief データ領域の開始セクタを計算
 	virtual int		CalcDataStartSectorPos();
+
+	/// @brief セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
+	virtual void	GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
+	/// @brief トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
+	virtual int		GetSectorPosFromNum(int track, int side, int sector_num, int div_num = 0, int div_nums = 1);
 	//@}
 
 	/// @name directory

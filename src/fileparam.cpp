@@ -99,6 +99,11 @@ WX_DEFINE_OBJARRAY(FileParams);
 FileTypes::FileTypes()
 {
 }
+
+/// XMLファイルをロード
+/// @param[in] data_path   : ファイルパス
+/// @param[in] locale_name : ローケル(jaなど)
+/// @return false:エラー
 bool FileTypes::Load(const wxString &data_path, const wxString &locale_name)
 {
 	wxXmlDocument doc;
@@ -179,6 +184,7 @@ bool FileTypes::Load(const wxString &data_path, const wxString &locale_name)
 	return true;
 }
 
+/// ファイルダイアログ用の拡張子選択リストを作成する
 void FileTypes::MakeWildcard()
 {
 	wxString desc[3];

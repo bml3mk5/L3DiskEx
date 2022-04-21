@@ -166,6 +166,11 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 	DoPrepareDC(dc);
 
 	wxSize size = GetSize();
+	wxPoint start = GetViewStart();
+	int ppux, ppuy;
+	GetScrollPixelsPerUnit(&ppux, &ppuy);
+	start.x *= ppux;
+	start.y *= ppuy;
 
 	int x = lpadding;
 	int y = lpadding;
@@ -190,9 +195,6 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 	y += (ll + margin);
 	int row = 0;
 	for(pos = 0; pos < datas.Count(); pos++) {
-		int sts = datas.Item(pos);
-
-		dc.SetPen(*wxBLACK_PEN);
 		if ((x + sq.x + rpadding) > size.x) {
 			y += (sq.y + margin);
 			row++;
@@ -202,36 +204,44 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 			if ((row % 4) == 0) {
 				int px0 = x - (1 - ((row / 4) & 1)) * ll;
 				int px1 = x + ll;
-				dc.DrawLine(px0, y, px1, y);
-				if ((row & 0xf) == 0) {
-					wxString str = wxString::Format(wxT("%x"), (row >> 4));
-					wxSize tsz = dc.GetTextExtent(str);
-					px1 = px1 + margin - tsz.x;
-					dc.DrawText(str, px1, y + 2);
+				if (y >= start.y - ppuy && y < start.y + size.y + ppuy) {
+					dc.SetPen(*wxBLACK_PEN);
+					dc.DrawLine(px0, y, px1, y);
+					if ((row & 0xf) == 0) {
+						wxString str = wxString::Format(wxT("%x"), (row >> 4));
+						wxSize tsz = dc.GetTextExtent(str);
+						px1 = px1 + margin - tsz.x;
+						dc.DrawText(str, px1, y + 2);
+					}
 				}
 			}
 			x += (ll + margin);
 		}
 
-		if (sts & 0x10000) {
-			// selected (red)
-			dc.SetBrush(brush_select);
-		} else if (sts & 0x20000) {
-			// selected (magenta)
-			dc.SetBrush(brush_extra);
-		} else {
-			if (sts < FAT_AVAIL_NULLEND) {
-				dc.SetPen(pens[sts]);
-				dc.SetBrush(brushes[sts]);
+		if (y >= start.y - ppuy && y < start.y + size.y + ppuy) {
+			int sts = datas.Item(pos);
+
+			dc.SetPen(*wxBLACK_PEN);
+			if (sts & 0x10000) {
+				// selected (red)
+				dc.SetBrush(brush_select);
+			} else if (sts & 0x20000) {
+				// selected (magenta)
+				dc.SetBrush(brush_extra);
+			} else {
+				if (sts < FAT_AVAIL_NULLEND) {
+					dc.SetPen(pens[sts]);
+					dc.SetBrush(brushes[sts]);
+				}
 			}
-		}
-		dc.DrawRectangle(x, y, sq.x, sq.y);
+			dc.DrawRectangle(x, y, sq.x, sq.y);
 #if 0
-		if (sts == FAT_AVAIL_USED_LAST) {
-			dc.SetPen(*wxBLUE_PEN);
-			dc.DrawLine(x + sq.x - 2, y, x + sq.x - 2, y + sq.y);
-		}
+			if (sts == FAT_AVAIL_USED_LAST) {
+				dc.SetPen(*wxBLUE_PEN);
+				dc.DrawLine(x + sq.x - 2, y, x + sq.x - 2, y + sq.y);
+			}
 #endif
+		}
 		x += (sq.x + margin);
 	}
 	y += (sq.y + margin);

@@ -686,10 +686,10 @@ void DiskBasicDirItemMZ::InitializeForAttrDialog(IntNameBox *parent, int show_fl
 	// 日付が０なら日付を無視するにチェック
 	struct tm tm;
 	GetFileDateTime(&tm);
-	parent->IgnoreDateTime(
+	parent->IgnoreDateTime(gConfig.DoesIgnoreDateTime()	|| (
 		tm.tm_mon == -1 && ((tm.tm_mday == 0 && tm.tm_hour == 0 && tm.tm_min == 0)
 		|| (tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61))
-	);
+	));
 }
 
 /// 属性を変更した際に呼ばれるコールバック

@@ -60,9 +60,11 @@ wxUint32 DiskBasicTypeSDOS::GetNextEmptyGroupNumber(wxUint32 curr_group)
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-double DiskBasicTypeSDOS::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeSDOS::ParseParamOnDisk(bool is_formatting)
 {
 	// グループ数
 	if (basic->GetFatEndGroup() == 0) {

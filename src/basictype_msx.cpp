@@ -18,18 +18,17 @@ DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-/// @retval 1.0>      正常
+/// @retval 1.0       正常
 /// @retval 0.0 - 1.0 警告あり
 /// @retval <0.0      エラーあり
-double DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+double DiskBasicTypeMSX::ParseParamOnDisk(bool is_formatting)
 {
 	if (is_formatting) return 0;
 
-	double valid_ratio = ParseMSDOSParamOnDisk(disk, is_formatting);
+	double valid_ratio = ParseMSDOSParamOnDisk(basic->GetDisk(), is_formatting);
 	if (valid_ratio >= 0.0) {
-		DiskD88Sector *sector = disk->GetSector(0, 0, 1);
+		DiskD88Sector *sector = basic->GetSector(0, 0, 1);
 		if (!sector) return -1.0;
 		wxUint8 *datas = sector->GetSectorBuffer();
 		if (!datas) return -1.0;

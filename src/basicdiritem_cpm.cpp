@@ -249,10 +249,18 @@ bool DiskBasicDirItemCPM::Check(bool &last)
 			valid = DiskBasicDirItem::Check(last);
 		}
 		// グループ番号が超えていたらダメ
+//		if (valid) {
+//			DiskD88Sector *sector = basic->GetSectorFromGroup(GetStartGroup(0));
+//			if (!sector) {
+//				valid = false;
+//			}
+//		}
 		if (valid) {
-			DiskD88Sector *sector = basic->GetSectorFromGroup(GetStartGroup(0));
-			if (!sector) {
-				valid = false;
+			for(int i = 0; i < group_entries; i++) {
+				if (GetGroup(i) > basic->GetFatEndGroup()) {
+					valid = false;
+					break;
+				}
 			}
 		}
 	} else {

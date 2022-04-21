@@ -18,7 +18,11 @@ DiskBasicTypeFM::DiskBasicTypeFM(DiskBasic *basic, DiskBasicFat *fat, DiskBasicD
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-double DiskBasicTypeFM::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @param [in] is_formatting フォーマット中か
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFM::ParseParamOnDisk(bool is_formatting)
 {
 	if (basic->GetFatEndGroup() == 0) {
 		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();

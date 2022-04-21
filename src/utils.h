@@ -19,7 +19,8 @@ namespace Utils
 #define TEMP_DATA_SIZE 2048
 
 /// データの書き出しや読み込みで使用するテンポラリバッファ
-class TempData {
+class TempData
+{
 private:
 	wxUint8 *data;
 	size_t  alloc_size;
@@ -78,6 +79,8 @@ wxString GetSideStr(int side_number, bool each_sides);
 int		IndexOf(const char *list[], const wxString &substr);
 
 bool	IsUpperString(const wxString &str);
+
+bool	IsPowerOfTwo(wxUint32 val, int digit);
 
 }; /* namespace L3DiskUtils */
 

@@ -21,9 +21,11 @@ DiskBasicTypeFalcom::DiskBasicTypeFalcom(DiskBasic *basic, DiskBasicFat *fat, Di
 }
 
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
-/// @param [in] disk          ディスク
 /// @param [in] is_formatting フォーマット中か
-double DiskBasicTypeFalcom::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+/// @retval 1.0       正常
+/// @retval 0.0 - 1.0 警告あり
+/// @retval <0.0      エラーあり
+double DiskBasicTypeFalcom::ParseParamOnDisk(bool is_formatting)
 {
 	// グループ数
 	if (basic->GetFatEndGroup() == 0) {

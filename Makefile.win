@@ -129,6 +129,7 @@ OBJS=	utils.o \
 	disktd0parser.o \
 	diskdimparser.o \
 	diskvfdparser.o \
+	diskimdparser.o \
 	diskparser.o \
 	diskd88writer.o \
 	diskplainwriter.o \

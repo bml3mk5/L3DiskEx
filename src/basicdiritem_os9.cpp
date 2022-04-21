@@ -41,6 +41,7 @@ DiskBasicDirItemOS9FD::DiskBasicDirItemOS9FD()
 	basic = NULL;
 	sector = NULL;
 	fd = NULL;
+	mylsn = (wxUint32)-1;
 	fd_ownmake = false;
 	memset(&zero_data, 0, sizeof(zero_data));
 }
@@ -62,6 +63,7 @@ DiskBasicDirItemOS9FD &DiskBasicDirItemOS9FD::operator=(const DiskBasicDirItemOS
 void DiskBasicDirItemOS9FD::Dup(const DiskBasicDirItemOS9FD &src)
 {
 	sector = src.sector;
+	mylsn = src.mylsn;
 	if (src.fd_ownmake) {
 		fd = new directory_os9_fd_t;
 		memcpy(&fd, src.fd, sizeof(directory_os9_fd_t));
@@ -72,10 +74,11 @@ void DiskBasicDirItemOS9FD::Dup(const DiskBasicDirItemOS9FD &src)
 }
 #endif
 /// ポインタをセット
-void DiskBasicDirItemOS9FD::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, directory_os9_fd_t *n_fd)
+void DiskBasicDirItemOS9FD::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd)
 {
 	basic = n_basic;
 	sector = n_sector;
+	mylsn = n_mylsn;
 	if (fd_ownmake) delete fd;
 	fd = n_fd;
 	fd_ownmake = false;
@@ -199,7 +202,7 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, i
 		if (lsn != 0) {
 			DiskD88Sector *sector = basic->GetSectorFromGroup(lsn);
 			if (sector) {
-				fd.Set(basic, sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
+				fd.Set(basic, sector, lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
 			}
 		}
 	}
@@ -272,7 +275,7 @@ void DiskBasicDirItemOS9::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8
 	DiskBasicDirItem::GetNativeFileName(name, nlen, ext, elen);
 
 	// 文字列の最後はMSBがセットされているのでクリア
-	DecodeString((char *)name, nlen, name, nlen);
+	nlen = DecodeString((char *)name, nlen, name, nlen);
 }
 
 /// 文字列のMSBをクリア
@@ -281,13 +284,19 @@ size_t DiskBasicDirItemOS9::DecodeString(char *dst, size_t dlen, const wxUint8 *
 	size_t len = dlen > slen ? slen : dlen;
 
 	// 文字列のMSBをクリア
+	bool last = false;
 	for(size_t i = 0; i < len; i++) {
+		last = ((src[i] & 0x80) != 0);
 		dst[i] = (src[i] & 0x7f);
+		if (last) {
+			dlen = i + 1;
+			break;
+		}
 	}
 	for(size_t i = dlen; i < len; i++) {
 		dst[i] = 0;
 	}
-	return len;
+	return dlen;
 }
 
 #ifdef COPYABLE_DIRITEM
@@ -316,6 +325,8 @@ bool DiskBasicDirItemOS9::Delete(wxUint8 code)
 bool DiskBasicDirItemOS9::Check(bool &last)
 {
 	if (!m_data) return false;
+
+//	if (m_data->os9.DE_Reserved != 0) return false;
 
 	return true;
 }
@@ -430,7 +441,6 @@ void DiskBasicDirItemOS9::GetUnitGroups(int fileunit_num, DiskBasicGroups &group
 		if (siz == 0) {
 			break;
 		}
-		calc_groups += siz;
 
 		if (i != 0) {
 			if (group_items.Count() > 0) {
@@ -444,13 +454,17 @@ void DiskBasicDirItemOS9::GetUnitGroups(int fileunit_num, DiskBasicGroups &group
 			int sector_num = 1;
 			wxUint32 next_lsn = (n + 1 != siz ? lsn + n + 1 : 0);
 			basic->CalcNumFromSectorPosForGroup(lsn + n, track_num, side_num, sector_num);
-			group_items.Add(lsn + n, next_lsn, track_num, side_num, sector_num, sector_num + basic->GetSectorsPerGroup() - 1);
+			group_items.Add(lsn + n, next_lsn, track_num, side_num, sector_num, sector_num);
+			calc_groups++;
+			if (calc_groups >= (int)basic->GetFatEndGroup()) {
+				// too large block size
+				break;
+			}
 		}
 	}
 	group_items.SetNums(calc_groups);
 	group_items.SetSize(calc_file_size);
-	group_items.SetSizePerGroup(basic->GetSectorSize() * basic->GetSectorsPerGroup());
-
+	group_items.SetSizePerGroup(basic->GetSectorSize());
 }
 
 void DiskBasicDirItemOS9::GetFileDate(struct tm *tm) const
@@ -610,11 +624,12 @@ void DiskBasicDirItemOS9::GetExtraGroups(wxArrayInt &arr) const
 
 /// チェイン用のセクタをセット
 /// @param [in] sector セクタ
+/// @param [in] lsn    セクタのLSN
 /// @param [in] data   セクタ内のバッファ
 /// @param [in] pitem  コピー元のアイテム
-void DiskBasicDirItemOS9::SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
+void DiskBasicDirItemOS9::SetChainSector(DiskD88Sector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem)
 {
-	fd.Set(basic, sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
+	fd.Set(basic, sector, lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
 	fd.Clear();
 
 	// 属性をコピー

@@ -276,6 +276,7 @@ void DiskBasicParam::ClearBasicParam()
 	dir_start_pos_on_sec = 0;
 	group_width			 = 1;
 	groups_per_dir_entry = 0;
+	sector_skew			 = 1;
 	special_attrs.Empty();
 	attrs_by_extension.Empty();
 	fillcode_on_format	 = 0;
@@ -335,6 +336,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	dir_start_pos_on_sec = src.dir_start_pos_on_sec;
 	group_width = src.group_width;
 	groups_per_dir_entry = src.groups_per_dir_entry;
+	sector_skew	= src.sector_skew;
 	special_attrs = src.special_attrs;
 	attrs_by_extension = src.attrs_by_extension;
 	fillcode_on_format = src.fillcode_on_format;
@@ -624,6 +626,8 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 					p.SetGroupWidth(Utils::ToInt(str));
 				} else if (name == "GroupsPerDirEntry") {
 					p.SetGroupsPerDirEntry(Utils::ToInt(str));
+				} else if (name == "SectorSkew") {
+					p.SetSectorSkew(Utils::ToInt(str));
 				} else if (name == "SubDirGroupSize") {
 					p.SetSubDirGroupSize(Utils::ToInt(str));
 				} else if (name == "FillCodeOnFormat") {
