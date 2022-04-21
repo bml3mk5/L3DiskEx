@@ -10,7 +10,8 @@
 
 namespace L3DiskUtils
 {
-	wxString DumpBinary(const wxUint8 *buffer, size_t bufsize);
+	int DumpBinary(const wxUint8 *buffer, size_t bufsize, wxString &str);
+	wxString DumpAscii(const wxUint8 *buffer, size_t bufsize);
 };
 
 #endif /* _L3DISKUTILS_H_ */

@@ -19,6 +19,7 @@ private:
 	L3DiskFrame *frame;
 
 	wxTextCtrl *txtAttr;
+	wxButton   *btnChange;
 	wxComboBox *comDensity;
 	wxCheckBox *chkWprotect;
 
@@ -28,6 +29,7 @@ public:
 	L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parent);
 	~L3DiskDiskAttr();
 
+	void OnButtonChange(wxCommandEvent& event);
 	void OnComboDensity(wxCommandEvent& event);
 	void OnCheckWriteProtect(wxCommandEvent& event);
 
@@ -42,6 +44,7 @@ public:
 
 	enum {
 		IDC_TXT_ATTR = 1,
+		IDC_BTN_CHANGE,
 		IDC_COM_DENSITY,
 		IDC_CHK_WPROTECT,
 	};

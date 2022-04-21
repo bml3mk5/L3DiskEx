@@ -5,14 +5,13 @@
 
 #include "main.h"
 #include "uibindump.h"
-#include "charcodes.h"
 #include "utils.h"
 
 #define SCROLLBAR_UNIT	2
 
 // Attach Event
 wxBEGIN_EVENT_TABLE(L3DiskBinDump, wxScrolledWindow)
-//	EVT_SIZE(L3DiskBinDump::OnSize)
+	EVT_SIZE(L3DiskBinDump::OnSize)
 wxEND_EVENT_TABLE()
 
 L3DiskBinDump::L3DiskBinDump(L3DiskFrame *parentframe, wxWindow *parentwindow)
@@ -43,17 +42,65 @@ L3DiskBinDump::L3DiskBinDump(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	pt.x += sz.x;
 	pt.y += sz.y;
 
+	min_x = pt.x;
+	min_y = pt.y;
+
 	SetScrollBarPos(pt.x, pt.y, 0, 0);
 }
 
-//void L3DiskBinDump::OnSize(wxSizeEvent& event)
-//{
-//}
+void L3DiskBinDump::OnSize(wxSizeEvent& event)
+{
+	wxSize sz, cszH, cszA;
+	wxPoint pt = GetViewStart();
+	int sx, sy;
+	GetScrollPixelsPerUnit(&sx, &sy);
+	sz = GetClientSize();
+	cszH = txtHex->GetSize();
+	cszA = txtAsc->GetSize();
+
+	int yy = pt.y * sy + sz.y;
+
+	if (yy > min_y) {
+		if (pt.y > 0) {
+			Scroll(0, (min_y - sz.y) / sy);
+		} else {
+			cszH.y = sz.y;
+			cszA.y = sz.y;
+		}
+	} else {
+		cszH.y = min_y;
+		cszA.y = min_y;
+	}
+
+	txtHex->SetSize(cszH);
+	txtAsc->SetSize(cszA);
+}
 
 void L3DiskBinDump::SetDatas(const wxUint8 *buf, size_t len)
 {
-	txtHex->SetValue(L3DiskUtils::DumpBinary(buf,len));	
-	txtAsc->SetValue(DumpAscii(buf,len));	
+	wxString str;
+	wxSize sz, cszH, cszA;
+	int rows = L3DiskUtils::DumpBinary(buf,len,str);
+	rows+=2;
+
+	txtHex->SetValue(str);	
+	txtAsc->SetValue(L3DiskUtils::DumpAscii(buf,len));
+
+	sz = txtHex->GetTextExtent(str);
+	cszH = txtHex->GetSize();
+	cszA = txtAsc->GetSize();
+
+	if (min_y < sz.y * rows) {
+		min_y = sz.y * rows;
+
+		cszH.y = min_y;
+		cszA.y = min_y;
+
+		txtHex->SetSize(cszH);
+		txtAsc->SetSize(cszA);
+
+		SetScrollBarPos(min_x, min_y, 0, 0);
+	}
 }
 
 void L3DiskBinDump::ClearDatas()
@@ -78,21 +125,4 @@ void L3DiskBinDump::SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_
 			, new_ux / SCROLLBAR_UNIT, new_uy / SCROLLBAR_UNIT
 			, new_px / SCROLLBAR_UNIT, new_py / SCROLLBAR_UNIT, true);
 	}
-}
-
-wxString L3DiskBinDump::DumpAscii(const wxUint8 *buffer, size_t bufsize)
-{
-	wxString str;
-	gCharCodes.SetMap(wxT("hankaku"));
-	for(size_t pos = 0, col = 0; pos < bufsize; pos++, col++) {
-		if (col >= 16) {
-			str += wxT("\n");
-			col = 0;
-		}
-		wxUint8 c = buffer[pos];
-		wxString cstr;
-		gCharCodes.FindString(c, cstr, wxT("."));
-		str += cstr;
-	}
-	return str;
 }

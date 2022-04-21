@@ -80,6 +80,7 @@ public:
 	void OnModifyIDonTrack(wxCommandEvent& event);
 	void OnModifyDensityOnDisk(wxCommandEvent& event);
 	void OnModifyDensityOnTrack(wxCommandEvent& event);
+	void OnDeleteTracksBelow(wxCommandEvent& event);
 
 	void SetData(DiskD88Disk *newdisk, int newsidenum);
 	void ClearData();
@@ -107,6 +108,7 @@ public:
 		IDM_MODIFY_ID_R_TRACK,
 		IDM_MODIFY_ID_N_TRACK,
 		IDM_MODIFY_DENSITY_TRACK,
+		IDM_DELETE_TRACKS_BELOW,
 	};
 
 	wxDECLARE_EVENT_TABLE();

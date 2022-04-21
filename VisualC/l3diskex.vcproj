@@ -206,6 +206,18 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskd88parser.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskd88creator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskparam.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskparambox.cpp"
 				>
 			</File>
@@ -281,6 +293,18 @@
 			</File>
 			<File
 				RelativePath="..\src\diskd88.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskd88parser.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskd88creator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\diskparam.h"
 				>
 			</File>
 			<File

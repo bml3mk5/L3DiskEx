@@ -18,6 +18,9 @@ public:
 	wxTextCtrl *txtHex;
 	wxTextCtrl *txtAsc;
 
+	int min_x;
+	int min_y;
+
 public:
 	L3DiskBinDump(L3DiskFrame *parentframe, wxWindow *parent);
 
@@ -26,13 +29,12 @@ public:
 		IDC_TXT_ASC,
 	};
 
-//	void OnSize(wxSizeEvent& event);
+	void OnSize(wxSizeEvent& event);
 
 	void SetDatas(const wxUint8 *buf, size_t len);
 	void ClearDatas();
 
 	void SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py);
-	wxString DumpAscii(const wxUint8 *buffer, size_t bufsize);
 
 	wxDECLARE_EVENT_TABLE();
 };

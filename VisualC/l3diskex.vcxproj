@@ -18,6 +18,9 @@
     <ClCompile Include="..\src\config.cpp" />
     <ClCompile Include="..\src\basicfmt.cpp" />
     <ClCompile Include="..\src\diskd88.cpp" />
+    <ClCompile Include="..\src\diskd88creator.cpp" />
+    <ClCompile Include="..\src\diskd88parser.cpp" />
+    <ClCompile Include="..\src\diskparam.cpp" />
     <ClCompile Include="..\src\diskparambox.cpp" />
     <ClCompile Include="..\src\intnamebox.cpp" />
     <ClCompile Include="..\src\main.cpp" />
@@ -38,6 +41,9 @@
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\basicfmt.h" />
     <ClInclude Include="..\src\diskd88.h" />
+    <ClInclude Include="..\src\diskd88creator.h" />
+    <ClInclude Include="..\src\diskd88parser.h" />
+    <ClInclude Include="..\src\diskparam.h" />
     <ClInclude Include="..\src\diskparambox.h" />
     <ClInclude Include="..\src\intnamebox.h" />
     <ClInclude Include="..\src\main.h" />

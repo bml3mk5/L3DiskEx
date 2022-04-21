@@ -20,6 +20,11 @@ _("'%s' should only contain ASCII characters.")
 class DiskParam;
 class DiskD88Disk;
 
+#define DiskParamBox_DiskName		0x01
+#define DiskParamBox_Density		0x02
+#define DiskParamBox_WriteProtect	0x04
+#define DiskParamBox_Flags_All		0x07
+
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
 {
@@ -34,8 +39,12 @@ private:
 	wxComboBox *comDensity;
 	wxCheckBox *chkWprotect;
 
+	wxUint32 disable_flags;
+
+	int FindTemplate(DiskD88Disk *disk);
+
 public:
-	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk);
+	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, bool use_template, wxUint32 disable_flags = 0);
 
 	enum {
 		IDC_COMBO_TEMPLATE = 1,
@@ -70,6 +79,7 @@ public:
 	wxString GetDiskName() const;
 	int GetDensity();
 	bool GetWriteProtect();
+	void SetDisableFlags(wxUint32 val);
 
 	wxDECLARE_EVENT_TABLE();
 };

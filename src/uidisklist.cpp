@@ -401,16 +401,51 @@ bool L3DiskList::InitializeDisk()
 	int ans = wxYES;
 	wxString diskname = wxT("'")+disk->GetName()+wxT("'");
 	int selected_side = cd->GetSubNumber();
-	if (selected_side >= 0) {
-		diskname += wxString::Format(_("side %c"), selected_side + 0x41);
-	}
-	wxString msg = wxString::Format(_("All files and datas will delete on %s. Do you really want to initialize it?"), diskname);
-	ans = wxMessageBox(msg, _("Initialize Disk"), wxYES_NO);
-
+	bool found = disk->ExistTrack(selected_side);
 	bool sts = false;
-	if (ans == wxYES) {
-		sts = disk->Initialize(selected_side);
+	if (found) {
+		// トラックがある場合は、初期化
+		if (selected_side >= 0) {
+			diskname += wxString::Format(_("side %c"), selected_side + 0x41);
+		}
+		wxString msg = wxString::Format(_("All files and datas will delete on %s. Do you really want to initialize it?"), diskname);
+		ans = wxMessageBox(msg, _("Initialize Disk"), wxYES_NO);
+
+		if (ans == wxYES) {
+			sts = disk->Initialize(selected_side);
+		}
+	} else {
+		// トラックが全くない場合は、ディスク作成
+		if (selected_side >= 0) {
+			// 選択したサイドだけ作り直す
+			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), 0, disk, false);
+			int rc = dlg.ShowModal();
+			if (rc == wxID_OK) {
+				DiskParam param;
+				dlg.GetParam(param);
+				sts = disk->Rebuild(param, selected_side);
+
+				// ファイル名一覧を更新
+				SetFileName();
+			}
+		} else {
+			// パラメータを選択するダイアログを表示
+			DiskParamBox dlg(this, wxID_ANY, _("Rebuild Tracks"), -1, disk, true);
+			int rc = dlg.ShowModal();
+			if (rc == wxID_OK) {
+				DiskParam param;
+				dlg.GetParam(param);
+				disk->SetName(dlg.GetDiskName());
+				disk->SetDensity(dlg.GetDensity());
+				disk->SetWriteProtect(dlg.GetWriteProtect());
+				sts = disk->Rebuild(param, selected_side);
+
+				// ファイル名一覧を更新
+				SetFileName();
+			}
+		}
 	}
+
 	return sts;
 }
 
@@ -449,8 +484,8 @@ bool L3DiskList::DeleteDisk()
 	if (ans == wxYES) {
 		sts = frame->GetDiskD88().Delete(cd->GetNumber());
 
-		// ファイル名一覧を更新
-		SetFileName();
+		// 画面を更新
+		frame->UpdateDataOnWindow();
 	}
 	return sts;
 }
@@ -468,10 +503,15 @@ void L3DiskList::ShowDiskAttr()
 {
 	if (!disk) return;
 
-	DiskParamBox dlg(this, wxID_ANY, wxEmptyString, 0, disk);
+	DiskParamBox dlg(this, wxID_ANY, _("Change Parameter"), -1, disk, true);
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
-		dlg.GetParamToDisk(*disk);
+		DiskParam param;
+		dlg.GetParam(param);
+		disk->SetDiskParam(param);
+		disk->SetName(dlg.GetDiskName());
+		disk->SetDensity(dlg.GetDensity());
+		disk->SetWriteProtect(dlg.GetWriteProtect());
 		disk->SetModify();
 		// ディスク名をセット
 		SetDiskName(disk->GetName());

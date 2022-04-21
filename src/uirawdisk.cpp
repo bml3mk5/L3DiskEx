@@ -130,6 +130,8 @@ wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
 	EVT_MENU(IDM_MODIFY_ID_H_TRACK, L3DiskRawTrack::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_ID_N_TRACK, L3DiskRawTrack::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_DENSITY_TRACK, L3DiskRawTrack::OnModifyDensityOnTrack)
+
+	EVT_MENU(IDM_DELETE_TRACKS_BELOW, L3DiskRawTrack::OnDeleteTracksBelow)
 wxEND_EVENT_TABLE()
 
 L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow)
@@ -159,6 +161,8 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
 	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
 	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_DELETE_TRACKS_BELOW, _("Delete All Tracks Below Current Track"));
 }
 
 L3DiskRawTrack::~L3DiskRawTrack()
@@ -223,6 +227,25 @@ void L3DiskRawTrack::OnModifyDensityOnTrack(wxCommandEvent& event)
 	parent->ModifyDensityOnTrack();
 }
 
+/// 現在のトラック以下を削除
+void L3DiskRawTrack::OnDeleteTracksBelow(wxCommandEvent& event)
+{
+	if (!disk) return;
+
+	int row = (int)GetFirstSelected();
+	if (row < 0) return;
+
+	int ans = wxYES;
+	wxString msg = wxString::Format(_("Do you really want to delete tracks?"));
+	ans = wxMessageBox(msg, _("Delete Tracks"), wxYES_NO);
+	if (ans == wxYES) {
+		disk->DeleteTracks(row, -1);
+
+		// 画面更新
+		frame->UpdateDataOnWindow();
+	}
+}
+
 /// トラックリストをセット
 void L3DiskRawTrack::SetData(DiskD88Disk *newdisk, int newsidenum)
 {
@@ -233,23 +256,24 @@ void L3DiskRawTrack::SetData(DiskD88Disk *newdisk, int newsidenum)
 
 	DeleteAllItems();
 
-	for(int num=0, row=0; num < DISKD88_MAX_TRACKS; num++) {
-		wxUint32 offset = disk->GetOffset(num);
+	int sides = disk->GetSidesPerDisk();
+	for(int pos=(side_number >= 0 ? side_number : 0), row=0; pos < DISKD88_MAX_TRACKS; pos+=(side_number >= 0 ? sides : 1)) {
+		wxUint32 offset = disk->GetOffset(pos);
 		DiskD88Track *trk = disk->GetTrackByOffset(offset);
 		int trk_num = -1;
 		int sid_num = -1;
-		if (newsidenum >= 0) {
-			if (!trk || newsidenum != trk->GetSideNumber()) continue;
-		}
+//		if (newsidenum >= 0) {
+//			if (!trk || newsidenum != trk->GetSideNumber()) continue;
+//		}
 		if (trk) {
 			trk_num = trk->GetTrackNumber();
 			sid_num = trk->GetSideNumber();
 		}
-		InsertItem(row, wxString::Format(wxT("%d"), num));
+		InsertItem(row, wxString::Format(wxT("%d"), pos));
 		SetItem(row, 1, trk_num >= 0 ? wxString::Format(wxT("%d"), trk_num) : wxT("--"));
 		SetItem(row, 2, sid_num >= 0 ? wxString::Format(wxT("%d"), sid_num) : wxT("--"));
 		SetItem(row, 3, wxString::Format(wxT("%x"), offset));
-		SetItemData(row, num);
+		SetItemData(row, pos);
 		row++;
 	}
 
@@ -295,6 +319,8 @@ void L3DiskRawTrack::ShowPopupMenu()
 	menuPopup->Enable(IDM_MODIFY_ID_H_TRACK, opened);
 	menuPopup->Enable(IDM_MODIFY_ID_N_TRACK, opened);
 	menuPopup->Enable(IDM_MODIFY_DENSITY_TRACK, opened);
+
+	menuPopup->Enable(IDM_DELETE_TRACKS_BELOW, opened);
 
 	PopupMenu(menuPopup);
 }

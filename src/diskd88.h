@@ -10,13 +10,11 @@
 #include <wx/filename.h>
 #include <wx/mstream.h>
 #include <wx/dynarray.h>
-#include "result.h"
+#include "diskparam.h"
+#include "diskd88parser.h"
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD
 extern const wxString gDiskDensity[];
-
-/// (0:128bytes 1:256bytes 2:512bytes 3:1024bytes)
-extern const int gSectorSizes[5];
 
 #define DISKD88_MAX_TRACKS	164
 
@@ -48,84 +46,6 @@ typedef struct st_d88_sector_header {
 	wxUint16 size;		///< sector size (bytes)
 } d88_sector_header_t;
 #pragma pack()
-
-///
-class SingleDensity
-{
-public:
-	int track_num;
-	int side_num;
-	SingleDensity(int n_track_num, int n_side_num);
-	~SingleDensity() {}
-};
-
-WX_DECLARE_OBJARRAY(SingleDensity, SingleDensities);
-
-/// ディスクパラメータ
-class DiskParam
-{
-protected:
-	wxString disk_type_name;	///< "2D" "2HD" など（DiskBasicParamとのマッチングにも使用）
-	wxUint32 disk_type;			///< 1: AB面あり（3インチFD）
-	int sides_per_disk;			///< サイド数
-	int tracks_per_side;		///< トラック数
-	int sectors_per_track;		///< セクタ数
-	int sector_size;			///< セクタサイズ
-	int density;				///< 0:2D 1:2DD 2:2HD
-	SingleDensities singles;	///< 単密度にするトラック
-
-public:
-	DiskParam();
-	DiskParam(const DiskParam &src);
-	DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, SingleDensities &n_singles);
-	virtual ~DiskParam() {}
-
-	void SetDiskParam(const DiskParam &src);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, SingleDensities &n_singles);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density);
-
-	void ClearDiskParam();
-	bool Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, const SingleDensities &n_singles);
-	bool MatchNear(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size);
-	bool FindSingleDensity(int track_num, int side_num) const;
-	const wxString &GetDiskTypeName() const { return disk_type_name; }
-	wxUint32 GetDiskType() const { return disk_type; }
-	int GetSidesPerDisk() const { return sides_per_disk; }
-	int GetTracksPerSide() const { return tracks_per_side; }
-	int GetSectorsPerTrack() const { return sectors_per_track; }
-	int GetSectorSize() const { return sector_size; }
-	int GetDensity() const { return density; }
-};
-
-WX_DECLARE_OBJARRAY(DiskParam, DiskParams);
-
-///
-class DiskTypes
-{
-private:
-	DiskParams types;
-
-public:
-	DiskTypes();
-	~DiskTypes() {}
-
-	bool Load(const wxString &data_path);
-
-	int IndexOf(const wxString &n_type_name);
-	DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, const SingleDensities &n_singles);
-	DiskParam *ItemPtr(size_t index) const { return &types[index]; }
-	DiskParam &Item(size_t index) const { return types[index]; }
-	size_t Count() const { return types.Count(); }
-#if 0
-	const wxString &GetTypeName(int num) { return types[num].GetTypeName(); }
-	int GetSidesPerDisk(int num) const { return types[num].GetSidesPerDisk(); }
-	int GetTracksPerSide(int num) const { return types[num].GetTracksPerSide(); }
-	int GetSectorsPerTrack(int num) const { return types[num].GetSectorsPerTrack(); }
-	int GetSectorSize(int num) const { return types[num].GetSectorSize(); }
-#endif
-};
-
-extern DiskTypes gDiskTypes;
 
 /// セクタデータへのポインタを保持するクラス
 class DiskD88Sector
@@ -193,14 +113,16 @@ class DiskD88Track
 private:
 	int trk_num;	///< track number
 	int sid_num;	///< side number
+	int offset_pos;	///< offset position
 	wxUint32 offset;	///< offset on diskimage
+	wxUint32 size;	///< track size
 	DiskD88Sectors *sectors;
 
 	DiskD88Track(const DiskD88Track &src);
 
 public:
 	DiskD88Track();
-	DiskD88Track(int newtrknum, int newsidnum, wxUint32 newoffset);
+	DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset);
 //	DiskD88Track(int newnum, int newsidnum, wxUint32 newoffset, DiskD88Sectors *newsecs);
 	~DiskD88Track();
 
@@ -210,8 +132,11 @@ public:
 	int GetSideNumber() const { return sid_num; }
 	void SetSideNumber(int val) { sid_num = val; }
 	wxUint32 GetOffset() const { return offset; }
+	int GetOffsetPos() const { return offset_pos; }
 	int GetMaxSectorNumber();
 	int GetMaxSectorSize();
+	wxUint32 GetSize() { return size; }
+	void SetSize(wxUint32 val) { size = val; }
 
 	DiskD88Sectors *GetSectors() { return sectors; }
 	DiskD88Sector  *GetSector(int sector_number);
@@ -238,6 +163,7 @@ private:
 
 	d88_header_t header;
 	DiskD88Tracks *tracks;
+	int offset_maxpos;
 
 	d88_header_t header_origin;
 
@@ -257,7 +183,8 @@ public:
 	~DiskD88Disk();
 
 	size_t Add(DiskD88Track *newtrk);
-	int Replace(int side_number, DiskD88Disk *src_disk, int src_side_number); 
+	int Replace(int side_number, DiskD88Disk *src_disk, int src_side_number);
+	size_t DeleteTracks(int start_offset_pos, int end_offset_pos);
 
 	int GetNumber() const { return num; }
 	wxString GetName(bool real = false);
@@ -280,13 +207,19 @@ public:
 	void SetDensity(int val);
 
 	wxUint32 GetSize();
-	wxUint32 GetDiskSize();
 	void SetSize(wxUint32 val);
+	wxUint32 GetSizeWithoutHeader();
+	void SetSizeWithoutHeader(wxUint32 val);
 
 	wxUint32 GetOffset(int num);
 	void SetOffset(int num, wxUint32 offset);
+	void SetOffsetWithoutHeader(int num, wxUint32 offset);
+
+	int GetOffsetMaxPos();
+	void SetOffsetMaxPos(int pos);
 
 	bool Initialize(int selected_side);
+	bool Rebuild(const DiskParam &param, int selected_side);
 
 //	wxUint8 *GetBuffer() { return buffer; }
 //	size_t GetBufferSize() { return buffer_size; }
@@ -294,6 +227,8 @@ public:
 	void SetModify();
 	bool IsModified();
 	void ClearModify();
+
+	bool ExistTrack(int side_number);
 
 	static int Compare(DiskD88Disk *item1, DiskD88Disk *item2);
 };
@@ -324,75 +259,6 @@ public:
 	void SetModify();
 	bool IsModified();
 	void ClearModify();
-};
-
-/// パース結果
-class DiskD88Result : public ResultInfo
-{
-public:
-	DiskD88Result() : ResultInfo() {}
-
-	enum {
-		ERR_NONE = 0,
-		ERR_CANNOT_OPEN,
-		ERR_CANNOT_SAVE,
-		ERR_INVALID_DISK,
-		ERR_OVERFLOW,
-		ERR_ID_TRACK,
-		ERR_ID_SIDE,
-		ERR_ID_SECTOR,
-		ERR_SECTOR_SIZE,
-		ERR_DUPLICATE_TRACK,
-		ERR_IGNORE_DATA,
-		ERR_NO_DATA,
-		ERR_NO_DISK,
-		ERR_REPLACE,
-		ERR_FILE_ONLY_1S,
-		ERR_FILE_SAME,
-	};
-
-	void SetMessage(int error_number, va_list ap);
-};
-
-/// D88ディスクパーサー
-class DiskD88Parser
-{
-private:
-	wxInputStream *stream;
-	DiskD88File *file;
-	DiskD88Result *result;
-
-	wxUint32 ParseSector(int disk_number, int track_number, int sector_nums, DiskD88Track *track);
-	wxUint32 ParseTrack(size_t start_pos, wxUint32 offset, int disk_number, DiskD88Disk *disk);
-	wxUint32 ParseDisk(size_t start_pos, int disk_number);
-
-public:
-	DiskD88Parser(wxInputStream *stream, DiskD88File *file, DiskD88Result &result);
-	~DiskD88Parser();
-
-	int Parse();
-};
-
-/// D88ディスク作成
-class DiskD88Creator
-{
-private:
-	wxString diskname;
-	const DiskParam *param;
-	bool write_protect;
-	DiskD88File *file;
-	DiskD88Result *result;
-
-	wxUint32 CreateSector(int track_number, int side_number, int sector_number, DiskD88Track *track);
-	wxUint32 CreateTrack(int track_number, int side_number, wxUint32 offset, DiskD88Disk *disk);
-	wxUint32 CreateDisk(int disk_number);
-
-public:
-	DiskD88Creator(const wxString &diskname, const DiskParam &param, bool write_protect, DiskD88File *file, DiskD88Result &result);
-	~DiskD88Creator();
-
-	int Create();
-	int Add();
 };
 
 /// D88ディスクイメージ入出力

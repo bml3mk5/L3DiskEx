@@ -998,6 +998,8 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside)
 		formatted = true;
 	} else {
 		errinfo.SetWarn(DiskBasicError::ERR_FORMATTED);
+		free_size = -1;
+		free_groups = -1;
 	}
 
 	return errinfo.GetValid();
@@ -1396,7 +1398,7 @@ bool DiskBasic::SaveFile(DiskBasicDirItem *item, wxInputStream *istream, const w
 	}
 
 	// ディスクに空きがあるか
-	if (sizeremain > (int)disk->GetDiskSize()) {
+	if (sizeremain > (int)disk->GetSizeWithoutHeader()) {
 		errinfo.SetError(DiskBasicError::ERR_FILE_TOO_LARGE);
 		// ディレクトリエントリを削除
 		item->Delete();

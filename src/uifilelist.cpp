@@ -287,9 +287,19 @@ void L3DiskFileList::ClearAttr()
 /// ファイル名をリストにセット
 void L3DiskFileList::SetFiles(DiskD88Disk *newdisk, int newsidenum)
 {
-	// ディスクをDISK BASICとして解析
-	if (basic.ParseDisk(newdisk, newsidenum) != 0) {
-		L3DiskErrorMessageBox(basic.GetErrorLevel(), basic.GetErrorMessage());
+	// トラックが存在するか
+	bool found = newdisk->ExistTrack(newsidenum);
+	if (found) {
+		// ディスクをDISK BASICとして解析
+		if (basic.ParseDisk(newdisk, newsidenum) != 0) {
+			L3DiskErrorMessageBox(basic.GetErrorLevel(), basic.GetErrorMessage());
+		}
+	} else {
+		// トラックがない
+		DiskD88Result result;
+		result.SetWarn(DiskD88Result::ERR_NO_FOUND_TRACK);
+		L3DiskErrorMessageBox(result.GetValid(), result.GetMessages());
+		basic.Clear();
 	}
 
 	// ファイル名一覧を設定

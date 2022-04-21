@@ -175,6 +175,7 @@ public:
 	void UpdateMenuAndToolBarFileList(L3DiskFileList *list);
 	void UpdateMenuAndToolBarRawDisk(L3DiskRawPanel *rawpanel);
 
+	void UpdateDataOnWindow();
 	void UpdateDataOnWindow(const wxString &path);
 
 	void ShowCreateFileDialog();
@@ -194,6 +195,7 @@ public:
 	void ReplaceDisk(int disk_number, int side_number, const wxString &path);
 	void DeleteDisk();
 	void RenameDisk();
+	void ShowDiskAttr();
 	void ExportFileFromDisk();
 	void ImportFileToDisk();
 	void DeleteFileFromDisk();

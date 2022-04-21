@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D916204E1BF261BC00DB06A7 /* rawparambox.cpp */; };
+		D9AA50741E4C8A9300F68374 /* diskd88creator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9AA506E1E4C8A9300F68374 /* diskd88creator.cpp */; };
+		D9AA50751E4C8A9300F68374 /* diskd88parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9AA50701E4C8A9300F68374 /* diskd88parser.cpp */; };
+		D9AA50761E4C8A9300F68374 /* diskparam.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9AA50721E4C8A9300F68374 /* diskparam.cpp */; };
 		D9C49E8C1BF1BDB100831032 /* basicfmt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E7C1BF1BDB100831032 /* basicfmt.cpp */; };
 		D9C49E8E1BF1BDB100831032 /* charcodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E7E1BF1BDB100831032 /* charcodes.cpp */; };
 		D9C49E911BF1BDB100831032 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E811BF1BDB100831032 /* config.cpp */; };
@@ -65,6 +68,12 @@
 /* Begin PBXFileReference section */
 		D916204E1BF261BC00DB06A7 /* rawparambox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rawparambox.cpp; sourceTree = "<group>"; };
 		D916204F1BF261BC00DB06A7 /* rawparambox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rawparambox.h; sourceTree = "<group>"; };
+		D9AA506E1E4C8A9300F68374 /* diskd88creator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskd88creator.cpp; sourceTree = "<group>"; };
+		D9AA506F1E4C8A9300F68374 /* diskd88creator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskd88creator.h; sourceTree = "<group>"; };
+		D9AA50701E4C8A9300F68374 /* diskd88parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskd88parser.cpp; sourceTree = "<group>"; };
+		D9AA50711E4C8A9300F68374 /* diskd88parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskd88parser.h; sourceTree = "<group>"; };
+		D9AA50721E4C8A9300F68374 /* diskparam.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskparam.cpp; sourceTree = "<group>"; };
+		D9AA50731E4C8A9300F68374 /* diskparam.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskparam.h; sourceTree = "<group>"; };
 		D9C49E571BF1BCA200831032 /* l3diskex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = l3diskex.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9C49E7A1BF1BD8700831032 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../src/res/Info.plist; sourceTree = "<group>"; };
 		D9C49E7C1BF1BDB100831032 /* basicfmt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = basicfmt.cpp; path = ../../src/basicfmt.cpp; sourceTree = SOURCE_ROOT; };
@@ -162,6 +171,12 @@
 				D9C49E821BF1BDB100831032 /* config.h */,
 				D9C49E831BF1BDB100831032 /* diskd88.cpp */,
 				D9C49E841BF1BDB100831032 /* diskd88.h */,
+				D9AA506E1E4C8A9300F68374 /* diskd88creator.cpp */,
+				D9AA506F1E4C8A9300F68374 /* diskd88creator.h */,
+				D9AA50701E4C8A9300F68374 /* diskd88parser.cpp */,
+				D9AA50711E4C8A9300F68374 /* diskd88parser.h */,
+				D9AA50721E4C8A9300F68374 /* diskparam.cpp */,
+				D9AA50731E4C8A9300F68374 /* diskparam.h */,
 				D9C49E851BF1BDB100831032 /* diskparambox.cpp */,
 				D9C49E861BF1BDB100831032 /* diskparambox.h */,
 				D9C49E871BF1BDB100831032 /* intnamebox.cpp */,
@@ -327,12 +342,15 @@
 				D9C49EB91BF1BDC000831032 /* uirawdisk.cpp in Sources */,
 				D9C49EBB1BF1BDC000831032 /* utils.cpp in Sources */,
 				D9C49E8C1BF1BDB100831032 /* basicfmt.cpp in Sources */,
+				D9AA50761E4C8A9300F68374 /* diskparam.cpp in Sources */,
 				D9C49E8E1BF1BDB100831032 /* charcodes.cpp in Sources */,
 				D9C49E911BF1BDB100831032 /* config.cpp in Sources */,
+				D9AA50741E4C8A9300F68374 /* diskd88creator.cpp in Sources */,
 				D9D2D4CA1BFF12F300AA70F8 /* rawexpbox.cpp in Sources */,
 				D9C49E931BF1BDB100831032 /* diskd88.cpp in Sources */,
 				D9C49E951BF1BDB100831032 /* diskparambox.cpp in Sources */,
 				D9C49E971BF1BDB100831032 /* intnamebox.cpp in Sources */,
+				D9AA50751E4C8A9300F68374 /* diskd88parser.cpp in Sources */,
 				D9C49E9A1BF1BDB100831032 /* main.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -966,7 +966,12 @@ void L3DiskFrame::UpdateDataOnWindow(const wxString &path)
 		wxString title = wxGetApp().GetAppName() + wxT(" - ") + path;
 		SetTitle(title);
 	}
+	UpdateDataOnWindow();
+}
 
+/// ウィンドウ上のデータを更新
+void L3DiskFrame::UpdateDataOnWindow()
+{
 	// update panel
 	SetLPanelData();
 	ClearRPanelData();
@@ -982,7 +987,7 @@ void L3DiskFrame::ShowCreateFileDialog()
 {
 	if (!CloseDataFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Create New Disk"), 0, NULL);
+	DiskParamBox dlg(this, wxID_ANY, _("Create New Disk"), 0, NULL, true);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1013,7 +1018,7 @@ void L3DiskFrame::ShowAddNewDiskDialog()
 {
 	if (!d88.GetFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Add New Disk"), d88.GetDiskTypeNumber(0), NULL);
+	DiskParamBox dlg(this, wxID_ANY, _("Add New Disk"), d88.GetDiskTypeNumber(0), NULL, true);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1274,6 +1279,15 @@ void L3DiskFrame::RenameDisk()
 	L3DiskList *list = GetLPanel();
 	if (list) {
 		list->RenameDisk();
+		return;
+	}
+}
+/// ディスクパラメータを表示/変更
+void L3DiskFrame::ShowDiskAttr()
+{
+	L3DiskList *list = GetLPanel();
+	if (list) {
+		list->ShowDiskAttr();
 		return;
 	}
 }

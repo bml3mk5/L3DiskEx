@@ -49,6 +49,9 @@ OBJS=utils.o \
 	charcodes.o \
 	config.o \
 	diskd88.o \
+	diskd88parser.o \
+	diskd88creator.o \
+	diskparam.o \
 	diskparambox.o \
 	intnamebox.o \
 	rawparambox.o \
