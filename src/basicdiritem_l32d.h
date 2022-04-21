@@ -49,15 +49,10 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	bool	Check(bool &last);
 
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString	GetDefaultInvalidateChars() const;
-
 	/// @brief ファイルサイズをセット
 	void	SetFileSize(int val);
 	/// @brief 最終セクタのサイズを計算してファイルサイズを返す
 	int		RecalcFileSize(DiskBasicGroups &group_items, int occupied_size);
-//	/// @brief ファイル番号のファイルサイズを得る
-//	int		GetFileUnitSize(int fileunit_num, wxInputStream &istream, int file_offset);
 	/// @brief 最初のグループ番号をセット
 	void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
 	/// @brief 最初のグループ番号を返す
@@ -66,23 +61,11 @@ public:
 	/// @brief ディレクトリアイテムのサイズ
 	size_t	GetDataSize() const;
 
-//	/// @brief 内部ファイル名からコード変換して文字列を返す コピー、このアプリからインポート時のダイアログを出す前
-//	wxString RemakeFileName(const wxUint8 *src, size_t srclen) const;
-
-//	/// @brief データをエクスポートする前に必要な処理
-//	bool	PreExportDataFile(wxString &filename);
-//	/// @brief インポート時などのダイアログを出す前にファイルパスから内部ファイル名を生成する
-//	bool	PreImportDataFile(wxString &filename);
-
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
-	void	ConvertToFileNameStr(wxString &filename) const;
 	/// @brief ダイアログ入力後のファイル名文字列を変換
-	void	ConvertFromFileNameStr(wxString &filename) const;
+	void	ConvertFileNameAfterRenamed(wxString &filename) const;
 
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-//	/// @brief 機種依存の属性を設定する
-//	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 };
 
 #endif /* _BASICDIRITEM_L32D_H_ */

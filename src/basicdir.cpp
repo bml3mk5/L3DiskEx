@@ -333,15 +333,6 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 	}
 	return item;
 }
-#if 0
-/// ディレクトリアイテムを新規に作成してアサインする
-DiskBasicDirItem *DiskBasicDir::AssignItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse)
-{
-	DiskBasicDirItem *item = NewItem(newnum, newtrack, newside, newsec, newpos, newdata, unuse);
-	items.Add(item);
-	return item;
-}
-#endif
 /// ルートディレクトリのアイテムを返す
 DiskBasicDirItem *DiskBasicDir::GetRootItem() const
 {
@@ -440,60 +431,32 @@ DiskBasicDirItem *DiskBasicDir::GetEmptyItem(const DiskBasicDirItems *items, Dis
 	return match_item;
 }
 
-#if 0
-/// ディレクトリアイテムの数
-size_t DiskBasicDir::Count()
-{
-	return items.Count();
-}
-/// 全ディレクトアイテムをクリア
-void DiskBasicDir::Clear()
-{
-	for(size_t i=0; i<items.Count(); i++) {
-		DiskBasicDirItem *p = items.Item(i);
-		delete p;
-	}
-	items.Clear();
-
-	unique_number++;
-}
-/// 全ディレクトアイテムをクリア
-void DiskBasicDir::Empty()
-{
-	for(size_t i=0; i<items.Count(); i++) {
-		DiskBasicDirItem *p = items.Item(i);
-		delete p;
-	}
-	items.Empty();
-
-	unique_number++;
-}
-#endif
-
 /// 現在のディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  filename     ファイル名
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
-	return FindFile(GetCurrentItem(), filename, exclude_item, next_item);
+	return FindFile(GetCurrentItem(), filename, icase, exclude_item, next_item);
 }
 
 /// 指定したディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  dir_item     検索対象のディレクトリアイテム
 /// @param [in]  filename     ファイル名
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *match_item = NULL;
 	const DiskBasicDirItems *items = dir_item->GetChildren();
 	if (items) {
 		for(size_t pos = 0; pos <items->Count(); pos++) {
 			DiskBasicDirItem *item = items->Item(pos);
-			if (item != exclude_item && item->IsSameFileName(filename)) {
+			if (item != exclude_item && item->IsSameFileName(filename, icase)) {
 				match_item = item;
 				if (next_item) {
 					pos++;
@@ -512,28 +475,30 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const
 
 /// 現在のディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  target_item  検索対象アイテム
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
-	return FindFile(GetCurrentItem(), target_item, exclude_item, next_item);
+	return FindFile(GetCurrentItem(), target_item, icase, exclude_item, next_item);
 }
 
 /// 指定したディレクトリ内に同じファイル名が既に存在するか
 /// @param [in]  dir_item     検索対象のディレクトリアイテム
 /// @param [in]  target_item  検索対象アイテム
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *match_item = NULL;
 	const DiskBasicDirItems *items = dir_item->GetChildren();
 	if (items) {
 		for(size_t pos = 0; pos <items->Count(); pos++) {
 			DiskBasicDirItem *item = items->Item(pos);
-			if (item != exclude_item && item->IsSameFileName(target_item)) {
+			if (item != exclude_item && item->IsSameFileName(target_item, icase)) {
 				match_item = item;
 				if (next_item) {
 					pos++;
@@ -552,28 +517,30 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const
 
 /// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
 /// @param [in]  name         ファイル名
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindName(const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
-	return FindName(GetCurrentItem(), name, exclude_item, next_item);
+	return FindName(GetCurrentItem(), name, icase, exclude_item, next_item);
 }
 
 /// 指定したディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
 /// @param [in]  dir_item     検索対象のディレクトリアイテム
 /// @param [in]  name         ファイル名
+/// @param [in]  icase        大文字小文字を区別しないか(case insensitive)
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindName(const DiskBasicDirItem *dir_item, const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindName(const DiskBasicDirItem *dir_item, const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *match_item = NULL;
 	const DiskBasicDirItems *items = dir_item->GetChildren();
 	if (items) {
 		for(size_t pos = 0; pos <items->Count(); pos++) {
 			DiskBasicDirItem *item = items->Item(pos);
-			if (item != exclude_item && item->IsSameName(name)) {
+			if (item != exclude_item && item->IsSameName(name, icase)) {
 				match_item = item;
 				if (next_item) {
 					pos++;

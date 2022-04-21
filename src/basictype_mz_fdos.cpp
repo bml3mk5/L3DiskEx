@@ -281,22 +281,6 @@ bool DiskBasicTypeMZFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentified
 {
 	DiskD88Sector *sector;
 
-	// IPL
-#if 0
-	sector = basic->GetSectorFromSectorPos(0);
-	if (sector) {
-		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
-		int len = (int)basic->GetVariousStringParam(wxT("IPLString")).Length();
-		if (len > 0) {
-			wxUint8 buf[16];
-			if (len > 16) len = 16;
-			memcpy(buf, basic->GetVariousStringParam(wxT("IPLString")).To8BitData(), len);
-			basic->InvertMem(buf, len);
-			sector->Copy(buf, len);
-		}
-	}
-#endif
-
 	//
 	// FATエリア
 	//

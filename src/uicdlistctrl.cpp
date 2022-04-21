@@ -429,6 +429,11 @@ void L3CDListCtrl::SelectListRow(int row)
 {
 	SelectRow((unsigned int)row);
 }
+/// 全て非選択にする
+void L3CDListCtrl::UnselectAllListItem()
+{
+	UnselectAll();
+}
 /// 非選択にする
 void L3CDListCtrl::UnselectListItem(const L3CDListItem &item)
 {

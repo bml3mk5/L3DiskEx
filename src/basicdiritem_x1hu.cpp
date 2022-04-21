@@ -489,42 +489,6 @@ int DiskBasicDirItemX1HU::RecalcFileSizeOnSave(wxInputStream *istream, int file_
 	return file_size;
 }
 
-#if 0
-/// 同じファイル名か
-bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) const
-{
-	// 属性が0以外
-	if (GetFileType1() == 0) return false;
-
-	return DiskBasicDirItem::IsSameFileName(filename);
-}
-#endif
-
-#if 0
-/// データをエクスポートする前に必要な処理
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemX1HU::PreExportDataFile(wxString &filename)
-{
-	if (!gConfig.IsAddExtensionExport()) return true;
-
-	AddExtensionByFileAttr(GetFileAttr().GetType(), 0x3f, filename, true);
-	return true;
-}
-
-/// データをインポートする前に必要な処理
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemX1HU::PreImportDataFile(wxString &filename)
-{
-	if (gConfig.IsDecideAttrImport()) {
-		TrimExtensionByExtensionAttr(filename);
-	}
-	filename = RemakeFileNameAndExtStr(filename);
-	return true;
-}
-#endif
-
 /// ファイル名から属性を決定する
 int DiskBasicDirItemX1HU::ConvOriginalTypeFromFileName(const wxString &filename) const
 {

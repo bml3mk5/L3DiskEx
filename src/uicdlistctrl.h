@@ -148,6 +148,8 @@ public:
 	void SelectListItem(const L3CDListItem &item);
 	/// 行を選択
 	void SelectListRow(int row);
+	/// 全て非選択にする
+	void UnselectAllListItem();
 	/// 非選択にする
 	void UnselectListItem(const L3CDListItem &item);
 	/// 指定した行が選択しているか

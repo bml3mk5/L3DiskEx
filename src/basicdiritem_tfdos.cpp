@@ -249,12 +249,6 @@ wxUint32 DiskBasicDirItemTFDOS::GetStartGroup(int fileunit_num) const
 	return basic->InvertUint8(m_data->tfdos.track);	// invert
 }
 
-/// ダイアログ入力前のファイル名を変換 大文字にするなど
-void DiskBasicDirItemTFDOS::ConvertToFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
 /// データをエクスポートする前に必要な処理
 bool DiskBasicDirItemTFDOS::PreExportDataFile(wxString &filename)
 {

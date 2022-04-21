@@ -109,9 +109,14 @@ private:
 	wxUint8 fillcode_on_dir;			///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
 	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxString valid_first_chars;			///< ファイル名の先頭に設定できる文字
 	wxString valid_chars;				///< ファイル名に設定できる文字
 	wxString invalid_chars;				///< ファイル名に設定できない文字
 	wxString deduplicate_chars;			///< ファイル名に重複指定できない文字
+	bool compare_case_insense;			///< ファイル名比較時に大文字小文字区別しないか
+	bool to_upper_before_dialog;		///< ファイル名ダイアログ表示前に大文字に変換するか
+	bool to_upper_after_renamed;		///< ファイル名ダイアログ入力後に大文字に変換するか
+	bool filename_require;				///< ファイル名が必須か
 	bool big_endian;					///< バイトオーダ ビッグエンディアンか
 
 public:
@@ -160,31 +165,24 @@ public:
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
 	/// テキストの終端コード
 	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// ファイル名の先頭に設定できる文字
+	const wxString&		GetValidFirstChars() const	{ return valid_first_chars; }
 	/// ファイル名に設定できる文字
 	const wxString&		GetValidChars() const	{ return valid_chars; }
 	/// ファイル名に設定できない文字
 	const wxString&		GetInvalidChars() const	{ return invalid_chars; }
 	/// ファイル名に重複指定できない文字
 	const wxString&		GetDeduplicateChars() const	{ return deduplicate_chars; }
+	/// ファイル名比較時に大文字小文字区別しないか
+	bool				IsCompareCaseInsense() const	{ return compare_case_insense; }
+	/// ファイル名ダイアログ表示前に大文字に変換するか
+	bool				ToUpperBeforeDialog() const { return to_upper_before_dialog; }
+	/// ファイル名ダイアログ入力後に大文字に変換するか
+	bool				ToUpperAfterRenamed() const { return to_upper_after_renamed; }
+	/// ファイル名が必須か
+	bool				IsFileNameRequired() const	{ return filename_require; }
 	/// バイトオーダ ビッグエンディアンか
 	bool				IsBigEndian() const			{ return big_endian; }
-
-#if 0
-	/// 属性が一致するか
-	const L3Attribute *FindSpecialAttr(int type, int value) const;
-	/// 属性が一致するか
-	const L3Attribute *FindSpecialAttr(int value) const;
-	/// 属性名が一致するか
-	const L3Attribute *FindSpecialAttr(const wxString &name) const;
-	/// 特別な属性の位置
-	int				GetIndexByValueOfSpecialAttr(int value) const;
-	/// 特別な属性の属性値を返す
-	int				GetTypeByValueOfSpecialAttr(int value) const;
-	/// 特別な属性の属性タイプを返す
-	int				GetTypeByIndexOfSpecialAttr(int value) const;
-	/// 特別な属性の属性値を返す
-	int				GetValueByIndexOfSpecialAttr(int idx) const;
-#endif
 
 	/// フォーマットタイプ番号
 	void			SetTypeNumber(DiskBasicFormatType val)	{ type_number = val; }
@@ -228,12 +226,22 @@ public:
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
 	/// テキストの終端コード
 	void			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// ファイル名の先頭に設定できる文字
+	void			SetValidFirstChars(const wxString &str)	{ valid_first_chars = str; }
 	/// ファイル名に設定できる文字
 	void			SetValidChars(const wxString &str)	{ valid_chars = str; }
 	/// ファイル名に設定できない文字
 	void			SetInvalidChars(const wxString &str)	{ invalid_chars = str; }
 	/// ファイル名に重複指定できない文字
 	void			SetDeduplicateChars(const wxString &str)	{ deduplicate_chars = str; }
+	/// ファイル名比較時に大文字小文字区別しないか
+	void			CompareCaseInsense(bool val) 	{ compare_case_insense = val; }
+	/// ファイル名ダイアログ表示前に大文字に変換するか
+	void 			ToUpperBeforeDialog(bool val)	{ to_upper_before_dialog = val; }
+	/// ファイル名ダイアログ入力後に大文字に変換するか
+	void 			ToUpperAfterRenamed(bool val)	{ to_upper_after_renamed = val; }
+	/// ファイル名が必須か
+	void			RequireFileName(bool val)		{ filename_require = val; }
 	/// バイトオーダ ビッグエンディアンか
 	void			BigEndian(bool val)				{ big_endian = val; }
 };
@@ -289,9 +297,14 @@ private:
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
 	wxUint8 media_id;					///< メディアID
 	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxString valid_first_chars;			///< ファイル名の先頭に設定できる文字
 	wxString valid_chars;				///< ファイル名に設定できる文字
 	wxString invalid_chars;				///< ファイル名に設定できない文字
 	wxString deduplicate_chars;			///< ファイル名に重複指定できない文字
+	bool compare_case_insense;			///< ファイル名比較時に大文字小文字区別しないか
+	bool to_upper_before_dialog;		///< ファイル名ダイアログ表示前に大文字に変換するか
+	bool to_upper_after_renamed;		///< ファイル名ダイアログ入力後に大文字に変換するか
+	bool filename_require;				///< ファイル名が必須か
 	bool data_inverted;					///< データビットが反転してるか
 	bool side_reversed;					///< サイドが反転してるか
 	bool big_endian;					///< バイトオーダ ビッグエンディアンか
@@ -396,12 +409,22 @@ public:
 	wxUint8				GetMediaId() const			{ return media_id; }
 	/// テキストの終端コード
 	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// ファイル名の先頭に設定できる文字
+	const wxString&		GetValidFirstChars() const	{ return valid_first_chars; }
 	/// ファイル名に設定できる文字
 	const wxString&		GetValidChars() const	{ return valid_chars; }
 	/// ファイル名に設定できない文字
 	const wxString&		GetInvalidChars() const	{ return invalid_chars; }
 	/// ファイル名に重複指定できない文字
 	const wxString&		GetDeduplicateChars() const	{ return deduplicate_chars; }
+	/// ファイル名比較時に大文字小文字区別しないか
+	bool				IsCompareCaseInsense() const	{ return compare_case_insense; }
+	/// ファイル名ダイアログ表示前に大文字に変換するか
+	bool				ToUpperBeforeDialog() const { return to_upper_before_dialog; }
+	/// ファイル名ダイアログ入力後に大文字に変換するか
+	bool				ToUpperAfterRenamed() const { return to_upper_after_renamed; }
+	/// ファイル名が必須か
+	bool				IsFileNameRequired() const	{ return filename_require; }
 	/// データビットが反転してるか
 	bool				IsDataInverted() const		{ return data_inverted; }
 	/// サイドが反転してるか
@@ -420,23 +443,6 @@ public:
 	bool				GetVariousBoolParam(const wxString &key) const;
 	/// 固有のパラメータ
 	wxString			GetVariousStringParam(const wxString &key) const;
-
-#if 0
-	/// 属性が一致するか
-	const L3Attribute *FindSpecialAttribute(int type, int value) const;
-	/// 属性が一致するか
-	const L3Attribute *FindSpecialAttribute(int value) const;
-	/// 属性名が一致するか
-	const L3Attribute *FindSpecialAttribute(int type, const wxString &name) const;
-	/// 特別な属性の位置
-	int					GetIndexByValueOfSpecialAttribute(int value) const;
-	/// 特別な属性の属性値を返す
-	int					GetTypeByValueOfSpecialAttribute(int value) const;
-	/// 特別な属性の属性タイプを返す
-	int					GetTypeByIndexOfSpecialAttribute(int idx) const;
-	/// 特別な属性の属性値を返す
-	int					GetValueByIndexOfSpecialAttribute(int idx) const;
-#endif
 
 	/// BASIC種類名
 	void			SetBasicTypeName(const wxString &str)	{ basic_type_name = str; }
@@ -522,12 +528,22 @@ public:
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
 	/// テキストの終端コード
 	void 			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// ファイル名の先頭に設定できる文字
+	void			SetValidFirstChars(const wxString &str)	{ valid_first_chars = str; }
 	/// ファイル名に設定できる文字
 	void			SetValidChars(const wxString &str)	{ valid_chars = str; }
 	/// ファイル名に設定できない文字
 	void			SetInvalidChars(const wxString &str)	{ invalid_chars = str; }
 	/// ファイル名に重複指定できない文字
 	void			SetDeduplicateChars(const wxString &str)	{ deduplicate_chars = str; }
+	/// ファイル名比較時に大文字小文字区別しないか
+	void			CompareCaseInsense(bool val) 	{ compare_case_insense = val; }
+	/// ファイル名ダイアログ表示前に大文字に変換するか
+	void 			ToUpperBeforeDialog(bool val)	{ to_upper_before_dialog = val; }
+	/// ファイル名ダイアログ入力後に大文字に変換するか
+	void 			ToUpperAfterRenamed(bool val)	{ to_upper_after_renamed = val; }
+	/// ファイル名が必須か
+	void			RequireFileName(bool val)		{ filename_require = val; }
 	/// データビットが反転してるか
 	void			DataInverted(bool val)			{ data_inverted = val; }
 	/// サイドが反転してるか
@@ -595,7 +611,8 @@ private:
 	bool LoadL3AttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, L3Attributes &attrs);
 	bool LoadL3Attribute(const wxXmlNode *node, const wxString &locale_name, int type, L3Attributes &attrs);
 
-	bool LoadFileNameChars(const wxXmlNode *node, wxString &val_chars, wxString &inv_chars, wxString &dup_chars, wxString &errmsgs);
+	bool LoadFileNameChars(const wxXmlNode *node, wxString &val_chars, wxString &inv_chars, wxString &dup_chars, wxString &fst_chars, wxString &errmsgs);
+	bool LoadFileNameCompareCase(const wxXmlNode *node, bool &val);
 
 	bool LoadVariousParam(const wxXmlNode *node, const wxString &val, wxVariant &nval);
 

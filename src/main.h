@@ -275,10 +275,6 @@ public:
 	void OnDeleteDataFromDisk(wxCommandEvent& event);
 	/// メニュー リネーム選択
 	void OnRenameDataOnDisk(wxCommandEvent& event);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// メニュー 複製選択
-	void OnDuplicateDataOnDisk(wxCommandEvent& event);
-#endif
 	/// メニュー コピー選択
 	void OnCopyDataFromDisk(wxCommandEvent& event);
 	/// メニュー ペースト選択
@@ -455,10 +451,6 @@ public:
 	void DeleteDataFromDisk();
 	/// ディスクのデータファイル名を変更
 	void RenameDataOnDisk();
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// ディスク上のデータを複製
-	void DuplicateDataOnDisk();
-#endif
 	/// ディスクのデータをコピー
 	void CopyDataFromDisk();
 	/// ディスクにデータをペースト
@@ -751,10 +743,6 @@ public:
 	L3DiskList *GetLPanel() { return lpanel; }
 	L3DiskRPanel *GetRPanel() { return rpanel; }
 
-//	bool ProcessDroppedFile(wxCoord x, wxCoord y, const wxString &filename);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	bool ProcessDroppedFile(wxCoord x, wxCoord y, const wxUint8 *buffer, size_t buflen);
-#endif
 	bool ProcessDroppedFiles(wxCoord x, wxCoord y, const wxArrayString &filenames);
 
 	wxDECLARE_EVENT_TABLE();
@@ -762,11 +750,6 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////
-
-#ifdef USE_CUSTOMDATA_FOR_DND
-// ドラッグアンドドロップ時のフォーマットID
-extern wxDataFormat *L3DiskPanelDataFormat;
-#endif
 
 /// ドラッグ＆ドロップ
 class L3DiskPanelDropTarget : public wxDropTarget

@@ -206,26 +206,6 @@ void DiskBasicDirItemCPM::SetNativeExt(wxUint8 *fileext, size_t size, size_t len
 	}
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemCPM::GetDefaultInvalidateChars() const
-{
-	return wxT(" \"*,:;<=>?[\\]");
-}
-#endif
-
-/// ダイアログ入力前のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemCPM::ConvertToFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
-/// ダイアログ入力後のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemCPM::ConvertFromFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
 /// 使用しているアイテムか
 bool DiskBasicDirItemCPM::CheckUsed(bool unuse)
 {
@@ -267,6 +247,13 @@ bool DiskBasicDirItemCPM::Check(bool &last)
 		}
 		if (valid && !last) {
 			valid = DiskBasicDirItem::Check(last);
+		}
+		// グループ番号が超えていたらダメ
+		if (valid) {
+			DiskD88Sector *sector = basic->GetSectorFromGroup(GetStartGroup(0));
+			if (!sector) {
+				valid = false;
+			}
 		}
 	} else {
 		valid = !CheckUsed(false);

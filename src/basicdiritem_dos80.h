@@ -119,8 +119,6 @@ public:
 
 	/// @brief データをインポートする前に必要な処理
 	bool			PreImportDataFile(wxString &filename);
-//	/// @brief ファイル名から属性を決定する
-//	int				ConvFileTypeFromFileName(const wxString &filename) const;
 
 	/// @name プロパティダイアログ用
 	//@{

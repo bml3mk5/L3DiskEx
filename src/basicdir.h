@@ -79,17 +79,17 @@ public:
 	DiskBasicDirItem *GetEmptyItem(const DiskBasicDirItems *items, DiskBasicDirItem **next_item);
 
 	/// 現在のディレクトリ内に同じファイル名が既に存在するか
-	DiskBasicDirItem *FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindFile(const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 指定したディレクトリ内に同じファイル名が既に存在するか
-	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内に同じファイル名が既に存在するか
-	DiskBasicDirItem *FindFile(const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindFile(const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 指定したディレクトリ内に同じファイル名が既に存在するか
-	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
-	DiskBasicDirItem *FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindName(const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 指定したディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
-	DiskBasicDirItem *FindName(const DiskBasicDirItem *dir_item, const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindName(const DiskBasicDirItem *dir_item, const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内の属性に一致するファイルを検索
 	DiskBasicDirItem *FindFileByAttr(int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
 	/// ルートディレクトリ内の属性に一致するファイルを検索

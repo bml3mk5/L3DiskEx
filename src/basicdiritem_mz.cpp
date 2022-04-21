@@ -490,23 +490,23 @@ void DiskBasicDirItemMZ::GetExtraGroups(wxArrayInt &arr) const
 }
 
 /// 同じファイル名か
-bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicFileName &filename) const
+bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicFileName &filename, bool icase) const
 {
 	// 属性が0とボリューム番号は除く
 	int t1 = GetFileType1();
 	if (t1 == 0 || t1 == FILETYPE_MZ_VOL) return false;
 
-	return DiskBasicDirItem::IsSameFileName(filename);
+	return DiskBasicDirItem::IsSameFileName(filename, icase);
 }
 
 /// 同じファイル名か
-bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicDirItem *src) const
+bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicDirItem *src, bool icase) const
 {
 	// 属性が0とボリューム番号は除く
 	int t1 = GetFileType1();
 	if (t1 == 0 || t1 == FILETYPE_MZ_VOL) return false;
 
-	return DiskBasicDirItem::IsSameFileName(src);
+	return DiskBasicDirItem::IsSameFileName(src, icase);
 }
 
 /// データ内部にチェインデータが必要か

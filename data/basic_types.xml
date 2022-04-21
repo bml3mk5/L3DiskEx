@@ -14,6 +14,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>\":</InvalidCharSet>
 		</FileNameCharacters>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
 		<AttributesByExtension>
 			<BasicBinary name="BAS" />
 			<MachineBinary name="BIN" />
@@ -36,6 +37,7 @@
 			<InvalidCharSet>\":()</InvalidCharSet>
 			<DuplicateCharSet>.</DuplicateCharSet>
 		</FileNameCharacters>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
 		<AttributesByExtension>
 			<BasicBinary name="BAS" />
 			<MachineBinary name="BIN" />
@@ -79,6 +81,10 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="4" name="MSX">
 		<GroupFinalCode>0xfff</GroupFinalCode>
@@ -94,6 +100,10 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="5" name="N88">
 		<GroupFinalCode>0xc1</GroupFinalCode>
@@ -160,12 +170,18 @@
 		<FillCodeOnFAT>0x00</FillCodeOnFAT>
 		<DeleteCodeOnDir>0xff</DeleteCodeOnDir>
 		<FileNameCharacters>
+			<ValidFirstCodeRange first="0x41" last="0x5a" />
+			<ValidFirstCodeRange first="0x61" last="0x7a" />
 			<ValidCharSet>-_.</ValidCharSet>
 			<ValidCodeRange first="0x30" last="0x39" />
 			<ValidCodeRange first="0x41" last="0x5a" />
 			<ValidCodeRange first="0x61" last="0x7a" />
 			<DuplicateCharSet>.</DuplicateCharSet>
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="9" name="OS9">
 		<HasVolumeName>true</HasVolumeName>
@@ -176,11 +192,15 @@
 		<FillCodeOnFAT>0x00</FillCodeOnFAT>
 		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
 		<FileNameCharacters>
+			<ValidFirstCodeRange first="0x41" last="0x5a" />
+			<ValidFirstCodeRange first="0x61" last="0x7a" />
 			<ValidCharSet>._</ValidCharSet>
 			<ValidCodeRange first="0x30" last="0x39" />
 			<ValidCodeRange first="0x41" last="0x5a" />
 			<ValidCodeRange first="0x61" last="0x7a" />
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<RequireFileName>true</RequireFileName>
 		<AttributesByExtension>
 			<Binary name="BIN" />
 			<Binary name="CMD" />
@@ -199,6 +219,10 @@
 			<ValidCodeRange first="0x61" last="0x7a" />
 			<DuplicateCharSet>.</DuplicateCharSet>
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
 		<AttributesByExtension>
 			<Binary name="CMD" />
 			<Binary name="COM" />
@@ -238,6 +262,10 @@
 			<ValidCodeRange first="0x61" last="0x7a" />
 			<DuplicateCharSet>.</DuplicateCharSet>
 		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
 		<AttributesByExtension>
 			<Binary name="CMD" />
 			<Binary name="COM" />
@@ -282,6 +310,7 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="31" name="LOSA">
 		<HasVolumeName>false</HasVolumeName>
@@ -298,6 +327,7 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="32" name="CDOS2">
 		<HasVolumeName>false</HasVolumeName>
@@ -314,6 +344,7 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="51" name="DOS80">
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -407,6 +438,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>!\"/:,?</InvalidCharSet>
 		</FileNameCharacters>
+		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="71" name="TFDOS">
 		<HasVolumeNumber>true</HasVolumeNumber>
@@ -423,6 +455,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>\"\\/:*?</InvalidCharSet>
 		</FileNameCharacters>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
 		<AttributesByExtension>
 			<DataBinary name="BIN" value="0x01" mask="0xff" /><!-- OBJ -->
 			<DataAscii name="TXT" value="0x02" mask="0xff" /><!-- TEX -->
@@ -1319,41 +1352,50 @@
 		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (2HD)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM86-1D-512" type="10" category="CPM">
+	<DiskBasicType name="CPM86-1D-512-2" type="10" category="CPM">
 		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>
 		<SectorsPerTrack>8</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>4</DirEndSector>
-		<Description>CP/M-86 (1D)</Description>
+		<Description>CP/M-86 (1D, 2groups)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM86-2D-AT" type="10" category="CPM">
-		<SectorsPerGroup>4</SectorsPerGroup>
+	<DiskBasicType name="CPM86-2D-512-2" type="10" category="CPM">
+		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>8</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>4</DirEndSector>
-		<Description>CP/M-86 for PC-AT (2D)</Description>
+		<Description>CP/M-86 (2D, 2groups)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM86-1D-AT" type="10" category="CPM">
+	<DiskBasicType name="CPM86-1D-512-4" type="10" category="CPM">
 		<SectorsPerGroup>4</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>
 		<SectorsPerTrack>8</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>4</DirEndSector>
-		<Description>CP/M-86 for PC-AT (1D)</Description>
+		<Description>CP/M-86 (1D, 4groups)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM68-2D" type="10" category="CPM">
+	<DiskBasicType name="CPM86-2D-512-4" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>4</DirEndSector>
+		<Description>CP/M-86 (2D, 4groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM68-2D-512-4" type="10" category="CPM">
 		<SectorsPerGroup>4</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>8</SectorsPerTrack>
 		<ManagedTrackNumber>3</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>8</DirEndSector>
-		<Description>CP/M 68K (2D)</Description>
+		<Description>CP/M 68K (2D, 4groups)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM88-2D" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
@@ -1383,14 +1425,51 @@
 		<DataInverted>true</DataInverted>
 		<Description>CP/M for MZ (2D)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="CPM86-2DD-8-512" type="10" category="CPM">
+	<DiskBasicType name="CPM86-1DD-8-512-4" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>4</DirEndSector>
+		<Description>CP/M-86 (1DD, 4groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM86-2DD-8-512-4" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>4</DirEndSector>
+		<Description>CP/M-86 (2DD, 4groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM86-1DD-8-512-8" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>4</DirEndSector>
+		<Description>CP/M-86 (1DD, 8groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM86-2DD-8-512-8" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>8</SectorsPerTrack>
 		<ManagedTrackNumber>1</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>4</DirEndSector>
-		<Description>CP/M-86 (2DD)</Description>
+		<Description>CP/M-86 (2DD, 8groups)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="PCPM-1DD-9-512" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<GroupWidth>2</GroupWidth>
+		<Description>Personal CP/M (1DD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="PCPM-2DD-9-512" type="10" category="CPM">
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -1398,7 +1477,7 @@
 		<SectorsPerTrack>9</SectorsPerTrack>
 		<ManagedTrackNumber>2</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
-		<DirEndSector>8</DirEndSector>
+		<DirEndSector>16</DirEndSector>
 		<GroupWidth>2</GroupWidth>
 		<Description>Personal CP/M (2DD)</Description>
 	</DiskBasicType>
@@ -1412,6 +1491,24 @@
 		<GroupWidth>2</GroupWidth>
 		<Description>Personal CP/M for MZ-2500 (2DD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="CPM68-1HS" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<Description>CP/M 68K (1HS)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPM68-2HS" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<Description>CP/M 68K (2HS)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="CPM88-2HD" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1422,7 +1519,7 @@
 		<Description>CP/M for PC-8801 (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM68-2HD" type="10" category="CPM">
-		<SectorsPerGroup>8</SectorsPerGroup>
+		<SectorsPerGroup>16</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>26</SectorsPerTrack>
 		<ManagedTrackNumber>0</ManagedTrackNumber>
@@ -1437,7 +1534,18 @@
 		<ManagedTrackNumber>1</ManagedTrackNumber>
 		<DirStartSector>1</DirStartSector>
 		<DirEndSector>32</DirEndSector>
+		<GroupWidth>2</GroupWidth>
 		<Description>CP/M for PC-9801 (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPMS1-2HD" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>27</DirStartSector>
+		<DirEndSector>50</DirEndSector>
+		<GroupWidth>2</GroupWidth>
+		<Description>CP/M 68K for S1 (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPMFM-2HD" type="10" category="CPM">
 		<SectorsPerGroup>16</SectorsPerGroup>

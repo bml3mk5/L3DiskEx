@@ -377,25 +377,6 @@ bool DiskBasicDirItemFP::PreImportDataFile(wxString &filename)
 	return true;
 }
 
-#if 0
-/// ファイル名から属性を決定する
-int DiskBasicDirItemFP::ConvOriginalTypeFromFileName(const wxString &filename) const
-{
-	int t1 = 0;
-	// 拡張子で属性を設定する
-	wxString ext = filename.Right(4).Upper();
-	if (ext == wxT(".BAS")) {
-		t1 = FILETYPE_FP_BASIC;
-	} else if (ext == wxT(".BIN")) {
-		t1 = FILETYPE_FP_MACHINE;
-	} else {
-		t1 = FILETYPE_FP_DATA;
-		t1 |= FILETYPE_FP_ASCII;
-	}
-	return t1;
-}
-#endif
-
 //
 // ダイアログ用
 //
@@ -411,33 +392,6 @@ int DiskBasicDirItemFP::ConvOriginalTypeFromFileName(const wxString &filename) c
 #define IDC_RADIO_TYPE2 52
 #define IDC_CHECK_READONLY 53
 #define IDC_CHECK_READWRITE 54
-
-#if 0
-/// ダイアログ用に属性を設定する
-/// ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemFP::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_NEW_FILE) {
-		// 外部からインポート時
-		// 拡張子で属性を設定する
-		wxString ext = name.Right(4).Upper();
-		if (ext == wxT(".BAS")) {
-			file_type_1 = TYPE_NAME_1_BASIC;
-			file_type_2 = TYPE_NAME_2_ASCII;
-		} else if (ext == wxT(".DAT") || ext == wxT(".TXT")) {
-			file_type_1 = TYPE_NAME_1_DATA;
-			file_type_2 = TYPE_NAME_2_ASCII;
-		} else if (ext == wxT(".BIN")) {
-			file_type_1 = TYPE_NAME_1_MACHINE;
-			file_type_2 = TYPE_NAME_2_BINARY;
-		}
-	}
-}
-#endif
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ

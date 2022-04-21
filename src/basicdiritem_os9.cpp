@@ -320,14 +320,6 @@ bool DiskBasicDirItemOS9::Check(bool &last)
 	return true;
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemOS9::GetDefaultInvalidateChars() const
-{
-	return wxT(" !\"#$%&'()*+,-/:;<=>?@[\\]^{|}~");
-}
-#endif
-
 /// 属性を設定
 void DiskBasicDirItemOS9::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -398,17 +390,6 @@ wxString DiskBasicDirItemOS9::GetFileAttrStr() const
 	}
 	return str;
 }
-
-#if 0
-/// ファイルパスから内部ファイル名を生成する
-/// エクスプローラからインポート時のダイアログを出す前
-/// @param [in] filepath ファイルパス
-/// @return ファイル名
-wxString DiskBasicDirItemOS9::PreImportDataFile(wxString &filename)
-{
-	return DiskBasicDirItem::RemakeFileNameStr(filepath);
-}
-#endif
 
 /// ファイルサイズをセット
 void DiskBasicDirItemOS9::SetFileSize(int val)
@@ -774,14 +755,6 @@ int DiskBasicDirItemOS9::GetFileType1Pos()
 {
 	return GetFileType1();
 }
-
-#if 0
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemOS9::GetFileType2Pos()
-{
-	return 0;
-}
-#endif
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定

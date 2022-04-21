@@ -363,14 +363,6 @@ int DiskBasicDirItemN88::ConvFileType1Pos(int t1) const
 	return val;
 }
 
-#if 0
-/// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemN88::ConvFileType2Pos(int t2) const
-{
-	return GetFileAttr().GetType();
-}
-#endif
-
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
 /// @param [in] show_flags      ダイアログ表示フラグ

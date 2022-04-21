@@ -49,10 +49,6 @@ public:
 
 	/// @brief 削除
 	virtual bool	Delete(wxUint8 code);
-//	/// @brief ファイル名が一致するか
-//	virtual bool	IsSameFileName(const DiskBasicFileName &filename) const;
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	virtual wxString GetDefaultInvalidateChars() const;
 
 	/// @brief ディレクトリを初期化 未使用にする
 	virtual void	InitialData();

@@ -120,8 +120,6 @@ private:
 	int		ConvToNativeType(int file_type) const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		ConvFileType1Pos(int native_type) const;
-//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-//	int	    ConvFileType2Pos(int native_type) const;
 	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
 	int		CalcFileTypeFromPos(int pos) const;
 	/// @brief 属性1を得る

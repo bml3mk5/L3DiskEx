@@ -661,7 +661,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
 
 	// ボリューム名をコピー
-	if (!newitem->IsSameFileName(item)) {
+	if (!newitem->IsSameFileName(item, basic->IsCompareCaseInsense())) {
 		newitem->CopyFileName(*item);
 	}
 

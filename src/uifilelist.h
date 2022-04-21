@@ -199,10 +199,6 @@ private:
 	/// ファイル名を反映させる
 	bool SetDirItemFromIntNameParam(DiskBasicDirItem *item, const wxString &file_path, const wxString &intname, struct tm &date_time, DiskBasic *basic, bool rename);
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// カスタムデータリスト作成（DnD, クリップボード用）
-	bool CreateCustomDataObject(wxCustomDataObject &data_object);
-#endif
 	/// ファイルリスト作成（DnD, クリップボード用）
 	bool CreateFileObject(wxString &tmp_dir_name, const wxString &start_msg, const wxString &end_msg, wxFileDataObject &file_object);
 	/// ファイルリストを解放（DnD, クリップボード用）
@@ -269,10 +265,6 @@ public:
 	void OnDeleteFile(wxCommandEvent& event);
 	/// リネーム選択
 	void OnRenameFile(wxCommandEvent& event);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// 複製選択
-	void OnDuplicateFile(wxCommandEvent& event);
-#endif
 	/// コピー選択
 	void OnCopyFile(wxCommandEvent& event);
 	/// ペースト選択
@@ -343,11 +335,6 @@ public:
 	/// 指定したフォルダにエクスポート
 	int  ExportDataFiles(const L3FileListItems &selected_items, const wxString &data_dir, const wxString &attr_dir, const wxString &start_msg, const wxString &end_msg, wxFileDataObject *file_object = NULL);
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// ファイルを複製
-	bool DuplicateDataFile();
-#endif
-
 	/// ファイルリストをドラッグ
 	bool DragDataSource();
 	/// クリップボードへコピー
@@ -361,12 +348,6 @@ public:
 	bool DropDataFiles(const wxArrayString &paths);
 	/// 指定したファイルをインポート
 	bool ImportDataFiles(const wxArrayString &paths, const wxString &start_msg, const wxString &end_msg);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
-	bool ImportDataFiles(const wxUint8 *buffer, size_t buflen);
-	/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
-	bool ImportDataFile(const wxUint8 *buffer, size_t buflen);
-#endif
 
 	/// 指定したファイルを削除
 	bool DeleteDataFile();

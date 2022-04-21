@@ -100,11 +100,9 @@ public:
 	bool	Check(bool &last);
 
 	/// @brief ファイル名が一致するか
-	bool	IsSameFileName(const DiskBasicFileName &filename) const;
+	bool	IsSameFileName(const DiskBasicFileName &filename, bool icase) const;
 	/// @brief ファイル名が一致するか
-	bool	IsSameFileName(const DiskBasicDirItem *src) const;
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString GetDefaultInvalidateChars() const;
+	bool	IsSameFileName(const DiskBasicDirItem *src, bool icase) const;
 
 	/// @brief 属性を設定
 	void	SetFileAttr(const DiskBasicFileType &file_type);

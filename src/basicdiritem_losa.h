@@ -28,12 +28,6 @@ protected:
 	/// @brief 属性２のセット
 	virtual void	SetFileType2(int val);
 
-//	/// ファイル名と拡張子を得る
-//	virtual void	GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
-
-//	/// @brief ダイアログ表示前にファイルの属性を設定
-//	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-
 public:
 	DiskBasicDirItemLOSA(DiskBasic *basic);
 	DiskBasicDirItemLOSA(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);

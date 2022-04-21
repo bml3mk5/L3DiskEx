@@ -502,14 +502,6 @@ bool DiskBasicDirItemDOS80::PreImportDataFile(wxString &filename)
 	return true;
 }
 
-#if 0
-/// ファイル名から属性を決定する
-int DiskBasicDirItemDOS80::ConvFileTypeFromFileName(const wxString &filename) const
-{
-	return 0;
-}
-#endif
-
 //
 // ダイアログ用
 //

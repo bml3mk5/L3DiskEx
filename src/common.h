@@ -25,6 +25,7 @@ void mem_invert(void *, size_t);
 size_t str_shrink(void *, size_t);
 void mem_copy(const void *src, size_t slen, char fill, void *dst, size_t dlen);
 int mem_rchr(const void *, size_t, int);
+void to_upper(void *, size_t);
 
 #if defined(__WXMSW__)
 

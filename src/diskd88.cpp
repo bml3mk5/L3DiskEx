@@ -278,6 +278,14 @@ void DiskD88Sector::ClearModify()
 	}
 //	modified = false;
 }
+/// セクタ番号を設定
+void DiskD88Sector::SetSectorNumber(int val)
+{
+	num = val;
+	if (header) {
+		header->id.r = (wxUint8)val;
+	}
+}
 /// 削除マークがついているか
 bool DiskD88Sector::IsDeleted() const
 {
@@ -931,6 +939,31 @@ void DiskD88Track::ClearModify()
 int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
 {
     return ((item1->trk_num - item2->trk_num) | (item1->sid_num - item2->sid_num));
+}
+
+/// インターリーブを考慮したセクタ番号リストを返す
+bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset)
+{
+	sector_nums.SetCount(sectors_count, 0);
+	int sector_pos = 0;
+	bool err = false;
+	for(int sector_number = 0; sector_number < (int)sectors_count && err == false; sector_number++) {
+		if (sector_pos >= (int)sectors_count) {
+			sector_pos -= sectors_count;
+			while (sector_nums[sector_pos] > 0) {
+				sector_pos++;
+				if (sector_pos >= (int)sectors_count) {
+					// ?? error
+					err = true;
+					break;
+				}
+			}
+		}
+		sector_nums[sector_pos] = (sector_number + sector_offset + 1);
+		sector_pos += interleave;
+	}
+
+	return !err;
 }
 
 //
@@ -2162,53 +2195,6 @@ int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk
 
 	return valid_disk;
 }
-
-#if 0
-/// ファイルでディスクを置換
-/// @param [in] disk_number ディスク番号
-/// @param [in] side_number サイド番号
-/// @param [in] filepath    ファイルパス
-/// @param [in] file_format ファイルの形式名("d88","plain"など)
-/// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
-/// @retval  0 正常
-/// @retval -1 エラーあり
-/// @retval  1 警告あり
-int DiskD88::ReplaceDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint)
-{
-	if (!file) return 0;
-
-	result.Clear();
-
-	wxFileInputStream fstream(filepath);
-	if (!fstream.IsOk()) {
-		result.SetError(DiskResult::ERR_CANNOT_OPEN);
-		return -1;
-	}
-
-	DiskD88File tmpfile;
-	DiskParser ps(filepath, &fstream, &tmpfile, result);
-	int valid_disk = ps.Parse(file_format, param_hint);
-
-	// エラーあり
-	if (valid_disk < 0) {
-		return valid_disk;
-	}
-
-	// ディスクを選択 
-	DiskD88Disk *tag_disk = file->GetDisk(disk_number);
-	if (!tag_disk) {
-		result.SetError(DiskResult::ERR_NO_DATA);
-		return result.GetValid();
-	}
-	DiskD88Disk *src_disk = tmpfile.GetDisk(0);
-	if (!src_disk) {
-		result.SetError(DiskResult::ERR_NO_DATA);
-		return result.GetValid();
-	}
-
-	return ReplaceDisk(disk_number, side_number, src_disk, tag_disk);
-}
-#endif
 
 /// ディスク名を設定
 bool DiskD88::SetDiskName(size_t disk_number, const wxString &newname)

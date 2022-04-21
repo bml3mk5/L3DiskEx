@@ -150,8 +150,6 @@ public:
 	/// @brief ファイルサイズをセット
 	virtual void 	SetFileSize(int val);
 
-//	/// @brief データをエクスポートする前に必要な処理
-//	virtual bool	PreExportDataFile(wxString &filename);
 	/// @brief インポート時などのダイアログを出す前にファイルパスから内部ファイル名を生成する
 	virtual bool	PreImportDataFile(wxString &filename);
 

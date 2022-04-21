@@ -815,16 +815,6 @@ bool DiskBasic::AccessUnitData(int fileunit_num, DiskBasicDirItem *item, wxInput
 	return rc;
 }
 
-/// 同じファイル名のアイテムをさがす
-/// @param [in]  filename     ファイル名
-/// @param [in]  exclude_item 検索対象から除くアイテム
-/// @param [out] next_item    一致したアイテムの次位置にあるアイテム
-/// @return NULL: ない
-DiskBasicDirItem *DiskBasic::FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
-{
-	return dir->FindFile(filename, exclude_item, next_item);
-}
-
 /// 同じファイル名が既に存在して上書き可能か
 /// @param [in]  filename     ファイル名
 /// @param [in]  exclude_item 検索対象から除くアイテム
@@ -834,7 +824,7 @@ DiskBasicDirItem *DiskBasic::FindFile(const DiskBasicFileName &filename, DiskBas
 /// @retval  -1 あり 上書き不可（ディレクトリ or ボリュームラベル）
 int DiskBasic::IsFileNameDuplicated(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
-	DiskBasicDirItem *item = dir->FindFile(filename, exclude_item, next_item);
+	DiskBasicDirItem *item = dir->FindFile(filename, IsCompareCaseInsense(), exclude_item, next_item);
 	if (item == NULL) {
 		return 0;
 	}
@@ -850,7 +840,7 @@ int DiskBasic::IsFileNameDuplicated(const DiskBasicFileName &filename, DiskBasic
 /// @retval  -1 あり 上書き不可（ディレクトリ or ボリュームラベル）
 int DiskBasic::IsFileNameDuplicated(const DiskBasicDirItem *target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
-	DiskBasicDirItem *item = dir->FindFile(target_item, exclude_item, next_item);
+	DiskBasicDirItem *item = dir->FindFile(target_item, IsCompareCaseInsense(), exclude_item, next_item);
 	if (item == NULL) {
 		return 0;
 	}
@@ -915,35 +905,6 @@ bool DiskBasic::CheckFile(const wxString &srcpath, int *file_size)
 	return true;
 }
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// 指定データのサイズでディスクに書き込めるかをチェック
-/// @param [in]  buffer  データ
-/// @param [in]  buflen  データサイズ
-bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
-{
-	// ディスクに書き込めるか
-	if (!IsWritableIntoDisk()) {
-		return false;
-	}
-
-	wxMemoryInputStream indata(buffer, buflen);
-	// データ読めるか
-	if (!indata.IsOk()) {
-		errinfo.SetError(DiskBasicError::ERR_CANNOT_IMPORT);
-		return false;
-	}
-
-#ifndef DEBUG_DISK_FULL_TEST
-	// 空きがあるか
-	if (!HasFreeDiskSize((int)buflen)) {
-		return false;
-	}
-#endif
-
-	return true;
-}
-#endif
-
 /// 指定ファイルをディスクイメージにセーブ
 /// @param [in] srcpath   元ファイルのあるパス
 /// @param [in]  pitem    ファイル名、属性を持っているディレクトリアイテム
@@ -993,7 +954,7 @@ bool DiskBasic::SaveFile(const wxUint8 *buffer, size_t buflen, const DiskBasicDi
 bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem **nitem)
 {
 	DiskBasicDirItem *next_item = NULL;
-	DiskBasicDirItem *item = dir->FindFile(pitem, NULL, &next_item);
+	DiskBasicDirItem *item = dir->FindFile(pitem, IsCompareCaseInsense(), NULL, &next_item);
 
 	bool valid = true;
 
@@ -1536,7 +1497,7 @@ int DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem)
 
 	/// 同じファイル名があるか
 	DiskBasicDirItem *next_item;
-	DiskBasicDirItem *item = dir->FindFile(dir_name, NULL, &next_item);
+	DiskBasicDirItem *item = dir->FindFile(dir_name, IsCompareCaseInsense(), NULL, &next_item);
 	if (item) {
 		errinfo.SetError(DiskBasicError::ERR_FILE_ALREADY_EXIST);
 		return 1;
@@ -1652,7 +1613,7 @@ bool DiskBasic::ExpandDirectory(DiskBasicDirItem *dir_item)
 
 	// ファイルサイズを設定
 	dir_item->SetFileSize(file_size);
-	DiskBasicDirItem *cur_item = dir->FindName(wxT("."), NULL, NULL);
+	DiskBasicDirItem *cur_item = dir->FindName(wxT("."), IsCompareCaseInsense(), NULL, NULL);
 	if (cur_item) {
 		cur_item->SetFileSize(file_size);
 	}
@@ -2018,20 +1979,6 @@ void DiskBasic::SetCharCode(const wxString &name)
 	char_code = name;
 	codes.SetMap(name);
 }
-
-#if 0
-/// 文字列をバイト列に変換 文字コードは機種依存
-/// @return >=0 バイト数
-int DiskBasic::ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len)
-{
-	return codes.ConvToChars(src, dst, len);
-}
-/// バイト列を文字列に変換 文字コードは機種依存
-void DiskBasic::ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst)
-{
-	codes.ConvToString(src, len, dst);
-}
-#endif
 
 /// エラーメッセージ
 const wxArrayString &DiskBasic::GetErrorMessage(int maxrow)

@@ -483,16 +483,6 @@ bool DiskBasicDirItemSDOS::Delete(wxUint8 code)
 	return true;
 }
 
-#if 0
-/// ENDマークがあるか(一度も使用していないか)
-bool DiskBasicDirItemSDOS::HasEndMark()
-{
-	bool val = false;
-//	val = ((wxUint32)m_data->sdos.s.name[0] == basic->GetGroupUnusedCode());
-	return val;
-}
-#endif
-
 /// 次のアイテムにENDマークを入れる
 void DiskBasicDirItemSDOS::SetEndMark(DiskBasicDirItem *next_item)
 {
@@ -667,14 +657,6 @@ void DiskBasicDirItemSDOS::ChangeTypeInAttrDialog(IntNameBox *parent)
 	parent->SetEditableStartAddress(editable);
 	parent->SetEditableExecuteAddress(editable);
 }
-
-#if 0
-/// リストの位置から属性を返す(プロパティダイアログ用)
-int	DiskBasicDirItemSDOS::CalcFileTypeFromPos(int pos)
-{
-	return 0;
-}
-#endif
 
 /// 機種依存の属性を設定する
 /// @param [in,out] parent  プロパティダイアログ

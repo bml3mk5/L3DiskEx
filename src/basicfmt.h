@@ -104,11 +104,9 @@ private:
 
 	int			selected_side;			///< サイド(1S用)
 
-//	int			sectors_on_basic;		///< BASICで使用するセクタ数
-
 	int			data_start_sector;		///< グループ計算用 データ開始セクタ番号
 	int			skipped_track;			///< グループ計算する際にスキップするトラック番号
-//	bool		reverse_side;			///< グループ計算する際にサイド番号を逆転するか
+
 	wxString	char_code;				///< ファイルなどの文字コード体系
 	CharCodes	codes;					///< 文字コード変換
 
@@ -177,8 +175,6 @@ public:
 	//@}
 	/// @name 比較・チェック
 	//@{
-	/// 同じファイル名のアイテムをさがす
-	DiskBasicDirItem *FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 同じファイル名が既に存在して上書き可能か
 	int				IsFileNameDuplicated(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item = NULL, DiskBasicDirItem **next_item = NULL);
 	/// 同じファイル名が既に存在して上書き可能か
@@ -186,10 +182,6 @@ public:
 
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxString &srcpath, int *file_size);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	/// 指定ファイルのサイズをチェック
-	bool			CheckFile(const wxUint8 *buffer, size_t buflen);
-#endif
 
 	/// DISK BASICで使用できる残りディスクサイズ内か
 	bool			HasFreeDiskSize(int size);
@@ -276,8 +268,6 @@ public:
 	DiskBasicDirItem *GetDirItem(size_t pos);
 	/// ディレクトリアイテムの位置から開始セクタを返す
 	DiskD88Sector	*GetSectorFromPosition(size_t position, wxUint32 *start_group);
-//	/// ディレクトリアイテムの位置から属している全グループを返す
-//	bool			GetGroupsFromPosition(size_t position, DiskBasicGroups &group_items);
 	//@}
 	/// @name グループ番号
 	//@{
@@ -316,15 +306,6 @@ public:
 	DiskD88Track	*GetTrackFromSectorPos(int sector_pos, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
 	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int *div_num = NULL, int *div_nums = NULL);
-
-//	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、サイド、セクタの各番号を得る
-//	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &side_num, int &sector_num, int *div_num = NULL, int *div_nums = NULL);
-//	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
-//	void			GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_num);
-//	/// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
-//	int				GetSectorPosFromNum(int track, int side, int sector_num, int div_num = 0, int div_nums = 1);
-//	/// トラック、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
-//	int				GetSectorPosFromNum(int track, int sector_num);
 	//@}
 	/// @name キャラクターコード
 	//@{
@@ -334,11 +315,6 @@ public:
 	const wxString &GetCharCode() const { return char_code; }
 	/// キャラクターコードの文字体系
 	CharCodes		&GetCharCodes() { return codes; }
-
-//	/// 文字列をバイト列に変換 文字コードは機種依存
-//	int				ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len);
-//	/// バイト列を文字列に変換 文字コードは機種依存
-//	void			ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst);
 	//@}
 	/// @name プロパティ
 	//@{
@@ -363,13 +339,6 @@ public:
 	/// TYPEクラス
 	DiskBasicType	*GetType() { return type; }
 
-//	/// セクタ数/トラックを返す(実際のディスクイメージと異なる場合があるため)
-//	int				GetSectorsPerTrackOnBasic() const { return sectors_on_basic; }
-//	/// セクタ数/トラックを設定(実際のディスクイメージと異なる場合があるため)
-//	void			SetSectorsPerTrackOnBasic(int val) { sectors_on_basic = val; }
-
-//	/// ディスク内のデータが反転しているか
-//	bool			IsDataInverted() const;
 	/// 必要ならデータを反転する
 	wxUint8			InvertUint8(wxUint8 val) const;
 	/// 必要ならデータを反転する

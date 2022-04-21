@@ -88,8 +88,6 @@ public:
 	virtual bool	IsDeletable() const;
 	/// @brief ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
-	/// @brief ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() const { return true; }
 	/// @brief アイテムをロード・エクスポートできるか
 	virtual bool	IsLoadable() const;
 	/// @brief アイテムをコピー(内部でDnD)できるか
@@ -143,11 +141,6 @@ public:
 
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvFileTypeFromFileName(const wxString &filename) const;
-
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
-	virtual void	ConvertToFileNameStr(wxString &filename) const;
-	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
-	virtual void	ConvertFromFileNameStr(wxString &filename) const;
 
 
 	/// @name プロパティダイアログ用

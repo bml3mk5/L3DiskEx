@@ -86,11 +86,6 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	bool	Check(bool &last);
 
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
-	void	ConvertToFileNameStr(wxString &filename) const;
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString GetDefaultInvalidateChars() const;
-
 	/// @brief 属性を設定
 	void	SetFileAttr(const DiskBasicFileType &file_type);
 	/// @brief ディレクトリをクリア ファイル新規作成時

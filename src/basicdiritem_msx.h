@@ -26,9 +26,6 @@ public:
 	DiskBasicDirItemMSX(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemMSX(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString	GetDefaultInvalidateChars() const;
-
 	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	wxString	GetFileAttrStr() const;
 

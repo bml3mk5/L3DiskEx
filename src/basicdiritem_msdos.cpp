@@ -255,14 +255,6 @@ bool DiskBasicDirItemMSDOS::IsOverWritable() const
 	return valid;
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMSDOS::GetDefaultInvalidateChars() const
-{
-	return wxT(" \"\\/:*?<>|");
-}
-#endif
-
 /// 属性を設定
 void DiskBasicDirItemMSDOS::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -500,21 +492,6 @@ wxUint32 DiskBasicDirItemMSDOS::GetStartGroup(int fileunit_num) const
 int DiskBasicDirItemMSDOS::ConvFileTypeFromFileName(const wxString &filename) const
 {
 	return FILE_TYPE_ARCHIVE_MASK;
-}
-
-/// ダイアログ入力前のファイル名文字列を変換
-void DiskBasicDirItemMSDOS::ConvertToFileNameStr(wxString &filename) const
-{
-	// 大文字にする
-	filename = filename.Upper();
-}
-
-/// ダイアログ入力後のファイル名文字列を変換
-/// ダイアログで指定したファイル名はすべて大文字にする
-void DiskBasicDirItemMSDOS::ConvertFromFileNameStr(wxString &filename) const
-{
-	// 大文字にする
-	filename = filename.Upper();
 }
 
 //
@@ -964,25 +941,6 @@ void DiskBasicDirItemVFAT::ConvCharsToString(const wxUint8 *src, size_t len, wxS
 #define IDC_TEXT_CDATE		57
 #define IDC_TEXT_CTIME		58
 #define IDC_TEXT_ADATE		59
-
-#if 0
-/// ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemVFAT::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_NEW_FILE) {
-		// 外部からインポート時
-		file_type_1 = FILE_TYPE_ARCHIVE_MASK;
-	}
-	if (show_flags & INTNAME_IMPORT_INTERNAL) {
-		// 内部からインポート時
-		file_type_1 |= FILE_TYPE_ARCHIVE_MASK;
-	}
-}
-#endif
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ

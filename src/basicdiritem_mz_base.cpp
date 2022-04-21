@@ -123,25 +123,6 @@ void DiskBasicDirItemMZBase::GetUnitGroups(int fileunit_num, DiskBasicGroups &gr
 	PostCalcAllGroups(user_data);
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMZBase::GetDefaultInvalidateChars() const
-{
-	return wxT("\"\\/:*?");
-}
-#endif
-
-#if 0
-/// 同じファイル名か
-bool DiskBasicDirItemMZBase::IsSameFileName(const DiskBasicFileName &filename) const
-{
-	// 属性が0以外
-	if (GetFileType1() == 0) return false;
-
-	return DiskBasicDirItem::IsSameFileName(filename);
-}
-#endif
-
 bool DiskBasicDirItemMZBase::IsDeletable() const
 {
 	bool valid = true;

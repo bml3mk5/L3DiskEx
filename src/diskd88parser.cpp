@@ -498,13 +498,20 @@ int DiskD88Parser::Check(wxInputStream &istream)
 
 	// check offset
 	int valid = -1;
+	int all_zero = 0;
 	for(int i=0; i < DISKD88_MAX_TRACKS; i++) {
 		wxUint32 offset = header.offsets[i];
 		offset = wxUINT32_SWAP_ON_BE(offset);
 		if (offset >= header_size_min && offset <= header_size_max && (offset & 0xf) == 0) {
 			valid = 0;
 			break;
+		} else if (offset == 0) {
+			all_zero++;
 		}
+	}
+	if (all_zero == DISKD88_MAX_TRACKS) {
+		// 全て0
+		valid = 0;
 	}
 	return valid;
 }

@@ -218,40 +218,12 @@ DiskBasicFormat::DiskBasicFormat()
 	fillcode_on_dir		 = 0;
 	delete_code			 = 0;
 	text_terminate_code	 = 0x1a;
+	compare_case_insense = false;
+	to_upper_before_dialog = false;
+	to_upper_after_renamed = false;
+	filename_require	 = false;
 	big_endian			 = false;
 }
-#if 0
-/// 属性が一致するか
-const L3Attribute *DiskBasicFormat::FindSpecialAttr(int type, int value) const
-{
-	return special_attrs.Find(type, value);
-}
-/// 属性が一致するか
-const L3Attribute *DiskBasicFormat::FindSpecialAttr(int value) const
-{
-	return special_attrs.Find(value);
-}
-/// 属性名が一致するか
-const L3Attribute *DiskBasicFormat::FindSpecialAttr(const wxString &name) const
-{
-	return special_attrs.Find(name);
-}
-/// 特別な属性の位置
-int DiskBasicFormat::GetIndexByValueOfSpecialAttr(int value) const
-{
-	return special_attrs.GetIndexByValue(value);
-}
-/// 特別な属性の属性値を返す
-int DiskBasicFormat::GetTypeByValueOfSpecialAttr(int value) const
-{
-	return special_attrs.GetTypeByValue(value);
-}
-/// 特別な属性の属性値を返す
-int DiskBasicFormat::GetTypeByIndexOfSpecialAttr(int idx) const
-{
-	return special_attrs.GetTypeByIndex(idx);
-}
-#endif
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicFormats);
@@ -312,9 +284,14 @@ void DiskBasicParam::ClearBasicParam()
 	delete_code			 = 0;
 	media_id			 = 0x00;
 	text_terminate_code	 = 0x1a;
+	valid_first_chars.Empty();
 	valid_chars.Empty();
 	invalid_chars.Empty();
 	deduplicate_chars.Empty();
+	compare_case_insense = false;
+	to_upper_before_dialog = false;
+	to_upper_after_renamed = false;
+	filename_require	 = false;
 	data_inverted		 = false;
 	side_reversed		 = false;
 	big_endian			 = false;
@@ -366,9 +343,14 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	delete_code = src.delete_code;
 	media_id = src.media_id;
 	text_terminate_code = src.text_terminate_code;
+	valid_first_chars = src.valid_first_chars;
 	valid_chars = src.valid_chars;
 	invalid_chars = src.invalid_chars;
 	deduplicate_chars = src.deduplicate_chars;
+	compare_case_insense = src.compare_case_insense;
+	to_upper_before_dialog = src.to_upper_before_dialog;
+	to_upper_after_renamed = src.to_upper_after_renamed;
+	filename_require = src.filename_require;
 	data_inverted = src.data_inverted;
 	side_reversed = src.side_reversed;
 	big_endian = src.big_endian;
@@ -435,44 +417,6 @@ wxString DiskBasicParam::GetVariousStringParam(const wxString &key) const
 		return wxT("");
 	}
 }
-
-#if 0
-/// 属性が一致するか
-const L3Attribute *DiskBasicParam::FindSpecialAttribute(int type, int value) const
-{
-	return special_attrs.Find(type, value);
-}
-/// 属性が一致するか
-const L3Attribute *DiskBasicParam::FindSpecialAttribute(int value) const
-{
-	return special_attrs.Find(value);
-}
-/// 属性名が一致するか
-const L3Attribute *DiskBasicParam::FindSpecialAttribute(int type, const wxString &name) const
-{
-	return special_attrs.Find(type, name);
-}
-/// 特別な属性の位置
-int DiskBasicParam::GetIndexByValueOfSpecialAttribute(int value) const
-{
-	return special_attrs.GetIndexByValue(value);
-}
-/// 特別な属性の属性値を返す
-int DiskBasicParam::GetTypeByValueOfSpecialAttribute(int value) const
-{
-	return special_attrs.GetTypeByValue(value);
-}
-/// 特別な属性の属性タイプを返す
-int DiskBasicParam::GetTypeByIndexOfSpecialAttribute(int idx) const
-{
-	return special_attrs.GetTypeByIndex(idx);
-}
-/// 特別な属性の属性値を返す
-int DiskBasicParam::GetValueByIndexOfSpecialAttribute(int idx) const
-{
-	return special_attrs.GetValueByIndex(idx);
-}
-#endif
 
 /// 固有のパラメータ
 void DiskBasicParam::SetVariousParam(const wxString &key, const wxVariant &val)
@@ -580,9 +524,14 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				p.SetFillCodeOnDir(format_type->GetFillCodeOnDir());
 				p.SetDeleteCode(format_type->GetDeleteCode());
 				p.SetTextTerminateCode(format_type->GetTextTerminateCode());
+				p.SetValidFirstChars(format_type->GetValidFirstChars());
 				p.SetValidChars(format_type->GetValidChars());
 				p.SetInvalidChars(format_type->GetInvalidChars());
 				p.SetDeduplicateChars(format_type->GetDeduplicateChars());
+				p.CompareCaseInsense(format_type->IsCompareCaseInsense());
+				p.ToUpperBeforeDialog(format_type->ToUpperBeforeDialog());
+				p.ToUpperAfterRenamed(format_type->ToUpperAfterRenamed());
+				p.RequireFileName(format_type->IsFileNameRequired());
 				p.BigEndian(format_type->IsBigEndian());
 			} else {
 				// フォーマットタイプがない
@@ -690,11 +639,22 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				} else if (name == "TextTerminateCode") {
 					p.SetTextTerminateCode(Utils::ToInt(str));
 				} else if (name == "FileNameCharacters") {
-					wxString val_chars, inv_chars, dup_chars;
-					valid = LoadFileNameChars(itemnode, val_chars, inv_chars, dup_chars, errmsgs);
+					wxString val_chars, inv_chars, dup_chars, fst_chars;
+					valid = LoadFileNameChars(itemnode, val_chars, inv_chars, dup_chars, fst_chars, errmsgs);
 					p.SetValidChars(val_chars);
 					p.SetInvalidChars(inv_chars);
 					p.SetDeduplicateChars(dup_chars);
+					p.SetValidFirstChars(fst_chars);
+				} else if (name == "FileNameCompareCase") {
+					bool val;
+					LoadFileNameCompareCase(itemnode, val);
+					p.CompareCaseInsense(val);
+				} else if (name == "ToUpperFileNameBeforeDialog") {
+					p.ToUpperBeforeDialog(Utils::ToBool(str));
+				} else if (name == "ToUpperFileNameAfterRenamed") {
+					p.ToUpperAfterRenamed(Utils::ToBool(str));
+				} else if (name == "RequireFileName") {
+					p.RequireFileName(Utils::ToBool(str));
 				} else if (name == "DataInverted") {
 					p.DataInverted(Utils::ToBool(str));
 				} else if (name == "SideReversed") {
@@ -844,10 +804,10 @@ bool DiskBasicTemplates::LoadL3Attribute(const wxXmlNode *node, const wxString &
 	return true;
 }
 
-bool DiskBasicTemplates::LoadFileNameChars(const wxXmlNode *node, wxString &val_chars, wxString &inv_chars, wxString &dup_chars, wxString &errmsgs)
+bool DiskBasicTemplates::LoadFileNameChars(const wxXmlNode *node, wxString &val_chars, wxString &inv_chars, wxString &dup_chars, wxString &fst_chars, wxString &errmsgs)
 {
 	bool valid = true;
-	wxString chars[3];
+	wxString chars[4];
 	wxXmlNode *cnode = node->GetChildren();
 	while(cnode) {
 		wxString name = cnode->GetName();
@@ -861,6 +821,13 @@ bool DiskBasicTemplates::LoadFileNameChars(const wxXmlNode *node, wxString &val_
 		} else if (name.Left(9) == "Duplicate") {
 			num = 2;
 			name = name.Mid(9);
+		}
+
+		if (num == 0) {
+			if (name.Left(5) == "First") {
+				num = 3;
+				name = name.Mid(5);
+			}
 		}
 
 		if (num >= 0) {
@@ -898,8 +865,16 @@ bool DiskBasicTemplates::LoadFileNameChars(const wxXmlNode *node, wxString &val_
 		val_chars = chars[0];
 		inv_chars = chars[1];
 		dup_chars = chars[2];
+		fst_chars = chars[3];
 	}
 	return valid;
+}
+
+bool DiskBasicTemplates::LoadFileNameCompareCase(const wxXmlNode *node, bool &val)
+{
+	wxString str = node->GetNodeContent();
+	val = (str.Upper() == wxT("INSENSITIVE"));
+	return true;
 }
 
 bool DiskBasicTemplates::LoadVariousParam(const wxXmlNode *node, const wxString &val, wxVariant &nval)
@@ -981,11 +956,22 @@ bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &loca
 				} else if (name == "TextTerminateCode") {
 					f.SetTextTerminateCode(Utils::ToInt(str));
 				} else if (name == "FileNameCharacters") {
-					wxString val_chars, inv_chars, dup_chars;
-					valid = LoadFileNameChars(itemnode, val_chars, inv_chars, dup_chars, errmsgs);
+					wxString val_chars, inv_chars, dup_chars, fst_chars;
+					valid = LoadFileNameChars(itemnode, val_chars, inv_chars, dup_chars, fst_chars, errmsgs);
 					f.SetValidChars(val_chars);
 					f.SetInvalidChars(inv_chars);
 					f.SetDeduplicateChars(dup_chars);
+					f.SetValidFirstChars(fst_chars);
+				} else if (name == "FileNameCompareCase") {
+					bool val;
+					LoadFileNameCompareCase(itemnode, val);
+					f.CompareCaseInsense(val);
+				} else if (name == "ToUpperFileNameBeforeDialog") {
+					f.ToUpperBeforeDialog(Utils::ToBool(str));
+				} else if (name == "ToUpperFileNameAfterRenamed") {
+					f.ToUpperAfterRenamed(Utils::ToBool(str));
+				} else if (name == "RequireFileName") {
+					f.RequireFileName(Utils::ToBool(str));
 				} else if (name == "Endian") {
 					f.BigEndian(str.Upper() == "BIG");
 				}

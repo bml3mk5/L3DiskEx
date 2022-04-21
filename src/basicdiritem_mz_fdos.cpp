@@ -600,19 +600,6 @@ bool DiskBasicDirItemMZFDOS::PreExportDataFile(wxString &filename)
 	return true;
 }
 
-#if 0
-/// データをDnDで外部へエクスポートする前に必要な処理
-/// 属性に応じて拡張子".xxx"を付加する
-///
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-/// @see PreExportDataFile()
-bool DiskBasicDirItemMZFDOS::PreDropDataFile(wxString &filename)
-{
-	return PreExportDataFile(filename);
-}
-#endif
-
 /// シーケンス番号
 void DiskBasicDirItemMZFDOS::AssignSeqNumber()
 {
@@ -691,14 +678,6 @@ int DiskBasicDirItemMZFDOS::ConvFileType1Pos(int native_type) const
 	}
 	return val;
 }
-
-#if 0
-/// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemMZFDOS::ConvFileType2Pos(int native_type) const
-{
-	return native_type;
-}
-#endif
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定

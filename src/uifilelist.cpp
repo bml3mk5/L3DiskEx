@@ -75,25 +75,6 @@ const struct st_list_columns gL3DiskFileListColumnDefs[] = {
 	{ NULL,			NULL,							false,	  0,	wxALIGN_LEFT,	false }
 };
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// ドラッグ時のデータ構成
-typedef struct st_directory_for_dnd {
-	wxUint32	data_size;
-	DiskBasicFormatType	format_type;
-	wxUint8		name[36];
-	int			file_size;
-	int			file_type;
-	int			original_type;
-	int			start_addr;
-	int			end_addr;
-	int			exec_addr;
-	int			external_attr;
-	wxUint8		date[3];
-	wxUint8		time[3];
-	wxUint8		reserved[2];
-} directory_for_dnd_t;
-#endif
-
 #ifdef DeleteFile
 #undef DeleteFile
 #endif
@@ -572,10 +553,6 @@ wxBEGIN_EVENT_TABLE(L3DiskFileList, wxPanel)
 	EVT_MENU(IDM_DELETE_FILE, L3DiskFileList::OnDeleteFile)
 	EVT_MENU(IDM_RENAME_FILE, L3DiskFileList::OnRenameFile)
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-	EVT_MENU(IDM_DUPLICATE_FILE, L3DiskFileList::OnDuplicateFile)
-#endif
-
 	EVT_MENU(IDM_COPY_FILE, L3DiskFileList::OnCopyFile)
 	EVT_MENU(IDM_PASTE_FILE, L3DiskFileList::OnPasteFile)
 
@@ -652,10 +629,6 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	menuPopup->Append(IDM_DELETE_FILE, _("&Delete..."));
 	menuPopup->Append(IDM_RENAME_FILE, _("Rena&me"));
 	menuPopup->AppendSeparator();
-#ifdef USE_CUSTOMDATA_FOR_DND
-	menuPopup->Append(IDM_DUPLICATE_FILE, _("D&uplicate..."));
-	menuPopup->AppendSeparator();
-#endif
 	menuPopup->Append(IDM_COPY_FILE, _("&Copy"));
 	menuPopup->Append(IDM_PASTE_FILE, _("&Paste..."));
 	menuPopup->AppendSeparator();
@@ -903,14 +876,6 @@ void L3DiskFileList::OnRenameFile(wxCommandEvent& event)
 	StartEditingFileName();
 }
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// 複製選択
-void L3DiskFileList::OnDuplicateFile(wxCommandEvent& event)
-{
-	DuplicateDataFile();
-}
-#endif
-
 /// コピー選択
 void L3DiskFileList::OnCopyFile(wxCommandEvent& event)
 {
@@ -1012,9 +977,6 @@ void L3DiskFileList::ShowPopupMenu()
 	opened = (opened && (list->GetListSelectedItemCount() > 0));
 	menuPopup->Enable(IDM_EXPORT_FILE, opened);
 	menuPopup->Enable(IDM_DELETE_FILE, opened);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	menuPopup->Enable(IDM_DUPLICATE_FILE, opened);
-#endif
 	menuPopup->Enable(IDM_COPY_FILE, opened);
 
 	opened = (opened && (list->GetListSelectedRow() != wxNOT_FOUND));
@@ -1543,62 +1505,25 @@ int L3DiskFileList::ExportDataFiles(DiskBasicDirItems *dir_items, const wxString
 	return sts;
 }
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// ファイルを複製
-bool L3DiskFileList::DuplicateDataFile()
-{
-	wxCustomDataObject *custom_object = NULL;
-
-	bool sts = true;
-	if (sts) {
-		custom_object = new wxCustomDataObject(*L3DiskPanelDataFormat);
-		sts = CreateCustomDataObject(*custom_object);
-	}
-	if (sts) {
-		size_t buflen = custom_object->GetDataSize();
-		wxUint8 *buffer = (wxUint8 *)custom_object->GetData();
-		sts = ImportDataFiles(buffer, buflen);
-	}
-	delete custom_object;
-	return sts;
-}
-#endif
-
 /// ドラッグする
 bool L3DiskFileList::DragDataSource()
 {
 	wxString tmp_dir_name;
 	wxDataObjectComposite compo;
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-	wxCustomDataObject *custom_object = NULL;
-#endif
 	wxFileDataObject *file_object = NULL;
 
 	bool sts = true;
-#ifdef USE_CUSTOMDATA_FOR_DND
-	if (sts) {
-		custom_object = new wxCustomDataObject(*L3DiskPanelDataFormat);
-		sts = CreateCustomDataObject(*custom_object);
-	}
-#endif
 	if (sts) {
 		file_object = new wxFileDataObject();
 		sts = CreateFileObject(tmp_dir_name, _("dragging..."), _("dragged."), *file_object);
 	}
 	if (!sts) {
 		delete file_object;
-#ifdef USE_CUSTOMDATA_FOR_DND
-		delete custom_object;
-#endif
 		return false;
 	}
 	// ファイルデータは外部用
 	if (file_object) compo.Add(file_object);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	// カスタムデータを優先（内部用）
-	if (custom_object) compo.Add(custom_object);
-#endif
 
 #ifdef __WXMSW__
 	wxDropSource dragSource(compo);
@@ -1628,66 +1553,6 @@ bool L3DiskFileList::CopyToClipboard()
 	}
 	return sts;
 }
-
-#ifdef USE_CUSTOMDATA_FOR_DND
-// カスタムデータリスト作成（DnD, クリップボード用）
-bool L3DiskFileList::CreateCustomDataObject(wxCustomDataObject &data_object)
-{
-	if (!basic) return false;
-
-	if (!list) return false;
-
-	L3FileListItems selected_items;
-	int selcount = list->GetListSelections(selected_items);
-	if (selcount <= 0) return false;
-
-	// 同じリストへのDnD
-	wxMemoryOutputStream ostream;
-
-	for(int n = 0; n < selcount; n++) {
-		// ファイルパスを作成
-		DiskBasicDirItem *item = GetDirItem(selected_items.Item(n));
-		if (!item) continue;
-		// コピーできるか
-		if (!item->IsCopyable()) continue;
-
-		// ディレクトリヘッダ部分を設定
-		directory_for_dnd_t dnd_header;
-		memset(&dnd_header, 0, sizeof(dnd_header));
-		DiskBasicFileType file_type = item->GetFileAttr();
-		item->GetFileName(dnd_header.name, sizeof(dnd_header.name));
-		dnd_header.file_size = item->GetFileSize();
-		dnd_header.file_type = file_type.GetType();
-		dnd_header.original_type = file_type.GetOrigin();
-		dnd_header.start_addr = item->GetStartAddress();
-		dnd_header.end_addr = item->GetEndAddress();
-		dnd_header.exec_addr = item->GetExecuteAddress();
-		dnd_header.external_attr = item->GetExternalAttr();
-		dnd_header.format_type = basic->GetFormatTypeNumber();
-		struct tm tm;
-		item->GetFileDateTime(&tm);
-		Utils::ConvTmToDateTime(&tm, dnd_header.date, dnd_header.time);
-		wxFileOffset ostart = ostream.TellO();
-		ostream.Write(&dnd_header, sizeof(directory_for_dnd_t));
-
-		// ファイルの読み込み
-		size_t outsize = 0;
-		bool sts = basic->LoadData(item, ostream, &outsize);
-		if (!sts) return false;
-
-		wxFileOffset oend = ostream.TellO();
-		dnd_header.data_size = (wxUint32)outsize;
-		ostream.SeekO(ostart);
-		ostream.Write(&dnd_header, sizeof(directory_for_dnd_t));
-		ostream.SeekO(oend);
-	}
-
-	wxStreamBuffer *buffer = ostream.GetOutputStreamBuffer();
-	data_object.SetData(buffer->GetBufferSize(), buffer->GetBufferStart());
-
-	return true;
-}
-#endif
 
 /// ファイルをテンポラリディレクトリにエクスポートしファイルリストを作成する（DnD, クリップボード用）
 bool L3DiskFileList::CreateFileObject(wxString &tmp_dir_name, const wxString &start_msg, const wxString &end_msg, wxFileDataObject &file_object)
@@ -1930,9 +1795,6 @@ int L3DiskFileList::ImportDataFile(const wxString &full_data_path, const wxStrin
 	int sts = 0;
 	DiskBasicDirItem *temp_item = basic->CreateDirItem();
 
-//	bool attr_exists = !attr_dir.IsEmpty();
-//	wxString full_attr_path = attr_exists ? wxFileName(attr_dir, name, wxT("xml")).GetFullPath() : attr_dir;
-
 	// ファイル情報があれば読み込む
 	wxString filename = file_name;
 	struct tm date_time;
@@ -1972,24 +1834,27 @@ int L3DiskFileList::ImportDataFile(const wxString &full_data_path, const wxStrin
 /// @param [in] file_name ファイルパス
 /// @param [in] file_size ファイルサイズ
 /// @param [in] date_time 日時
-/// @param [in] style     スタイル
+/// @param [in] style     スタイル(IntNameBoxShowFlags)
 /// @retval wxYES
 /// @retval wxCANCEL
 int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(DiskBasicDirItem *temp_item, const wxString &file_name, int file_size, struct tm &date_time, int style)
 {
-	int ans = wxYES;
+	int ans = wxNO;
 	bool skip_dlg = gConfig.IsSkipImportDialog();
 	IntNameBox *dlg = NULL;
 	wxString int_name = file_name;
-	do {
-//		int dlgsts = wxID_OK;
+
+	// ファイルパスからファイル名を生成
+	if (style & INTNAME_NEW_FILE) {
+		// 外部からインポート時
+		if (!temp_item->PreImportDataFile(int_name)) {
+			// エラー
+			ans = wxCANCEL;
+		}
+	}
+	while (ans != wxYES && ans != wxCANCEL) {
 		if (!skip_dlg) {
-			// ダイアログ生成
-			if (!temp_item->PreImportDataFile(int_name)) {
-				ans = wxCANCEL;
-				break;
-			}
-//			wxString file_name = temp_item->RemakeFileNameStr(file_path);
+			// ファイル名ダイアログを表示
 			if (!dlg) dlg = new IntNameBox(frame, this, wxID_ANY, _("Import File"), wxT(""), basic, temp_item, file_name, int_name, file_size, &date_time, style);
 			int dlgsts = dlg->ShowModal();
 			m_sw_import.Restart();
@@ -2018,10 +1883,13 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(DiskBasicDirItem *temp_item, 
 			// ダイアログを表示しないとき
 			if (style & INTNAME_NEW_FILE) {
 				// 外部からインポート時でダイアログなし
-				// ファイルパスからファイル名を生成
-				if (!temp_item->PreImportDataFile(int_name)) {
-					ans = wxCANCEL;
-					break;
+				// ファイル名が適正か
+				IntNameValidator vali(basic, temp_item);
+				if (!vali.Validate(this, int_name)) {
+					// ファイル名が不適切
+					skip_dlg = false;
+					ans = wxNO;
+					continue;
 				}
 				// 属性をファイル名から判定してアイテムに反映
 				if (!SetDirItemFromIntNameParam(temp_item, file_name, int_name, date_time, basic, true)) {
@@ -2061,7 +1929,7 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(DiskBasicDirItem *temp_item, 
 			ans = wxCANCEL;
 			break;
 		}
-	} while (ans != wxYES && ans != wxCANCEL);
+	}
 
 	delete dlg;
 	return ans;
@@ -2139,105 +2007,6 @@ bool L3DiskFileList::SetDirItemFromIntNameParam(DiskBasicDirItem *item, const wx
 	}
 	return sts;
 }
-
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
-bool L3DiskFileList::ImportDataFiles(const wxUint8 *buffer, size_t buflen)
-{
-	if (!basic) return false;
-
-	if (!basic->IsFormatted()) {
-		return false;
-	}
-	if (!basic->IsWritableIntoDisk()) {
-		basic->ShowErrorMessage();
-		return false;
-	}
-
-	const wxUint8 *buffer1 = buffer;
-	size_t buflen1 = 0;
-	while(buflen1 < buflen) {
-		// バッファの始めはヘッダ
-		directory_for_dnd_t *dnd_header = (directory_for_dnd_t *)buffer1;
-		size_t data_buflen = (size_t)dnd_header->data_size + sizeof(directory_for_dnd_t);
-		if (buflen1 + sizeof(directory_for_dnd_t) >= buflen) {
-			break;
-		}
-
-		if (!ImportDataFile(buffer1, data_buflen)) {
-			return false;
-		}
-
-		buffer1 += data_buflen;
-		buflen1 += data_buflen;
-	}
-	return true;
-}
-#endif
-
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
-bool L3DiskFileList::ImportDataFile(const wxUint8 *buffer, size_t buflen)
-{
-	if (!basic) return false;
-
-	if (!basic->IsFormatted()) {
-		return false;
-	}
-	if (!basic->IsWritableIntoDisk()) {
-		basic->ShowErrorMessage();
-		return false;
-	}
-
-	// バッファの始めはヘッダ
-	directory_for_dnd_t *dnd_header = (directory_for_dnd_t *)buffer;
-	const wxUint8 *data_buffer = buffer + sizeof(directory_for_dnd_t);
-	size_t data_buflen = buflen - sizeof(directory_for_dnd_t);
-
-	// ディスクの残りサイズ
-	if (!basic->CheckFile(data_buffer, data_buflen)) {
-		return false;
-	}
-
-	// ディレクトリアイテムを新規に作成して、各パラメータをセット
-	wxString filename;
-	DiskBasicDirItem *temp_item = basic->CreateDirItem();
-	temp_item->SetFileAttr(dnd_header->format_type, dnd_header->file_type, dnd_header->original_type);
-	filename = temp_item->RemakeFileName(dnd_header->name, sizeof(dnd_header->name));
-	temp_item->SetStartAddress(dnd_header->start_addr);
-	temp_item->SetEndAddress(dnd_header->end_addr);
-	temp_item->SetExecuteAddress(dnd_header->exec_addr);
-	temp_item->SetExternalAttr(dnd_header->external_attr);
-	struct tm tm;
-	Utils::ConvDateTimeToTm(dnd_header->date, dnd_header->time, &tm);
-	temp_item->SetFileDateTime(&tm);
-
-	// ダイアログ表示
-	IntNameBox dlg(frame, this, wxID_ANY, _("Copy File"), basic, temp_item, filename, (int)data_buflen
-		, INTNAME_IMPORT_INTERNAL | INTNAME_SHOW_NO_PROPERTY);
-
-	// ダイアログ表示と同じファイルがあるかチェック
-	int ans = ShowIntNameBoxAndCheckSameFile(dlg, temp_item, (int)data_buflen);
-
-	bool sts = false;
-	if (ans == wxYES) {
-		// ダイアログで指定した値をアイテムに反映
-		sts = SetIntNameValuesToDirItem(temp_item, dlg, basic, true);
-		// ディスク内にセーブ
-		DiskBasicDirItem *madeitem = NULL;
-		if (sts) {
-			sts = basic->SaveFile(data_buffer, data_buflen, temp_item, &madeitem);
-		}
-		if (!sts) {
-			basic->ShowErrorMessage();
-		}
-		RefreshFiles();
-	}
-
-	delete temp_item;
-	return sts;
-}
-#endif
 
 /// 指定したファイルを削除
 int L3DiskFileList::DeleteDataFile(DiskBasic *tmp_basic, DiskBasicDirItem *dst_item)
@@ -2411,8 +2180,12 @@ bool L3DiskFileList::RenameDataFile(const L3FileListItem &view_item, const wxStr
 	DiskBasicFileName filename;
 	filename.SetName(newname);
 
+	// ダイアログ入力後のファイル名文字列を大文字に変換
+	if (basic->ToUpperAfterRenamed()) {
+		filename.GetName().MakeUpper();
+	}
 	// ダイアログ入力後のファイル名文字列を変換
-	item->ConvertFromFileNameStr(filename.GetName());
+	item->ConvertFileNameAfterRenamed(filename.GetName());
 	// 拡張属性を得る
 	filename.SetOptional(item->GetOptionalName());
 

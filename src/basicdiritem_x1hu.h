@@ -82,10 +82,6 @@ private:
 	int		ConvToNativeType(int file_type, int val) const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType1Pos(int native_type) const;
-//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-//	int		GetFileType1Pos() const;
-//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-//	int		GetFileType2Pos() const;
 	/// @brief 属性1を得る
 	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// @brief 属性2を得る
@@ -103,9 +99,6 @@ public:
 
 	/// @brief ディレクトリアイテムのチェック
 	bool	Check(bool &last);
-
-//	/// @brief ファイル名が一致するか
-//	bool	IsSameFileName(const DiskBasicFileName &filename) const;
 
 	/// @brief 属性を設定
 	void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -173,10 +166,6 @@ public:
 	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 	int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 
-//	/// @brief データをエクスポートする前に必要な処理
-//	bool	PreExportDataFile(wxString &filename);
-//	/// @brief データをインポートする前に必要な処理
-//	bool	PreImportDataFile(wxString &filename);
 	/// @brief ファイル名から属性を決定する
 	int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 

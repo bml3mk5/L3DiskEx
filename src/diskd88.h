@@ -113,6 +113,8 @@ public:
 
 	/// セクタ番号を返す(ID Rと同じ)
 	int		GetSectorNumber() const { return num; }
+	/// セクタ番号を設定
+	void	SetSectorNumber(int val);
 	/// 削除マークがついているか
 	bool	IsDeleted() const;
 	/// 削除マークの設定
@@ -290,6 +292,8 @@ public:
 
 	/// トラック番号とサイド番号の比較
 	static int Compare(DiskD88Track *item1, DiskD88Track *item2);
+	/// インターリーブを考慮したセクタ番号リストを返す
+	static bool CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset = 0);
 };
 
 WX_DEFINE_ARRAY(DiskD88Track *, DiskD88Tracks);
@@ -435,10 +439,6 @@ public:
 
 	/// DISK BASIC領域を確保
 	void	AllocDiskBasics();
-//	/// DISK BASICパラメータを設定
-//	void	SetDiskBasicParam(const DiskBasicParam *val) { basic_param = val; }
-//	/// DISK BASICパラメータを返す
-//	const	DiskBasicParam *GetDiskBasicParam() const { return basic_param; }
 	/// DISK BASICを返す
 	DiskBasic *GetDiskBasic(int idx);
 	/// DISK BASICを返す
@@ -547,8 +547,6 @@ public:
 	int ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskD88File &src_file, DiskD88Disk* &tag_disk);
 	/// ファイルでディスクを置換
 	int ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, DiskD88Disk *tag_disk);
-//	/// ファイルでディスクを置換
-//	int ReplaceDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint);
 
 	/// ディスク名を設定
 	bool SetDiskName(size_t disk_number, const wxString &newname);

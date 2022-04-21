@@ -223,23 +223,6 @@ void DiskBasicTypeXDOS::CalcDiskFreeSize(bool wrote)
 	for(size_t idx = 0; idx < items->Count(); idx++) {
 		DiskBasicDirItem *item = items->Item(idx);
 		if (!item || !item->IsUsed()) continue;
-#if 0
-		// 開始グループ
-		gnum = item->GetStartGroup(0);
-		if (gnum <= basic->GetFatEndGroup()) {
-			fat_availability.Item(gnum) = FAT_AVAIL_USED_FIRST;
-		}
-
-		// グループ番号のマップを調べる
-		size_t gcnt = item->GetGroupCount();
-		for(size_t gidx = 0; gidx < gcnt; gidx++) {
-			const DiskBasicGroupItem *gitem = item->GetGroup(gidx);
-			gnum = gitem->group;
-			if (gnum <= basic->GetFatEndGroup()) {
-				fat_availability.Item(gnum) = (gidx == gcnt - 1 ? FAT_AVAIL_USED_LAST : FAT_AVAIL_USED);
-			}
-		}
-#else
 		size_t gcnt = item->GetGroupCount();
 		if (gcnt > 0) {
 			const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
@@ -248,7 +231,6 @@ void DiskBasicTypeXDOS::CalcDiskFreeSize(bool wrote)
 				fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;
 			}
 		}
-#endif
 	}
 
 	// 空きをチェック

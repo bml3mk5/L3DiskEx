@@ -60,7 +60,7 @@ public:
 	/// 文字コードが文字変換テーブルにあるか
 	virtual size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
-	virtual bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
+	virtual bool FindCode(const wxString &src, wxUint8 *dst, size_t &pos);
 };
 
 /// キャラクターコード変換マップ Shift-JIS変換用
@@ -81,7 +81,7 @@ public:
 	/// 文字コード１文字を(SJIS)を文字列に変換する
 	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
-	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
+	bool FindCode(const wxString &src, wxUint8 *dst, size_t &pos);
 };
 
 WX_DEFINE_ARRAY(CharCodeMap *, ArrayOfCharCodeMap);
@@ -167,7 +167,7 @@ public:
 	/// 文字コードが文字変換テーブルにあるか
 	size_t FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar = '_');
 	/// 文字が文字変換テーブルにあるか
-	bool FindCode(const wxString &src, wxUint8 *dst, size_t *pos);
+	bool FindCode(const wxString &src, wxUint8 *dst, size_t &pos);
 
 	void SetMap(const wxString &name);
 	void SetMap(int idx);

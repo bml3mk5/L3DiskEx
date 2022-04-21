@@ -32,13 +32,6 @@ _("'%s' should be numeric."), \
 _("'%s' doesn't consist only of valid characters"), \
 _("'%s' contains illegal characters")
 
-#if 0
-IntNameParam::IntNameParam()
-{
-	user_data = 0;
-}
-#endif
-
 // Attach Event
 BEGIN_EVENT_TABLE(IntNameBox, wxDialog)
 	EVT_TEXT(IDC_TEXT_START_ADDR, IntNameBox::OnChangeStartAddr)
@@ -404,7 +397,7 @@ void IntNameBox::SetInternalName(const wxString &name)
 }
 
 /// 内部ファイル名を得る
-/// DiskBasicDirItem::ConvertFromFileNameStr()で変換したファイル名
+/// DiskBasicDirItem::ConvertFileNameAfterRenamed()で変換したファイル名
 void IntNameBox::GetInternalName(wxString &name) const
 {
 	if (!txtIntName) return;
@@ -415,8 +408,12 @@ void IntNameBox::GetInternalName(wxString &name) const
 		val = val.Mid(0, mNameMaxLen);
 	}
 	if (item) {
-		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理 大文字にするなど
-		item->ConvertFromFileNameStr(val);
+		// ダイアログ入力後のファイル名文字列を大文字にする
+		if (basic->ToUpperAfterRenamed()) {
+			val.MakeUpper();
+		}
+		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理
+		item->ConvertFileNameAfterRenamed(val);
 	}
 
 	name = val;
@@ -715,6 +712,7 @@ void IntNameValidator::CreateValidator(DiskBasic *basic, DiskBasicDirItem *item)
 	valchrs = basic->GetValidChars();
 	invchrs = basic->GetInvalidChars();
 	dupchrs = basic->GetDeduplicateChars();
+	fstchrs = basic->GetValidFirstChars();
 	maxlen = item->GetFileNameStrSize();
 }
 bool IntNameValidator::Copy(const IntNameValidator& val)
@@ -725,6 +723,7 @@ bool IntNameValidator::Copy(const IntNameValidator& val)
 	valchrs = val.valchrs;
 	invchrs = val.invchrs;
 	dupchrs = val.dupchrs;
+	fstchrs = val.fstchrs;
 	maxlen = val.maxlen;
 	return true;
 }
@@ -761,24 +760,30 @@ bool IntNameValidator::Validate(wxWindow *parent, const wxString &val)
 	wxString errormsg;
 	wxString invchr;
 
-	if ( val.length() > maxlen )
+	if ( val.length() > maxlen ) {
 		errormsg = _("File name is too long.");
-	else if ( !ContainsIncludedCharacters(val, invchr) )
+	} else if ( !ContainsIncludedCharactersAtFirst(val, invchr) ) {
+		errormsg = wxString::Format(_("The char '%s' is not able to use in the first of file name."), invchr);
+	} else if ( !ContainsIncludedCharacters(val, invchr) ) {
 		errormsg = wxString::Format(_("The char '%s' is not able to use in file name."), invchr);
-	else if ( ContainsExcludedCharacters(val, invchr) )
+	} else if ( ContainsExcludedCharacters(val, invchr) ) {
 		errormsg = wxString::Format(_("The char '%s' is not able to use in file name."), invchr);
-	else if ( ContainsDuplicatedCharacters(val, invchr) ) {
+	} else if ( ContainsDuplicatedCharacters(val, invchr) ) {
 		errormsg = wxString::Format(_("The char '%s' is duplicated, so is not able to set in file name."), invchr);
-	} else if ( item ) {
-		if (item->IsFileNameRequired()) {
+#if 0
+	} else if (basic->IsFileNameRequired()) {
 			wxString name = val;
 			name = name.Trim().Trim(true);
-			if (name.empty()) {
+			if (name.IsEmpty()) {
 				errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
 			}
-		}
+#endif
+	} else if ( item ) {
 		if (errormsg.empty()) {
-			if ( item->ConvStringToChars(val, NULL, 32) < 0 ) {
+			int len = item->ConvStringToChars(val, NULL, 32);
+			if (len == 0 && basic->IsFileNameRequired()) {
+				errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+			} else if (len < 0) {
 				errormsg = _("Invalid char is contained in file name.");
 			}
 		}
@@ -807,16 +812,6 @@ bool IntNameValidator::TransferFromWindow()
 {
 	return true;
 }
-
-#if 0
-wxString IntNameValidator::IsValid(const wxString& val) const
-{
-	if (ContainsExcludedCharacters(val))
-		return wxT("invalid");
-
-	return wxEmptyString;
-}
-#endif
 
 /// 設定できる文字がファイル名に含まれるか
 bool IntNameValidator::ContainsIncludedCharacters(const wxString& val, wxString &invchr) const
@@ -864,6 +859,20 @@ bool IntNameValidator::ContainsDuplicatedCharacters(const wxString& val, wxStrin
 		} while(!str.IsEmpty());
 	}
 	return (n >= 2);
+}
+
+/// 設定できる文字がファイル名の先頭に含まれるか
+bool IntNameValidator::ContainsIncludedCharactersAtFirst(const wxString& val, wxString &invchr) const
+{
+	if (fstchrs.IsEmpty()) return true;
+	if (val.IsEmpty()) return true;
+
+	wxString::const_iterator i = val.begin();
+	if (fstchrs.Find(*i) == wxNOT_FOUND) {
+		invchr = wxString((wxUniChar)*i);
+		return false;
+	}
+	return true;
 }
 
 void IntNameValidator::OnChar(wxKeyEvent& event)

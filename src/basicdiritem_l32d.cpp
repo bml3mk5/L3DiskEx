@@ -54,14 +54,6 @@ bool DiskBasicDirItemL32D::Check(bool &last)
 	return valid;
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL32D::GetDefaultInvalidateChars() const
-{
-	return wxT("\":()");
-}
-#endif
-
 /// ファイル名を格納する位置を返す
 wxUint8 *DiskBasicDirItemL32D::GetFileNamePos(int num, size_t &size, size_t &len) const
 {
@@ -121,19 +113,6 @@ void DiskBasicDirItemL32D::SetFileSize(int val)
 	SetDataSizeOnLastSecotr(val % basic->GetSectorSize());
 }
 
-#if 0
-/// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemL32D::CalcFileUnitSize(int fileunit_num)
-{
-	DiskBasicDirItemFAT8::CalcFileUnitSize(fileunit_num);
-
-	// 最終セクタのサイズを足す
-	if (IsUsed() && m_file_size >= 0) {
-		m_file_size = m_file_size - basic->GetSectorSize() + GetDataSizeOnLastSector();
-	}
-}
-#endif
-
 /// 最初のグループ番号を設定
 void DiskBasicDirItemL32D::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
@@ -173,93 +152,12 @@ int DiskBasicDirItemL32D::RecalcFileSize(DiskBasicGroups &group_items, int occup
 	return occupied_size;
 }
 
-#if 0
-/// ファイル番号のファイルサイズを得る
-/// @param [in]     fileunit_num ファイル番号
-/// @param [in,out] istream      入力ストリーム
-/// @param [in]     file_offset  ストリーム内のオフセット
-/// @return ファイルサイズ / ない場合 -1
-int DiskBasicDirItemL32D::GetFileUnitSize(int fileunit_num, wxInputStream &istream, int file_offset)
-{
-	if (fileunit_num == 0) {
-		int siz = (int)istream.GetLength();
-		if ((siz % basic->GetSectorSize()) == 0) {
-			// サイズがセクタ境界になる場合はサイズを+1する。→次のセクタも確保させる
-			siz++;
-		}
-		return siz;
-	} else {
-		return -1;
-	}
-}
-#endif
-
-#if 0
-/// データをエクスポートする前に必要な処理
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemL32D::PreExportDataFile(wxString &filename)
-{
-	AddExtensionByFileAttr(GetFileAttr().GetType(), 0x3f, filename);
-	return true;
-}
-#endif
-
-#if 0
-/// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemL32D::PreImportDataFile(wxString &filename)
-{
-	// 拡張子で属性を設定する
-	ConvFileNameByExtension(filename);
-	// 拡張子部分を含める
-	filename = DiskBasicDirItem::RemakeFileNameAndExtStr(filename);
-	return true;
-}
-#endif
-
-/// ダイアログ入力前のファイル名を変換 大文字にする
-void DiskBasicDirItemL32D::ConvertToFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
 /// ダイアログ入力後のファイル名文字列を変換
-void DiskBasicDirItemL32D::ConvertFromFileNameStr(wxString &filename) const
+void DiskBasicDirItemL32D::ConvertFileNameAfterRenamed(wxString &filename) const
 {
 	int file_type_1 = GetFileType1();
 	filename = AddExtension(file_type_1, filename);
 }
-
-#if 0
-/// 内部ファイル名から変換＆拡張子を付加
-/// コピー、このアプリからインポート時のダイアログを出す前
-wxString DiskBasicDirItemL32D::RemakeFileName(const wxUint8 *src, size_t srclen) const
-{
-	wxString dst;
-	srclen = str_length(src, srclen, 0);
-	ConvCharsToString(src, srclen, dst);
-//	dst.Trim(true);
-
-	// 拡張子がないとき
-	if (dst.Find('.', true) == wxNOT_FOUND) {
-		switch(GetFileType1Pos()) {
-		case TYPE_NAME_1_BASIC:
-			dst += wxT(".BAS");
-			break;
-		case TYPE_NAME_1_DATA:
-			dst += wxT(".DAT");
-			break;
-		case TYPE_NAME_1_MACHINE:
-			dst += wxT(".BIN");
-			break;
-		}
-	}
-
-	return dst;
-}
-#endif
 
 #include <wx/textctrl.h>
 #include <wx/radiobox.h>
@@ -296,17 +194,6 @@ void DiskBasicDirItemL32D::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
 	radType2->Show(TYPE_NAME_2_RANDOM, false);
 }
-
-#if 0
-/// 機種依存の属性を設定する
-/// @param [in,out] parent  プロパティダイアログ
-/// @param [in,out] errinfo エラー情報
-bool DiskBasicDirItemL32D::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
-{
-	bool sts = DiskBasicDirItemFAT8::SetAttrInAttrDialog(parent, errinfo);
-	return sts;
-}
-#endif
 
 /// 拡張子を追加
 wxString DiskBasicDirItemL32D::AddExtension(int file_type_1, const wxString &name) const

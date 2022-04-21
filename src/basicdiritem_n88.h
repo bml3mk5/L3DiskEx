@@ -60,8 +60,6 @@ private:
 
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int	    ConvFileType1Pos(int t1) const;
-//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-//	int	    ConvFileType2Pos(int t2) const;
 	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
 	int		CalcFileTypeFromPos(int pos) const;
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定

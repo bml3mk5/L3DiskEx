@@ -29,8 +29,6 @@ enum en_file_type_mask_os9 {
 	FILETYPE_MASK_OS9_USER_WRITE = 0x02,
 	FILETYPE_MASK_OS9_USER_READ = 0x01,
 };
-//#define FILETYPE_OS9_PERMISSION_MASK 0x3f00000
-//#define FILETYPE_OS9_PERMISSION_POS  20
 
 /// File Descriptorエリアのポインタ
 class DiskBasicDirItemOS9FD
@@ -124,8 +122,6 @@ private:
 
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType1Pos();
-//	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-//	int		GetFileType2Pos();
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1);
 
@@ -151,11 +147,6 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	bool	Check(bool &last);
 
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString GetDefaultInvalidateChars() const;
-	/// @brief ファイル名は必須（空文字不可）か
-	bool	IsFileNameRequired() const { return true; }
-
 	/// @brief 削除
 	bool	Delete(wxUint8 code);
 
@@ -166,9 +157,6 @@ public:
 
 	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	wxString GetFileAttrStr() const;
-
-//	/// @brief ファイルパスから内部ファイル名を生成する インポート時などのダイアログを出す前
-//	bool PreImportDataFile(wxString &filename);
 
 	/// @brief ファイルサイズをセット
 	void	SetFileSize(int val);

@@ -56,18 +56,6 @@ size_t DiskBasicDirItemHU68K::GetDataSize() const
 	return sizeof(directory_hu68k_t);
 }
 
-/// ダイアログ入力前のファイル名文字列を変換
-void DiskBasicDirItemHU68K::ConvertToFileNameStr(wxString &filename) const
-{
-	// 何もしない
-}
-
-/// ダイアログ入力後のファイル名文字列を変換
-void DiskBasicDirItemHU68K::ConvertFromFileNameStr(wxString &filename) const
-{
-	// 何もしない
-}
-
 //
 // ダイアログ用
 //

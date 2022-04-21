@@ -119,7 +119,9 @@
 		<Density>0x00</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
-			<Type>CPM86-1D-512</Type>
+			<Type>CPM86-1D-512-2</Type>
+			<Type>CPM86-1D-512-4</Type>
+			<Type>CPM86-1D-AT</Type>
 		</DiskBasicTypes>
 		<DensityName>1D</DensityName>
 		<DensityName lang="ja">1D</DensityName>
@@ -317,9 +319,11 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>MSDOS-2D</Type>
-			<Type>CPM86-2D-AT</Type>
-			<Type>CPM86-1D-AT</Type>
-			<Type>CPM68-2D</Type>
+			<Type>CPM86-1D-512-2</Type>
+			<Type>CPM86-2D-512-2</Type>
+			<Type>CPM86-1D-512-4</Type>
+			<Type>CPM86-2D-512-4</Type>
+			<Type>CPM68-2D-512-4</Type>
 		</DiskBasicTypes>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
@@ -791,7 +795,10 @@
 		<DiskBasicTypes>
 			<Type>MSX-1DD8</Type>
 			<Type>MSX-2DD8</Type>
-			<Type>CPM86-2DD-8-512</Type>
+			<Type>CPM86-1DD-8-512-4</Type>
+			<Type>CPM86-2DD-8-512-4</Type>
+			<Type>CPM86-1DD-8-512-8</Type>
+			<Type>CPM86-2DD-8-512-8</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
@@ -809,6 +816,7 @@
 			<Type>MSX-1DD9</Type>
 			<Type>MSX-2DD9</Type>
 			<Type>MSDOS-2DD</Type>
+			<Type>PCPM-1DD-9-512</Type>
 			<Type>PCPM-2DD-9-512</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
@@ -940,6 +948,40 @@
 		<Description>, Track0 and side0 is single density [X-DOS]</Description>
 		<Description lang="ja">トラック0,サイド0は単密度 [X-DOS用]</Description>
 	</DiskType>
+	<DiskType name="2HS-77-26-1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<SingleDensity track="ALL" side="ALL" />
+		<DiskBasicTypes>
+			<Type>CPM68-1HS</Type>
+			<Type>CPM68-2HS</Type>
+		</DiskBasicTypes>
+		<DensityName>8inch2S</DensityName>
+		<DensityName lang="ja">8インチ2S</DensityName>
+		<Description></Description>
+		<Description lang="ja"></Description>
+	</DiskType>
+	<DiskType name="2HS-77-26-6">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>6</Interleave>
+		<SingleDensity track="ALL" side="ALL" />
+		<DiskBasicTypes>
+			<Type>CPM68-1HS</Type>
+			<Type>CPM68-2HS</Type>
+		</DiskBasicTypes>
+		<DensityName>8inch2S</DensityName>
+		<DensityName lang="ja">8インチ2S</DensityName>
+		<Description></Description>
+		<Description lang="ja"></Description>
+	</DiskType>
 	<DiskType name="2HD-77-26-1-S0">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>77</TracksPerSide>
@@ -961,6 +1003,7 @@
 			<Type>CPM68-2HD</Type>
 			<Type>CPM98-2HD</Type>
 			<Type>CPMFM-2HD</Type>
+			<Type>CPMS1-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
@@ -995,6 +1038,7 @@
 		<DiskBasicTypes>
 			<Type>OS9-2HD</Type>
 			<Type>L3S1-2HD</Type>
+			<Type>CPMS1-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>

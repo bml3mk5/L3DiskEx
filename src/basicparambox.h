@@ -30,7 +30,6 @@ private:
 	DiskBasicParamPtrs params;
 	int show_flags;
 
-//	wxTextCtrl	*txtBasic;
 	wxChoice	*comBasic;
 	int selected_basic;
 

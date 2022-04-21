@@ -210,41 +210,6 @@ DiskParam::DiskParam(const DiskParam &src)
 {
 	this->SetDiskParam(src);
 }
-#if 0
-DiskParam::DiskParam(const wxString &n_type_name
-	, const DiskParamNames &n_basic_types
-	, bool n_reversible
-	, int n_sides_per_disk
-	, int n_tracks_per_side
-	, int n_sectors_per_track
-	, int n_sector_size
-	, int n_numbering_sector
-	, int n_disk_density
-	, int n_interleave
-	, const DiskParticulars &n_singles
-	, const DiskParticulars &n_ptracks
-	, const DiskParticulars &n_psectors
-	, const wxString &n_density_name
-	, const wxString &n_desc
-) {
-	this->SetDiskParam(n_type_name
-		, n_basic_types
-		, n_reversible
-		, n_sides_per_disk
-		, n_tracks_per_side
-		, n_sectors_per_track
-		, n_sector_size
-		, n_numbering_sector
-		, n_disk_density
-		, n_interleave
-		, n_singles
-		, n_ptracks
-		, n_psectors
-		, n_density_name
-		, n_desc
-	);
-}
-#endif
 DiskParam &DiskParam::operator=(const DiskParam &src)
 {
 	this->SetDiskParam(src);

@@ -559,22 +559,6 @@ void DiskBasicDirItemFAT8F::SetFileSize(int val)
 	m_groups.SetSize(val);
 }
 
-#if 0
-/// データをエクスポートする前に必要な処理
-/// @param [in,out] filename ファイル名
-/// @return false このファイルは対象外とする
-bool DiskBasicDirItemFAT8F::PreExportDataFile(wxString &filename)
-{
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindType(GetFileAttr().GetType(), -1);
-	if (sa) {
-		// 拡張子部分を付加
-		filename += wxT(".");
-		filename += sa->GetName();
-	}
-	return true;
-}
-#endif
-
 /// インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する
 /// @param [in,out] filename ファイル名
 /// @return false このファイルは対象外とする

@@ -63,18 +63,6 @@ void DiskBasicDirItemLOSA::SetFileType2(int val)
 	m_data->losa.binary_type = val & 0xff;
 }
 
-#if 0
-/// ファイル名と拡張子を得る
-void DiskBasicDirItemLOSA::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
-{
-	DiskBasicDirItem::GetNativeFileName(name, nlen, ext, elen);
-	if (nlen > 0) {
-		// 0x05を0xe5に変換(Sjift JISなど2バイト系文字など)
-		if (name[0] == 0x05) name[0] = 0xe5;
-	}
-}
-#endif
-
 /// 属性を設定
 void DiskBasicDirItemLOSA::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -166,25 +154,6 @@ size_t DiskBasicDirItemLOSA::GetDataSize() const
 
 
 #define IDC_CHK_LABIN		61
-
-#if 0
-/// ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemLOSA::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_NEW_FILE) {
-		// 外部からインポート時
-		file_type_1 = FILE_TYPE_ARCHIVE_MASK;
-	}
-	if (show_flags & INTNAME_IMPORT_INTERNAL) {
-		// 内部からインポート時
-		file_type_1 |= FILE_TYPE_ARCHIVE_MASK;
-	}
-}
-#endif
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ

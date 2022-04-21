@@ -105,6 +105,17 @@ int mem_rchr(const void *buf, size_t len, int ch)
 	return match;
 }
 
+/// バッファのアルファベットASCII小文字を大文字にする
+void to_upper(void *src, size_t len)
+{
+	unsigned char *p = (unsigned char *)src;
+	for(size_t i=0; i<len; i++) {
+		if (p[i] >= 0x61 && p[i] <= 0x7a) {
+			p[i] -= 0x20;
+		}
+	}
+}
+
 //
 //
 //

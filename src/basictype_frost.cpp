@@ -431,21 +431,4 @@ void DiskBasicTypeFROST::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 /// IPLや管理エリアの属性をセット
 void DiskBasicTypeFROST::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
-#if 0
-	// タイトル名 FATエリア
-	if (basic->GetFormatType()->HasVolumeName()) {
-		int div_num, div_nums;
-		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1 + 3, NULL, NULL, NULL, &div_num, &div_nums);
-		if (sector) {
-			wxCharBuffer n = data.GetVolumeName().To8BitData();
-			size_t l = n.length();
-			if (l > 0) {
-				if (l > 64) {
-					l = 64;
-				}
-				sector->Copy(n.data(), l, sector->GetSectorSize() * div_num / div_nums + 0x140);
-			}
-		}
-	}
-#endif
 }

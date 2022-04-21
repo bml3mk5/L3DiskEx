@@ -83,8 +83,6 @@ private:
 	int	    GetFileType1Pos() const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int	    GetFileType2Pos() const;
-//	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
-//	int		CalcFileTypeFromPos(int pos);
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
@@ -104,8 +102,6 @@ public:
 
 	/// @brief 削除
 	bool	Delete(wxUint8 code);
-//	/// @brief ENDマークがあるか(一度も使用していないか)
-//	bool	HasEndMark();
 	/// @brief 次のアイテムにENDマークを入れる
 	void	SetEndMark(DiskBasicDirItem *next_item);
 

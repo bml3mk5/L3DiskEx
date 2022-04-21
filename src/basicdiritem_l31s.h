@@ -22,9 +22,6 @@ public:
 	DiskBasicDirItemL31S(DiskBasic *basic);
 	DiskBasicDirItemL31S(DiskBasic *basic, DiskD88Sector *sector, int secpos, wxUint8 *data);
 	DiskBasicDirItemL31S(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
-
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
-	void	ConvertToFileNameStr(wxString &filename) const;
 };
 
 #endif /* _BASICDIRITEM_L31S_H_ */

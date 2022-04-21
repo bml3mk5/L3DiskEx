@@ -401,34 +401,6 @@ void DiskBasicDirItem::SetFileExtPlain(const wxString &fileext)
 /// @param [in]  src ディレクトリアイテム
 void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 {
-#if 0
-	wxUint8 sname[FILENAME_BUFSIZE], dname[FILENAME_BUFSIZE];
-	wxUint8 *sn, *dn;
-	size_t sl, sel, dl, del;
-	bool sinvert = src.basic->IsDataInverted();
-	bool dinvert = basic->IsDataInverted();
-	char space = basic->GetDirSpaceCode();	// 空白コード
-	char term  = basic->GetDirTerminateCode();	// 終端コード
-
-	sn = src.GetFileNamePos(0, sl);
-	src.GetFileExtPos(sel);
-	sl += sel;
-	memcpy(sname, sn, sl);
-	if (sinvert) mem_invert(sname, sl);
-	sl = rtrim(sname, sl, space);
-	sl = rtrim(sname, sl, term);
-	sl = str_shrink(sname, sl);
-
-	dn = GetFileNamePos(0, dl);
-	GetFileExtPos(del);
-	dl += del;
-
-	MemoryCopy(sname, sl, strlen((const char *)sname), term, space, dname, dl);
-
-	if (dinvert) mem_invert(dname, dl);
-
-	memcpy(dn, dname, dl);
-#else
 	wxUint8 name[FILENAME_BUFSIZE], ext[FILEEXT_BUFSIZE];
 	size_t nlen = sizeof(name);
 	size_t elen;
@@ -436,7 +408,6 @@ void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 	GetFileExtPos(elen);
 	src.GetNativeFileName(name, nlen, ext, elen);
 	SetNativeFileName(name, sizeof(name), nlen, ext, sizeof(ext), elen);
-#endif
 }
 
 /// ファイル名を設定
@@ -686,18 +657,10 @@ void DiskBasicDirItem::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *e
 	}
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-/// @return 文字列
-wxString DiskBasicDirItem::GetDefaultInvalidateChars() const
-{
-	return wxT("\"\\/:;");
-}
-#endif
-
 /// ファイル名(拡張子除く)が一致するか
-/// @param [in] name ファイル名
-bool DiskBasicDirItem::IsSameName(const wxString &name) const
+/// @param [in] name      ファイル名
+/// @param [in] icase     大文字小文字を区別しないか(case insensitive)
+bool DiskBasicDirItem::IsSameName(const wxString &name, bool icase) const
 {
 	if (!IsUsedAndVisible()) return false;
 
@@ -712,6 +675,11 @@ bool DiskBasicDirItem::IsSameName(const wxString &name) const
 	ToNativeFileName(name, dname, dnlen, NULL, delen);
 	// このアイテムのファイル名を取得
 	GetNativeFileName(sname, snlen, NULL, selen);
+	// 小文字大文字を区別しない場合
+	if (icase) {
+		to_upper(sname, snlen);
+		to_upper(dname, dnlen);
+	}
 	// 比較
 	return (memcmp(sname, dname, snlen > dnlen ? snlen : dnlen) == 0);
 }
@@ -719,8 +687,9 @@ bool DiskBasicDirItem::IsSameName(const wxString &name) const
 /// 同じファイル名か
 /// ファイル名＋拡張子＋拡張属性で一致するかどうか
 /// @param [in] filename ファイル名
+/// @param [in] icase    大文字小文字を区別しないか(case insensitive)
 /// @see GetOptionalName()
-bool DiskBasicDirItem::IsSameFileName(const DiskBasicFileName &filename) const
+bool DiskBasicDirItem::IsSameFileName(const DiskBasicFileName &filename, bool icase) const
 {
 	if (!IsUsedAndVisible()) return false;
 
@@ -735,6 +704,13 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicFileName &filename) const
 	ToNativeFileName(filename.GetName(), dname, dnlen, dext, delen);
 	// このアイテムのファイル名を取得
 	GetNativeFileName(sname, snlen, sext, selen);
+	// 小文字大文字を区別しない場合
+	if (icase) {
+		to_upper(sname, snlen);
+		to_upper(sext, selen);
+		to_upper(dname, dnlen);
+		to_upper(dext, delen);
+	}
 	// 比較
 	return (memcmp(sname, dname, snlen > dnlen ? snlen : dnlen) == 0)
 		&& ((delen == 0 && selen == 0) || memcmp(sext, dext, selen > delen ? selen : delen) == 0)
@@ -743,9 +719,10 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicFileName &filename) const
 
 /// 同じファイル名か
 /// ファイル名＋拡張子＋拡張属性で一致するかどうか
-/// @param [in] src ディレクトリアイテム
+/// @param [in] src     ディレクトリアイテム
+/// @param [in] icase   大文字小文字を区別しないか(case insensitive)
 /// @see GetOptionalName()
-bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem *src) const
+bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem *src, bool icase) const
 {
 	if (!IsUsedAndVisible()) return false;
 
@@ -760,6 +737,13 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem *src) const
 	src->GetNativeFileName(dname, dnlen, dext, delen);
 	// このアイテムのファイル名を取得
 	GetNativeFileName(sname, snlen, sext, selen);
+	// 小文字大文字を区別しない場合
+	if (icase) {
+		to_upper(sname, snlen);
+		to_upper(sext, selen);
+		to_upper(dname, dnlen);
+		to_upper(dext, delen);
+	}
 	// 比較
 	return (memcmp(sname, dname, snlen > dnlen ? snlen : dnlen) == 0)
 		&& ((delen == 0 && selen == 0) || memcmp(sext, dext, selen > delen ? selen : delen) == 0)
@@ -815,7 +799,10 @@ wxString DiskBasicDirItem::RemakeFileNameAndExtStr(const wxString &filepath) con
 	}
 
 	// 大文字にする（機種依存）
-	ConvertToFileNameStr(newname);
+	if (basic->ToUpperBeforeDialog()) {
+		newname.MakeUpper();
+	}
+	ConvertFileNameBeforeImportDialog(newname);
 
 	return newname;
 }
@@ -845,7 +832,10 @@ wxString DiskBasicDirItem::RemakeFileNameOnlyStr(const wxString &filepath) const
 	}
 
 	// 大文字にする（機種依存）
-	ConvertToFileNameStr(newname);
+	if (basic->ToUpperBeforeDialog()) {
+		newname.MakeUpper();
+	}
+	ConvertFileNameBeforeImportDialog(newname);
 
 	return newname;
 }
@@ -1025,55 +1015,6 @@ bool DiskBasicDirItem::IsContainAttrByExtension(const wxString &filename, const 
 	return match;
 }
 
-#if 0
-/// 内部ファイル名からコード変換して文字列を返す
-///
-/// コピー、このアプリからインポート時のダイアログを出す前
-///
-/// @param [in] src    ファイル名
-/// @param [in] srclen ファイル名長さ
-/// @return ファイル名
-wxString DiskBasicDirItem::RemakeFileName(const wxUint8 *src, size_t srclen) const
-{
-	wxString dst;
-	srclen = str_length(src, srclen, 0);
-	ConvCharsToString(src, srclen, dst);
-	return dst;
-}
-#endif
-
-#if 0
-/// ファイル名を変換して内部ファイル名にする "."で拡張子と分別 大文字変換（機種依存）
-///
-/// ダイアログ入力後のファイル名文字列を変換する
-///
-/// @param [in]  filename   ファイル名(Unicode)
-/// @param [out] nativename 内部ファイル名バッファ
-/// @param [in]  length     バッファサイズ
-void DiskBasicDirItem::ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length) const
-{
-	wxUint8 tmp[FILENAME_BUFSIZE];
-	bool invert = basic->IsDataInverted();
-	size_t nl, el;
-
-	wxString namestr = filename;
-
-	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
-	ConvertFromFileNameStr(namestr);
-
-	int tmplen = basic->ConvStringToChars(namestr, tmp, sizeof(tmp));
-	if (tmplen < 0) return;
-
-	GetFileNamePos(0, nl);
-	GetFileExtPos(el);
-	MemoryCopyEx(tmp, nl, el, basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), nativename, length);
-	if (invert) {
-		mem_invert(nativename, length);
-	}
-	return;
-}
-#endif
-
 /// ファイル名を変換して内部ファイル名にする 検索用
 /// @param [in]     filename ファイル名(Unicode)
 /// @param [out]    name     内部ファイル名バッファ
@@ -1090,7 +1031,10 @@ bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name,
 	wxString namestr = filename;
 
 	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
-	ConvertFromFileNameStr(namestr);
+	if (basic->ToUpperAfterRenamed()) {
+		namestr.MakeUpper();
+	}
+	ConvertFileNameAfterRenamed(namestr);
 
 	int tmplen = ConvStringToChars(namestr, tmp, sizeof(tmp));
 	if (tmplen < 0) return false;
@@ -1105,66 +1049,6 @@ bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name,
 
 	return true;
 }
-
-#if 0
-/// 文字列をコード変換して内部ファイル名(名前)にする
-/// @param [in]   src     ファイル名(Unicode)
-/// @param [out]  dst     内部ファイル名バッファ
-/// @param [in]   len     上記バッファサイズ
-/// @return true OK / false 変換できない文字がある
-bool DiskBasicDirItem::ToNativeName(const wxString &src, wxUint8 *dst, size_t len) const
-{
-	wxUint8 tmp[FILENAME_BUFSIZE];
-	bool valid = true;
-	bool invert = basic->IsDataInverted();
-	size_t nl, el;
-
-	wxString namestr = src;
-
-	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
-	ConvertFromFileNameStr(namestr);
-
-	int tmplen = basic->ConvStringToChars(namestr, tmp, sizeof(tmp));
-	if (tmplen < 0) return false;
-
-	GetFileNamePos(0, nl);
-	GetFileExtPos(el);
-	nl += el;
-	valid = MemoryCopy(tmp, nl, strlen((const char *)tmp), basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), dst, len);
-	if (invert) {
-		mem_invert(dst, len);
-	}
-	return valid;
-}
-
-/// 文字列をコード変換して内部ファイル名(拡張子)にする
-/// @param [in]   src     ファイル名(Unicode)
-/// @param [out]  dst     内部ファイル名バッファ
-/// @param [in]   len     上記バッファサイズ
-/// @return true OK / false 変換できない文字がある
-bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len) const
-{
-	wxUint8 tmp[FILEEXT_BUFSIZE];
-	bool valid = true;
-	bool invert = basic->IsDataInverted();
-	size_t el;
-
-	wxString extstr = src;
-
-	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
-	ConvertFromFileNameStr(extstr);
-
-	int tmplen = basic->ConvStringToChars(extstr, tmp, sizeof(tmp));
-	if (tmplen < 0) return false;
-
-	GetFileExtPos(el);
-	valid = MemoryCopy(tmp, el, strlen((const char *)tmp), basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), dst, len);
-	if (invert) {
-		mem_invert(dst, len);
-	}
-	return valid;
-}
-#endif
 
 /// 文字列をバッファにコピー
 /// @param [in]   src     ファイル名
@@ -1509,19 +1393,6 @@ void DiskBasicDirItem::CopyItem(const DiskBasicDirItem &src)
 	// その他の属性
 	m_external_attr = src.m_external_attr;
 }
-
-#if 0
-/// 内部メモリを確保してアイテムをコピー
-/// @param [in] val ディレクトリアイテム
-void DiskBasicDirItem::CloneData(const directory_t *val)
-{
-	if (!m_ownmake_data) {
-		m_data = new directory_t;
-	}
-	m_ownmake_data = true;
-	memcpy(m_data, val, GetDataSize());
-}
-#endif
 
 /// ディレクトリをクリア ファイル新規作成時
 void DiskBasicDirItem::ClearData()

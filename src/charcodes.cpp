@@ -99,16 +99,16 @@ size_t CharCodeMap::FindString(const wxUint8 *src, size_t remain, wxString &dst,
 /// @param [out]    pos : ある場合、その位置
 /// @retval true  一致した
 /// @retval false 一致しなかった
-bool CharCodeMap::FindCode(const wxString &src, wxUint8 *dst, size_t *pos)
+bool CharCodeMap::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 {
 	bool match = false;
 	for(size_t i=0; i<list.Count(); i++) {
 		CharCode *itm = list.Item(i);
 		if (itm->str == src) {
 			if (dst) {
-				memcpy(&dst[*pos], itm->code, itm->code_len);
-				(*pos) += itm->code_len;
+				memcpy(&dst[pos], itm->code, itm->code_len);
 			}
+			pos += itm->code_len;
 			match = true;
 			break;
 		}
@@ -118,9 +118,9 @@ bool CharCodeMap::FindCode(const wxString &src, wxUint8 *dst, size_t *pos)
 		wxUint8 c = *p;
 		if (c < 0x80) {
 			if (dst) {
-				dst[*pos] = c;
-				(*pos)++;
+				dst[pos] = c;
 			}
+			pos++;
 			match = true;
 		}
 	}
@@ -226,7 +226,7 @@ size_t CharCodeMapMB::FindString(const wxUint8 *src, size_t remain, wxString &ds
 /// @param [out]    pos : ある場合、その位置
 /// @retval true  一致した
 /// @retval false 一致しなかった
-bool CharCodeMapMB::FindCode(const wxString &src, wxUint8 *dst, size_t *pos)
+bool CharCodeMapMB::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 {
 	bool match = false;
 
@@ -236,9 +236,9 @@ bool CharCodeMapMB::FindCode(const wxString &src, wxUint8 *dst, size_t *pos)
 		match = true;
 		for(size_t i=0; i<len; i++) {
 			if (dst) {
-				dst[*pos] = cb[i];
-				(*pos)++;
+				dst[pos] = cb[i];
 			}
+			pos++;
 		}
 	}
 	return match;
@@ -568,7 +568,7 @@ int CharCodes::ConvToChars(const wxString &src, wxUint8 *dst, size_t len)
 	size_t pos = 0;
 //	cache = maps[0];
 	for(size_t i=0; i<src.Length() && pos < (len - 1) && rc; i++) {
-		rc = cache->FindCode(src.Mid(i,1), dst, &pos);
+		rc = cache->FindCode(src.Mid(i,1), dst, pos);
 	}
 	if (dst) dst[pos]='\0';
 	return rc ? (int)pos : -1;
@@ -591,7 +591,7 @@ size_t CharCodes::FindString(const wxUint8 *src, size_t len, wxString &dst, wxUi
 /// @param [out]    pos : ある場合、その位置
 /// @retval true  一致した
 /// @retval false 一致しなかった
-bool CharCodes::FindCode(const wxString &src, wxUint8 *dst, size_t *pos)
+bool CharCodes::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 {
 	return cache->FindCode(src, dst, pos);
 }

@@ -42,23 +42,6 @@ typedef enum en_intnamebox_show_flags {
 
 //////////////////////////////////////////////////////////////////////
 
-#if 0
-class IntNameParam
-{
-private:
-	int		 user_data;
-
-public:
-	IntNameParam();
-	~IntNameParam() {}
-
-	void	SetUserData(int val) { user_data = val; }
-	int		GetUserData() { return user_data; }
-};
-#endif
-
-//////////////////////////////////////////////////////////////////////
-
 /// 内部ファイル名ボックス
 class IntNameBox : public wxDialog
 {
@@ -123,8 +106,6 @@ public:
 		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, const wxString &file_name, int file_size, struct tm *date_time, int show_flags);
 
 	int ShowModal();
-
-//	void SetValuesToDirItem();
 	//@}
 
 	/// @name event procedures
@@ -232,12 +213,13 @@ private:
 	wxString valchrs;	///< 入力できる文字
 	wxString invchrs;	///< 入力できない文字
 	wxString dupchrs;	///< 重複指定できない文字
+	wxString fstchrs;	///< ファイル名先頭に入力できる文字
 	size_t maxlen;
 
-//	wxString IsValid(const wxString& val) const;
 	bool ContainsIncludedCharacters(const wxString& val, wxString &invchr) const;
 	bool ContainsExcludedCharacters(const wxString& val, wxString &invchr) const;
 	bool ContainsDuplicatedCharacters(const wxString& val, wxString &invchr) const;
+	bool ContainsIncludedCharactersAtFirst(const wxString& val, wxString &invchr) const;
 
 public:
 	IntNameValidator(DiskBasic *basic, DiskBasicDirItem *item);

@@ -239,7 +239,7 @@ void L3DiskApp::MacOpenFile(const wxString &fileName)
 /// アプリケーションのパスを設定
 void L3DiskApp::SetAppPath()
 {
-	app_path = wxFileName::FileName(argv[0]).GetPath(wxPATH_GET_SEPARATOR);
+	app_path = wxFileName::FileName(argv[0]).GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
 #ifdef __WXOSX__
 	if (app_path.Find(_T("MacOS")) >= 0) {
 		wxFileName file = wxFileName::FileName(app_path+"../../../");
@@ -492,9 +492,6 @@ wxBEGIN_EVENT_TABLE(L3DiskFrame, wxFrame)
 	EVT_MENU(IDM_IMPORT_DATA, L3DiskFrame::OnImportDataToDisk)
 	EVT_MENU(IDM_DELETE_DATA, L3DiskFrame::OnDeleteDataFromDisk)
 	EVT_MENU(IDM_RENAME_DATA_ON_DISK, L3DiskFrame::OnRenameDataOnDisk)
-#ifdef USE_CUSTOMDATA_FOR_DND
-	EVT_MENU(IDM_DUPLICATE_DATA, L3DiskFrame::OnDuplicateDataOnDisk)
-#endif
 	EVT_MENU(IDM_COPY_DATA, L3DiskFrame::OnCopyDataFromDisk)
 	EVT_MENU(IDM_PASTE_DATA, L3DiskFrame::OnPasteDataToDisk)
 	EVT_MENU(IDM_MAKE_DIRECTORY_ON_DISK, L3DiskFrame::OnMakeDirectoryOnDisk)
@@ -584,10 +581,6 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 	menuData->Append( IDM_DELETE_DATA, _("&Delete...") );
 	menuData->Append( IDM_RENAME_DATA_ON_DISK, _("Rena&me File") );
 	menuData->AppendSeparator();
-#ifdef USE_CUSTOMDATA_FOR_DND
-	menuData->Append(IDM_DUPLICATE_DATA, _("D&uplicate..."));
-	menuData->AppendSeparator();
-#endif
 	menuData->Append(IDM_COPY_DATA, _("&Copy"));
 	menuData->Append(IDM_PASTE_DATA, _("&Paste..."));
 	menuData->AppendSeparator();
@@ -946,13 +939,6 @@ void L3DiskFrame::OnRenameDataOnDisk(wxCommandEvent& WXUNUSED(event))
 {
 	RenameDataOnDisk();
 }
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// メニュー 複製選択
-void L3DiskFrame::OnDuplicateDataOnDisk(wxCommandEvent& WXUNUSED(event))
-{
-	DuplicateDataOnDisk();
-}
-#endif
 /// メニュー コピー選択
 void L3DiskFrame::OnCopyDataFromDisk(wxCommandEvent& WXUNUSED(event))
 {
@@ -1198,9 +1184,6 @@ void L3DiskFrame::UpdateMenuFileList(L3DiskFileList *list)
 	opened = (opened && cnt > 0);
 	menuData->Enable(IDM_EXPORT_DATA, opened);
 	menuData->Enable(IDM_DELETE_DATA, opened);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	menuData->Enable(IDM_DUPLICATE_DATA, opened);
-#endif
 	menuData->Enable(IDM_COPY_DATA, opened);
 	opened = (opened && cnt == 1);
 	menuData->Enable(IDM_RENAME_DATA_ON_DISK, opened);
@@ -1243,9 +1226,6 @@ void L3DiskFrame::UpdateMenuRawDisk(L3DiskRawPanel *rawpanel)
 	menuData->Enable(IDM_COPY_DATA, opened);
 	menuData->Enable(IDM_PASTE_DATA, opened);
 	menuData->Enable(IDM_DELETE_DATA, opened);
-#ifdef USE_CUSTOMDATA_FOR_DND
-	menuData->Enable(IDM_DUPLICATE_DATA, false);
-#endif
 
 	menuData->Enable(IDM_RENAME_DATA_ON_DISK, false);
 	menuData->Enable(IDM_MAKE_DIRECTORY_ON_DISK, false);
@@ -1743,26 +1723,6 @@ void L3DiskFrame::AddDiskFile(const wxString &path, const wxString &file_format,
 	}
 }
 
-#if 0
-/// ファイル種類選択ダイアログ オープン時
-/// @param [in]  path        ファイルパス
-/// @param [out] file_format ファイルの形式名("d88","plain"など)
-/// @return 1:OK 0:CANCEL
-int L3DiskFrame::ShowFileSelectDialogForOpen(const wxString &path, wxString &file_format)
-{
-	return (ShowFileSelectDialog(path, file_format) ? 1 : 0);
-}
-
-/// ファイル種類選択ダイアログ 追加時
-/// @param [in]  path        ファイルパス
-/// @param [out] file_format ファイルの形式名("d88","plain"など)
-/// @return 1:OK 0:CANCEL
-int L3DiskFrame::ShowFileSelectDialogForAdd(const wxString &path, wxString &file_format)
-{
-	return (ShowFileSelectDialog(path, file_format) ? 1 : 0);
-}
-#endif
-
 /// ファイル種類選択ダイアログ
 /// @param [in]  path        ファイルパス
 /// @param [out] file_format 選択したファイルの形式名("d88","plain"など)
@@ -2106,17 +2066,6 @@ void L3DiskFrame::RenameDataOnDisk()
 		return;
 	}
 }
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// ディスク上のデータを複製
-void L3DiskFrame::DuplicateDataOnDisk()
-{
-	L3DiskFileList *list = GetFileListPanel();
-	if (list) {
-		list->DuplicateDataFile();
-		return;
-	}
-}
-#endif
 /// ディスクのデータをコピー
 void L3DiskFrame::CopyDataFromDisk()
 {
@@ -2855,21 +2804,11 @@ L3DiskPanel::L3DiskPanel(L3DiskFrame *parent)
 
 	SetMinimumPaneSize(10);
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-	// drag and drop
-	if (!L3DiskPanelDataFormat) {
-		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATAV4"));
-	}
-#endif
 	SetDropTarget(new L3DiskPanelDropTarget(parent, this));
 }
 
 L3DiskPanel::~L3DiskPanel()
 {
-#ifdef USE_CUSTOMDATA_FOR_DND
-	delete L3DiskPanelDataFormat;
-	L3DiskPanelDataFormat = NULL;
-#endif
 }
 
 #if 0
@@ -2919,18 +2858,6 @@ bool L3DiskPanel::ProcessDroppedFiles(wxCoord x, wxCoord y, const wxArrayString 
 	return sts;
 }
 
-#ifdef USE_CUSTOMDATA_FOR_DND
-/// このアプリどうしでDnD
-bool L3DiskPanel::ProcessDroppedFile(wxCoord x, wxCoord y, const wxUint8 *buffer, size_t buflen)
-{
-	L3DiskFileList *list = rpanel->GetFileListPanel();
-	if (list) {
-		list->ImportDataFiles(buffer, buflen);
-	}
-	return true;
-}
-#endif
-
 //////////////////////////////////////////////////////////////////////
 //
 // File Drag and Drop
@@ -2942,11 +2869,7 @@ L3DiskPanelDropTarget::L3DiskPanelDropTarget(L3DiskFrame *parentframe, L3DiskPan
 	frame = parentframe;
 
 	wxDataObjectComposite* dataobj = new wxDataObjectComposite();
-#ifdef USE_CUSTOMDATA_FOR_DND
-	// from own appli このアプリからのDnDを優先
-	dataobj->Add(new wxCustomDataObject(*L3DiskPanelDataFormat), true);
-#endif
-	// from explorer, finder etc.
+
 	dataobj->Add(new wxFileDataObject());
 	SetDataObject(dataobj);
 }
@@ -2967,15 +2890,6 @@ wxDragResult L3DiskPanelDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult de
 	if (comobj) {
 		wxDataFormat fmt = comobj->GetReceivedFormat();
 //		wxDataFormat fmt = comobj->GetPreferredFormat();
-#ifdef USE_CUSTOMDATA_FOR_DND
-		if (fmt == *L3DiskPanelDataFormat) {
-			// このアプリからのDnDを優先
-			wxCustomDataObject *dobj = (wxCustomDataObject *)comobj->GetObject(fmt);
-			size_t buflen = dobj->GetDataSize();
-			wxUint8 *buffer = (wxUint8 *)dobj->GetData();
-			sts = parent->ProcessDroppedFile(x, y, buffer, buflen);
-		} else
-#endif
 		if (fmt.GetType() == wxDF_FILENAME) {
 			// エクスプローラからのDnD
 			wxFileDataObject *dobj = (wxFileDataObject *)comobj->GetObject(fmt);

@@ -65,15 +65,6 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	bool			Check(bool &last);
 
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	wxString		GetDefaultInvalidateChars() const;
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
-	void			ConvertToFileNameStr(wxString &filename) const;
-	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
-	void			ConvertFromFileNameStr(wxString &filename) const;
-	/// @brief ファイル名は必須（空文字不可）か
-	bool			IsFileNameRequired() const { return true; }
-
 	/// @brief 削除
 	bool			Delete(wxUint8 code);
 

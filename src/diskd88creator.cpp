@@ -59,32 +59,16 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 	// 単密度にするか
 	bool single_density = param->FindSingleDensity(track_number, side_number, &sector_max, &sector_size);
 
-	int *sector_nums = new int[sector_max + 1];
-
 	// interleave
-	memset(sector_nums, 0, sizeof(int) * (sector_max + 1));
-	int sector_pos = 0;
-	int err = 0;
-	for(int sector_number = 1; sector_number <= sector_max && err == 0; sector_number++) {
-		if (sector_pos >= sector_max) {
-			sector_pos -= sector_max;
-			while (sector_nums[sector_pos] > 0) {
-				sector_pos++;
-				if (sector_pos >= sector_max) {
-					// ?? error
-					err = 1;
-					result->SetError(DiskResult::ERR_INTERLEAVE);
-					break;
-				}
-			}
-		}
-		sector_nums[sector_pos] = sector_number;
-		sector_pos += param->GetInterleave();
+//	int *sector_nums = new int[sector_max + 1];
+	wxArrayInt sector_nums;
+	if (!DiskD88Track::CalcSectorNumbersForInterleave(param->GetInterleave(), sector_max, sector_nums)) {
+		result->SetError(DiskResult::ERR_INTERLEAVE);
 	}
 
 	// create sectors
 	wxUint32 track_size = 0;
-	for(sector_pos = 0; sector_pos < sector_max && result->GetValid() >= 0; sector_pos++) {
+	for(int sector_pos = 0; sector_pos < sector_max && result->GetValid() >= 0; sector_pos++) {
 		int sector_offset = 0;
 		if (param->IsReversible()) {
 			// 裏返しできる(AB面あり)場合
@@ -105,7 +89,6 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 		delete track;
 	}
 
-	delete [] sector_nums;
 	return track_size;
 }
 

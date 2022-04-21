@@ -26,14 +26,6 @@ DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int num, int track, i
 {
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMSX::GetDefaultInvalidateChars() const
-{
-	return wxT(" \"\\/:;*?+,=[]");
-}
-#endif
-
 /// 属性の文字列を返す(ファイル一覧画面表示用)
 wxString DiskBasicDirItemMSX::GetFileAttrStr() const
 {

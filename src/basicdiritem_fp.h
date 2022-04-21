@@ -62,8 +62,6 @@ private:
 	int	    GetFileType1Pos() const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int	    GetFileType2Pos() const;
-//	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
-//	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 	/// @brief ファイル内部のアドレスを取り出す
 	void	TakeAddressesInFile() {}
@@ -131,8 +129,6 @@ public:
 
 	/// @brief インポート時などのダイアログを出す前にファイルパスから内部ファイル名を生成する
 	bool	PreImportDataFile(wxString &filename);
-//	/// @brief ファイル名から属性を決定する
-//	int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 	/// @brief 属性値を加工する
 	bool	ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 

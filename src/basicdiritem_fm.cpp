@@ -25,11 +25,3 @@ DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, int num, int track, int
 	: DiskBasicDirItemFAT8F(basic, num, track, side, sector, secpos, data, unuse)
 {
 }
-
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemFM::GetDefaultInvalidateChars() const
-{
-	return wxT("\":()");
-}
-#endif

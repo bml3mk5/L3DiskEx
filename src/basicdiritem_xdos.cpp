@@ -954,22 +954,6 @@ static int GetSubTypeInAttrDialog(const IntNameBox *parent, const xdos_sub_type_
 	return stype;
 }
 
-#if 0
-/// ダイアログ用に属性を設定する
-/// ダイアログ表示前にファイルの属性を設定
-/// @param [in] show_flags      ダイアログ表示フラグ
-/// @param [in]  name           ファイル名
-/// @param [out] file_type_1    CreateControlsForAttrDialog()に渡す
-/// @param [out] file_type_2    CreateControlsForAttrDialog()に渡す
-void DiskBasicDirItemXDOS::SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2)
-{
-	if (show_flags & INTNAME_NEW_FILE) {
-		// 外部からインポート時
-		file_type_1 = ConvOriginalTypeFromFileName(name);
-	}
-}
-#endif
-
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
 /// @param [in] show_flags     ダイアログ表示フラグ

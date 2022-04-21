@@ -114,8 +114,6 @@ protected:
 	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// @brief 属性2を得る
 	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
-//	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
-//	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 	/// @brief ユーザーファイルタイプ名に変換
 	static void	ConvUserFileTypeToStr(int type1, wxString &str);
@@ -142,8 +140,6 @@ public:
 	virtual bool	IsDeletable() const;
 	/// @brief ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
-	/// @brief ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() const { return true; }
 	/// @brief アイテムをロード・エクスポートできるか
 	virtual bool	IsLoadable() const;
 	/// @brief アイテムをコピー(内部でDnD)できるか

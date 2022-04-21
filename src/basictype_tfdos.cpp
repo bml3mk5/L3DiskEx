@@ -331,21 +331,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 			}
 		}
 	}
-#if 0
-	// IPL MZ用
-	sector = basic->GetSectorFromSectorPos(basic->GetSectorsPerTrackOnBasic());
-	if (sector) {
-		// IPL文字列を設定
-		wxCharBuffer s_ipl = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
-		size_t len = s_ipl.length();
-		if (len > 0) {
-			if (len > (size_t)sector->GetSectorBufferSize()) len = (size_t)sector->GetSectorBufferSize();
-			memcpy(sector->GetSectorBuffer(), s_ipl.data(), len);
-			// 常に反転する
-			mem_invert(sector->GetSectorBuffer(), len);
-		}
-	}
-#endif
+
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	fatbuf->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));

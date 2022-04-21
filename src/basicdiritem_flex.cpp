@@ -125,26 +125,6 @@ bool DiskBasicDirItemFLEX::Check(bool &last)
 	return valid;
 }
 
-#if 0
-/// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemFLEX::GetDefaultInvalidateChars() const
-{
-	return wxT(" !\"#$%&'()*+,/:;<=>?@[\\]^{|}~");
-}
-#endif
-
-/// ダイアログ入力前のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemFLEX::ConvertToFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
-/// ダイアログ入力後のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemFLEX::ConvertFromFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
-
 /// 属性を設定
 void DiskBasicDirItemFLEX::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -572,12 +552,5 @@ bool DiskBasicDirItemFLEX::ValidateFileName(const wxWindow *parent, const wxStri
 		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
 		return false;
 	}
-	wxRegEx re(wxT("[A-Za-z]"));
-	wxString first_char = fn.GetName().Left(1);
-	if (!re.Matches(first_char)) {
-		errormsg = wxString::Format(_("The char '%s' is not able to use the first char of filename."), first_char);
-		return false;
-	}
-
 	return true;
 }

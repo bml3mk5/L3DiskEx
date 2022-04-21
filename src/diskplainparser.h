@@ -30,6 +30,7 @@ protected:
 	short			mod_flags;
 	DiskResult		*result;
 
+	void ParseInterleave(DiskD88Track *track, int interleave, int sector_offset);
 	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool single_density, bool is_dummy, DiskD88Track *track);
 	wxUint32 ParseTrack(wxInputStream &istream, int offset_pos, wxUint32 offset, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_nums, int sector_size, bool single_density, bool is_dummy_side, DiskD88Disk *disk);
 	wxUint32 ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param);

@@ -89,15 +89,6 @@ public:
 	/// @brief 削除
 	virtual bool	Delete(wxUint8 code);
 
-	/// @brief ダイアログ入力前のファイル名を変換 大文字にする
-	virtual void	ConvertToFileNameStr(wxString &filename) const;
-	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にする
-	virtual void	ConvertFromFileNameStr(wxString &filename) const;
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	virtual wxString GetDefaultInvalidateChars() const;
-	/// @brief ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() const { return true; }
-
 	/// @brief 属性を設定
 	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
 	/// @brief 属性を返す

@@ -31,14 +31,7 @@ public:
 	/// @name functions
 	//@{
 	int ShowModal();
-//	bool ValidateParam();
 	//@}
-
-	// event procedures
-//	void OnOK(wxCommandEvent& event);
-
-	// properties
-//	int GetValue();
 
 	wxDECLARE_EVENT_TABLE();
 };

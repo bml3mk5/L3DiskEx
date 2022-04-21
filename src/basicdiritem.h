@@ -52,7 +52,6 @@ protected:
 	int			m_num;				///< 通し番号
 	int			m_position;			///< セクタ内の位置（バイト）
 	int			m_flags;			///< フラグ bit0:使用しているか bit1:リストに表示するか bit2:ツリーに表示するか
-//	int			m_file_size;		///< ファイルサイズ
 	DiskBasicGroups m_groups;		///< 占有グループ
 	directory_t	*m_data;			///< セクタ内のデータへのポインタ
 	bool		m_ownmake_data;		///< データのメモリは自身で確保したか
@@ -104,20 +103,12 @@ protected:
 	virtual wxString GetFileNamePlainStr() const;
 	/// @brief 拡張子を返す
 	virtual wxString GetFileExtPlainStr() const;
-//	/// @brief ファイル名を変換して内部ファイル名にする "."で拡張子と分別
-//	void			ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length) const;
 	/// @brief ファイル名を変換して内部ファイル名にする 検索用
 	bool			ToNativeFileName(const wxString &filename, wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
-//	/// @brief 文字列をコード変換して内部ファイル名にする
-//	bool			ToNativeName(const wxString &src, wxUint8 *dst, size_t len) const;
-//	/// @brief 文字列をコード変換して内部ファイル名にする
-//	bool			ToNativeExt(const wxString &src, wxUint8 *dst, size_t len) const;
 	/// @brief ファイルパスから内部ファイル名を生成する インポート時などのダイアログを出す前
 	wxString		RemakeFileNameAndExtStr(const wxString &filepath) const;
 	/// @brief ファイルパスから内部ファイル名を生成する インポート時などのダイアログを出す前
 	wxString		RemakeFileNameOnlyStr(const wxString &filepath) const;
-//	/// @brief 内部ファイル名からコード変換して文字列を返す コピー、このアプリからインポート時のダイアログを出す前
-//	virtual wxString RemakeFileName(const wxUint8 *src, size_t srclen) const;
 	/// @brief 属性から拡張子を付加する
 	void			AddExtensionByFileAttr(int file_type, int mask, wxString &filename, bool dupli = false) const;
 	/// @brief 属性から拡張子を付加する
@@ -206,21 +197,17 @@ public:
 	/// @brief ファイル名と拡張子を得る
 	virtual void	GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 	/// @brief ファイル名(拡張子除く)が一致するか
-	bool			IsSameName(const wxString &name) const;
+	bool			IsSameName(const wxString &name, bool icase) const;
 	/// @brief ファイル名が一致するか
-	virtual bool	IsSameFileName(const DiskBasicFileName &filename) const;
+	virtual bool	IsSameFileName(const DiskBasicFileName &filename, bool icase) const;
 	/// @brief 同じファイル名か
-	virtual bool	IsSameFileName(const DiskBasicDirItem *src) const;
+	virtual bool	IsSameFileName(const DiskBasicDirItem *src, bool icase) const;
 	/// @brief ファイル名＋拡張子のサイズ
 	int				GetFileNameStrSize() const;
 	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
-	virtual void	ConvertToFileNameStr(wxString &filename) const {}
+	virtual void	ConvertFileNameBeforeImportDialog(wxString &filename) const {}
 	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にするなど
-	virtual void	ConvertFromFileNameStr(wxString &filename) const {}
-//	/// @brief ファイル名に設定できない文字を文字列にして返す
-//	virtual wxString GetDefaultInvalidateChars() const;
-	/// @brief ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() const { return false; }
+	virtual void	ConvertFileNameAfterRenamed(wxString &filename) const {}
 	/// @brief ファイル名に付随する拡張属性を設定
 	virtual void	SetOptionalName(int val) {}
 	/// @brief ファイル名に付随する拡張属性を返す
@@ -396,8 +383,6 @@ public:
 	virtual void	SetDataPtr(int n_num, int n_track, int n_side, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
 	/// @brief アイテムをコピー
 	virtual bool	CopyData(const directory_t *val);
-//	/// @brief 内部メモリを確保してアイテムをコピー
-//	virtual void	CloneData(const directory_t *val);
 	/// @brief ディレクトリをクリア ファイル新規作成時
 	virtual void	ClearData();
 	/// @brief ディレクトリを初期化 未使用にする

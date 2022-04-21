@@ -26,6 +26,32 @@ DiskPlainParser::~DiskPlainParser()
 {
 }
 
+/// インターリーブの解析
+void DiskPlainParser::ParseInterleave(DiskD88Track *track, int interleave, int sector_offset)
+{
+	if (!track) return;
+
+	DiskD88Sectors *sectors = track->GetSectors();
+	if (!sectors) {
+		return;
+	}
+	size_t count = sectors->Count();
+
+	wxArrayInt sector_nums;
+	if (!DiskD88Track::CalcSectorNumbersForInterleave(interleave, count, sector_nums, sector_offset)) {
+		return;
+	}
+
+	for(size_t idx = 0; idx < count; idx++) {
+		DiskD88Sector *sector = sectors->Item(idx);
+		if (sector) {
+			sector->SetSectorNumber(sector_nums.Item(idx));
+		}
+	}
+
+	track->SetInterleave(interleave);
+}
+
 /// セクタデータの解析
 wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool single_density, bool is_dummy, DiskD88Track *track)
 {
@@ -67,8 +93,9 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 	for(int sector_number = 1; sector_number <= sector_nums && result->GetValid() >= 0; sector_number++) {
 		track_size += ParseSector(istream, disk_number, track_number, side_number, sector_number + sector_offset, sector_nums, sector_size, single_density, is_dummy_side, track);
 	}
-
 	if (result->GetValid() >= 0) {
+		// インターリーブ
+		ParseInterleave(track, disk_param->GetInterleave(), sector_offset);
 		// トラックサイズ設定
 		track->SetSize(track_size);
 		// ディスクに追加

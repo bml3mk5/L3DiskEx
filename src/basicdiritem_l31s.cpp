@@ -25,9 +25,3 @@ DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, int num, int track,
 	: DiskBasicDirItemFAT8F(basic, num, track, side, sector, secpos, data, unuse)
 {
 }
-
-/// ダイアログ入力前のファイル名を変換 大文字にする
-void DiskBasicDirItemL31S::ConvertToFileNameStr(wxString &filename) const
-{
-	filename = filename.Upper();
-}
