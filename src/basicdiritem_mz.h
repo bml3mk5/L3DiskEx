@@ -76,8 +76,6 @@ public:
 	wxString		RemakeFileNameStr(const wxString &filepath);
 	/// ファイル名に設定できない文字を文字列にして返す
 	wxString		InvalidateChars();
-	/// ダイアログ入力後のファイル名チェック
-	bool			ValidateFileName(const wxString &filename, wxString &errormsg);
 
 	/// 属性を設定
 	void			SetFileAttr(int file_type);
@@ -144,8 +142,6 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-//	/// 書き込み/上書き禁止か
-//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
 	bool			IsDeletable();
 	/// ファイル名を編集できるか
@@ -166,6 +162,8 @@ public:
 	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 属性2を得る
 	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// ダイアログ入力後のファイル名チェック
+	bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	//@}
 };
 

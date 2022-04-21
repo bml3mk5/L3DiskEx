@@ -7,13 +7,13 @@
 
 #include "common.h"
 #include <wx/string.h>
+#include "diskd88.h"
+
 
 class wxOutputStream;
-class DiskD88;
-class DiskResult;
 
 /// ディスクライター
-class DiskWriter
+class DiskWriter : public DiskWriteOptions
 {
 private:
 	wxString		file_path;
@@ -31,7 +31,7 @@ private:
 	int SelectSaveDisk(const wxString &type, int disk_number, int side_number, bool &support);
 
 public:
-	DiskWriter(DiskD88 *image, const wxString &path, DiskResult *result);
+	DiskWriter(DiskD88 *image, const wxString &path, const DiskWriteOptions &options, DiskResult *result);
 	~DiskWriter();
 
 	/// 出力先を開く

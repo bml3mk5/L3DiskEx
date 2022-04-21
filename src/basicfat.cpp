@@ -159,7 +159,7 @@ bool DiskBasicFat::Assign()
 
 //		sides = newsides;
 
-		format_type =	basic->GetFormatType();
+//		format_type =	basic->GetFormatType();
 		count =			basic->GetNumberOfFats();
 		size =			basic->GetSectorsPerFat();
 		start_pos =		basic->GetFatStartPos();
@@ -213,7 +213,7 @@ bool DiskBasicFat::Assign()
 }
 void DiskBasicFat::Clear()
 {
-	format_type = FORMAT_TYPE_NONE;
+//	format_type = FORMAT_TYPE_NONE;
 	count = 0;
 	size = 0;
 	start = 0;

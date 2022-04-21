@@ -11,6 +11,8 @@
 #include "basiccommon.h"
 #include "diskd88.h"
 
+class DiskBasicGroupItem;
+
 /// グループ番号に対応するパラメータを保持
 class DiskBasicGroupItem
 {
@@ -86,25 +88,14 @@ class DiskBasicFat
 private:
 	DiskBasic			*basic;
 	DiskBasicType		*type;
-	DiskBasicFormatType format_type;	///< フォーマット種類
 	int count;			///< FATの数
 	int size;			///< FATサイズ(セクタ数)
 	int start;			///< 開始セクタ番号
 	int start_pos;		///< 開始位置
-//	int sides;			///< サイド数
-//	int grps_per_track;	///< 1トラックあたりのグループ数
-//	int sector_size;	///< セクタサイズ
-//	wxUint32 group_final_code;	///< 最終グループのコード(0xc0 - )
-//	wxUint32 group_system_code;	///< システムで使用するコード(0xfe)
-//	wxUint32 group_unused_code;	///< 未使用のコード(0xff)
 
 	DiskBasicFatArea bufs;
 
-//	void CalcGroupNumberFromManagedTrack();
-
 	DiskBasicFat();
-
-//	void CreateFatType();
 
 public:
 	DiskBasicFat(DiskBasic *basic);

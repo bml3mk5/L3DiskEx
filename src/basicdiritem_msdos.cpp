@@ -173,6 +173,21 @@ bool DiskBasicDirItemMSDOS::IsDeletable()
 	return valid;
 }
 
+/// ファイル名を編集できるか
+bool DiskBasicDirItemMSDOS::IsFileNameEditable()
+{
+	bool valid = true;
+	int attr = GetFileAttr();
+	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+		wxString name =	GetFileNamePlainStr();
+		if (name == wxT(".") || name == wxT("..")) {
+			// ディレクトリ ".", ".."は削除不可
+			valid = false;
+		}
+	}
+	return valid;
+}
+
 /// ファイル名に設定できない文字を文字列にして返す
 wxString DiskBasicDirItemMSDOS::InvalidateChars()
 {
@@ -367,14 +382,18 @@ wxString DiskBasicDirItemMSDOS::GetFileTimeStr()
 
 void DiskBasicDirItemMSDOS::SetFileDate(const struct tm *tm)
 {
-	wxUint16 wdate = ConvTmToDate(tm);
-	data->msdos.wdate = wxUINT16_SWAP_ON_BE(wdate);
+	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
+		wxUint16 wdate = ConvTmToDate(tm);
+		data->msdos.wdate = wxUINT16_SWAP_ON_BE(wdate);
+	}
 }
 
 void DiskBasicDirItemMSDOS::SetFileTime(const struct tm *tm)
 {
-	wxUint16 wtime = ConvTmToTime(tm);
-	data->msdos.wtime = wxUINT16_SWAP_ON_BE(wtime); 
+	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
+		wxUint16 wtime = ConvTmToTime(tm);
+		data->msdos.wtime = wxUINT16_SWAP_ON_BE(wtime); 
+	}
 }
 
 /// 日付のタイトル名（ダイアログ用）
@@ -410,20 +429,26 @@ wxString DiskBasicDirItemMSDOS::GetADateStr()
 /// 日付をセット
 void DiskBasicDirItemMSDOS::SetCDate(const struct tm *tm)
 {
-	wxUint16 date = ConvTmToDate(tm);
-	data->msdos.cdate = wxUINT16_SWAP_ON_BE(date);
+	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
+		wxUint16 date = ConvTmToDate(tm);
+		data->msdos.cdate = wxUINT16_SWAP_ON_BE(date);
+	}
 }
 /// 時間をセット
 void DiskBasicDirItemMSDOS::SetCTime(const struct tm *tm)
 {
-	wxUint16 time = ConvTmToTime(tm);
-	data->msdos.ctime = wxUINT16_SWAP_ON_BE(time); 
+	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
+		wxUint16 time = ConvTmToTime(tm);
+		data->msdos.ctime = wxUINT16_SWAP_ON_BE(time); 
+	}
 }
 /// 日付をセット
 void DiskBasicDirItemMSDOS::SetADate(const struct tm *tm)
 {
-	wxUint16 date = ConvTmToDate(tm);
-	data->msdos.adate = wxUINT16_SWAP_ON_BE(date);
+	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
+		wxUint16 date = ConvTmToDate(tm);
+		data->msdos.adate = wxUINT16_SWAP_ON_BE(date);
+	}
 }
 
 /// 日付を変換

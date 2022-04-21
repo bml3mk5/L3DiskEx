@@ -38,8 +38,10 @@ public:
 
 	/// @name disk size
 	//@{
+	/// 使用可能なディスクサイズを得る
+	void		GetUsableDiskSize(int &disk_size, int &group_size) const;
 	/// 残りディスクサイズを計算
-	void		CalcDiskFreeSize();
+	void		CalcDiskFreeSize(bool wrote);
 	//@}
 
 	/// @name file chain
@@ -56,16 +58,16 @@ public:
 	bool		IsRootDirectory(wxUint32 group_num);
 	/// サブディレクトリを作成できるか
 	bool		CanMakeDirectory() const { return true; }
-	/// サブディレクトリを作成する前の個別処理
-	bool		PreProcessOnMakingDirectory(wxString &dir_name);
+	/// サブディレクトリを作成する前にディレクトリ名を編集する
+	bool		RenameOnMakingDirectory(wxString &dir_name);
 	/// サブディレクトリを作成した後の個別処理
-	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num);
+	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
 	//@{
 	/// セクタデータを埋めた後の個別処理
-	bool		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name data access (read / verify)

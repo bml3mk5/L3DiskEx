@@ -55,6 +55,7 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 	lbl = new wxStaticText(this, wxID_ANY, _("Offset :"));
 	grid->Add(lbl);
 	str = wxNumberFormatter::ToString((long)offset);
+	str += wxString::Format(wxT(" (0x%x)"), offset);
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
@@ -79,6 +80,12 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
+	lbl = new wxStaticText(this, wxID_ANY, _("Extra Data Size :"));
+	grid->Add(lbl);
+	str = track ? wxNumberFormatter::ToString((long)track->GetExtraDataSize()) : wxT("0");
+	lbl = new wxStaticText(this, wxID_ANY, str);
+	grid->Add(lbl, flagsr);
+
 	lbl = new wxStaticText(this, wxID_ANY, _("Total Size of This Track :"));
 	grid->Add(lbl);
 	str = track ? wxNumberFormatter::ToString((long)track->GetSize()) : wxT("0");
@@ -87,7 +94,7 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 
 	szrAll->Add(grid, wxSizerFlags().Expand().Border(wxALL, 8));
 
-	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
+	wxSizer *szrButtons = CreateButtonSizer(wxOK);
 	szrAll->Add(szrButtons, flags);
 
 	SetSizerAndFit(szrAll);

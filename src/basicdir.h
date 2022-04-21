@@ -15,6 +15,7 @@
 
 class DiskBasic;
 class DiskBasicType;
+class DiskBasicFormat;
 class DiskBasicFat;
 class DiskBasicDirItems;
 class DiskBasicGroups;
@@ -26,11 +27,11 @@ private:
 	DiskBasic		*basic;
 	DiskBasicFat	*fat;
 
+	const DiskBasicFormat *format_type;	///< フォーマットタイプ
+
 	int start_sector_pos;	///< ルートディレクトリの開始セクタ位置
 	int end_sector_pos;		///< ルートディレクトリの終了セクタ位置
 	int unique_number;		///< Assignするごとに+1 
-
-	DiskBasicFormatType format_type;	///< フォーマットタイプ
 
 	DiskBasicDirItem	*parent_item;	///< 親ディレクトリのアイテム（ルートの場合NULL）
 	DiskBasicGroups		groups;			///< カレントディレクトリのあるグループ番号
@@ -69,7 +70,7 @@ public:
 	/// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
 	DiskBasicDirItem *FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// ルートディレクトリのチェック
-	bool		CheckRoot(DiskBasicType *type, int start_sector, int end_sector);
+	bool		CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting);
 	/// ルートディレクトリをアサイン
 	bool		AssignRoot(DiskBasicType *type, int start_sector, int end_sector);
 	/// ルートディレクトリをアサイン
@@ -93,12 +94,13 @@ public:
 	int			GetUniqueNumber() const { return unique_number; }
 
 	/// フォーマット種類を設定
-	void		SetFormatType(DiskBasicFormatType val) { format_type = val; }
+	void		SetFormatType(const DiskBasicFormat *val) { format_type = val; }
 	/// フォーマット種類を得る
-	DiskBasicFormatType GetFormatType() const { return format_type; }
+	const DiskBasicFormat *GetFormatType() const { return format_type; }
+
 
 	/// アイテムリストを返す
-	const DiskBasicDirItems &GetItems() const { return items; }
+	DiskBasicDirItems &GetItems() { return items; }
 };
 
 #endif /* _BASICDIR_H_ */

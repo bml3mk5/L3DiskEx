@@ -29,14 +29,16 @@ private:
 
 public:
 	L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int selected_window);
-
+	/// パネルの切り替え
 	void ChangePanel(int num);
-
+	/// ディスク属性パネルを返す
 	L3DiskDiskAttr *GetDiskAttrPanel() const { return diskattr; }
-
+	/// ファイルリストパネルを返す
 	L3DiskFileList *GetFileListPanel(bool inst = false) const;
-
+	/// Rawディスクパネルを返す
 	L3DiskRawPanel *GetRawPanel(bool inst = false) const;
+	/// フォントをセット
+	void SetListFont(const wxFont &font);
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskRPanel);

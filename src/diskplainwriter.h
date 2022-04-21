@@ -8,6 +8,7 @@
 #include "common.h"
 
 class wxOutputStream;
+class DiskWriter;
 class DiskD88;
 class DiskD88Disk;
 class DiskResult;
@@ -16,6 +17,7 @@ class DiskResult;
 class DiskPlainWriter
 {
 private:
+	DiskWriter *dw;
 	DiskResult *result;
 
 	/// ディスク1つを保存
@@ -24,7 +26,7 @@ private:
 	int SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream);
 
 public:
-	DiskPlainWriter(DiskResult *result);
+	DiskPlainWriter(DiskWriter *dw, DiskResult *result);
 	~DiskPlainWriter();
 
 	/// ストリームの内容をファイルに保存

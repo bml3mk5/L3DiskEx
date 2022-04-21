@@ -2,6 +2,13 @@
 ///
 /// @brief 本体
 ///
+/** @mainpage L3 Disk Explorer
+
+    @section notes NOTES
+
+    This application needs library to build:
+    wxWidgets version 3.0 or later.
+*/
 #ifndef _L3DISKEX_MAIN_H_
 #define _L3DISKEX_MAIN_H_
 
@@ -22,10 +29,6 @@
 #include "diskd88.h"
 #include "config.h"
 
-// icon
-extern const char *fd_5inch_16_1_xpm[];
-extern const char *fd_5inch_16_2_xpm[];
-
 class L3DiskApp;
 class L3DiskFrame;
 class L3DiskPanel;
@@ -42,6 +45,8 @@ class L3DiskBinDumpFrame;
 class L3DiskFatAreaFrame;
 
 class DiskBasicGroups;
+class DiskBasicDirItem;
+class DiskBasicDirItems;
 
 class CharTypeBox;
 
@@ -60,8 +65,10 @@ private:
 	L3DiskFrame *frame;
 	wxString in_file;
 
+#ifdef CAPTURE_MOD_KEY_ON_APP
 	int		mod_keys;	///< 修飾キー押下を記憶
 	int		mod_cnt;
+#endif
 
 	wxArrayString tmp_dirs;
 
@@ -77,6 +84,7 @@ public:
 	bool	OnCmdLineParsed(wxCmdLineParser &parser);
 	/// 終了処理
 	int		OnExit();
+#ifdef CAPTURE_MOD_KEY_ON_APP
 	/// アイドル時の処理
 	void	OnAppIdle(wxIdleEvent& event);
 	/// イベント強制取得
@@ -85,6 +93,7 @@ public:
 	int		GetModifiers() const { return mod_keys; }
 	/// 修飾キー押下状態を設定
 	void	SetModifiers(int val) { mod_keys = val; }
+#endif
 	/// ファイルを開く(Mac用)
 	void	MacOpenFile(const wxString &fileName);
 	/// アプリケーションのパスを返す
@@ -205,11 +214,17 @@ public:
 	void OnBasicMode(wxCommandEvent& event);
 	/// Rawディスクモード選択
 	void OnRawDiskMode(wxCommandEvent& event);
+	/// キャラクターコード選択
+	void OnChangeCharCode(wxCommandEvent& event);
+	/// 未使用データを切り落とすか
+	void OnTrimData(wxCommandEvent& event);
 
 	/// ダンプウィンドウ選択
 	void OnOpenBinDump(wxCommandEvent& event);
 	/// FAT使用状況ウィンドウ選択
 	void OnOpenFatArea(wxCommandEvent& event);
+	/// フォント変更選択
+	void OnChangeFont(wxCommandEvent& event);
 
 	/// メニュー 設定ダイアログ選択
 	void OnConfigure(wxCommandEvent& event);
@@ -231,6 +246,8 @@ public:
 	/// メニューのファイル項目を更新
 	void UpdateMenuFileList(L3DiskFileList *list);
 	void UpdateMenuRawDisk(L3DiskRawPanel *rawpanel);
+	/// メニューのモード項目を更新
+	void UpdateMenuMode();
 #endif
 	/// 最近使用したファイル一覧を更新
 	void UpdateMenuRecentFiles();
@@ -257,6 +274,11 @@ public:
 	/// ウィンドウ上のデータを更新 タイトルバーにファイルパスを表示
 	void UpdateDataOnWindow(const wxString &path, bool keep);
 
+	/// 保存後のウィンドウ上のデータを更新
+	void UpdateSavedDataOnWindow(const wxString &path);
+	/// ウィンドウ上のファイルパスを更新
+	void UpdateFilePathOnWindow(const wxString &path);
+
 	/// 新規作成ダイアログ
 	void ShowCreateFileDialog();
 	/// 新規作成
@@ -268,21 +290,25 @@ public:
 	/// オープンダイアログ
 	void ShowOpenFileDialog();
 	/// 拡張子でファイル種別を判別する オープン時
-	void PreOpenDataFile(const wxString &path);
+	bool PreOpenDataFile(const wxString &path);
+	/// 指定したディスクイメージをチェック
+	int  CheckOpeningDataFile(const wxString &path, const wxString &ext, wxString &file_format, DiskParam &param_hint);
 	/// 指定したディスクイメージを開く
-	bool OpenDataFile(const wxString &path, const wxString &file_format, const wxString &disk_type);
+	bool OpenDataFile(const wxString &path, const wxString &file_format, const DiskParam &param_hint);
 	/// ファイル追加ダイアログ
 	void ShowAddFileDialog();
 	/// 拡張子でファイル種別を判別する 追加時
-	void PreAddDiskFile(const wxString &path);
+	bool PreAddDiskFile(const wxString &path);
 	/// 指定したファイルを追加
-	void AddDiskFile(const wxString &path, const wxString &file_format, const wxString &disk_type);
-	/// ファイル種類選択ダイアログ オープン時
-	void ShowFileSelectDialogForOpen(const wxString &path);
-	/// ファイル種類選択ダイアログ 追加時
-	void ShowFileSelectDialogForAdd(const wxString &path);
+	void AddDiskFile(const wxString &path, const wxString &file_format, const DiskParam &param_hint);
+//	/// ファイル種類選択ダイアログ オープン時
+//	int  ShowFileSelectDialogForOpen(const wxString &path, wxString &file_format);
+//	/// ファイル種類選択ダイアログ 追加時
+//	int  ShowFileSelectDialogForAdd(const wxString &path, wxString &file_format);
 	/// ファイル種類選択ダイアログ
-	bool ShowFileSelectDialog(const wxString &path, wxString &file_format, wxString &disk_type);
+	bool ShowFileSelectDialog(const wxString &path, wxString &file_format);
+	/// ディスク種類選択ダイアログ
+	bool ShowParamSelectDialog(const wxString &path, const DiskParamPtrs &disk_params, const DiskParam *manual_param, DiskParam &param_hint);
 	/// ファイルを閉じる
 	bool CloseDataFile(bool force = false);
 	/// 保存ダイアログ
@@ -296,11 +322,13 @@ public:
 	/// ディスクイメージ置換ダイアログ
 	void ShowReplaceDiskDialog(int disk_number, int side_number);
 	/// 拡張子でファイル種別を判別する 置換時
-	void PreReplaceDisk(int disk_number, int side_number, const wxString &path);
-	/// ファイル種類選択ダイアログ 置換時
-	void ShowFileSelectDialogForReplace(int disk_number, int side_number, const wxString &path);
+	bool PreReplaceDisk(int disk_number, int side_number, const wxString &path);
+//	/// ファイル種類選択ダイアログ 置換時
+//	int  ShowFileSelectDialogForReplace(int disk_number, int side_number, const wxString &path, wxString &file_format);
 	/// 指定したディスクイメージ置換
-	void ReplaceDisk(int disk_number, int side_number, const wxString &path, const wxString &file_format, const wxString &disk_type);
+	void ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, DiskD88Disk *tag_disk);
+//	/// 指定したディスクイメージ置換
+//	void ReplaceDisk(int disk_number, int side_number, const wxString &path, const wxString &file_format, const DiskParam &param_hint);
 	/// ディスクをファイルから削除
 	void DeleteDisk();
 	/// ディスク名を変更
@@ -323,9 +351,30 @@ public:
 	void FormatDisk();
 	/// ドロップされたファイルを開く
 	void OpenDroppedFile(const wxString &path);
+	/// BASIC情報ダイアログ
+	void ShowBasicAttr();
+	/// キャラクターコード選択
+	void ChangeCharCode(int sel);
+	/// キャラクターコード番号を返す
+	int  GetCharCode() const;
+	// キャラクターコード番号設定
+	void SetDefaultCharCode();
+	/// フォント変更ダイアログ
+	void ShowListFontDialog();
+	/// リストウィンドウのフォント変更
+	void SetListFont(const wxFont &font);
+	/// リストウィンドウのデフォルトフォントを得る
+	void GetDefaultListFont(wxFont &font);
 
 	/// 選択しているModeメニュー BASICかRAW DISKか
 	int GetSelectedMode();
+
+	/// 全パネルにデータをセットする（ディスク選択時）
+	void SetDataOnDisk(DiskD88Disk *disk, int side_number, bool refresh_list);
+	/// 全パネルのデータをクリアする
+	void ClearAllData();
+	/// 全パネルのデータをクリアしてRAW DISKパネルだけデータをセット
+	void ClearAllAndSetRawData(DiskD88Disk *disk, int side_number);
 	//@}
 
 	/// @name 左パネル 全般
@@ -339,16 +388,21 @@ public:
 	/// 左パネルのディスクリストを返す
 	L3DiskList *GetDiskListPanel();
 	/// 左パネルのディスクリストにデータを設定する
-	void SetDiskListData();
+	void SetDiskListData(const wxString &filename);
 	/// 左パネルのディスクリストをクリア
 	void ClearDiskListData();
-//	bool IsDiskListSelectedDiskImage();
 	/// 左パネルのディスクリストのディスクを選択しているか
 	bool IsDiskListSelectedDisk();
 	/// 左パネルのディスクリストの選択している位置
 	void GetDiskListSelectedPos(int &disk_number, int &side_number);
 	/// 左パネルのディスクリストを選択
 	void SetDiskListPos(int disk_number, int side_number);
+	/// 左パネルのディスクリストにファイルパスを設定
+	void SetDiskListFilePath(const wxString &path);
+	/// 左パネルのディスクリストにディスク名を設定
+	void SetDiskListName(const wxString &name);
+	/// 左パネルのディスクリストを再選択
+	void ReSelectDiskList();
 	//@}
 
 	/// @name 右パネル 全般
@@ -375,12 +429,14 @@ public:
 	//@{
 	/// 右下パネルのファイルリストパネルを返す
 	L3DiskFileList *GetFileListPanel(bool inst = false);
+	/// 右下パネルのファイルリストにDISK BASICをアタッチ
+	void AttachDiskBasicOnFileList(DiskD88Disk *disk, int side_num);
+	/// 右下パネルのファイルリストからDISK BASICをデタッチ
+	void DetachDiskBasicOnFileList();
 	/// 右下パネルのファイルリストにデータを設定する
-	void SetFileListData(DiskD88Disk *disk, int side_num);
+	void SetFileListData();
 	/// 右下パネルのファイルリストをクリア
 	void ClearFileListData();
-//	/// 右下パネルのファイルリストの選択行を返す
-//	int GetFileListSelectedRow();
 	//@}
 
 	/// @name ファイル名属性プロパティダイアログ
@@ -397,23 +453,22 @@ public:
 	void SetRawPanelData(DiskD88Disk *disk, int side_num);
 	/// 右下パネルのRAWディスクパネルをクリア
 	void ClearRawPanelData();
-//	/// 右下パネルのRAWディスクパネルの選択行を返す
-//	int GetRawPanelSelectedRow();
+	/// 右下パネルのRAWディスクパネルにデータを再設定する
+	void RefreshRawPanelData();
 	//@}
 
 	/// @name ダンプウィンドウ
 	//@{
 	/// ダンプウィンドウを返す
 	L3DiskBinDumpFrame *GetBinDumpFrame() const { return bindump_frame; }
-//	L3DiskBinDump *GetBinDumpPanel();
 	/// ダンプウィンドウにデータを設定する
-	void SetBinDumpData(const wxUint8 *buf, size_t len, int char_code, bool invert);
+	void SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert);
 	/// ダンプウィンドウにデータを設定する
-	void SetBinDumpData(const wxUint8 *buf, size_t len);
+	void SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	/// ダンプウィンドウにデータを追記する
-	void AppendBinDumpData(const wxUint8 *buf, size_t len, int char_code, bool invert);
+	void AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert);
 	/// ダンプウィンドウにデータを追記する
-	void AppendBinDumpData(const wxUint8 *buf, size_t len);
+	void AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	/// ダンプウィンドウをクリア
 	void ClearBinDumpData();
 
@@ -452,6 +507,8 @@ public:
 
 	/// @name 設定ファイル
 	//@{
+	/// 設定ファイルを返す
+	Config *GetConfig() { return ini; }
 	/// 最近使用したパスを取得
 	const wxString &GetRecentPath() const;
 	/// 最近使用したパスを取得(エクスポート用)
@@ -462,6 +519,12 @@ public:
 	void SetFilePath(const wxString &path);
 	/// 最近使用したパスを更新(エクスポート用)
 	void SetExportFilePath(const wxString &path);
+	/// ダンプフォントを更新
+	void SetDumpFont(const wxFont &font);
+	/// ダンプフォント名を返す
+	const wxString &GetDumpFontName() const;
+	/// ダンプフォントサイズを返す
+	int GetDumpFontSize() const;
 	//@}
 
 	/// @name utility
@@ -509,9 +572,13 @@ public:
 
 		IDM_BASIC_MODE,
 		IDM_RAWDISK_MODE,
+		IDM_CHAR_ASCII,
+		IDM_CHAR_SJIS,
+		IDM_TRIM_DATA,
 
 		IDM_WINDOW_BINDUMP,
 		IDM_WINDOW_FATAREA,
+		IDM_CHANGE_FONT,
 
 		IDM_CONFIGURE,
 
@@ -565,7 +632,6 @@ public:
     L3DiskPanelDropTarget(L3DiskFrame *parentframe, L3DiskPanel *parentwindow);
 
 	wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
-//   bool OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames);
 };
 #endif
 

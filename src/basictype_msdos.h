@@ -21,7 +21,15 @@ public:
 	/// @name format
 	//@{
 	/// セクタデータを埋めた後の個別処理
-	bool	AdditionalProcessOnFormatted();
+	bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
+	//@}
+
+	/// @name property
+	//@{
+	/// IPLや管理エリアの属性を得る
+	void		GetIdentifiedData(DiskBasicIdentifiedData &data) const;
+	/// IPLや管理エリアの属性をセット
+	void		SetIdentifiedData(const DiskBasicIdentifiedData &data);
 	//@}
 };
 

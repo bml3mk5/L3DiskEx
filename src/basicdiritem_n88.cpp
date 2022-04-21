@@ -272,14 +272,6 @@ void DiskBasicDirItemN88::SetEndMark(DiskBasicDirItem *next_item)
 	if (HasEndMark()) next_item->Delete(basic->GetGroupUnusedCode());
 }
 
-#if 0
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemN88::IsWriteProtected()
-{
-	return (data->n88.type & 0x10) != 0;
-}
-#endif
-
 /// ファイルの終端コードをチェックする必要があるか
 bool DiskBasicDirItemN88::NeedCheckEofCode()
 {

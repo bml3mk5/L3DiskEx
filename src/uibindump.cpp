@@ -30,6 +30,8 @@ wxBEGIN_EVENT_TABLE(L3DiskBinDumpFrame, wxFrame)
 	EVT_MENU(wxID_CLOSE, L3DiskBinDumpFrame::OnClose)
 	EVT_MENU(IDM_VIEW_INVERT, L3DiskBinDumpFrame::OnViewInvert)
 	EVT_MENU_RANGE(IDM_VIEW_CHAR_ASCII, IDM_VIEW_CHAR_SJIS, L3DiskBinDumpFrame::OnViewChar)
+	EVT_MENU_RANGE(IDM_VIEW_TEXT, IDM_VIEW_BINARY, L3DiskBinDumpFrame::OnViewTextBinary)
+	EVT_MENU(IDM_VIEW_FONT, L3DiskBinDumpFrame::OnViewFont)
 wxEND_EVENT_TABLE()
 
 L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size)
@@ -41,10 +43,15 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 
 	menuFile->Append(wxID_CLOSE, _("&Close"));
 
+	menuView->AppendRadioItem(IDM_VIEW_BINARY, _("Binary"));
+	menuView->AppendRadioItem(IDM_VIEW_TEXT, _("Text"));
+	menuView->AppendSeparator();
 	menuView->AppendRadioItem(IDM_VIEW_CHAR_ASCII, _("Ascii"));
 	menuView->AppendRadioItem(IDM_VIEW_CHAR_SJIS, _("Shift JIS"));
 	menuView->AppendSeparator();
 	menuView->AppendCheckItem(IDM_VIEW_INVERT, _("&Invert Datas"));
+	menuView->AppendSeparator();
+	menuView->AppendCheckItem(IDM_VIEW_FONT, _("&Font..."));
 
 	// menu bar
 	wxMenuBar *menuBar = new wxMenuBar;
@@ -88,9 +95,45 @@ void L3DiskBinDumpFrame::OnViewChar(wxCommandEvent& event)
 	panel->SetDataChar(id - IDM_VIEW_CHAR_ASCII);
 }
 
+void L3DiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
+{
+	int id = event.GetId();
+	bool checked = event.IsChecked();
+	ToggleControl(id, checked);
+	panel->SetTextBinary(id - IDM_VIEW_TEXT);
+}
+
+void L3DiskBinDumpFrame::OnViewFont(wxCommandEvent& event)
+{
+	ShowDataFontDialog();
+}
+
 L3DiskBinDump *L3DiskBinDumpFrame::GetDumpPanel() const
 {
 	return panel->GetDumpPanel();
+}
+
+void L3DiskBinDumpFrame::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+	L3DiskBinDump *dump = GetDumpPanel();
+	if (dump) dump->SetDatas(trk, sid, sec, buf, len);
+}
+
+void L3DiskBinDumpFrame::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+	L3DiskBinDump *dump = GetDumpPanel();
+	if (dump) dump->AppendDatas(trk, sid, sec, buf, len);
+}
+
+void L3DiskBinDumpFrame::ClearDatas()
+{
+	L3DiskBinDump *dump = GetDumpPanel();
+	if (dump) dump->ClearDatas();
+}
+
+void L3DiskBinDumpFrame::SetTextBinary(int val)
+{
+	panel->SetTextBinary(val);
 }
 
 void L3DiskBinDumpFrame::SetDataInvert(bool val)
@@ -108,6 +151,26 @@ void L3DiskBinDumpFrame::SetDataChar(int val)
 void L3DiskBinDumpFrame::SetDataFont(const wxFont &font)
 {
 	panel->SetDataFont(font);
+	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	parent->SetDumpFont(font);
+}
+
+void L3DiskBinDumpFrame::GetDefaultDataFont(wxFont &font)
+{
+	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	wxString name = parent->GetDumpFontName();
+	int size = parent->GetDumpFontSize();
+	if (size == 0) size = 10;
+	if (name.IsEmpty()) {
+		font = wxFont(size, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+	} else {
+		font = wxFont(size, wxFONTFAMILY_DEFAULT , wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, name);
+	}
+}
+
+wxFont L3DiskBinDumpFrame::GetDefaultFont() const
+{
+	return wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
 }
 
 wxString L3DiskBinDumpFrame::GetDataFontName() const
@@ -130,7 +193,7 @@ void L3DiskBinDumpFrame::ToggleControl(int id, bool checked)
 
 void L3DiskBinDumpFrame::ShowDataFontDialog()
 {
-	FontMiniBox dlg(this, wxID_ANY);
+	FontMiniBox dlg(this, wxID_ANY, GetDefaultFont());
 	dlg.SetFontName(GetDataFontName());
 	dlg.SetFontSize(GetDataFontSize());
 	int sts = dlg.ShowModal();
@@ -138,6 +201,24 @@ void L3DiskBinDumpFrame::ShowDataFontDialog()
 		wxFont new_font(dlg.GetFontSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, dlg.GetFontName());
 		SetDataFont(new_font);
 	}
+}
+
+//
+//
+//
+L3MemoryBuffer::L3MemoryBuffer(const L3MemoryBuffer &src)
+	: wxMemoryBuffer(src)
+{
+	track_number = 0;
+	side_number = 0;
+	sector_number = 1;
+}
+L3MemoryBuffer::L3MemoryBuffer(size_t size)
+	: wxMemoryBuffer(size)
+{
+	track_number = 0;
+	side_number = 0;
+	sector_number = 1;
 }
 
 //
@@ -166,6 +247,11 @@ L3DiskBinDumpPanel::~L3DiskBinDumpPanel()
 {
 }
 
+void L3DiskBinDumpPanel::SetTextBinary(int val)
+{
+	attr->SetTextBinary(val);
+	dump->SetTextBinary(val);
+}
 void L3DiskBinDumpPanel::SetDataInvert(bool val)
 {
 	attr->SetDataInvert(val);
@@ -194,6 +280,8 @@ int L3DiskBinDumpPanel::GetDataFontSize() const
 //
 // Attach Event
 wxBEGIN_EVENT_TABLE(L3DiskBinDumpAttr, wxPanel)
+	EVT_RADIOBUTTON(IDC_RADIO_TEXT, L3DiskBinDumpAttr::OnCheckTextBinary)
+	EVT_RADIOBUTTON(IDC_RADIO_BINARY, L3DiskBinDumpAttr::OnCheckTextBinary)
 	EVT_RADIOBUTTON(IDC_RADIO_CHAR_ASCII, L3DiskBinDumpAttr::OnCheckChar)
 	EVT_RADIOBUTTON(IDC_RADIO_CHAR_SJIS, L3DiskBinDumpAttr::OnCheckChar)
 	EVT_CHECKBOX(IDC_CHECK_INVERT, L3DiskBinDumpAttr::OnCheckInvert)
@@ -210,15 +298,30 @@ L3DiskBinDumpAttr::L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *szrH = new wxBoxSizer(wxHORIZONTAL);
 
+	radBinary = new wxRadioButton(this, IDC_RADIO_BINARY, _("Binary"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
+	szrH->Add(radBinary, flags);
+	radText = new wxRadioButton(this, IDC_RADIO_TEXT, _("Text"));
+	szrH->Add(radText, flags);
+
+	radBinary->SetValue(true);
+
+	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
+
 	szrH->Add(new wxStaticText(this, wxID_ANY, _("Charactor Code")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxALL, 4));
 	radCharAscii = new wxRadioButton(this, IDC_RADIO_CHAR_ASCII, _("Ascii"), wxDefaultPosition, wxDefaultSize, wxRB_GROUP);
 	szrH->Add(radCharAscii, flags);
 	radCharSJIS = new wxRadioButton(this, IDC_RADIO_CHAR_SJIS, _("Shift JIS"));
 	szrH->Add(radCharSJIS, flags);
+	
+	radCharAscii->SetValue(true);
+
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
+
 	chkInvert = new wxCheckBox(this, IDC_CHECK_INVERT, _("Invert Datas")); 
 	szrH->Add(chkInvert, flags);
+
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
+
 	btnFont = new wxButton(this, IDC_BUTTON_FONT, _("Font..."));
 	szrH->Add(btnFont, flags);
 
@@ -231,6 +334,10 @@ L3DiskBinDumpAttr::~L3DiskBinDumpAttr()
 {
 }
 
+void L3DiskBinDumpAttr::OnCheckTextBinary(wxCommandEvent& event)
+{
+	frame->SetTextBinary(event.GetId() - IDC_RADIO_TEXT);
+}
 void L3DiskBinDumpAttr::OnCheckChar(wxCommandEvent& event)
 {
 	frame->SetDataChar(event.GetId() - IDC_RADIO_CHAR_ASCII);
@@ -244,6 +351,17 @@ void L3DiskBinDumpAttr::OnClickButton(wxCommandEvent& event)
 	frame->ShowDataFontDialog();
 }
 
+void L3DiskBinDumpAttr::SetTextBinary(int val)
+{
+	switch(val) {
+	case 1:
+		radBinary->SetValue(true);
+		break;
+	default:
+		radText->SetValue(true);
+		break;
+	}
+}
 void L3DiskBinDumpAttr::SetDataInvert(bool val)
 {
 	chkInvert->SetValue(val);
@@ -276,13 +394,14 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	data_invert = false;
 	data_char = 0;
 
-	wxFont fontFixed(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
+	wxFont font;
+	frame->GetDefaultDataFont(font);
 
 	wxPoint pt(0, 0);
 	wxSize sz;
 
 	txtHex = new wxTextCtrl(this, IDC_TXT_HEX, wxT(""), pt, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 | wxTE_NO_VSCROLL);
-	txtHex->SetFont(fontFixed);
+	txtHex->SetFont(font);
 	sz = txtHex->GetTextExtent(wxString((char)'0', 60));
 	sz.y *= 35;
 	txtHex->SetSize(sz);
@@ -290,8 +409,8 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	pt.x += sz.x;
 
 	txtAsc = new wxTextCtrl(this, IDC_TXT_ASC, wxT(""), pt, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 | wxTE_NO_VSCROLL);
-	txtAsc->SetFont(fontFixed);
-	sz = txtHex->GetTextExtent(wxString((char)'0', 30));
+	txtAsc->SetFont(font);
+	sz = txtAsc->GetTextExtent(wxString((char)'0', 30));
 	sz.y *= 35;
 	txtAsc->SetSize(sz);
 	txtAsc->Bind(wxEVT_MOUSEWHEEL, &L3DiskBinDump::OnMouseWheelOnChild, this);
@@ -303,6 +422,7 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	min_y = pt.y;
 
 	txt_height = 0;
+	text_binary = 1;
 
 	parent->SetClientSize(min_x, min_y);
 	SetScrollBarPos(min_x, min_y, 0, 0);
@@ -316,17 +436,21 @@ L3DiskBinDump::~L3DiskBinDump()
 void L3DiskBinDump::ClearBuffer()
 {
 	for(size_t i=0; i<buffers.Count(); i++) {
-		wxMemoryBuffer *p = buffers.Item(i);
+		L3MemoryBuffer *p = buffers.Item(i);
 		delete p;
 	}
 	buffers.Clear();
 }
 
-void L3DiskBinDump::AppendBuffer(const wxUint8 *buf, size_t len)
+L3MemoryBuffer *L3DiskBinDump::AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
-	wxMemoryBuffer *p = new wxMemoryBuffer(len);
+	L3MemoryBuffer *p = new L3MemoryBuffer(len);
+	p->SetTrackNumber(trk);
+	p->SetSideNumber(sid);
+	p->SetSectorNumber(sec);
 	p->AppendData(buf, len);
 	buffers.Add(p);
+	return p;
 }
 
 void L3DiskBinDump::OnSize(wxSizeEvent& event)
@@ -345,37 +469,64 @@ void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
 #endif
 }
 
-void L3DiskBinDump::SetDatas(const wxUint8 *buf, size_t len)
+void L3DiskBinDump::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
 	ClearBuffer();
-	AppendBuffer(buf, len);
-	SetDatasMain(buf, len);
+	SetDatasMain(AppendBuffer(trk, sid, sec, buf, len));
 }
 
-void L3DiskBinDump::SetDatasMain(const wxUint8 *buf, size_t len)
+void L3DiskBinDump::SetDatasMain(const L3MemoryBuffer *buf)
 {
-	wxString str;
+	switch(text_binary) {
+	case 1:
+		SetDatasBinaryMain(buf, false);
+		break;
+	default:
+		SetDatasTextMain(buf, false);
+		break;
+	}
+}
+
+void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
+{
+	wxString str, stra;
 	wxSize sz, tz, cszH, cszA;
 
 	Freeze();
 
-	int rows = dump.DumpBinary(buf,len,str,data_invert);
+	int rows = dump.Binary(buf->GetByteData(),buf->GetDataLen(),str,data_invert);
+	dump.Ascii(buf->GetByteData(),buf->GetDataLen(),data_char,stra,data_invert);
 
-	txtHex->SetValue(str);	
-	txtAsc->SetValue(dump.DumpAscii(buf,len,data_char,data_invert));
+	if (append) {
+		txtHex->AppendText(wxT("\n"));
+		txtAsc->AppendText(wxT("\n"));	
+	} else {
+		txtHex->Clear();
+		txtAsc->Clear();
+		txt_height = 0;
+	}
+
+	txtHex->AppendText(wxString::Format(wxT("# C:%d H:%d R:%d\n"),buf->GetTrackNumber(),buf->GetSideNumber(),buf->GetSectorNumber()));	
+	txtHex->AppendText(str);
+	txtAsc->AppendText(wxT("#\n"));
+	txtAsc->AppendText(stra);
+
+	rows++;
 
 	txtHex->ShowPosition(0);
 	txtAsc->ShowPosition(0);
 
-	sz = txtAsc->GetTextExtent(str);
-	tz = txtAsc->GetSizeFromTextSize(sz);
 	cszH = txtHex->GetSize();
 	cszA = txtAsc->GetSize();
 
 #ifdef __WXOSX__
-	int yy = ((double)sz.y * 1.4) * rows;
+	sz = txtAsc->GetTextExtent(str);
+	int yy = txt_height + ((double)sz.y * 1.4) * rows;
 #else
-	int yy = sz.y * rows + (tz.y - sz.y) * rows / 2;
+	wxPoint pz = txtAsc->PositionToCoords(txtAsc->GetLastPosition());
+	sz = txtAsc->GetTextExtent(stra);
+	tz = txtAsc->GetSizeFromTextSize(sz);
+	int yy = pz.y + tz.y;
 #endif
 
 	txt_height = yy;
@@ -395,25 +546,89 @@ void L3DiskBinDump::SetDatasMain(const wxUint8 *buf, size_t len)
 	Thaw();
 }
 
-void L3DiskBinDump::AppendDatas(const wxUint8 *buf, size_t len)
-{
-	AppendBuffer(buf, len);
-	AppendDatasMain(buf, len);
-}
-
-void L3DiskBinDump::AppendDatasMain(const wxUint8 *buf, size_t len)
+void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
 {
 	wxString str;
+	wxSize sz, tz, cszH;
+
+	Freeze();
+
+	int rows = dump.Text(buf->GetByteData(),buf->GetDataLen(),data_char,str,data_invert);
+
+	if (append) {
+		txtHex->AppendText(str);
+	} else {
+		txtHex->SetValue(str);
+		txtAsc->Clear();
+		txt_height = 0;
+	}
+
+	txtHex->ShowPosition(0);
+	txtAsc->ShowPosition(0);
+
+	cszH = txtHex->GetSize();
+
+#ifdef __WXOSX__
+	sz = txtHex->GetTextExtent(str);
+	int yy = txt_height + ((double)sz.y * 1.4) * rows;
+#else
+	wxPoint pz = txtHex->PositionToCoords(txtHex->GetLastPosition());
+	sz = txtHex->GetTextExtent(str);
+	tz = txtHex->GetSizeFromTextSize(sz);
+	int yy = pz.y + tz.y;
+#endif
+
+	txt_height = yy;
+
+	if (min_y > yy) {
+		yy = min_y;
+	}
+
+	cszH.y = yy;
+
+	txtHex->SetSize(cszH);
+
+	SetScrollBarPos(min_x, yy, -1, -1);
+
+	Thaw();
+}
+
+void L3DiskBinDump::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+	AppendDatasMain(AppendBuffer(trk, sid, sec, buf, len));
+}
+
+void L3DiskBinDump::AppendDatasMain(const L3MemoryBuffer *buf)
+{
+	switch(text_binary) {
+	case 1:
+		SetDatasBinaryMain(buf, true);
+		break;
+	default:
+		SetDatasTextMain(buf, true);
+		break;
+	}
+}
+
+#if 0
+void L3DiskBinDump::AppendDatasBinaryMain(const L3MemoryBuffer *buf)
+{
+	wxString str, stra;
 	wxSize sz, tz, cszH, cszA;
 
 	Freeze();
 
-	int rows = dump.DumpBinary(buf,len,str,data_invert);
+	int rows = dump.DumpBinary(buf->GetByteData(),buf->GetDataLen(),str,data_invert);
+	dump.DumpAscii(buf->GetByteData(),buf->GetDataLen(),data_char,stra,data_invert);
 
 	txtHex->AppendText(wxT("\n"));	
-	txtHex->AppendText(str);	
+	txtHex->AppendText(wxString::Format(wxT("# C:%d H:%d R:%d\n"),buf->GetTrackNumber(),buf->GetSideNumber(),buf->GetSectorNumber()));	
+	txtHex->AppendText(str);
 	txtAsc->AppendText(wxT("\n"));	
-	txtAsc->AppendText(dump.DumpAscii(buf,len,data_char,data_invert));
+	txtAsc->AppendText(wxT("#\n"));	
+	txtAsc->AppendText(stra);
+
+	rows++;
 
 	txtHex->ShowPosition(0);
 	txtAsc->ShowPosition(0);
@@ -445,15 +660,16 @@ void L3DiskBinDump::AppendDatasMain(const wxUint8 *buf, size_t len)
 
 	Thaw();
 }
+#endif
 
 void L3DiskBinDump::RefreshData()
 {
 	for(size_t i=0; i<buffers.Count(); i++) {
-		wxMemoryBuffer *p = buffers.Item(i);
+		L3MemoryBuffer *p = buffers.Item(i);
 		if (i == 0) {
-			SetDatasMain((const wxUint8 *)p->GetData(), p->GetDataLen());
+			SetDatasMain(p);
 		} else {
-			AppendDatasMain((const wxUint8 *)p->GetData(), p->GetDataLen());
+			AppendDatasMain(p);
 		}
 	}
 }
@@ -464,6 +680,25 @@ void L3DiskBinDump::ClearDatas()
 
 	txtHex->Clear();
 	txtAsc->Clear();
+}
+
+void L3DiskBinDump::SetTextBinary(int val)
+{
+	if (text_binary != val) {
+		wxSize cszH = txtHex->GetSize();
+		wxSize cszA = txtAsc->GetSize();
+		if (val == 0) {
+			txtAsc->Show(false);
+			cszH.SetWidth(cszH.GetWidth() + cszA.GetWidth());
+			txtHex->SetSize(cszH);
+		} else {
+			cszH.SetWidth(cszH.GetWidth() - cszA.GetWidth());
+			txtHex->SetSize(cszH);
+			txtAsc->Show(true);
+		}
+		text_binary = val;
+		RefreshData();
+	}
 }
 
 void L3DiskBinDump::SetDataInvert(bool val)
@@ -483,10 +718,43 @@ void L3DiskBinDump::SetDataChar(int val)
 }
 void L3DiskBinDump::SetDataFont(const wxFont &font)
 {
+	wxPoint pt, pv;
+	wxSize hsz, asz, sz;
+
+	pv = GetViewStart();
+	pv.x *= SCROLLBAR_UNIT;
+	pv.y *= SCROLLBAR_UNIT;
+
 	txtHex->SetFont(font);
+	hsz = txtHex->GetSize();
+	sz = txtHex->GetTextExtent(wxString((char)'0', 60));
+	hsz.x = sz.x;
+
 	txtAsc->SetFont(font);
+	pt = txtAsc->GetPosition();
+	pt.x = sz.x - pv.x;
+	pt.y = -pv.y;
+	txtAsc->SetPosition(pt);
+
+	asz = txtAsc->GetSize();
+	sz = txtAsc->GetTextExtent(wxString((char)'0', 30));
+	asz.x = sz.x;
+
+	min_x = hsz.x + asz.x;
+
+	if (text_binary == 0) {
+		// text
+		hsz.x += asz.x;
+	}
+
+	txtHex->SetSize(hsz);
+	txtAsc->SetSize(asz);
+
+	SetScrollBarPos(min_x, asz.y, pv.x, pv.y);
+
 	RefreshData();
 }
+
 wxString L3DiskBinDump::GetDataFontName() const
 {
 	wxFont font = txtHex->GetFont();

@@ -266,6 +266,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicparambox.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicselbox.cpp"
 				>
 			</File>
@@ -378,6 +382,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskreplacebox.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskresult.cpp"
 				>
 			</File>
@@ -418,15 +426,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\rawsectorbox.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\rawtrackbox.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\result.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\src\sectorbox.cpp"
 				>
 			</File>
 			<File
@@ -544,6 +552,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicparambox.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicselbox.h"
 				>
 			</File>
@@ -656,6 +668,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\diskreplacebox.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\diskresult.h"
 				>
 			</File>
@@ -696,15 +712,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\rawsectorbox.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\rawtrackbox.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\result.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\sectorbox.h"
 				>
 			</File>
 			<File

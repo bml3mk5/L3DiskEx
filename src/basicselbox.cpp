@@ -4,19 +4,25 @@
 ///
 
 #include "basicselbox.h"
+#include <wx/string.h>
 #include <wx/listbox.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
 #include <wx/sizer.h>
 //#include <wx/numformatter.h>
+#include "basicfmt.h"
 #include "basicparam.h"
 #include "diskd88.h"
+#include "utils.h"
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(BasicSelBox, wxDialog)
-	EVT_CHOICE(IDC_COMBO_BASIC, BasicSelBox::OnBasicChanged)
+	EVT_LISTBOX(IDC_LIST_BASIC, BasicSelBox::OnBasicChanged)
 	EVT_BUTTON(wxID_OK, BasicSelBox::OnOK)
 END_EVENT_TABLE()
 
-BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk)
+BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, DiskBasic *basic, int show_flags)
 	: wxDialog(parent, id, _("Select BASIC Type"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -25,19 +31,20 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk)
 
 	this->disk = disk;
 
-	comBasic = new wxListBox(this, IDC_COMBO_BASIC, wxDefaultPosition, wxDefaultSize);
+	comBasic = new wxListBox(this, IDC_LIST_BASIC, wxDefaultPosition, wxDefaultSize);
 	szrAll->Add(comBasic, flags);
 
 	wxArrayString types = disk->GetBasicTypes();
-	types.Sort();
-
 	wxString category = disk->GetFile()->GetBasicTypeHint();
+
+	gDiskBasicTemplates.FindParams(types, params);
+
 	int cur_num = 0;
 	int pos = 0;
-	for(size_t n = 0; n < types.Count(); n++) {
-		DiskBasicParam *param = gDiskBasicTemplates.FindType(wxEmptyString, types.Item(n));
-		if (!param) continue;
-		if (param == disk->GetDiskBasicParam()) {
+	for(size_t n = 0; n < params.Count(); n++) {
+		const DiskBasicParam *param = params.Item(n);
+//		if (param == disk->GetDiskBasicParam()) {
+		if (param->GetBasicTypeName() == basic->GetBasicTypeName()) {
 			cur_num = pos;
 		} else if (param->GetBasicCategoryName() == category) {
 			cur_num = pos;
@@ -46,15 +53,24 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk)
 		pos++;
 	}
 	comBasic->SetSelection(cur_num);
-#if 0
-	wxArrayString char_codes;
-	char_codes.Add(_("Ascii"));
-	char_codes.Add(_("Shift JIS"));
-	radChar = new wxRadioBox(this, IDC_RADIO_CHAR, _("Charactor Code"), wxDefaultPosition, wxDefaultSize, char_codes, 0, wxRA_SPECIFY_COLS);
-	radChar->SetSelection(char_code);
 
-	szrAll->Add(radChar, flags);
-#endif
+	lblVolName = NULL;
+	txtVolName = NULL;
+	lblVolNum = NULL;
+	txtVolNum = NULL;
+	if (show_flags & SHOW_ATTR_CONTROLS) {
+		lblVolName = new wxStaticText(this, wxID_ANY, _("Volume Name"));
+		szrAll->Add(lblVolName, flags);
+		txtVolName = new wxTextCtrl(this, IDC_TEXT_VOLNAME, wxEmptyString);
+		szrAll->Add(txtVolName, flags);
+
+		lblVolNum = new wxStaticText(this, wxID_ANY, _("Volume Number"));
+		szrAll->Add(lblVolNum, flags);
+		txtVolNum = new wxTextCtrl(this, IDC_TEXT_VOLNUM, wxEmptyString);
+		szrAll->Add(txtVolNum, flags);
+	}
+	ChangeBasic(cur_num);
+
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
 
@@ -78,36 +94,44 @@ void BasicSelBox::OnOK(wxCommandEvent& event)
 
 void BasicSelBox::OnBasicChanged(wxCommandEvent& event)
 {
+	int num = event.GetSelection();
+	if (num == wxNOT_FOUND) return;
+
+	ChangeBasic(num);
 }
 
-DiskBasicParam *BasicSelBox::GetBasicParam()
+void BasicSelBox::ChangeBasic(int sel)
 {
-	DiskBasicParam *match = NULL;
+	const DiskBasicParam *param = params.Item(sel);
+	if (!param) return;
 
-	if (!comBasic || !disk) return match;
+	const DiskBasicFormat *fmt = param->GetFormatType();
+	if (!fmt) return;
 
-	wxArrayString types = disk->GetBasicTypes();
-	types.Sort();
+	if (lblVolName) lblVolName->Enable(fmt->HasVolumeName());
+	if (txtVolName) txtVolName->Enable(fmt->HasVolumeName());
+	if (lblVolNum) lblVolNum->Enable(fmt->HasVolumeNumber());
+	if (txtVolNum) txtVolNum->Enable(fmt->HasVolumeNumber());
+}
+
+const DiskBasicParam *BasicSelBox::GetBasicParam() const
+{
+	const DiskBasicParam *match = NULL;
 
 	int num = comBasic->GetSelection();
-	int pos = 0;
-	for(size_t n = 0; n < types.Count(); n++) {
-		DiskBasicParam *param = gDiskBasicTemplates.FindType(wxEmptyString, types.Item(n));
-		if (!param) continue;
-		if (num == pos) {
-			match = param;
-			break;
-		}
-		pos++;
-	}
+	if (num == wxNOT_FOUND) return match;
+
+	match = params.Item(num);
+
 	return match;
 }
 
-#if 0
-int BasicSelBox::GetCharCode()
+wxString BasicSelBox::GetVolumeName() const
 {
-	if (!radChar) return 0;
-
-	return radChar->GetSelection();
+	return txtVolName ? txtVolName->GetValue() : wxT("");
 }
-#endif
+
+int BasicSelBox::GetVolumeNumber() const
+{
+	return L3DiskUtils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
+}

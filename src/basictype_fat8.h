@@ -40,7 +40,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理 FAT予約済みをセット
-	virtual bool	AdditionalProcessOnFormatted();
+	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name save / write

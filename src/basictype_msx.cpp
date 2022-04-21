@@ -14,17 +14,19 @@ DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 }
 
 /// ディスク上のパラメータを読む
+/// @retval  -1 エラー
 int DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk)
 {
 	int valid = DiskBasicTypeFAT12::ParseParamOnDisk(disk);
-	if (valid == 0) {
+	if (valid >= 0) {
 		DiskD88Sector *sector = disk->GetSector(0, 0, 1);
 		wxUint8 *datas = sector->GetSectorBuffer();
 		fat_bpb_t *bpb = (fat_bpb_t *)datas;
 		char oem_name[10];
 		memset(oem_name, 0, sizeof(oem_name));
 		memcpy(oem_name, bpb->BS_OEMName, sizeof(bpb->BS_OEMName));
-		if (strstr(oem_name, "MSX") == NULL) {
+		if ((strstr(oem_name, "MSX") == NULL)
+		&& (sector->Find("MSXDOS",6) < 0)) {
 			valid = -1;
 		}
 	}
@@ -33,7 +35,7 @@ int DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk)
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット IPLの書き込み
-bool DiskBasicTypeMSX::AdditionalProcessOnFormatted()
+bool DiskBasicTypeMSX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	wxUint8 *buf = NULL;
 	if (!CreateBiosParameterBlock("\xeb\xfe\x90", "MSX", &buf)) {

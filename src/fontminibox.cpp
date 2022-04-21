@@ -5,6 +5,7 @@
 
 #include "fontminibox.h"
 #include <wx/combobox.h>
+#include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/fontenum.h>
@@ -12,11 +13,14 @@
 // Attach Event
 BEGIN_EVENT_TABLE(FontMiniBox, wxDialog)
 	EVT_TEXT(IDC_COMBO_FONTSIZE, FontMiniBox::OnTextSize)
+	EVT_BUTTON(IDC_BUTTON_DEFAULT, FontMiniBox::OnButtonDefault)
 END_EVENT_TABLE()
 
-FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id)
+FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_font)
 	: wxDialog(parent, id, _("Font"), wxDefaultPosition, wxDefaultSize, wxCAPTION)
 {
+	this->default_font = default_font;
+
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	wxSize size;
 
@@ -30,8 +34,13 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id)
 	hbox->Add(comFontName, flags);
 	hbox->Add(comFontSize, flags);
 	szrAll->Add(hbox, flags);
+
+	wxGridSizer *gszr = new wxGridSizer(2);
+	btnDefault = new wxButton(this, IDC_BUTTON_DEFAULT, _("Default"));
+	gszr->Add(btnDefault);
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
-	szrAll->Add(szrButtons, flags);
+	gszr->Add(szrButtons);
+	szrAll->Add(gszr, flags);
 
 	init_dialog();
 
@@ -94,4 +103,10 @@ void FontMiniBox::OnTextSize(wxCommandEvent& event)
 {
 	wxString mInputSize = event.GetString().Left(2);
 	comFontSize->ChangeValue(mInputSize);
+}
+
+void FontMiniBox::OnButtonDefault(wxCommandEvent& event)
+{
+	SetFontName(default_font.GetFaceName());
+	SetFontSize(default_font.GetPointSize());
 }

@@ -55,11 +55,6 @@ wxUint32 DiskBasicTypeFAT8::GetGroupNumber(wxUint32 num) const
 	return new_num;
 }
 
-///// データサイズ分のグループを確保する
-//bool DiskBasicTypeFAT8::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items)
-//{
-//}
-
 /// セクタデータを指定コードで埋める
 void DiskBasicTypeFAT8::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
@@ -73,7 +68,7 @@ void DiskBasicTypeFAT8::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 }
 
 /// セクタデータを埋めた後の個別処理 FAT予約済みをセット
-bool DiskBasicTypeFAT8::AdditionalProcessOnFormatted()
+bool DiskBasicTypeFAT8::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// FATエリア先頭に0を入れる
 	fat->Set(0, 0);
@@ -81,9 +76,9 @@ bool DiskBasicTypeFAT8::AdditionalProcessOnFormatted()
 //	// FATエリアを予約済みにする
 //	int sec_pos = CalcDataStartSectorPos() - 1;
 //	if (sec_pos >= 0) {
-//		wxUint32 end_gnum = sec_pos / secs_per_group;
+//		wxUint32 end_gnum = sec_pos / basic->GetSectorsPerGroup();
 //		for(wxUint32 gnum = 0; gnum <= end_gnum; gnum++) {
-//			SetGroupNumber(gnum, group_system_code);
+//			SetGroupNumber(gnum, basic->GetGroupSystemCode());
 //		}
 //	}
 	return true;

@@ -12,20 +12,27 @@
 #include "diskresult.h"
 
 
+//
+//
+//
 DiskWriter::DiskWriter()
+	: DiskWriteOptions()
 {
 	this->d88 = NULL;
 	this->ostream = NULL;
 	this->result = NULL;
 }
 DiskWriter::DiskWriter(const DiskWriter &src)
+	: DiskWriteOptions(src)
 {
 }
 
 /// @param [in,out] image ディスクイメージ
 /// @param [in] path      ファイルパス
+/// @param [in] options   出力時のオプション
 /// @param [out] result   結果
-DiskWriter::DiskWriter(DiskD88 *image, const wxString &path, DiskResult *result)
+DiskWriter::DiskWriter(DiskD88 *image, const wxString &path, const DiskWriteOptions &options, DiskResult *result)
+	: DiskWriteOptions(options)
 {
 	this->d88 = image;
 	this->file_path = path;
@@ -133,7 +140,7 @@ int DiskWriter::SelectSaveDisk(const wxString &type, int disk_number, int side_n
 	int rc = -1;
 	if (type == wxT("d88")) {
 		// d88形式
-		DiskD88Writer wr(result);
+		DiskD88Writer wr(this, result);
 		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
 		support = true;
 //	} else if (type == wxT("cpcdsk")) {
@@ -143,7 +150,7 @@ int DiskWriter::SelectSaveDisk(const wxString &type, int disk_number, int side_n
 //		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
-		DiskPlainWriter wr(result);
+		DiskPlainWriter wr(this, result);
 		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
 		support = true;
 	}

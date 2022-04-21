@@ -77,15 +77,17 @@ public:
 	/// @name check / assign directory area
 	//@{
 	/// ルートディレクトリのチェック
-	bool		CheckRootDirectory(int start_sector, int end_sector);
+	bool		CheckRootDirectory(int start_sector, int end_sector, bool is_formatting);
 	/// ルートディレクトリをアサイン
 	bool		AssignRootDirectory(int start_sector, int end_sector);
 	//@}
 
 	/// @name disk size
 	//@{
+	/// 使用可能なディスクサイズを得る
+	void		GetUsableDiskSize(int &disk_size, int &group_size) const;
 	/// 残りディスクサイズを計算
-	void		CalcDiskFreeSize();
+	void		CalcDiskFreeSize(bool wrote);
 	//@}
 
 	/// @name file size
@@ -95,7 +97,7 @@ public:
 	/// @name file chain
 	//@{
 	/// データサイズ分のグループを確保する
-	int			AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items);
+	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
 
 	/// グループ番号から開始セクタ番号を得る
 	int			GetStartSectorFromGroup(wxUint32 group_num);
@@ -115,7 +117,7 @@ public:
 	/// サブディレクトリを作成する前の準備を行う
 	bool		PrepareToMakeDirectory(DiskBasicDirItem *item);
 	/// サブディレクトリを作成した後の個別処理
-	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num);
+	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
@@ -123,7 +125,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	bool		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name data access (read / verify)
@@ -147,6 +149,14 @@ public:
 	void		DeleteGroupNumber(wxUint32 group_num);
 	/// ファイル削除後の処理
 	bool		AdditionalProcessOnDeletedFile(DiskBasicDirItem *item);
+	//@}
+
+	/// @name property
+	//@{
+	/// IPLや管理エリアの属性を得る
+	void		GetIdentifiedData(DiskBasicIdentifiedData &data) const;
+	/// IPLや管理エリアの属性をセット
+	void		SetIdentifiedData(const DiskBasicIdentifiedData &data);
 	//@}
 };
 

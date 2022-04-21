@@ -27,10 +27,17 @@
 		</Format>
 		<Description>2D file</Description>
 	</FileType>
+	<FileType ext="2dd">
+		<Format type="plain">
+			<DiskTypeHint>2DD</DiskTypeHint>
+			<DiskTypeHint>2DD MS9</DiskTypeHint>
+			<DiskTypeHint>2DD MS8</DiskTypeHint>
+		</Format>
+		<Description>2DD file</Description>
+	</FileType>
 	<FileType ext="2hd">
 		<Format type="plain">
 			<DiskTypeHint>2HD</DiskTypeHint>
-			<DiskTypeHint>2HD S1</DiskTypeHint>
 			<DiskTypeHint>2HD 98</DiskTypeHint>
 			<DiskTypeHint>2HD AT</DiskTypeHint>
 		</Format>
@@ -44,6 +51,7 @@
 			<DiskTypeHint>2DD MS8</DiskTypeHint>
 			<DiskTypeHint>1DD MS8</DiskTypeHint>
 			<DiskTypeHint>2D</DiskTypeHint>
+			<DiskTypeHint>2D 40 18</DiskTypeHint>
 		</Format>
 		<Description>DSK file</Description>
 	</FileType>

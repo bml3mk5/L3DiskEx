@@ -43,6 +43,8 @@ bool DiskBasicTypeFLEX::CheckFat()
 
 	if (!valid) return valid;
 
+	basic->SetFatEndGroup((flex->max_track + 1) * flex->max_sector - 1);
+
 	flex_sir = flex;
 
 	// DIRエリアのチェインをチェック
@@ -64,11 +66,9 @@ bool DiskBasicTypeFLEX::CheckFat()
 		}
 		sector = basic->GetSector(p->next_track, p->next_sector);
 	}
-	// DIRエリアの使用セクタが少ない場合
+	// DIRエリアの最終セクタ
 	int dir_end = basic->GetDirStartSector() + dir_cnt - 1;
-	if (valid && dir_end < (dir_end_sec + 1)) {
-		basic->SetDirEndSector(dir_end);
-	}
+	basic->SetDirEndSector(dir_end);
 
 	return valid;
 }
@@ -90,11 +90,22 @@ int DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk)
 	return 0;
 }
 
+
+/// 使用可能なディスクサイズを得る
+void DiskBasicTypeFLEX::GetUsableDiskSize(int &disk_size, int &group_size) const
+{
+	group_size = basic->GetFatEndGroup() + 1;
+	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+}
+
 /// 残りディスクサイズを計算
-void DiskBasicTypeFLEX::CalcDiskFreeSize()
+void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 {
 	wxUint32 fsize = 0;
 	wxUint32 grps = 0;
+
+//	myLog.SetDebug("DiskBasicTypeFLEX::CalcDiskFreeSize");
+
 	fat_availability.Empty();
 
 	fat_availability.Add(FAT_AVAIL_USED, basic->GetFatEndGroup() + 1);
@@ -106,8 +117,9 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize()
 
 	int track_num  = flex_sir->free_start_track;
 	int sector_num = flex_sir->free_start_sector;
+	int limit = basic->GetFatEndGroup() + 1;
 
-	while(track_num != 0 || sector_num != 0) {
+	while((track_num != 0 || sector_num != 0) && limit >= 0) {
 		sector = basic->GetSector(track_num, sector_num);
 		if (!sector) {
 			// error
@@ -115,16 +127,24 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize()
 		}
 		int sector_pos = basic->GetSectorPosFromNum(track_num, sector_num);
 		if (sector_pos < (int)fat_availability.Count()) {
+			if (fat_availability.Item(sector_pos) == FAT_AVAIL_FREE) {
+				// 既に空きエリアにしているのに同じセクタにきている
+				// 無限ループしている？
+				break;
+			}
 			fat_availability.Item(sector_pos) = FAT_AVAIL_FREE;
 		}
-
-		flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
-		track_num = p->next_track;
-		sector_num = p->next_sector;
 
 		// セクタ先頭4バイトは除く
 		fsize += (sector->GetSectorSize() - 4);
 		grps++;
+
+//		myLog.SetDebug("trk:%d sec:%d size:%d", track_num, sector_num, fsize);
+
+		flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
+		track_num = p->next_track;
+		sector_num = p->next_sector;
+		limit--;
 	}
 
 	free_disk_size = (int)fsize;
@@ -235,9 +255,10 @@ wxUint32 DiskBasicTypeFLEX::GetNextEmptyGroupNumber(wxUint32 curr_group)
 /// データサイズ分のグループを確保する
 /// @param [in]  item         ディレクトリアイテム
 /// @param [in]  data_size    データサイズ RecalcFileSizeOnSave()で計算した値
+/// @param [in]  flags        新規か追加か
 /// @param [out] group_items  グループ数
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items)
+int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 //	myLog.SetDebug("DiskBasicTypeFLEX::AllocateGroups {");
 
@@ -415,7 +436,7 @@ void DiskBasicTypeFLEX::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 }
 
 /// セクタデータを埋めた後の個別処理
-bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted()
+bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// SIR area
 	DiskD88Sector *sector = basic->GetSector(0, 0, 3);
@@ -446,6 +467,9 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted()
 	flex_sir->cmonth = tm.tm_mon + 1;
 	flex_sir->cday = tm.tm_mday;
 	flex_sir->cyear = (tm.tm_year % 100);
+
+	// volume name and number
+	SetIdentifiedData(data);
 
 	// DIRエリア
 
@@ -645,4 +669,24 @@ void DiskBasicTypeFLEX::RemakeChainOnFreeArea()
 		}
 	}
 	flex_sir->free_sector_nums = wxUINT16_SWAP_ON_LE(group_items_count);
+}
+
+/// IPLや管理エリアの属性を得る
+void DiskBasicTypeFLEX::GetIdentifiedData(DiskBasicIdentifiedData &data) const
+{
+	// volume label
+	wxString vol((const char *)flex_sir->volume_label, sizeof(flex_sir->volume_label)); 
+	data.SetVolumeName(vol);
+	// volume number
+	data.SetVolumeNumber(wxUINT16_SWAP_ON_LE(flex_sir->volume_number));
+}
+
+/// IPLや管理エリアの属性をセット
+void DiskBasicTypeFLEX::SetIdentifiedData(const DiskBasicIdentifiedData &data)
+{
+	// volume label
+	wxCharBuffer vol = data.GetVolumeName().To8BitData();
+	strncpy((char *)flex_sir->volume_label, vol, sizeof(flex_sir->volume_label)); 
+	// volume number
+	flex_sir->volume_number = wxUINT16_SWAP_ON_LE(data.GetVolumeNumber());
 }

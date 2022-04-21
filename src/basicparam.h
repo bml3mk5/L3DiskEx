@@ -11,13 +11,38 @@
 #include "basiccommon.h"
 #include "diskd88.h"
 
+
+/// DISK BASICのフォーマットタイプ
+class DiskBasicFormat
+{
+private:
+	DiskBasicFormatType type_number;
+	bool has_volume_name;
+	bool has_volume_number;
+
+public:
+	DiskBasicFormat();
+	DiskBasicFormat(
+		int	 n_type_number,
+		bool n_has_volume_name,
+		bool n_has_volume_number
+	);
+	~DiskBasicFormat() {}
+
+	DiskBasicFormatType GetTypeNumber() const { return type_number; }
+	bool HasVolumeName() const { return has_volume_name; }
+	bool HasVolumeNumber() const { return has_volume_number; }
+};
+
+WX_DECLARE_OBJARRAY(DiskBasicFormat, DiskBasicFormats);
+
 /// DISK BASICのパラメータを保持するクラス
 class DiskBasicParam
 {
 private:
 	wxString basic_type_name;
 	wxString basic_category_name;
-	DiskBasicFormatType format_type; ///< フォーマット種類
+	const DiskBasicFormat *format_type; ///< フォーマット種類
 
 	int sectors_per_group;		///< グループ(クラスタ)サイズ
 	int sides_on_basic;			///< BASICが使用するサイド数
@@ -26,8 +51,6 @@ private:
 	int reserved_sectors;		///< 予約済みセクタ数
 	int number_of_fats;			///< ファイル管理エリアの数
 	int sectors_per_fat;		///< FAT領域のセクタ数
-//	int fat_start_sector;		///< FAT領域の開始セクタ
-//	int fat_end_sector;			///< FAT領域の終了セクタ
 	int fat_start_pos;			///< FAT開始位置（バイト）
 	wxUint32 fat_end_group;		///< FAT最大グループ番号
 	int fat_side_number;		///< FAT領域のあるサイド番号
@@ -40,7 +63,8 @@ private:
 	int dir_entry_count;		///< ルートディレクトリエントリ数
 	int subdir_group_size;		///< サブディレクトリの初期グループ数
 	wxUint8 dir_space_code;		///< ディレクトリの空白
-	int dir_start_pos;			///< ルートディレクトリの開始位置（バイト）
+	int dir_start_pos;			///< ディレクトリの開始位置（バイト）
+	int dir_start_pos_on_root;	///< ルートディレクトリの開始位置（バイト）
 	int dir_start_pos_on_sec;	///< ディレクトリのセクタ毎の開始位置
 	int groups_per_dir_entry;	///< １ディレクトリエントリで指定できるグループ数 
 	int id_sector_pos;			///< ID領域のセクタ位置(0 - )
@@ -54,6 +78,7 @@ private:
 	wxUint8 media_id;			///< メディアID
 	bool data_inverted;			///< データビットが反転してるか
 	bool side_reversed;			///< サイドが反転してるか
+	bool mount_each_sides;		///< 片面のみ使用するOSで各面ごとに独立してアクセスできるか
 	wxString basic_description;	///< 説明
 
 public:
@@ -62,7 +87,7 @@ public:
 	DiskBasicParam(
 		const wxString &	n_basic_type_name,
 		const wxString &	n_basic_category_name,
-		DiskBasicFormatType	n_format_type,
+		const DiskBasicFormat *n_format_type,
 		int					n_sectors_per_group,
 		int					n_sides_on_basic,
 		int					n_sectors_on_basic,
@@ -83,6 +108,7 @@ public:
 		int					n_subdir_group_size,
 		wxUint8				n_dir_space_code,
 		int					n_dir_start_pos,
+		int					n_dir_start_pos_on_root,
 		int					n_dir_start_pos_on_sec,
 		int					n_groups_per_dir_entry,
 		int					n_id_sector_pos,
@@ -96,6 +122,7 @@ public:
 		wxUint8				n_media_id,
 		bool				n_data_inverted,
 		bool				n_side_reversed,
+		bool				n_mount_each_sides,
 		const wxString &	n_basic_description
 	);
 	virtual ~DiskBasicParam() {}
@@ -108,7 +135,7 @@ public:
 
 	const wxString&		GetBasicTypeName() const	{ return basic_type_name; }
 	const wxString&		GetBasicCategoryName() const	{ return basic_category_name; }
-	DiskBasicFormatType	GetFormatType() const		{ return format_type; }
+	const DiskBasicFormat *GetFormatType() const		{ return format_type; }
 	int					GetSectorsPerGroup() const	{ return sectors_per_group; }
 	int					GetSidesOnBasic() const		{ return sides_on_basic; }
 	int					GetSectorsOnBasic() const	{ return sectors_on_basic; }
@@ -117,7 +144,6 @@ public:
 	int					GetNumberOfFats() const		{ return number_of_fats; }
 	int					GetSectorsPerFat() const	{ return sectors_per_fat; }
 	int					GetFatStartSector() const	{ return (reserved_sectors + 1); }
-//	int					GetFatEndSector() const		{ return fat_end_sector; }
 	int					GetFatStartPos() const		{ return fat_start_pos; }
 	wxUint32			GetFatEndGroup() const		{ return fat_end_group; }
 	int					GetFatSideNumber() const	{ return fat_side_number; }
@@ -131,6 +157,7 @@ public:
 	int					GetSubDirGroupSize() const	{ return subdir_group_size; }
 	wxUint8				GetDirSpaceCode() const		{ return dir_space_code; }
 	int					GetDirStartPos() const		{ return dir_start_pos; }
+	int					GetDirStartPosOnRoot() const	{ return dir_start_pos_on_root; }
 	int					GetDirStartPosOnSector() const	{ return dir_start_pos_on_sec; }
 	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
 	int					GetIdSectorPos() const		{ return id_sector_pos; }
@@ -145,8 +172,9 @@ public:
 	bool				IsDataInverted() const		{ return data_inverted; }
 	bool				IsSideReversed() const		{ return side_reversed; }
 	int					GetReversedSideNumber(int side_num) const;
+	bool				CanMountEachSides() const;
 
-	const wxString& GetBasicDescription()			{ return basic_description; }
+	const wxString& GetBasicDescription() const		{ return basic_description; }
 
 	void			SetSectorsPerGroup(int val)		{ sectors_per_group = val; }
 	void			SetSidesOnBasic(int val)		{ sides_on_basic = val; }
@@ -155,8 +183,6 @@ public:
 	void			SetNumberOfFats(int val)		{ number_of_fats = val; }
 	void			SetSectorsPerFat(int val)		{ sectors_per_fat = val; }
 	void			SetReservedSector(int val)		{ reserved_sectors = val; }
-//	void			SetFatStartSector(int val)		{ reserved_sectors = val - 1; }
-//	void			SetFatEndSector(int val)		{ fat_end_sector = val; }
 	void			SetFatStartPos(int val)			{ fat_start_pos = val; }
 	void			SetFatEndGroup(wxUint32 val)	{ fat_end_group = val; }
 	void			SetReservedGroups(const wxArrayInt &val)	{ reserved_groups = val; }
@@ -174,6 +200,7 @@ public:
 	void			SetSubDirGroupSize(int val)		{ subdir_group_size = val; }
 	void			SetDirSpaceCode(wxUint8 val)	{ dir_space_code = val; }
 	void			SetDirStartPos(int val)			{ dir_start_pos = val; }
+	void			SetDirStartPosOnRoot(int val)	{ dir_start_pos_on_root = val; }
 	void			SetDirStartPosOnSector(int val)	{ dir_start_pos_on_sec = val; }
 	void			SetFillCodeOnFormat(wxUint8 val) { fillcode_on_format = val; }
 	void			SetFillCodeOnFAT(wxUint8 val)	{ fillcode_on_fat = val; }
@@ -182,11 +209,16 @@ public:
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
 	void			DataInverted(bool val)			{ data_inverted = val; }
 	void			SideReversed(bool val)			{ side_reversed = val; }
+	void			MountEachSides(bool val)		{ mount_each_sides = val; }
 
 	void			SetBasicDescription(const wxString &str) { basic_description = str; }
+
+	static int		SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2);
 };
 
 WX_DECLARE_OBJARRAY(DiskBasicParam, DiskBasicParams);
+
+WX_DEFINE_ARRAY(const DiskBasicParam *, DiskBasicParamPtrs);
 
 /// DISK BASICのカテゴリ(メーカ毎、OS毎にまとめる)クラス
 class DiskBasicCategory
@@ -214,28 +246,35 @@ WX_DECLARE_OBJARRAY(DiskBasicCategory, DiskBasicCategories);
 class DiskBasicTemplates
 {
 private:
-	DiskBasicParams types;
-	DiskBasicCategories categories;
+	DiskBasicFormats	formats;
+	DiskBasicParams		types;
+	DiskBasicCategories	categories;
 
 public:
 	DiskBasicTemplates();
 	~DiskBasicTemplates() {}
 
 	/// XMLファイル読み込み
-	bool Load(const wxString &data_path, const wxString &locale_name);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
 
 	/// カテゴリとタイプに一致するパラメータを検索
 	DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type);
 	/// カテゴリが一致し、タイプリストに含まれるパラメータを検索
 	DiskBasicParam *FindType(const wxString &n_category, const wxArrayString &n_basic_types);
-	/// カテゴリ、サイド数とセクタ数が一致するパラメータを検索
-	DiskBasicParam *FindType(const wxString &n_category, int n_sides, int n_sectors);
+	/// カテゴリ、タイプ、サイド数とセクタ数が一致するパラメータを検索
+	DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors);
 	/// DISK BASICフォーマット種類に一致するタイプを検索
 	size_t FindTypes(const wxArrayInt &n_format_types, DiskBasicParams &n_types);
 	/// カテゴリ番号に一致するタイプ名リストを検索
 	size_t FindTypeNames(size_t n_category_index, wxArrayString &n_type_names);
 	/// カテゴリ名に一致するタイプ名リストを検索
 	size_t FindTypeNames(const wxString &n_category_name, wxArrayString &n_type_names);
+	/// フォーマット種類を検索
+	DiskBasicFormat *FindFormat(DiskBasicFormatType format_type);
+	/// タイプリストと一致するパラメータを得る
+	size_t FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params);
+	/// カテゴリを検索
+	DiskBasicCategory *FindCategory(const wxString &n_category);
 
 	const DiskBasicCategories &GetCategories() { return categories; }
 };

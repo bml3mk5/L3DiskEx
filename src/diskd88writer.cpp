@@ -2,6 +2,7 @@
 ///
 /// @brief D88ディスクライター
 ///
+#include "diskwriter.h"
 #include "diskd88writer.h"
 #include <wx/stream.h>
 #include "diskd88.h"
@@ -11,8 +12,9 @@
 //
 // D88形式で保存
 //
-DiskD88Writer::DiskD88Writer(DiskResult *result)
+DiskD88Writer::DiskD88Writer(DiskWriter *dw, DiskResult *result)
 {
+	this->dw = dw;
 	this->result = result;
 }
 
@@ -70,13 +72,13 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 		return result->GetValid();
 	}
 
-	// ヘッダオフセットが古い場合や、ディスクサイズが一致しない場合、再計算する
-	size_t new_size = disk->CalcSizeWithoutHeader();
-	if (new_size != disk->GetSizeWithoutHeader() || (size_t)disk->GetOffsetStart() < sizeof(d88_header_t)) {
+	// オフセットを再計算する
+	size_t new_size = 0; //disk->CalcSizeWithoutHeader();
+//	if (new_size != disk->GetSizeWithoutHeader() || (size_t)disk->GetOffsetStart() < sizeof(d88_header_t)) {
 		disk->SetOffsetStart(sizeof(d88_header_t));
-		new_size = disk->Shrink();
+		new_size = disk->ShrinkTracks(dw->IsTrimUnusedData());
 		disk->SetSizeWithoutHeader((wxUint32)new_size);
-	}
+//	}
 
 	// write disk header
 	ostream->Write((void *)disk->GetHeader(), (size_t)disk->GetOffsetStart());	
@@ -91,8 +93,8 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 		DiskD88Track *track = tracks->Item(track_num);
 		if (!track) continue;
 		DiskD88Sectors *sectors = track->GetSectors();
-		if (!sectors) continue;
-		for(size_t sector_num = 0; sector_num < sectors->Count(); sector_num++) {
+		size_t count = sectors ? sectors->Count() : 0;
+		for(size_t sector_num = 0; sector_num < count; sector_num++) {
 			DiskD88Sector *sector = sectors->Item(sector_num);
 			if (!sector) continue;
 
@@ -105,6 +107,14 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 				ostream->Write((void *)buffer, buffer_size);	
 			}
 //			sector->ClearModify();
+		}
+		//
+		if (!dw->IsTrimUnusedData()) {
+			wxUint8 *extra_data = track->GetExtraData();
+			size_t   extra_size = track->GetExtraDataSize();
+			if (extra_data && extra_size > 0) {
+				ostream->Write(extra_data, extra_size);
+			}
 		}
 	}
 	if (result->GetValid() >= 0) {
@@ -125,7 +135,7 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *
 	SingleDensities singles;
 	singles.Add(new SingleDensity(-1, -1, disk->GetSectorsPerTrack(), 128));
 	wxArrayString basic_types;
-	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
+	DiskParam param(wxT("1S"), basic_types, false, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
 
 	DiskD88File tmpfile;
 	DiskD88Creator cr("", param, false, &tmpfile, *result);

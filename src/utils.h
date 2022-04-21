@@ -23,8 +23,9 @@ public:
 	Dump() {}
 	~Dump() {}
 
-	int DumpBinary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert);
-	wxString DumpAscii(const wxUint8 *buffer, size_t bufsize, int char_code, bool invert);
+	int Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert);
+	int Ascii(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert);
+	int Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert);
 };
 
 void	ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time);

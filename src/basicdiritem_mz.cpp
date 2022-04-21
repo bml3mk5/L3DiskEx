@@ -532,6 +532,8 @@ wxString DiskBasicDirItemMZ::GetFileTimeStr()
 
 void DiskBasicDirItemMZ::SetFileDate(const struct tm *tm)
 {
+	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
+
 	int tmp = data->mz.date_time[0] << 16 | data->mz.date_time[1] << 8 | data->mz.date_time[2];
 	tmp = basic->InvertUint32(tmp);	// invert
 	tmp &= 0x1f;
@@ -546,6 +548,8 @@ void DiskBasicDirItemMZ::SetFileDate(const struct tm *tm)
 
 void DiskBasicDirItemMZ::SetFileTime(const struct tm *tm)
 {
+	if (tm->tm_hour < 0 || tm->tm_min < 0) return;
+
 	int tmp = data->mz.date_time[2] << 8 | data->mz.date_time[3];
 	tmp = basic->InvertUint32(tmp);	// invert
 	tmp &= ~0x1fff;
@@ -630,17 +634,6 @@ wxString DiskBasicDirItemMZ::InvalidateChars()
 	return wxT("\"\\/:*?");
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemMZ::ValidateFileName(const wxString &filename, wxString &errormsg)
-{
-	// 空白はOK
-	if (filename.empty()) {
-		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
-		return false;
-	}
-	return true;
-}
-
 /// 同じファイル名か
 bool DiskBasicDirItemMZ::IsSameFileName(const wxString &filename)
 {
@@ -654,14 +647,6 @@ bool DiskBasicDirItemMZ::NeedChainInData()
 {
 	return ((GetFileAttr() & FILE_TYPE_ASCII_MASK) != 0);
 }
-
-#if 0
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemMZ::IsWriteProtected()
-{
-	return (data->mz.type2 & 1) == 0;
-}
-#endif
 
 bool DiskBasicDirItemMZ::IsDeletable()
 {
@@ -812,4 +797,15 @@ int DiskBasicDirItemMZ::GetFileType2InAttrDialog(const IntNameBox *parent) const
 	val |= chkSeamless->GetValue() ? (DATATYPE_MZ_SEAMLESS << DATATYPE_MZ_SEAMLESS_POS) : 0;
 
 	return val;
+}
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemMZ::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
+{
+	// 空白はOK
+	if (filename.empty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+		return false;
+	}
+	return true;
 }

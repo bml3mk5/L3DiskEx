@@ -165,7 +165,6 @@ void DiskBasicDirItemOS9FD::SetDCR(const os9_cdate_t &val)
 // 更新にする
 void DiskBasicDirItemOS9FD::SetModify()
 {
-	if (sector) sector->SetModify();
 }
 
 //
@@ -499,7 +498,7 @@ wxString DiskBasicDirItemOS9::GetFileTimeStr()
 
 void DiskBasicDirItemOS9::SetFileDate(const struct tm *tm)
 {
-	if (fd.IsValid()) {
+	if (fd.IsValid() && tm->tm_year >= 0 && tm->tm_mon >= -1) {
 		os9_cdate_t date;
 		ConvTmToDate(tm, date);
 		fd.SetDAT(date);
@@ -508,7 +507,7 @@ void DiskBasicDirItemOS9::SetFileDate(const struct tm *tm)
 
 void DiskBasicDirItemOS9::SetFileTime(const struct tm *tm)
 {
-	if (fd.IsValid()) {
+	if (fd.IsValid() && tm->tm_hour >= 0 && tm->tm_min >= -1) {
 		os9_date_t time = fd.GetDAT();
 		ConvTmToTime(tm, time);
 		fd.SetDAT(time);
@@ -537,7 +536,7 @@ wxString DiskBasicDirItemOS9::GetCDateStr()
 /// 日付をセット
 void DiskBasicDirItemOS9::SetCDate(const struct tm *tm)
 {
-	if (fd.IsValid()) {
+	if (fd.IsValid() && tm->tm_year >= 0 && tm->tm_mon >= 0) {
 		os9_cdate_t date;
 		ConvTmToDate(tm, date);
 		fd.SetDCR(date);
@@ -626,7 +625,16 @@ bool DiskBasicDirItemOS9::IsDeletable()
 /// ファイル名を編集できるか
 bool DiskBasicDirItemOS9::IsFileNameEditable()
 {
-	return true;
+	bool valid = true;
+	int attr = GetFileAttr();
+	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+		wxString name =	GetFileNamePlainStr();
+		if (name == wxT(".") || name == wxT("..")) {
+			// ディレクトリ ".", ".."は編集不可
+			valid = false;
+		}
+	}
+	return valid;
 }
 /// アイテムをコピー
 void DiskBasicDirItemOS9::CopyItem(const DiskBasicDirItem &src)

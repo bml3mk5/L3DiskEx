@@ -33,11 +33,11 @@ L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	txtAttr = new wxTextCtrl(this, IDC_TXT_ATTR, wxT(""), wxDefaultPosition, size, wxTE_READONLY | wxTE_LEFT);
 	hbox->Add(txtAttr, flagsW);
 
-	size.x = 80;
+	size.x = 60;
 	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, size);
 	hbox->Add(btnChange, flagsW);
 
-	size.x = 80;
+	size.x = 60;
 	comDensity = new wxComboBox(this, IDC_COM_DENSITY, wxT(""), wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
 	for(int i=0; gDiskDensity[i] != NULL; i++) {
 		comDensity->Append(wxGetTranslation(gDiskDensity[i]));
@@ -62,10 +62,8 @@ L3DiskDiskAttr::~L3DiskDiskAttr()
 /// ボタンを押した
 void L3DiskDiskAttr::OnButtonChange(wxCommandEvent& event)
 {
-	if (!disk) return;
-
 	// パラメータを選択するダイアログを表示
-	frame->ShowDiskAttr();
+	ShowChangeDisk();
 }
 /// コンボボックスを変更した
 void L3DiskDiskAttr::OnComboDensity(wxCommandEvent& event)
@@ -78,6 +76,31 @@ void L3DiskDiskAttr::OnCheckWriteProtect(wxCommandEvent& event)
 {
 	if (!disk) return;
 	disk->SetWriteProtect(event.IsChecked());
+}
+
+/// パラメータを選択するダイアログを表示
+void L3DiskDiskAttr::ShowChangeDisk()
+{
+	if (!disk) return;
+
+	DiskParamBox dlg(this, wxID_ANY, _("Change Disk Parameter"), -1, disk, NULL, NULL, DiskParamBox::SHOW_TEMPLATE_ALL);
+	int sts = dlg.ShowModal();
+	if (sts == wxID_OK) {
+		DiskParam param;
+		dlg.GetParam(param);
+		disk->SetDiskParam(param);
+//		disk->SetName(dlg.GetDiskName());
+//		disk->SetDensity(dlg.GetDensity());
+//		disk->SetWriteProtect(dlg.IsWriteProtected());
+		disk->SetModify();
+		disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
+//		// ディスク名をセット
+//		frame->SetDiskListName(disk->GetName());
+//		// ディスク属性をセット
+//		SetAttr(disk);
+		// 左パネルを再選択
+		frame->ReSelectDiskList();
+	}
 }
 
 void L3DiskDiskAttr::SetAttr(DiskD88Disk *newdisk)

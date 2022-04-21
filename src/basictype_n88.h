@@ -29,7 +29,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	bool	AdditionalProcessOnFormatted();
+	bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name data access (read / verify)

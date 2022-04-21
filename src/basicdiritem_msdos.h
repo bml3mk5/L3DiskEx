@@ -72,6 +72,8 @@ public:
 	virtual bool	Check(bool &last);
 	/// アイテムを削除できるか
 	virtual bool	IsDeletable();
+	/// ファイル名を編集できるか
+	virtual bool	IsFileNameEditable();
 	/// ファイル名に設定できない文字を文字列にして返す
 	virtual wxString InvalidateChars();
 	/// ファイル名は必須（空文字不可）か

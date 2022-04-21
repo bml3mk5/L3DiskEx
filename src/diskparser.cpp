@@ -3,7 +3,6 @@
 /// @brief ディスクパーサー
 ///
 #include "diskparser.h"
-#include <wx/arrstr.h>
 #include "diskplainparser.h"
 #include "diskd88parser.h"
 #include "diskdskparser.h"
@@ -28,14 +27,69 @@ DiskParser::~DiskParser()
 {
 }
 
+/// ディスクイメージを新たに解析する
+/// @param [in] file_format      ファイルの形式名("d88","plain"など)
+/// @param [in] param_hint       ディスクパラメータヒント("plain"時のみ)
+int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint)
+{
+	return Parse(file_format, param_hint, DiskD88File::MODIFY_NONE);
+}
+
+/// 指定ディスクを解析してこれを既存のディスクイメージに追加する
+/// @param [in] file_format      ファイルの形式名("d88","plain"など)
+/// @param [in] param_hint       ディスクパラメータヒント("plain"時のみ)
+int DiskParser::ParseAdd(const wxString &file_format, const DiskParam &param_hint)
+{
+	return Parse(file_format, param_hint, DiskD88File::MODIFY_ADD);
+}
+
 /// ディスクイメージの解析
 /// @param [in] file_format ファイルの形式名("d88","plain"など)
-/// @param [in] disk_type   ディスクパラメータ種類
+/// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
 /// @param [in] mod_flags   オープン/追加 DiskD88File::Add()
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskParser::Parse(const wxString &file_format, const wxString &disk_type, short mod_flags)
+int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint, short mod_flags)
+{
+	bool support = false;
+	int rc = -1;
+
+	image_type.Empty();
+	if (!file_format.IsEmpty()) {
+		// ファイル形式の指定あり
+
+//		DiskParam *param = gDiskTemplates.Find(disk_type);
+
+		rc = SelectPerser(file_format, &param_hint, mod_flags, support);
+		if (rc >= 0) {
+			image_type = file_format;
+		}
+	}
+	if (!support) {
+		result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return result->GetValid();
+	}
+	return rc;
+}
+
+/// ディスクイメージをチェック
+/// @param [in,out] file_format  ファイルの形式名("d88","plain"など)
+/// @param [out] disk_params     ディスクパラメータの候補
+/// @param [out] manual_param    候補がないときのパラメータヒント
+int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return Check(file_format, disk_params, manual_param, DiskD88File::MODIFY_NONE);
+}
+
+/// ディスクイメージのチェック
+/// @param [in,out] file_format  ファイルの形式名("d88","plain"など)
+/// @param [out] disk_params     ディスクパラメータの候補
+/// @param [out] manual_param    候補がないときのパラメータヒント
+/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @retval  0 正常
+/// @retval -1 エラーあり
+int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags)
 {
 	bool support = false;
 	int rc = -1;
@@ -57,17 +111,18 @@ int DiskParser::Parse(const wxString &file_format, const wxString &disk_type, sh
 		const FileParamFormats *formats = &fitem->GetFormats();
 		for(size_t i=0; i<formats->Count(); i++) {
 			const FileParamFormat *param_format = &formats->Item(i);
-			rc = SelectPerser(param_format->GetType(), &param_format->GetHints(), NULL, mod_flags, support);
+			rc = SelectChecker(param_format->GetType(), &param_format->GetHints(), NULL, disk_params, manual_param, mod_flags, support);
 			if (rc >= 0) {
+				file_format = param_format->GetType();
 				break;
 			}
 		}
+
 	} else {
 		// ファイル形式の指定あり
 
-		DiskParam *param = gDiskTypes.Find(disk_type);
+		rc = SelectChecker(file_format, NULL, NULL, disk_params, manual_param, mod_flags, support);
 
-		rc = SelectPerser(file_format, NULL, param, mod_flags, support);
 	}
 	if (!support) {
 		result->SetError(DiskResult::ERR_UNSUPPORTED);
@@ -77,38 +132,66 @@ int DiskParser::Parse(const wxString &file_format, const wxString &disk_type, sh
 }
 
 /// ファイルの解析方法を選択
-int DiskParser::SelectPerser(const wxString &type, const wxArrayString *disk_hints, const DiskParam *disk_param, short mod_flags, bool &support)
+/// @param [in] type             ファイルの形式名("d88","plain"など)
+/// @param [in] disk_param       ディスクパラメータ("plain"時のみ)
+/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @param [out] support         サポートしているファイルか
+/// @retval  1 警告
+/// @retval  0 正常
+/// @retval -1 エラー
+int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, short mod_flags, bool &support)
 {
 	int rc = -1;
 	if (type == wxT("d88")) {
 		// d88形式
 		DiskD88Parser ps(file, mod_flags, result);
-		rc = ps.Parse(stream);
+		rc = ps.Parse(*stream);
 		support = true;
 	} else if (type == wxT("cpcdsk")) {
 		// CPC DSK形式
 		DiskDskParser ps(file, mod_flags, result);
-		if (ps.Check(stream)) {
-			rc = ps.Parse(stream);
+		if (ps.Check(*stream) >= 0) {
+			rc = ps.Parse(*stream);
 		}
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
 		DiskPlainParser ps(file, mod_flags, result);
-		rc = ps.Parse(stream, disk_hints, disk_param);
+		rc = ps.Parse(*stream, disk_param);
 		support = true;
 	}
 	return rc;
 }
 
-/// ディスクイメージを新たに解析する
-int DiskParser::Parse(const wxString &file_format, const wxString &disk_type)
+/// ファイルのチェック方法を選択
+/// @param [in] type             ファイルの形式名("d88","plain"など)
+/// @param [in] disk_hints       ディスクパラメータヒント("plain"時のみ)
+/// @param [in] disk_param       ディスクパラメータ("plain"時のみ)
+/// @param [out] disk_params     ディスクパラメータの候補
+/// @param [out] manual_param    候補がないときのパラメータヒント
+/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @param [out] support         サポートしているファイルか
+/// @retval  1 候補がないので改めてディスク種類を選択してもらう
+/// @retval  0 候補あり正常
+/// @retval -1 エラー終了
+int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags, bool &support)
 {
-	return Parse(file_format, disk_type, DiskD88File::MODIFY_NONE);
-}
-
-/// 指定ディスクを解析してこれを既存のディスクイメージに追加する
-int DiskParser::ParseAdd(const wxString &file_format, const wxString &disk_type)
-{
-	return Parse(file_format, disk_type, DiskD88File::MODIFY_ADD);
+	int rc = -1;
+	if (type == wxT("d88")) {
+		// d88形式
+		DiskD88Parser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
+		support = true;
+	} else if (type == wxT("cpcdsk")) {
+		// CPC DSK形式
+		DiskDskParser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
+		support = true;
+	} else if (type == wxT("plain")) {
+		// ベタ
+		DiskPlainParser ps(file, mod_flags, result);
+		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	}
+	return rc;
 }

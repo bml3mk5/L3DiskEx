@@ -9,10 +9,17 @@
 #include <wx/string.h>
 #include <wx/splitter.h>
 #include <wx/listctrl.h>
-#include <wx/dataview.h>
-#include <wx/clntdata.h>
 #include "diskd88.h"
 
+
+#define USE_LIST_CTRL_ON_SECTOR_LIST
+
+#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
+#include <wx/dataview.h>
+#include <wx/clntdata.h>
+#endif
+
+class wxFileDataObject;
 class L3DiskFrame;
 class L3DiskRawTrack;
 class L3DiskRawSector;
@@ -37,6 +44,8 @@ public:
 	void SetTrackListData(DiskD88Disk *disk, int side_num);
 	/// トラックリストをクリアする
 	void ClearTrackListData();
+	/// トラックリストを再描画する
+	void RefreshTrackListData();
 	/// トラックリストが存在するか
 	bool TrackListExists() const;
 	/// トラックリストの選択行を返す
@@ -65,8 +74,6 @@ public:
 	bool ShowExportDataFileDialog();
 	/// セクタへインポートダイアログ表示
 	bool ShowImportDataFileDialog();
-	/// セクタのプロパティダイアログ表示
-	bool ShowSectorAttr();
 	/// トラックのID一括変更
 	void ModifyIDonTrack(int type_num);
 	/// トラックの密度一括変更
@@ -76,10 +83,18 @@ public:
 	/// トラックのセクタサイズ一括変更
 	void ModifySectorSizeOnTrack();
 
+	/// トラック or セクタのプロパティダイアログ表示
+	bool ShowRawDiskAttr();
+	/// セクタのプロパティダイアログ表示
+	bool ShowSectorAttr();
+
 	/// ファイル名
 	wxString MakeFileName(DiskD88Sector *sector);
 	/// ファイル名
 	wxString MakeFileName(int st_c, int st_h, int st_r, int ed_c, int ed_h, int ed_r);
+
+	/// フォントをセット
+	void SetListFont(const wxFont &font);
 
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskRawPanel);
@@ -178,6 +193,9 @@ public:
 	/// トラック情報を表示
 	void ShowTrackAttr();
 
+	/// トラックを削除
+	void DeleteTracks();
+
 	/// ディスクを返す
 	DiskD88Disk *GetDisk() const { return disk; }
 	/// 選択行のトラックを返す
@@ -230,6 +248,7 @@ public:
 
 WX_DECLARE_OBJARRAY(L3DiskRawSectorItem, L3DiskRawSectorItems);
 
+#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
 /// セクタリストの挙動を設定
 class L3DiskRawListStoreDerivedModel : public wxDataViewListStore
 {
@@ -237,8 +256,23 @@ public:
     virtual bool IsEnabledByRow(unsigned int row, unsigned int col) const;
 };
 
+#define L3SectorListColumn	wxDataViewColumn*
+#define L3SectorListItem	wxDataViewItem
+#define L3SectorListItems	wxDataViewItemArray
+#define L3SectorListEvent	wxDataViewEvent
+#else
+#define L3SectorListColumn	long
+#define L3SectorListItem	long
+#define L3SectorListItems	wxArrayLong
+#define L3SectorListEvent	wxListEvent
+#endif
+
 /// 右パネルのセクタリスト
+#ifndef USE_LIST_CTRL_ON_SECTOR_LIST
 class L3DiskRawSector : public wxDataViewListCtrl
+#else
+class L3DiskRawSector : public wxListCtrl
+#endif
 {
 private:
 	L3DiskRawPanel *parent;
@@ -248,7 +282,7 @@ private:
 
 	DiskD88Track *track;
 
-	wxDataViewItem selected_item;
+	L3SectorListItem selected_item;
 
 	bool initialized;
 
@@ -264,13 +298,15 @@ public:
 	/// @name event procedures
 	//@{
 	/// セクタリスト右クリック
-	void OnDataViewItemContextMenu(wxDataViewEvent& event);
+	void OnItemContextMenu(L3SectorListEvent& event);
+	/// 右クリック
+	void OnContextMenu(wxContextMenuEvent& event);
 	/// セクタリスト ダブルクリック
-	void OnDataViewItemActivated(wxDataViewEvent& event);
+	void OnItemActivated(L3SectorListEvent& event);
 	/// セクタリスト選択
-	void OnSelectionChanged(wxDataViewEvent& event);
+	void OnSelectionChanged(L3SectorListEvent& event);
 	/// セクタリストからドラッグ開始
-	void OnBeginDrag(wxDataViewEvent& event);
+	void OnBeginDrag(L3SectorListEvent& event);
 	/// セクタリスト エクスポート選択
 	void OnExportFile(wxCommandEvent& event);
 	/// セクタリスト インポート選択
@@ -283,6 +319,10 @@ public:
 	void OnModifySectorsOnTrack(wxCommandEvent& event);
 	/// トラック上のセクタサイズ一括変更選択
 	void OnModifySectorSizeOnTrack(wxCommandEvent& event);
+	/// セクタ追加選択
+	void OnAppendSector(wxCommandEvent& event);
+	/// セクタ削除選択
+	void OnDeleteSector(wxCommandEvent& event);
 	/// トラック上のセクタ一括削除選択
 	void OnDeleteSectorsOnTrack(wxCommandEvent& event);
 	/// セクタプロパティ選択
@@ -306,9 +346,9 @@ public:
 	/// セクタリストをクリア
 	void ClearSectors();
 	/// 選択しているセクタを返す
-	DiskD88Sector *GetSelectedSector();
+	DiskD88Sector *GetSelectedSector(int *pos = NULL);
 	/// セクタを返す
-	DiskD88Sector *GetSector(const wxDataViewItem &item);
+	DiskD88Sector *GetSector(const L3SectorListItem &item);
 
 	/// ファイルリストをドラッグ
 	bool DragDataSourceForExternal();
@@ -323,8 +363,6 @@ public:
 	bool ExportDataFile(const wxString &path, DiskD88Sector *sector);
 	/// インポートダイアログ表示
 	bool ShowImportDataFileDialog();
-//	/// 指定したファイルからセクタにデータをインポート
-//	bool ImportDataFile(const wxString &path);
 	/// セクタ情報プロパティダイアログ表示
 	bool ShowSectorAttr();
 
@@ -336,8 +374,20 @@ public:
 	void ModifySectorsOnTrack();
 	/// トラック上のセクタサイズを一括変更
 	void ModifySectorSizeOnTrack();
+
+	/// セクタを追加ダイアログを表示
+	void ShowAppendSectorDialog();
+	/// セクタを削除
+	void DeleteSector();
 	/// トラック上のセクタを一括削除
 	void DeleteSectorsOnTrack();
+
+	/// 選択行を返す
+	int  GetListSelectedRow() const;
+	/// 選択行数を返す
+	int  GetListSelectedCount() const;
+	/// 選択行を配列で返す
+	int  GetListSelections(L3SectorListItems &arr) const;
 
 	enum {
 		IDM_EXPORT_FILE = 1,
@@ -349,6 +399,8 @@ public:
 		IDM_MODIFY_DENSITY_TRACK,
 		IDM_MODIFY_SECTORS_TRACK,
 		IDM_MODIFY_SIZE_TRACK,
+		IDM_APPEND_SECTOR,
+		IDM_DELETE_SECTOR,
 		IDM_DELETE_SECTORS_BELOW,
 		IDM_PROPERTY_SECTOR,
 	};

@@ -16,7 +16,6 @@ DiskBasicDirItem::DiskBasicDirItem()
 	this->type = NULL;
 
 	this->num = 0;
-	this->format_type = FORMAT_TYPE_NONE;
 	this->position = 0;
 	this->file_size = 0;
 	this->groups = 0;
@@ -47,7 +46,6 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic)
 	this->type = basic->GetType();
 
 	this->num = 0;
-	this->format_type = basic->GetFormatType();
 	this->position = 0;
 	this->file_size = 0;
 	this->groups = 0;
@@ -73,7 +71,6 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *sector, wxUi
 	this->type = basic->GetType();
 
 	this->num = 0;
-	this->format_type = basic->GetFormatType();
 	this->position = 0;
 	this->file_size = 0;
 	this->groups = 0;
@@ -102,7 +99,6 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int num, int track, int sid
 	this->type = basic->GetType();
 
 	this->num = num;
-	this->format_type = basic->GetFormatType();
 	this->position = secpos;
 	this->file_size = 0;
 	this->groups = 0;
@@ -134,7 +130,6 @@ void DiskBasicDirItem::Dup(const DiskBasicDirItem &src)
 	this->type = src.type;
 
 	this->num = src.num;
-	this->format_type = src.format_type;
 	this->position = src.position;
 	this->file_size = src.file_size;
 	this->groups = src.groups;
@@ -941,30 +936,9 @@ int DiskBasicDirItem::CheckEofCode(wxInputStream *istream, int file_size)
 	return file_size;
 }
 
-/// ファイルサイズが適正か
-/// @param [in]  file_type1 ファイル属性
-/// @param [in]  size       ファイルサイズ
-/// @param [out] limit      制限サイズ
-/// @return true 適正
-bool DiskBasicDirItem::IsFileValidSize(int file_type1, int size, int *limit)
-{
-	return true;
-}
-
-/// ファイルサイズが適正か
-/// @param [in]  dlg        ダイアログ（で設定したファイル属性を使用する）
-/// @param [in]  size       ファイルサイズ
-/// @param [out] limit      制限サイズ
-/// @return true 適正
-bool DiskBasicDirItem::IsFileValidSize(const IntNameBox *dlg, int size, int *limit)
-{
-	return IsFileValidSize(GetFileType1InAttrDialog(dlg), size, limit);
-}
-
-/// アイテムの属するセクタを変更済みにする
+/// アイテムの属するセクタを変更済みにする（未実装）
 void DiskBasicDirItem::SetModify()
 {
-	if (sector) sector->SetModify();
 }
 
 /// ディレクトリアイテムのサイズ
@@ -1049,3 +1023,25 @@ bool DiskBasicDirItem::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicEr
 	}
 	return true;
 }
+
+/// ファイルサイズが適正か
+/// @param [in]  file_type1 ファイル属性
+/// @param [in]  size       ファイルサイズ
+/// @param [out] limit      制限サイズ
+/// @return true 適正
+bool DiskBasicDirItem::IsFileValidSize(int file_type1, int size, int *limit)
+{
+	return true;
+}
+
+/// ファイルサイズが適正か
+/// @param [in]  parent     ダイアログ（で設定したファイル属性を使用する）
+/// @param [in]  size       ファイルサイズ
+/// @param [out] limit      制限サイズ
+/// @return true 適正
+bool DiskBasicDirItem::IsFileValidSize(const IntNameBox *parent, int size, int *limit)
+{
+	return IsFileValidSize(GetFileType1InAttrDialog(parent), size, limit);
+}
+
+

@@ -59,7 +59,7 @@
     <ClCompile Include="..\src\result.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\sectorbox.cpp">
+    <ClCompile Include="..\src\rawsectorbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\diskparambox.cpp">
@@ -224,6 +224,12 @@
     <ClCompile Include="..\src\rawtrackbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\basicparambox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskreplacebox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\main.h">
@@ -271,7 +277,7 @@
     <ClInclude Include="..\src\result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\sectorbox.h">
+    <ClInclude Include="..\src\rawsectorbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\diskparambox.h">
@@ -433,12 +439,33 @@
     <ClInclude Include="..\src\rawtrackbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\basicparambox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskreplacebox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\src\res\l3diskex.ico">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="..\src\res\fd_5inch.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\basic_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\char_codes.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\disk_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\file_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\lang\ja\l3diskex.mo">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

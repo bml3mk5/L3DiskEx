@@ -68,24 +68,23 @@ public:
 class DiskD88Sector
 {
 private:
-	int num;		///< sector number(ID Rと同じ)
-	bool deleted;	///< deleted mark
-	d88_sector_header_t header;
-	wxUint8 *data;
+	int					 num;		///< sector number(ID Rと同じ)
+	d88_sector_header_t *header;	///< sector header
+	wxUint8 			*data;		///< sector data
 
-	bool modified;	///< 変更したか
+//	bool modified;	///< 変更したか
 
-//	bool fat_area;	///< FATorディレクトリ管理エリアか？
-
-	d88_sector_header_t header_origin;
-	wxUint8 *data_origin;
+	d88_sector_header_t  header_origin;	///< pre-save header
+	wxUint8				*data_origin;	///< pre-save data
 
 	DiskD88Sector();
 	DiskD88Sector(const DiskD88Sector &src) {}
 	DiskD88Sector &operator=(const DiskD88Sector &src) { return *this; }
+	/// 変更されているか
+	bool	IsModifiedBase() const;
 
 public:
-	DiskD88Sector(int newnum, const d88_sector_header_t &newhdr, wxUint8 *newdata);
+	DiskD88Sector(int n_num, d88_sector_header_t *n_header, wxUint8 *n_data);
 	DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density = false);
 	~DiskD88Sector();
 
@@ -95,15 +94,17 @@ public:
 	bool	Fill(wxUint8 code, size_t len = (size_t)-1); 
 	/// セクタのデータを上書き
 	bool	Copy(const void *buf, size_t len); 
+	/// セクタのデータに指定したバイト列があるか
+	int		Find(const void *buf, size_t len); 
 	/// 指定位置のセクタデータを返す
 	wxUint8	Get(int pos) const;
 	/// セクタサイズを変更
-	void	ModifySectorSize(int size);
+	int		ModifySectorSize(int size);
 
 	/// セクタ番号を返す(ID Rと同じ)
 	int		GetSectorNumber() const { return num; }
 	/// 削除マークがついているか
-	bool	IsDeleted() const { return deleted; }
+	bool	IsDeleted() const;
 	/// 削除マークの設定
 	void	SetDeletedMark(bool val);
 	/// 同じセクタか
@@ -113,46 +114,45 @@ public:
 	/// セクタサイズを設定
 	void	SetSectorSize(int val);
 	/// セクタサイズ（バッファのサイズ）を返す
-	int		GetSectorBufferSize() const { return header.size; }
+	int		GetSectorBufferSize() const;
+	/// セクタサイズ（ヘッダ＋バッファのサイズ）を返す
+	int		GetSize() const;
 	/// セクタデータへのポインタを返す
 	wxUint8 *GetSectorBuffer() { return data; }
 	/// セクタ数を返す
-	wxUint16 GetSectorsPerTrack() const { return header.secnums; }
+	wxUint16 GetSectorsPerTrack() const;
 	/// セクタ数を設定
-	void	SetSectorsPerTrack(wxUint16 val) { header.secnums = val; }
+	void	SetSectorsPerTrack(wxUint16 val);
 
 	/// ヘッダを返す
-	d88_sector_header_t	*GetHeader() { return &header; }
+	d88_sector_header_t	*GetHeader() { return header; }
 	/// ID Cを返す
-	wxUint8	GetIDC() const { return header.id.c; }
+	wxUint8	GetIDC() const;
 	/// ID Hを返す
-	wxUint8	GetIDH() const { return header.id.h; }
+	wxUint8	GetIDH() const;
 	/// ID Rを返す
-	wxUint8	GetIDR() const { return header.id.r; }
+	wxUint8	GetIDR() const;
 	/// ID Nを返す
-	wxUint8	GetIDN() const { return header.id.n; }
+	wxUint8	GetIDN() const;
 	/// ID Cを設定
-	void	SetIDC(wxUint8 val) { header.id.c = val; }
+	void	SetIDC(wxUint8 val);
 	/// ID Hを設定
-	void	SetIDH(wxUint8 val) { header.id.h = val; }
+	void	SetIDH(wxUint8 val);
 	/// ID Rを設定
-	void	SetIDR(wxUint8 val) { header.id.r = val; }
+	void	SetIDR(wxUint8 val);
 	/// ID Nを設定
-	void	SetIDN(wxUint8 val) { header.id.n = val; }
+	void	SetIDN(wxUint8 val);
 	/// 単密度か
 	bool	IsSingleDensity();
 	/// 単密度かを設定
 	void	SetSingleDensity(bool val);
 
 	/// 変更されているか
-	bool	IsModified() const { return modified; }
+	bool	IsModified() const;
 	/// 変更済みを設定
 	void	SetModify();
 	/// 変更済みをクリア
 	void	ClearModify();
-
-//	bool	IsFATArea() const { return fat_area; }
-//	void	SetFATArea(bool val) { fat_area = val; }
 
 	/// セクタ内容の比較
 	static int Compare(DiskD88Sector *item1, DiskD88Sector *item2);
@@ -176,10 +176,14 @@ private:
 	int trk_num;	///< track number
 	int sid_num;	///< side number
 	int offset_pos;	///< position of offset table in header
-//	wxUint32 offset;	///< offset on diskimage
 	wxUint32 size;	///< track size
 	int interleave;	///< interleave of sector
 	DiskD88Sectors *sectors;
+
+	size_t orig_sectors;	///< num of sectors (original / pre save)
+
+	wxUint8 *extra_data;	///< extra data
+	size_t extra_size;		///< extra data size
 
 	DiskD88Track() {}
 	DiskD88Track(const DiskD88Track &src) {}
@@ -187,28 +191,34 @@ private:
 
 public:
 	DiskD88Track(DiskD88Disk *disk);
-//	DiskD88Track(DiskD88Disk *disk, int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset, int newinterleave);
 	DiskD88Track(DiskD88Disk *disk, int newtrknum, int newsidnum, int newoffpos, int newinterleave);
-//	DiskD88Track(DiskD88Disk *disk, int newnum, int newsidnum, wxUint32 newoffset, DiskD88Sectors *newsecs);
 	~DiskD88Track();
 
 	/// セクタを追加する
 	size_t	Add(DiskD88Sector *newsec);
 	/// トラック内のセクタデータを置き換える
 	int		Replace(DiskD88Track *src_track); 
+	/// トラックに新規セクタを追加する
+	int		AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity);
+	/// トラック内の指定位置のセクタを削除する
+	int		DeleteSectorByIndex(int pos);
 	/// トラック内の指定セクタを削除する
 	int		DeleteSectors(int start_sector_num, int end_sector_num);
 	/// トラックサイズの再計算
-	wxUint32 Shrink();
+	wxUint32 Shrink(bool trim_unused_data);
+	/// トラックサイズの再計算&オフセット計算
+	void	ShrinkAndCalcOffsets(bool trim_unused_data);
+	/// 余りバッファ領域のサイズを増やす
+	void	IncreaseExtraDataSize(size_t size);
+	/// 余りバッファ領域のサイズを減らす
+	void	DecreaseExtraDataSize(size_t size);
+
 	/// トラック番号を返す
 	int		GetTrackNumber() const { return trk_num; }
 	/// サイド番号を返す
 	int		GetSideNumber() const { return sid_num; }
 	/// サイド番号を設定
 	void	SetSideNumber(int val) { sid_num = val; }
-
-//	wxUint32	GetOffset() const { return offset; }
-//	void		SetOffset(wxUint32 val) { offset = val; }
 
 	/// オフセットを返す
 	int		GetOffsetPos() const { return offset_pos; }
@@ -233,6 +243,8 @@ public:
 	DiskD88Sectors *GetSectors() const { return sectors; }
 	/// 指定セクタ番号のセクタを返す
 	DiskD88Sector  *GetSector(int sector_number);
+	/// 指定位置のセクタを返す
+	DiskD88Sector  *GetSectorByIndex(int pos);
 
 	/// トラック内のもっともらしいID Hを返す
 	wxUint8	GetMajorIDH() const;
@@ -252,12 +264,17 @@ public:
 	/// トラック内のすべてのセクタサイズを変更
 	void	SetAllSectorSize(int val);
 
+	/// 余分なデータを設定する
+	void	SetExtraData(wxUint8 *buf, size_t size);
+	/// 余分なデータを返す
+	wxUint8 *GetExtraData() const { return extra_data; }
+	/// 余分なデータのサイズを返す
+	size_t	GetExtraDataSize() const { return extra_size; }
+
 	/// 変更されているか
 	bool	IsModified() const;
 	/// 変更済みをクリア
 	void	ClearModify();
-
-//	void SetFATArea(bool val);
 
 	/// トラック番号とサイド番号の比較
 	static int Compare(DiskD88Track *item1, DiskD88Track *item2);
@@ -275,20 +292,16 @@ private:
 	DiskD88File *parent;
 	int num;	///< disk number
 
-	d88_header_t header;
+	d88_header_t *header;	///< disk header
 	wxUint32 offset_start;	///< usually header size
 	DiskD88Tracks *tracks;
 	int max_track_number;
 
 	d88_header_t header_origin;
 
-//	int max_track_num;
-//	wxUint8 *buffer;
-//	size_t buffer_size;
-
 	bool modified;	///< 変更したか
 
-	DiskBasicParam *basic_param;
+	const DiskBasicParam *basic_param;
 
 	DiskD88Disk() : DiskParam() {}
 	DiskD88Disk(const DiskD88Disk &src) : DiskParam(src) {}
@@ -297,19 +310,21 @@ private:
 public:
 	DiskD88Disk(DiskD88File *file);
 	DiskD88Disk(DiskD88File *file, const wxString &newname, int newnum, const DiskParam &param, bool write_protect);
-	DiskD88Disk(DiskD88File *file, int newnum, const d88_header_t &newhdr);
-//	DiskD88Disk(wxUint8 *newbuf, size_t newbuflen, int newnum);
-//	DiskD88Disk(int newnum, d88_header_t *newhdr, DiskD88Tracks *newtrks);
+	DiskD88Disk(DiskD88File *file, int n_num, d88_header_t *n_header);
 	~DiskD88Disk();
 
 	/// ディスクにトラックを追加
 	size_t	Add(DiskD88Track *newtrk);
 	/// ディスクの内容を置き換える
 	int		Replace(int side_number, DiskD88Disk *src_disk, int src_side_number);
+	/// ディスクにトラックを追加
+	int		AddNewTrack(int side_number);
 	/// トラックを削除する
 	void	DeleteTracks(int start_offset_pos, int end_offset_pos, int side_number);
+	/// トラックサイズ＆オフセットの再計算＆ディスクサイズ変更
+	size_t	ShrinkTracks(bool trim_unused_data);
 	/// オフセットの再計算＆ディスクサイズ変更
-	size_t	Shrink();
+	size_t	CalcOffsets();
 	/// ディスクサイズ計算（ディスクヘッダ分を除く）
 	size_t	CalcSizeWithoutHeader();
 
@@ -322,10 +337,8 @@ public:
 	/// ディスク名を設定
 	void	SetName(const wxUint8 *buf, size_t len);
 
-//	int		GetDiskType() { return disk_type; }
-
 	/// ヘッダを返す
-	d88_header_t *GetHeader() { return &header; }
+	d88_header_t *GetHeader() { return header; }
 	/// ディスクファイルを返す
 	DiskD88File   *GetFile() const { return parent; }
 	/// トラックリストを返す
@@ -339,9 +352,6 @@ public:
 	/// ディスクの中でもっともらしいパラメータを設定
 	const DiskParam *CalcMajorNumber();
 
-//	/// ディスクパラメータを文字列にフォーマットして返す
-//	wxString GetAttrText() const;
-
 	/// 書き込み禁止かどうかを返す
 	bool	IsWriteProtected() const;
 	/// 書き込み禁止かどうかを設定
@@ -349,6 +359,8 @@ public:
 
 	/// 密度を返す
 	wxString GetDensityText() const;
+	/// 密度を返す
+	int		GetDensity() const;
 	/// 密度を設定
 	void	SetDensity(int val);
 
@@ -383,9 +395,6 @@ public:
 	/// ディスクのトラックを作り直す
 	bool	Rebuild(const DiskParam &param, int selected_side);
 
-//	wxUint8 *GetBuffer() { return buffer; }
-//	size_t GetBufferSize() { return buffer_size; }
-
 	/// 変更済みに設定
 	void	SetModify();
 	/// 変更されているか
@@ -396,20 +405,30 @@ public:
 	/// トラックが存在するか
 	bool	ExistTrack(int side_number);
 
-//	void	SetMaxTrackNumber(int track_number);
-//	int		GetMaxTrackNumber();
-
 	/// DISK BASICパラメータを設定
-	void	SetDiskBasicParam(DiskBasicParam *val) { basic_param = val; }
+	void	SetDiskBasicParam(const DiskBasicParam *val) { basic_param = val; }
 	/// DISK BASICパラメータを返す
-	DiskBasicParam *GetDiskBasicParam() { return basic_param; }
-//	void	SetFATArea(bool val);
+	const DiskBasicParam *GetDiskBasicParam() const { return basic_param; }
 
 	/// ディスク番号を比較
 	static int Compare(DiskD88Disk *item1, DiskD88Disk *item2);
 };
 
 WX_DEFINE_ARRAY(DiskD88Disk *, DiskD88Disks);
+
+/// ディスクライト時のオプション
+class DiskWriteOptions
+{
+protected:
+	bool trim_unused_data;
+public:
+	DiskWriteOptions();
+	DiskWriteOptions(
+		bool n_trim_unused_data
+	);
+	virtual ~DiskWriteOptions();
+	bool IsTrimUnusedData() const { return trim_unused_data; }
+};
 
 /// ディスクイメージへのポインタを保持するクラス
 class DiskD88File
@@ -440,7 +459,6 @@ public:
 	DiskD88Disks *GetDisks() { return disks; }
 	DiskD88Disk  *GetDisk(size_t idx);
 
-//	void SetModify();
 	bool IsModified();
 	void ClearModify();
 
@@ -474,19 +492,25 @@ public:
 	/// 追加で新規作成
 	int Add(const wxString &diskname, const DiskParam &param, bool write_protect, const wxString &basic_hint);
 	/// ファイルを追加
-	int Add(const wxString &filepath, const wxString &file_format, const wxString &disk_type);
+	int Add(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint);
 	/// ファイルを開く
-	int Open(const wxString &filepath, const wxString &file_format, const wxString &disk_type);
+	int Open(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint);
+	/// ファイルを開く前のチェック
+	int Check(const wxString &filepath, wxString &file_format, DiskParamPtrs &params, DiskParam &manual_param);
 	/// 閉じる
 	void Close();
 	/// ストリームの内容をファイルに保存
-	int Save(const wxString &filepath);
+	int Save(const wxString &filepath, const DiskWriteOptions &options);
 	/// ストリームの内容をファイルに保存
-	int SaveDisk(int disk_number, int side_number, const wxString &filepath);
+	int SaveDisk(int disk_number, int side_number, const wxString &filepath, const DiskWriteOptions &options);
 	/// ディスクを削除
 	bool Delete(size_t disk_number);
+	/// 置換元のディスクを解析
+	int ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskD88File &src_file, DiskD88Disk* &tag_disk);
 	/// ファイルでディスクを置換
-	int ReplaceDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const wxString &disk_type);
+	int ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, DiskD88Disk *tag_disk);
+//	/// ファイルでディスクを置換
+//	int ReplaceDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint);
 
 	/// ディスク名を設定
 	bool SetDiskName(size_t disk_number, const wxString &newname);

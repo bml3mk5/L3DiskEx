@@ -144,8 +144,6 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-//	/// 書き込み/上書き禁止か
-//	bool			IsWriteProtected();
 	/// ファイルの終端コードをチェックする必要があるか
 	bool			NeedCheckEofCode();
 	/// データをエクスポートする前に必要な処理

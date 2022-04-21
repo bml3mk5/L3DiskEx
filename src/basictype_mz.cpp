@@ -51,15 +51,22 @@ bool DiskBasicTypeMZ::CheckFat()
 		valid = false;
 	}
 	if (valid) {
-//		secs_per_group = mag + 1;
 		basic->SetSectorsPerGroup(mag + 1);
 	}
 
 	return valid;
 }
 
+/// 使用可能なディスクサイズを得る
+void DiskBasicTypeMZ::GetUsableDiskSize(int &disk_size, int &group_size) const
+{
+	group_size = basic->GetFatEndGroup() + 1 - data_start_group;
+	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+}
+
 /// 残りディスクサイズを計算
-void DiskBasicTypeMZ::CalcDiskFreeSize()
+/// @param [in] wrote 書込み操作を行った後か
+void DiskBasicTypeMZ::CalcDiskFreeSize(bool wrote)
 {
 	wxUint32 fsize = 0;
 	wxUint32 grps = 0;
@@ -95,7 +102,7 @@ void DiskBasicTypeMZ::CalcDiskFreeSize()
 
 	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
 	// 使用済みクラスタ数を更新
-	if (used_groups != used) {
+	if (wrote && used_groups != used) {
 		b->used = basic->InvertUint16(used);	// invert
 	}
 
@@ -258,9 +265,10 @@ wxUint32 DiskBasicTypeMZ::FindContinuousArea(wxUint32 group_size, wxUint32 &grou
 /// データサイズ分のグループを確保する
 /// @param [in]  item        ディレクトリアイテム
 /// @param [in]  data_size   確保するデータサイズ（バイト）
+/// @param [in]  flags       新規か追加か
 /// @param [out] group_items 確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items)
+int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int file_size = 0;
 	int groups = 0;
@@ -461,7 +469,7 @@ bool DiskBasicTypeMZ::IsRootDirectory(wxUint32 group_num)
 }
 
 /// サブディレクトリを作成した後の個別処理
-void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num)
+void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item)
 {
 	if (group_items.Count() <= 0) return;
 
@@ -495,7 +503,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	} else {
 		// 親がルート
 		newitem->CopyData(item->GetData());
-		newitem->SetStartGroup(parent_group_num);
+		newitem->SetStartGroup(0);
 	}
 	newitem->SetFileNamePlain(wxT(".."));
 	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
@@ -512,7 +520,7 @@ void DiskBasicTypeMZ::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
-bool DiskBasicTypeMZ::AdditionalProcessOnFormatted()
+bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// IPL
 	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);

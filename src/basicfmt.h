@@ -16,13 +16,34 @@
 #include "charcodes.h"
 #include "result.h"
 
+
+class DiskBasic;
 class DiskBasicFat;
 class DiskBasicDir;
 class DiskBasicType;
 class DiskBasicDirItem;
-//class DiskBasicGroupItems;
+class DiskBasicDirItems;
 class DiskBasicGroups;
 class AttrControls;
+
+/// フォーマット時やダイアログ表示で渡す値
+class DiskBasicIdentifiedData
+{
+private:
+	wxString volume_name;	///< ボリューム名
+	int		 volume_number;	///< ボリューム番号
+
+public:
+	DiskBasicIdentifiedData();
+	DiskBasicIdentifiedData(const wxString &n_volume_name, int n_volume_number);
+	~DiskBasicIdentifiedData() {}
+
+	const wxString &GetVolumeName() const { return volume_name; }
+	int GetVolumeNumber() const { return volume_number; }
+
+	void SetVolumeName(const wxString &val) { volume_name = val; }
+	void SetVolumeNumber(int val) { volume_number = val; }
+};
 
 /// DISK BASIC 構造解析
 class DiskBasic : public DiskParam, public DiskBasicParam
@@ -52,7 +73,7 @@ private:
 	/// BASIC種類を設定
 	void			CreateType();
 	/// 指定のDISK BASICでフォーマットされているかを解析＆チェック
-	int				ParseFormattedDisk(DiskD88Disk *newdisk, DiskBasicParam *match, bool is_formatting); 
+	int				ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam *match, bool is_formatting); 
 
 public:
 	DiskBasic();
@@ -66,10 +87,10 @@ public:
 	void			Clear();
 
 	/// 現在選択しているディスクのFAT領域をアサイン
-	bool			AssignFat();
+	bool			AssignFat(bool is_formatting);
 
 	/// 現在選択しているディスクのルートディレクトリ構造をチェック
-	bool			CheckRootDirectory();
+	bool			CheckRootDirectory(bool is_formatting);
 	/// 現在選択しているディスクのルートディレクトリをアサイン
 	bool			AssignRootDirectory();
 	/// 現在選択しているディスクのFATとルートディレクトリをアサイン
@@ -78,8 +99,6 @@ public:
 	//@}
 	/// @name 読み出し
 	//@{
-//	/// 指定したファイル名のファイルをロード
-//	bool			LoadFile(const wxString &filename, const wxString &dstpath);
 	/// 指定したディレクトリ位置のファイルをロード
 	bool			LoadFile(int item_number, const wxString &dstpath);
 	/// 指定したディレクトリアイテムのファイルをロード
@@ -88,19 +107,21 @@ public:
 	/// 指定したアイテムのファイルをベリファイ
 	bool			VerifyFile(DiskBasicDirItem *item, const wxString &srcpath);
 	/// ディスクデータにアクセス（ロード/ベリファイで使用）
-	bool			AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream);
+	bool			AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, size_t *outsize = NULL);
 	//@}
 	/// @name 比較・チェック
 	//@{
 	/// 同じファイル名のアイテムをさがす
 	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 同じファイル名が既に存在して上書き可能か
+	int				IsFileNameDuplicated(const wxString &filename, DiskBasicDirItem *exclude_item = NULL, DiskBasicDirItem **next_item = NULL);
 
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxString &srcpath, int *file_size);
 	/// 指定ファイルのサイズをチェック
 	bool			CheckFile(const wxUint8 *buffer, size_t buflen);
 
-	/// DISK BASICで使用できる残りディスクサイズ
+	/// DISK BASICで使用できる残りディスクサイズ内か
 	bool			HasFreeDiskSize(int size);
 	/// DISK BASICで使用できる残りディスクサイズを返す
 	int				GetFreeDiskSize() const;
@@ -133,7 +154,7 @@ public:
 	/// @name 属性変更
 	//@{
 	/// ファイル名や属性を更新できるか
-	bool			CanRenameFile(DiskBasicDirItem *item);
+	bool			CanRenameFile(DiskBasicDirItem *item, bool showmsg = true);
 	/// ファイル名を更新
 	bool			RenameFile(DiskBasicDirItem *item, const wxString &newname);
 	/// 属性を更新
@@ -146,10 +167,12 @@ public:
 	/// DISK BASIC用にフォーマットできるか
 	bool			IsFormattable();
 	/// ディスクを論理フォーマット
-	bool			FormatDisk();
+	int				FormatDisk(const DiskBasicIdentifiedData &data);
 	//@}
 	/// @name ディレクトリ操作
 	//@{
+	/// カレントディレクトリ内の一覧を返す
+	DiskBasicDirItems *GetCurrentDirectoryItems(DiskBasicDirItem **dir_item = NULL);
 	/// ディレクトリを変更
 	bool			ChangeDirectory(DiskBasicDirItem *item);
 	/// サブディレクトリの作成できるか
@@ -176,8 +199,6 @@ public:
 	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num);
 	/// グループ番号から開始セクタを返す
 	DiskD88Sector	*GetSectorFromGroup(wxUint32 group_num, int &track_num, int &side_num);
-//	/// 指定ディレクトリのすべてのグループを取得
-//	void			GetAllGroups(DiskBasicDirItem *item, DiskBasicGroups &group_items);
 	/// グループ番号からトラック番号、サイド番号、セクタ番号を計算してリストに入れる
 	bool			GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_size, int remain_size, DiskBasicGroups &items, int *end_sector = NULL);
 	/// グループ番号からトラック、サイド、セクタの各番号を計算(グループ計算用)
@@ -238,7 +259,7 @@ public:
 	/// 選択中のサイドを返す
 	int				GetSelectedSide() const { return selected_side; }
 	/// DISK BASICの説明を取得
-	const wxString &GetDescription();
+	const wxString &GetDescriptionDetail();
 	/// FATクラス
 	DiskBasicFat	*GetFat() { return fat; }
 	/// DIRクラス

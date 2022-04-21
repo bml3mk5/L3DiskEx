@@ -3,7 +3,7 @@
 #
 CC=g++
 
-APPLICATION_VERSION=0.3.2
+APPLICATION_VERSION=0.3.5
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
@@ -90,6 +90,7 @@ OBJS=	utils.o \
 	basicdir.o \
 	basicfmt.o \
 	basicselbox.o \
+	basicparambox.o \
 	charcodes.o \
 	config.o \
 	diskd88.o \
@@ -104,6 +105,7 @@ OBJS=	utils.o \
 	diskparam.o \
 	diskparambox.o \
 	diskresult.o \
+	diskreplacebox.o \
 	fileparam.o \
 	fileselbox.o \
 	fontminibox.o \
@@ -111,9 +113,9 @@ OBJS=	utils.o \
 	logging.o \
 	rawparambox.o \
 	rawexpbox.o \
+	rawsectorbox.o \
 	rawtrackbox.o \
 	result.o \
-	sectorbox.o \
 	uibindump.o \
 	uidiskattr.o \
 	uidisklist.o \

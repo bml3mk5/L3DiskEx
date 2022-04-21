@@ -9,7 +9,7 @@
 #include <wx/string.h>
 #include <wx/arrstr.h>
 
-/// 結果保存用のクラス absolute
+/// 結果保存用のクラス abstract
 class ResultInfo
 {
 protected:

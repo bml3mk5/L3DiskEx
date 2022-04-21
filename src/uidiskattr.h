@@ -39,6 +39,7 @@ public:
 	void OnComboDensity(wxCommandEvent& event);
 	void OnCheckWriteProtect(wxCommandEvent& event);
 
+	void ShowChangeDisk();
 	void SetAttr(DiskD88Disk *newdisk);
 
 	void SetAttrText(const wxString &val);

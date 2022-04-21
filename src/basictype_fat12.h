@@ -61,8 +61,10 @@ public:
 
 	/// @name disk size
 	//@{
+	/// 使用可能なディスクサイズを得る
+	virtual void	GetUsableDiskSize(int &disk_size, int &group_size) const;
 	/// 残りディスクサイズを計算
-	virtual void	CalcDiskFreeSize();
+	virtual void	CalcDiskFreeSize(bool wrote);
 	//@}
 
 	/// @name file size
@@ -75,7 +77,6 @@ public:
 	virtual int		GetStartSectorFromGroup(wxUint32 group_num);
 	/// グループ番号から最終セクタ番号を得る
 	virtual int		GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
-
 	/// データ領域の開始セクタを計算
 	virtual int		CalcDataStartSectorPos();
 	//@}
@@ -87,7 +88,7 @@ public:
 	/// サブディレクトリを作成できるか
 	virtual bool	CanMakeDirectory() const { return true; }
 	/// サブディレクトリを作成した後の個別処理
-	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num);
+	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
@@ -95,7 +96,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	virtual bool	AdditionalProcessOnFormatted();
+	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	/// BIOS Parameter Block を作成
 	bool			CreateBiosParameterBlock(const char *jmp, const char *name, wxUint8 **sec_buf = NULL);
 	//@}

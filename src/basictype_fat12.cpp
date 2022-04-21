@@ -4,6 +4,7 @@
 ///
 #include "basictype_fat12.h"
 #include "basicfmt.h"
+#include "basicdir.h"
 #include "basicdiritem.h"
 #include "logging.h"
 
@@ -87,6 +88,14 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 		// サイド数が少ない
 		valid = 1;
 	}
+	if (basic->GetSidesOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
+		// BASICテンプレートのサイド数が異なる
+		valid = 1;
+	}
+	if (basic->GetSectorsPerTrackOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_SecPerTrk)) {
+		// BASICテンプレートのセクタ数が異なる
+		valid = 1;
+	}
 
 	if (valid == 0) {
 		basic->SetSidesOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads));
@@ -113,7 +122,7 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 	basic->SetFatEndGroup(max_grp_on_fat > max_grp_on_prm ? max_grp_on_prm : max_grp_on_fat);
 
 	// テンプレートに一致するものがあるか
-	DiskBasicParam *param = gDiskBasicTemplates.FindType(basic->GetBasicCategoryName(), basic->GetSidesOnBasic(), basic->GetSectorsPerTrackOnBasic());
+	DiskBasicParam *param = gDiskBasicTemplates.FindType(basic->GetBasicCategoryName(), basic->GetBasicTypeName(), basic->GetSidesOnBasic(), basic->GetSectorsPerTrackOnBasic());
 	if (param) {
 		basic->SetBasicDescription(param->GetBasicDescription());
 	}
@@ -128,8 +137,15 @@ wxUint32 DiskBasicTypeFAT12::CalcManagedStartGroup()
 	return managed_start_group;
 }
 
+/// 使用可能なディスクサイズを得る
+void DiskBasicTypeFAT12::GetUsableDiskSize(int &disk_size, int &group_size) const
+{
+	group_size = basic->GetFatEndGroup() - 2;
+	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+}
+
 /// 残りディスクサイズを計算
-void DiskBasicTypeFAT12::CalcDiskFreeSize()
+void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
 {
 	wxUint32 fsize = 0;
 	wxUint32 grps = 0; 
@@ -304,7 +320,7 @@ void DiskBasicTypeFAT12::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 
 /// セクタデータを埋めた後の個別処理
 /// ヘッダのパラメータを設定
-bool DiskBasicTypeFAT12::AdditionalProcessOnFormatted()
+bool DiskBasicTypeFAT12::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	if (!CreateBiosParameterBlock("\xeb\x3c\x90", "FAT12")) {
 		return false;
@@ -368,7 +384,7 @@ bool DiskBasicTypeFAT12::IsRootDirectory(wxUint32 group_num)
 }
 
 /// サブディレクトリを作成した後の個別処理
-void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num)
+void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item)
 {
 	if (group_items.Count() <= 0) return;
 
@@ -395,7 +411,7 @@ void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 	} else {
 		// 親がルート
 		newitem->CopyData(item->GetData());
-		newitem->SetStartGroup(parent_group_num);
+		newitem->SetStartGroup(0);
 	}
 	newitem->SetFileNamePlain(wxT(".."));
 	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);

@@ -28,7 +28,7 @@ DiskBasicDir::DiskBasicDir(DiskBasic *basic)
 	this->start_sector_pos = 0;
 	this->end_sector_pos = 0;
 	this->unique_number = 0;
-	this->format_type = FORMAT_TYPE_NONE;
+	this->format_type = NULL;
 	this->parent_item = NULL;
 }
 DiskBasicDir::~DiskBasicDir()
@@ -40,8 +40,12 @@ DiskBasicDir::~DiskBasicDir()
 /// ディレクトリアイテムを新規に作成
 DiskBasicDirItem *DiskBasicDir::NewItem()
 {
-	DiskBasicDirItem *item;
-	switch(format_type) {
+	DiskBasicDirItem *item = NULL;
+
+	int num = FORMAT_TYPE_NONE;
+	if (format_type) num = format_type->GetTypeNumber();
+
+	switch(num) {
 	case FORMAT_TYPE_L3_1S:
 		item = new DiskBasicDirItemL31S(basic);
 		break;
@@ -75,9 +79,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	case FORMAT_TYPE_CPM:
 		item = new DiskBasicDirItemCPM(basic);
 		break;
-	default:
-		item = new DiskBasicDirItem(basic);
-		break;
+//	default:
+//		item = new DiskBasicDirItem(basic);
+//		break;
 	}
 	return item;
 }
@@ -86,8 +90,12 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 /// @param [in] newdata セクタ内のバッファ
 DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 {
-	DiskBasicDirItem *item;
-	switch(format_type) {
+	DiskBasicDirItem *item = NULL;
+
+	int num = FORMAT_TYPE_NONE;
+	if (format_type) num = format_type->GetTypeNumber();
+
+	switch(num) {
 	case FORMAT_TYPE_L3_1S:
 		item = new DiskBasicDirItemL31S(basic, newsec, newdata);
 		break;
@@ -121,9 +129,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 	case FORMAT_TYPE_CPM:
 		item = new DiskBasicDirItemCPM(basic, newsec, newdata);
 		break;
-	default:
-		item = new DiskBasicDirItem(basic, newsec, newdata);
-		break;
+//	default:
+//		item = new DiskBasicDirItem(basic, newsec, newdata);
+//		break;
 	}
 	return item;
 }
@@ -137,8 +145,12 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 /// @param [out] unuse   未使用か   
 DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse)
 {
-	DiskBasicDirItem *item;
-	switch(format_type) {
+	DiskBasicDirItem *item = NULL;
+
+	int num = FORMAT_TYPE_NONE;
+	if (format_type) num = format_type->GetTypeNumber();
+
+	switch(num) {
 	case FORMAT_TYPE_L3_1S:
 		item = new DiskBasicDirItemL31S(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
@@ -172,9 +184,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 	case FORMAT_TYPE_CPM:
 		item = new DiskBasicDirItemCPM(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
-	default:
-		item = new DiskBasicDirItem(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
-		break;
+//	default:
+//		item = new DiskBasicDirItem(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+//		break;
 	}
 	return item;
 }
@@ -324,9 +336,10 @@ DiskBasicDirItem *DiskBasicDir::FindName(const wxString &name, DiskBasicDirItem 
 /// @param [in] type          DISK BASIC 種類
 /// @param [in] start_sector  開始セクタ番号
 /// @param [in] end_sector    終了セクタ番号
-bool DiskBasicDir::CheckRoot(DiskBasicType *type, int start_sector, int end_sector)
+/// @param [in] is_formatting フォーマット中か
+bool DiskBasicDir::CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting)
 {
-	return type->CheckRootDirectory(start_sector, end_sector);
+	return type->CheckRootDirectory(start_sector, end_sector, is_formatting);
 }
 
 /// ルートディレクトリをアサイン

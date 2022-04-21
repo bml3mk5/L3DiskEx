@@ -1,9 +1,9 @@
-﻿/// @file sectorbox.cpp
+﻿/// @file rawsectorbox.cpp
 ///
 /// @brief セクタダイアログ
 ///
 
-#include "sectorbox.h"
+#include "rawsectorbox.h"
 #include <wx/textctrl.h>
 #include <wx/checkbox.h>
 #include <wx/stattext.h>
@@ -14,12 +14,12 @@
 #include "charcodes.h"
 
 // Attach Event
-BEGIN_EVENT_TABLE(SectorBox, wxDialog)
-	EVT_BUTTON(wxID_OK, SectorBox::OnOK)
+BEGIN_EVENT_TABLE(RawSectorBox, wxDialog)
+	EVT_BUTTON(wxID_OK, RawSectorBox::OnOK)
 END_EVENT_TABLE()
 
-SectorBox::SectorBox(wxWindow* parent, wxWindowID id, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity)
-	: wxDialog(parent, id, _("Sector Information"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int hide_flags)
+	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxALL, 4).Border(wxRIGHT, 8);
@@ -58,12 +58,15 @@ SectorBox::SectorBox(wxWindow* parent, wxWindowID id, int id_c, int id_h, int id
 
 	szrAll->Add(hbox, flags);
 
-	hbox = new wxBoxSizer(wxHORIZONTAL);
-	hbox->Add(new wxStaticText(this, wxID_ANY, _("Number Of Sector")), flags);
-	txtSecNums = new wxTextCtrl(this, IDC_TEXT_SECNUMS, wxString::Format(wxT("%d"), sec_nums), wxDefaultPosition, wxDefaultSize, style, validate);
-	hbox->Add(txtSecNums, flags);
+	txtSecNums = NULL;
+	if ((hide_flags & SECTORBOX_HIDE_SECTOR_NUMS) == 0) {
+		hbox = new wxBoxSizer(wxHORIZONTAL);
+		hbox->Add(new wxStaticText(this, wxID_ANY, _("Number Of Sector")), flags);
+		txtSecNums = new wxTextCtrl(this, IDC_TEXT_SECNUMS, wxString::Format(wxT("%d"), sec_nums), wxDefaultPosition, wxDefaultSize, style, validate);
+		hbox->Add(txtSecNums, flags);
 
-	szrAll->Add(hbox, flags);
+		szrAll->Add(hbox, flags);
+	}
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
@@ -71,12 +74,12 @@ SectorBox::SectorBox(wxWindow* parent, wxWindowID id, int id_c, int id_h, int id
 	SetSizerAndFit(szrAll);
 }
 
-int SectorBox::ShowModal()
+int RawSectorBox::ShowModal()
 {
 	return wxDialog::ShowModal();
 }
 
-void SectorBox::OnOK(wxCommandEvent& event)
+void RawSectorBox::OnOK(wxCommandEvent& event)
 {
 	if (Validate() && TransferDataFromWindow()) {
 		if (IsModal()) {
@@ -88,41 +91,41 @@ void SectorBox::OnOK(wxCommandEvent& event)
 	}
 }
 
-int SectorBox::GetIdC()
+int RawSectorBox::GetIdC()
 {
 	long val;
 	txtID_C->GetValue().ToLong(&val);
 	return (int)val;
 }
-int SectorBox::GetIdH()
+int RawSectorBox::GetIdH()
 {
 	long val;
 	txtID_H->GetValue().ToLong(&val);
 	return (int)val;
 }
-int SectorBox::GetIdR()
+int RawSectorBox::GetIdR()
 {
 	long val;
 	txtID_R->GetValue().ToLong(&val);
 	return (int)val;
 }
-int SectorBox::GetIdN()
+int RawSectorBox::GetIdN()
 {
 	long val;
 	txtID_N->GetValue().ToLong(&val);
 	return (int)val;
 }
-int SectorBox::GetSectorNums()
+int RawSectorBox::GetSectorNums()
 {
-	long val;
-	txtSecNums->GetValue().ToLong(&val);
+	long val = 0;
+	if (txtSecNums) txtSecNums->GetValue().ToLong(&val);
 	return (int)val;
 }
-bool SectorBox::GetDeletedMark()
+bool RawSectorBox::GetDeletedMark()
 {
 	return chkDeleted->GetValue();
 }
-bool SectorBox::GetSingleDensity()
+bool RawSectorBox::GetSingleDensity()
 {
 	return chkDensity->GetValue();
 }

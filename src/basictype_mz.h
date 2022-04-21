@@ -42,8 +42,10 @@ public:
 
 	/// @name disk size
 	//@{
+	/// 使用可能なディスクサイズを得る
+	void		GetUsableDiskSize(int &disk_size, int &group_size) const;
 	/// 残りディスクサイズを計算
-	void		CalcDiskFreeSize();
+	void		CalcDiskFreeSize(bool wrote);
 	//@}
 
 	/// @name file chain
@@ -51,7 +53,7 @@ public:
 	/// 未使用が連続している位置をさがす
 	wxUint32	FindContinuousArea(wxUint32 group_size, wxUint32 &group_start);
 	/// データサイズ分のグループを確保する
-	int			AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items);
+	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
 	/// グループを確保して使用中にする
 	int			AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_start, int remain, int sec_size, DiskBasicGroups &group_items, int &file_size, int &groups);
 
@@ -68,7 +70,7 @@ public:
 	/// サブディレクトリを作成できるか
 	bool		CanMakeDirectory() const { return true; }
 	/// サブディレクトリを作成した後の個別処理
-	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num);
+	void		AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item);
 	//@}
 
 	/// @name format
@@ -76,7 +78,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	bool		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name data access (read / verify)

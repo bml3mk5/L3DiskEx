@@ -18,6 +18,12 @@ protected:
 	wxString	mFilePath;			///< ファイルパス
 	wxString	mExportFilePath;	///< エクスポート先パス
 	wxArrayString mRecentFiles;		///< 最近使用したファイル
+	int			mCharCode;			///< キャラクターコードマップ番号
+	wxString	mListFontName;		///< リストウィンドウのフォント名
+	int			mListFontSize;		///< リストウィンドウのフォントサイズ
+	wxString	mDumpFontName;		///< ダンプウィンドウのフォント名
+	int			mDumpFontSize;		///< ダンプウィンドウのフォントサイズ
+	bool		mTrimUnusedData;	///< 未使用データを切り落とすか
 
 public:
 	Params();
@@ -32,6 +38,18 @@ public:
 	void			AddRecentFile(const wxString &val);
 	const wxString &GetRecentFile() const;
 	const wxArrayString &GetRecentFiles() const;
+	void			SetCharCode(int val) { mCharCode = val; }
+	int				GetCharCode() const { return mCharCode; }
+	void			SetListFontName(const wxString &val) { mListFontName = val; }
+	const wxString &GetListFontName() const { return mListFontName; }
+	void			SetListFontSize(int val) { mListFontSize = val; }
+	int				GetListFontSize() const { return mListFontSize; }
+	void			SetDumpFontName(const wxString &val) { mDumpFontName = val; }
+	const wxString &GetDumpFontName() const { return mDumpFontName; }
+	void			SetDumpFontSize(int val) { mDumpFontSize = val; }
+	int				GetDumpFontSize() const { return mDumpFontSize; }
+	void			TrimUnusedData(bool val) { mTrimUnusedData = val; }
+	bool			IsTrimUnusedData() const { return mTrimUnusedData; }
 	//@}
 };
 

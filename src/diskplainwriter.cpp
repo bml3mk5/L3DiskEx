@@ -2,6 +2,7 @@
 ///
 /// @brief べたディスクライター
 ///
+#include "diskwriter.h"
 #include "diskplainwriter.h"
 #include <wx/stream.h>
 #include "diskd88.h"
@@ -11,8 +12,9 @@
 //
 // べた形式で保存
 //
-DiskPlainWriter::DiskPlainWriter(DiskResult *result)
+DiskPlainWriter::DiskPlainWriter(DiskWriter *dw, DiskResult *result)
 {
+	this->dw = dw;
 	this->result = result;
 }
 
@@ -114,7 +116,7 @@ int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream
 	SingleDensities singles;
 	singles.Add(new SingleDensity(-1, -1, disk->GetSectorsPerTrack(), 128));
 	wxArrayString basic_types;
-	DiskParam param(wxT("1S"), 0, basic_types, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
+	DiskParam param(wxT("1S"), basic_types, false, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
 
 	DiskD88File tmpfile;
 	DiskD88Creator cr("", param, false, &tmpfile, *result);

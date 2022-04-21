@@ -50,13 +50,14 @@ class DiskParam
 {
 protected:
 	wxString disk_type_name;	///< "2D" "2HD" など
-	wxUint32 disk_type;			///< 1: AB面あり（3インチFD）
+//	wxUint32 disk_type;			///< 1: AB面あり（3インチFD）
 	wxArrayString basic_types;	///< BASIC種類（DiskBasicParamとのマッチングにも使用）
+	bool reversible;			///< 裏返し可能 AB面あり（3インチFD）
 	int sides_per_disk;			///< サイド数
 	int tracks_per_side;		///< トラック数
 	int sectors_per_track;		///< セクタ数
 	int sector_size;			///< セクタサイズ
-	int numbering_sector;		///< セクタ番号の付番方法
+	int numbering_sector;		///< セクタ番号の付番方法(0:サイド毎、1:トラック毎)
 	int density;				///< 0:2D 1:2DD 2:2HD
 	int interleave;				///< セクタの間隔
 	SingleDensities singles;	///< 単密度にするトラック
@@ -67,8 +68,9 @@ public:
 	DiskParam();
 	DiskParam(const DiskParam &src);
 	DiskParam(const wxString &n_type_name
-		, wxUint32 n_disk_type
+//		, wxUint32 n_disk_type
 		, const wxArrayString &n_basic_types
+		, bool n_reversible
 		, int n_sides_per_disk
 		, int n_tracks_per_side
 		, int n_sectors_per_track
@@ -93,8 +95,9 @@ public:
 		, const SingleDensities &n_singles
 	);
 	void SetDiskParam(const wxString &n_type_name
-		, wxUint32 n_disk_type
+//		, wxUint32 n_disk_type
 		, const wxArrayString &n_basic_types
+		, bool n_reversible
 		, int n_sides_per_disk
 		, int n_tracks_per_side
 		, int n_sectors_per_track
@@ -122,14 +125,15 @@ public:
 	int  CalcDiskSize() const;
 
 	const wxString &GetDiskTypeName() const { return disk_type_name; }
-	wxUint32 GetDiskType() const { return disk_type; }
+//	wxUint32 GetDiskType() const { return disk_type; }
 	const wxArrayString &GetBasicTypes() const { return basic_types; }
+	bool IsReversible() const { return reversible; }
 	int GetSidesPerDisk() const { return sides_per_disk; }
 	int GetTracksPerSide() const { return tracks_per_side; }
 	int GetSectorsPerTrack() const { return sectors_per_track; }
 	int GetSectorSize() const { return sector_size; }
 	int GetNumberingSector() const { return numbering_sector; }
-	int GetDensity() const { return density; }
+	int GetParamDensity() const { return density; }
 	int GetInterleave() const { return interleave; }
 	void SetInterleave(int val) { interleave = val; }
 	const SingleDensities &GetSingles() const { return singles; }
@@ -143,17 +147,17 @@ WX_DECLARE_OBJARRAY(DiskParam, DiskParams);
 WX_DEFINE_ARRAY(const DiskParam *, DiskParamPtrs);
 
 /// ディスクパラメータのテンプレートを提供する
-class DiskTypes
+class DiskTemplates
 {
 private:
-	DiskParams types;
+	DiskParams params;
 
 public:
-	DiskTypes();
-	~DiskTypes() {}
+	DiskTemplates();
+	~DiskTemplates() {}
 
 	/// XMLファイルから読み込み
-	bool Load(const wxString &data_path, const wxString &locale_name);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
 
 	/// タイプ名に一致するテンプレートの番号を返す
 	int IndexOf(const wxString &n_type_name);
@@ -162,11 +166,11 @@ public:
 	/// パラメータに一致するあるいは近い物のテンプレートを返す
 	DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const SingleDensities &n_singles);
 
-	DiskParam *ItemPtr(size_t index) const { return &types[index]; }
-	DiskParam &Item(size_t index) const { return types[index]; }
-	size_t Count() const { return types.Count(); }
+	DiskParam *ItemPtr(size_t index) const { return &params[index]; }
+	DiskParam &Item(size_t index) const { return params[index]; }
+	size_t Count() const { return params.Count(); }
 };
 
-extern DiskTypes gDiskTypes;
+extern DiskTemplates gDiskTemplates;
 
 #endif /* _DISK_PARAMETER_H_ */

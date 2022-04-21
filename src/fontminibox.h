@@ -11,6 +11,7 @@
 #include <wx/arrstr.h>
 
 class wxComboBox;
+class wxButton;
 
 /// フォントボックス
 class FontMiniBox : public wxDialog
@@ -18,9 +19,12 @@ class FontMiniBox : public wxDialog
 private:
 	wxComboBox *comFontName;
 	wxComboBox *comFontSize;
+	wxButton   *btnDefault;
 
 	wxArrayString mFontNames;
 	wxArrayString mFontSizes;
+
+	wxFont default_font;
 
 	wxString mSelectedName;
 	int      mSelectedSize;
@@ -31,11 +35,12 @@ private:
 	void term_dialog();
 
 public:
-	FontMiniBox(wxWindow* parent, wxWindowID id);
+	FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_font);
 
 	enum {
 		IDC_COMBO_FONTNAME = 1,
-		IDC_COMBO_FONTSIZE
+		IDC_COMBO_FONTSIZE,
+		IDC_BUTTON_DEFAULT
 	};
 
 	/// @name functions
@@ -45,6 +50,7 @@ public:
 	/// @name event procedures
 	//@{
 	void OnTextSize(wxCommandEvent& event);
+	void OnButtonDefault(wxCommandEvent& event);
 	//@}
 	/// @name properties
 	//@{

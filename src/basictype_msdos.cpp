@@ -16,9 +16,9 @@ DiskBasicTypeMSDOS::DiskBasicTypeMSDOS(DiskBasic *basic, DiskBasicFat *fat, Disk
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット IPLの書き込み
-bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted()
+bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	if (!DiskBasicTypeFAT12::AdditionalProcessOnFormatted()) {
+	if (!DiskBasicTypeFAT12::AdditionalProcessOnFormatted(data)) {
 		return false;
 	}
 
@@ -27,7 +27,7 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted()
 	DiskD88Sector *sec = basic->GetSectorFromSectorPos(dir_start);
 	DiskBasicDirItem *ditem = dir->NewItem(sec, sec->GetSectorBuffer());
 
-	ditem->SetFileNamePlain(wxT("MS-DOS"));
+	ditem->SetFileNamePlain(data.GetVolumeName());
 	ditem->SetFileAttr(FILE_TYPE_VOLUME_MASK);
 	struct tm tm;
 	wxDateTime::GetTmNow(&tm);
@@ -36,4 +36,14 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted()
 	delete ditem;
 
 	return true;
+}
+
+/// IPLや管理エリアの属性を得る
+void DiskBasicTypeMSDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
+{
+}
+
+/// IPLや管理エリアの属性をセット
+void DiskBasicTypeMSDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
+{
 }

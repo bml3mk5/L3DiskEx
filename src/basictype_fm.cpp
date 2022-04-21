@@ -38,7 +38,7 @@ bool DiskBasicTypeFM::CheckFat()
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT,IDのセット
-bool DiskBasicTypeFM::AdditionalProcessOnFormatted()
+bool DiskBasicTypeFM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// FATエリア先頭に0を入れる
 	fat->Set(0, 0);

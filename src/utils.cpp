@@ -10,7 +10,7 @@
 namespace L3DiskUtils
 {
 
-int Dump::DumpBinary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert)
+int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert)
 {
 	int rows = 0;
 	wxUint8 inv = invert ? 0xff : 0;
@@ -41,9 +41,8 @@ int Dump::DumpBinary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool 
 	return rows;
 }
 
-wxString Dump::DumpAscii(const wxUint8 *buffer, size_t bufsize, int char_code, bool invert)
+int Dump::Ascii(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert)
 {
-	wxString str;
 	wxUint16 inv = invert ? 0xff : 0;
 
 	switch(char_code) {
@@ -85,7 +84,67 @@ wxString Dump::DumpAscii(const wxUint8 *buffer, size_t bufsize, int char_code, b
 		col += len;
 	}
 	str += wxT("\n");
-	return str;
+	return 0;
+}
+
+int Dump::Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &str, bool invert)
+{
+	wxUint16 inv = invert ? 0xff : 0;
+
+	switch(char_code) {
+	case 1:
+		codes.SetMap(wxT("sjis"));
+		break;
+	default:
+		codes.SetMap(wxT("hankaku"));
+		break;
+	}
+
+	int row = 1;
+	for(size_t pos = 0; pos < bufsize; ) {
+		wxString cstr;
+		wxUint8 c[4];
+		c[0] = buffer[pos] ^ inv;
+		c[1] = pos + 1 == bufsize ? 0 : buffer[pos + 1] ^ inv;
+		c[2] = 0;
+
+		if (c[0] == '\r' && c[1] == '\n') {
+			// 改行
+			str += wxT("\n");
+			row++;
+			pos+=2;
+			continue;
+		} else if (c[0] == '\r' || c[0] == '\n') {
+			// 改行
+			str += wxT("\n");
+			row++;
+			pos++;
+			continue;
+		} else if (c[0] == '\t') {
+			// タブ
+			if (c[1] >= 1 && c[1] < 0x20) {
+				// for FLEX
+				for(int i=0; i<c[1]; i++) {
+					str += wxT(" ");
+				}
+				pos+=2;
+			} else {
+				str += wxT("\t");
+				pos++;
+			}
+			continue;
+		} else if (c[0] < 0x20) {
+			// コントロールコードは"."に変換
+			str += wxT(".");
+			pos++;
+			continue;
+		}
+
+		size_t len = codes.FindString(c, 2, cstr, '.');
+		str += cstr;
+		pos += len;
+	}
+	return row;
 }
 
 void ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time)
@@ -129,6 +188,11 @@ void ConvDateStrToTm(const wxString &date, struct tm *tm)
 		sval = re.GetMatch(date, 3);
 		sval.ToLong(&lval);
 		tm->tm_mday = (int)lval;
+	} else {
+		// invalid
+		tm->tm_year = -1;
+		tm->tm_mon = -2;
+		tm->tm_mday = -1;
 	}
 }
 void ConvTimeStrToTm(const wxString &time, struct tm *tm)
@@ -163,19 +227,36 @@ void ConvTimeStrToTm(const wxString &time, struct tm *tm)
 		sval = re2.GetMatch(time, 2);
 		sval.ToLong(&lval);
 		tm->tm_min = (int)lval;
+	} else {
+		// invalid
+		tm->tm_hour = -1;
+		tm->tm_min = -1;
+		tm->tm_sec = -1;
 	}
 }
 wxString FormatYMDStr(const struct tm *tm)
 {
-	return wxString::Format(wxT("%04d/%02d/%02d"), tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
+	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
+		return wxString::Format(wxT("%04d/%02d/%02d"), tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday);
+	} else {
+		return wxT("----/--/--");
+	}
 }
 wxString FormatHMSStr(const struct tm *tm)
 {
-	return wxString::Format(wxT("%02d:%02d:%02d"), tm->tm_hour, tm->tm_min, tm->tm_sec);
+	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
+		return wxString::Format(wxT("%02d:%02d:%02d"), tm->tm_hour, tm->tm_min, tm->tm_sec);
+	} else {
+		return wxT("--:--:--");
+	}
 }
 wxString FormatHMStr(const struct tm *tm)
 {
-	return wxString::Format(wxT("%02d:%02d"), tm->tm_hour, tm->tm_min);
+	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
+		return wxString::Format(wxT("%02d:%02d"), tm->tm_hour, tm->tm_min);
+	} else {
+		return wxT("--:--");
+	}
 }
 
 int ToInt(const wxString &val)

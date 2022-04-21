@@ -95,7 +95,9 @@ wxUint32 DiskBasicTypeX1HU::GetGroupNumber(wxUint32 num) const
 		wxUint32 half_size = (fatbuf->size >> 1);
 		if (num < half_size) {
 			new_num = basic->InvertUint8(fatbuf->buffer[num]);
-			new_num |= ((wxUint32)basic->InvertUint8(fatbuf->buffer[num + half_size]) << 8);
+			if (basic->GetFatEndGroup() >= 0x80) {
+				new_num |= ((wxUint32)basic->InvertUint8(fatbuf->buffer[num + half_size]) << 8);
+			}
 			break;
 		}
 		num -= fatbuf->size;
@@ -152,8 +154,16 @@ wxUint32 DiskBasicTypeX1HU::GetNextEmptyGroupNumber(wxUint32 curr_group)
 	return new_num;
 }
 
+/// 使用可能なディスクサイズを得る
+void DiskBasicTypeX1HU::GetUsableDiskSize(int &disk_size, int &group_size) const
+{
+	group_size = basic->GetFatEndGroup() + 1;
+	if (group_size >= (int)basic->GetGroupFinalCode()) group_size += basic->GetGroupFinalCode();
+	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+}
+
 /// 残りディスクサイズを計算
-void DiskBasicTypeX1HU::CalcDiskFreeSize()
+void DiskBasicTypeX1HU::CalcDiskFreeSize(bool wrote)
 {
 //	myLog.SetDebug("DiskBasicTypeX1HU::CalcDiskFreeSize: {");
 
@@ -253,9 +263,9 @@ bool DiskBasicTypeX1HU::IsRootDirectory(wxUint32 group_num)
 	return (group_num < start_group);
 }
 
-/// サブディレクトリを作成する前の個別処理
+/// サブディレクトリを作成する前にディレクトリ名を編集する
 /// @param [in,out] dir_name ディレクトリ名
-bool  DiskBasicTypeX1HU::PreProcessOnMakingDirectory(wxString &dir_name)
+bool  DiskBasicTypeX1HU::RenameOnMakingDirectory(wxString &dir_name)
 {
 	int pos;
 	if ((pos = dir_name.Find('.', true)) != wxNOT_FOUND) {
@@ -269,7 +279,7 @@ bool  DiskBasicTypeX1HU::PreProcessOnMakingDirectory(wxString &dir_name)
 }
 
 /// サブディレクトリを作成した後の個別処理
-void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item, wxUint32 parent_group_num)
+void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item)
 {
 	if (group_items.Count() <= 0) return;
 
@@ -279,7 +289,7 @@ void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT,DIRエリアの初期化
-bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted()
+bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// FATエリアの初期化
 	fat->Fill(basic->GetFillCodeOnFAT());

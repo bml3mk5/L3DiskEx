@@ -6,12 +6,6 @@
 #ifndef _RAWTRACKBOX_H_
 #define _RAWTRACKBOX_H_
 
-#define RAWTRACKBOX_TRANS \
-_("Required information entry is empty.") \
-_("'%s' is invalid") \
-_("Validation conflict") \
-_("'%s' should only contain digits.")
-
 #include "common.h"
 #include <wx/dialog.h>
 

@@ -27,14 +27,6 @@ class DiskParam;
 class DiskParamPtrs;
 class DiskD88Disk;
 
-#define DiskParamBox_DiskName		0x01
-#define DiskParamBox_Density		0x02
-#define DiskParamBox_WriteProtect	0x04
-#define DiskParamBox_Disk_All		0x07
-#define DiskParamBox_Category		0x10
-#define DiskParamBox_Template		0x20
-#define DiskParamBox_Temp_All		0x30
-
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
 {
@@ -55,16 +47,24 @@ private:
 	wxTextCtrl *txtSingleSectors;
 	wxComboBox *comSingleSecSize;
 
-	wxUint32 disable_flags;
+	int show_flags;
 	const DiskParamPtrs *disk_params;
+	const DiskParam *manual_param;
 
 	wxArrayString type_names;
 
 	int FindTemplate(DiskD88Disk *disk);
 	void SetParamFromTemplate(const DiskParam *item);
+	void SetParamOfIndexFromGlobals(size_t index);
+	void SetParamOfIndexFromParams(size_t index);
+	void SetParamForManual();
+	void SetParamToControl(const DiskParam *item);
+	bool GetParamFromGlobals(DiskParam &param);
+	bool GetParamFromParams(DiskParam &param);
+	void GetParamForManual(DiskParam &param);
 
 public:
-	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, wxUint32 disable_flags = 0);
+	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags);
 
 	enum {
 		IDC_COMBO_CATEGORY = 1,
@@ -86,6 +86,14 @@ public:
 		IDC_COMBO_SINGLE_SECSIZE,
 	};
 
+	enum en_show_flags {
+		SHOW_ALL			 = 0xffff,
+		SHOW_CATEGORY		 = 0x0001,
+		SHOW_TEMPLATE		 = 0x0002,
+		SHOW_TEMPLATE_ALL	 = 0x0003,
+		SHOW_DISKLABEL_ALL	 = 0x0010,
+	};
+
 	/// @name functions
 	//@{
 	int ShowModal();
@@ -103,12 +111,8 @@ public:
 	void SetTemplateValuesFromGlobals();
 	void SetTemplateValuesFromParams();
 	void SetParamOfIndex(size_t index);
-	void SetParamOfIndexFromGlobals(size_t index);
-	void SetParamOfIndexFromParams(size_t index);
 	void SetParamFromDisk(const DiskD88Disk *disk);
 	bool GetParam(DiskParam &param);
-	bool GetParamFromGlobals(DiskParam &param);
-	bool GetParamFromParams(DiskParam &param);
 	bool GetParamToDisk(DiskD88Disk &disk);
 	wxString GetCategory() const;
 	int GetTracksPerSide() const;

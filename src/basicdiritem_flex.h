@@ -121,8 +121,6 @@ public:
 	/// ディレクトリアイテムのサイズ
 	size_t			GetDataSize();
 
-//	/// 書き込み/上書き禁止か
-//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
 	bool			IsDeletable();
 	/// ファイル名を編集できるか

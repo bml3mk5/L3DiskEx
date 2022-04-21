@@ -71,6 +71,10 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("No sector exists. group:%d track:%d side:%d sector:%d"),
 	//	ERRV_INVALID_SECTOR  v:5
 	wxTRANSLATE("Invalid sector. group:%d track:%d side:%d sector:%d sector_size:%d"),
+	//	ERRV_NOTHING_IN_TRACK  v:2
+	wxTRANSLATE("There is nothing in track. track:%d side:%d"),
+	//	ERRV_NUM_OF_SECTORS_IN_TRACK  v:2
+	wxTRANSLATE("Number of sectors is short in track. track:%d side:%d"),
 	//	ERRV_NO_SECTOR_IN_TRACK  v:3
 	wxTRANSLATE("No sector exists in track. track:%d side:%d sector:%d"),
 	//	ERRV_INVALID_VALUE_IN  v:1

@@ -8,14 +8,25 @@
 #include "common.h"
 #include <wx/string.h>
 #include <wx/panel.h>
-#include <wx/dataview.h>
-#include <wx/clntdata.h>
 #include <wx/radiobut.h>
 #include <wx/menu.h>
 #include <wx/sizer.h>
 #include <wx/msgdlg.h>
 
 
+#define USE_LIST_CTRL_ON_FILE_LIST
+#undef  USE_VIRTUAL_ON_LIST_CTRL
+
+#ifndef USE_LIST_CTRL_ON_FILE_LIST
+#include <wx/dataview.h>
+#include <wx/clntdata.h>
+#else
+#include <wx/listctrl.h>
+#include <wx/dynarray.h>
+#endif
+
+class wxCustomDataObject;
+class wxFileDataObject;
 class DiskBasic;
 class DiskBasicGroupItem;
 class DiskBasicDirItem;
@@ -25,10 +36,33 @@ class DiskD88Disk;
 class DiskD88Sector;
 class IntNameBox;
 
+// リストアイテム
+#ifndef USE_LIST_CTRL_ON_FILE_LIST
 #define L3FileListColumn	wxDataViewColumn*
 #define L3FileListItem		wxDataViewItem
 #define L3FileListItems		wxDataViewItemArray
 #define L3FileListEvent		wxDataViewEvent
+#else
+#define L3FileListColumn	long
+#define L3FileListItem		long
+#define L3FileListItems		wxArrayLong
+#define L3FileListEvent		wxListEvent
+#endif
+
+enum en_disk_file_list_columns {
+	LISTCOL_NAME = 0,
+	LISTCOL_ATTR,
+	LISTCOL_SIZE,
+	LISTCOL_GROUPS,
+	LISTCOL_START,
+	LISTCOL_TRACK,
+	LISTCOL_SIDE,
+	LISTCOL_SECTOR,
+	LISTCOL_DATE,
+	LISTCOL_END
+};
+
+#ifndef USE_LIST_CTRL_ON_FILE_LIST
 /// ファイルリストの挙動を設定
 class L3DiskFileListStoreModel : public wxDataViewListStore
 {
@@ -40,33 +74,44 @@ public:
 
 	virtual bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col);
 };
+#endif
 
 /// リストコントロール
-class MyListCtrl : public wxDataViewListCtrl
+#ifndef USE_LIST_CTRL_ON_FILE_LIST
+class L3DiskFileListCtrl : public wxDataViewListCtrl
+#else
+class L3DiskFileListCtrl : public wxListCtrl
+#endif
 {
 private:
-	enum {
-		LISTCOL_NAME = 0,
-		LISTCOL_ATTR,
-		LISTCOL_SIZE,
-		LISTCOL_GROUPS,
-		LISTCOL_START,
-		LISTCOL_TRACK,
-		LISTCOL_SIDE,
-		LISTCOL_SECTOR,
-		LISTCOL_DATE,
-		LISTCOL_END
-	};
-
 	L3FileListColumn	listColumns[LISTCOL_END];
+	wxString			m_values[LISTCOL_END];
+	int					m_icon;
+
 public:
-	MyListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
-	~MyListCtrl();
+	L3DiskFileListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
+	~L3DiskFileListCtrl();
 
 	long InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, wxUIntPtr data);
 	void SetListData(DiskBasic *basic, DiskBasicDirItems *dir_items);
 
-	int GetDirItemPos(const L3FileListItem &item) const;
+//	int GetDirItemPos(const L3FileListItem &item) const;
+	/// テキストを設定
+	void SetListText(const L3FileListItem &item, const wxString &text);
+	/// 選択している行の位置を返す
+	int  GetListSelectedRow() const;
+	/// 選択している行数
+	int  GetListSelectedItemCount() const;
+	/// 選択している行アイテムを得る
+	L3FileListItem GetListSelection() const;
+	/// 選択している行アイテムを得る
+	int GetListSelections(L3FileListItems &arr) const;
+	/// アイテムを編集
+	void EditListItem(const L3FileListItem &item);
+	/// リストを削除
+	bool DeleteAllListItems();
+	/// アイテムの固有データを返す
+	wxUIntPtr GetListItemData(const L3FileListItem &item) const;
 };
 
 /// 右パネルのファイルリスト
@@ -80,7 +125,7 @@ private:
 	wxButton *btnChange;
 	wxRadioButton *radCharAscii;
 	wxRadioButton *radCharSJIS;
-	MyListCtrl *list;
+	L3DiskFileListCtrl *list;
 
 	wxMenu *menuPopup;
 
@@ -88,6 +133,8 @@ private:
 	DiskBasic *basic;
 
 	bool initialized;
+
+	bool disk_selecting;
 
 	/// 現在選択している行のディレクトリアイテムを得る
 	DiskBasicDirItem *GetSelectedDirItem();
@@ -98,10 +145,17 @@ private:
 	/// ファイル名ダイアログ表示と同じファイル名が存在する際のメッセージダイアログ表示
 	int ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg, DiskBasicDirItem *item, int file_size);
 
+	// カスタムデータリスト作成（DnD, クリップボード用）
+	bool CreateCustomDataObject(wxCustomDataObject &data_object);
 	// ファイルリスト作成（DnD, クリップボード用）
 	bool CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &file_object);
 	// ファイルリストを解放（DnD, クリップボード用）
 	void ReleaseFileObject(const wxString &tmp_dir_name);
+
+	/// 指定したファイルを削除
+	bool DeleteDataFile(DiskBasic *tmp_basic, DiskBasicDirItem *dst_item);
+	/// 指定したファイルを一括削除
+	bool DeleteDataFiles(DiskBasic *tmp_basic, L3FileListItems &selected_items);
 
 public:
 	L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parent);
@@ -109,6 +163,7 @@ public:
 
 	/// @name event procedures
 	//@{
+	L3FileListItem GetEventItem(const L3FileListEvent& event) const;
 	/// リサイズ
 	void OnSize(wxSizeEvent& event);
 	/// リスト上で右クリック
@@ -155,8 +210,17 @@ public:
 	/// BASIC種類テキストボックスをクリア
 	void ClearAttr();
 
-	/// ファイル名をリストにセット
-	void SetFiles(DiskD88Disk *newdisk, int newsidenum);
+	/// キャラクターコード変更
+	void ChangeCharCode(int sel);
+	/// キャラクターコードの選択位置を変える
+	void PushCharCode(int sel);
+
+	/// DISK BASICをアタッチ
+	void AttachDiskBasic(DiskD88Disk *newdisk, int newsidenum);
+	/// DISK BASICをデタッチ
+	void DetachDiskBasic();
+	/// ファイル名をリストに設定
+	void SetFiles();
 	/// ファイル名をリストに再設定
 	void RefreshFiles();
 	/// リストをクリア
@@ -164,7 +228,6 @@ public:
 
 	/// 行選択
 	void SelectItem(wxUint32 group_num, DiskD88Sector *sector, int char_code, bool invert);
-//	void SelectItem(const DiskBasicGroups *group_items, int char_code, bool invert);
 	// 行非選択
 	void UnselectItem();
 
@@ -178,10 +241,8 @@ public:
 	/// 指定したファイルにエクスポート
 	bool ExportDataFile(DiskBasicDirItem *item, const wxString &path);
 
-	/// ファイルリストをドラッグ 内部へドロップする場合
-	bool DragDataSourceForInternal();
-	/// ファイルリストをドラッグ 外部へドロップする場合
-	bool DragDataSourceForExternal();
+	/// ファイルリストをドラッグ
+	bool DragDataSource();
 	/// クリップボードへコピー
 	bool CopyToClipboard();
 	/// クリップボードからペースト
@@ -192,6 +253,8 @@ public:
 	/// 指定したファイルをインポート 外部から
 	bool ImportDataFile(const wxString &path);
 	/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
+	bool ImportDataFiles(const wxUint8 *buffer, size_t buflen);
+	/// 指定したデータをインポート（内部でのドラッグ＆ドロップ時など）
 	bool ImportDataFile(const wxUint8 *buffer, size_t buflen);
 
 	/// 指定したファイルを削除
@@ -199,6 +262,8 @@ public:
 
 	/// ファイル名の編集開始
 	void StartEditingFileName();
+	/// ファイル名の編集開始
+	void StartEditingFileName(const L3FileListItem &selected_item);
 	/// 指定したファイル名を変更
 	bool RenameDataFile(const L3FileListItem &view_item, const wxString &newname);
 
@@ -219,6 +284,8 @@ public:
 
 	/// BASIC種類を変更
 	bool ChangeBasicType();
+	/// BASIC情報ダイアログ
+	void ShowBasicAttr();
 
 	/// ディスクを論理フォーマット
 	bool FormatDisk();
@@ -228,14 +295,8 @@ public:
 	/// ディレクトリを作成
 	bool MakeDirectory();
 
-	/// 選択している行の位置を返す
-	int  GetListSelectedRow() const;
 	/// 選択している行数
 	int  GetListSelectedItemCount() const;
-	/// 選択している行アイテムを得る
-	L3FileListItem GetListSelection() const;
-	/// 選択している行アイテムを得る
-	int GetListSelections(L3FileListItems &arr) const;
 
 	/// BASICディスクとして使用できるか
 	bool CanUseBasicDisk() const;
@@ -248,6 +309,9 @@ public:
 
 	/// FATエリアの空き状況を取得
 	void GetFatAvailability(wxUint32 *offset, const wxArrayInt **arr) const;
+
+	/// フォントをセット
+	void SetListFont(const wxFont &font);
 
 	enum {
 		IDM_EXPORT_FILE = 1,

@@ -430,14 +430,6 @@ wxUint32 DiskBasicDirItemCPM::GetStartGroup() const
 	return val;
 }
 
-#if 0
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemCPM::IsWriteProtected()
-{
-	return false;
-}
-#endif
-
 bool DiskBasicDirItemCPM::IsDeletable()
 {
 	return true;

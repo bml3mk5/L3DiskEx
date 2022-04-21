@@ -36,8 +36,11 @@ private:
 	enum en_menu_id
 	{
 		IDM_VIEW_INVERT = 1,
+		IDM_VIEW_TEXT,
+		IDM_VIEW_BINARY,
 		IDM_VIEW_CHAR_ASCII,
 		IDM_VIEW_CHAR_SJIS,
+		IDM_VIEW_FONT,
 	};
 
 public:
@@ -47,12 +50,22 @@ public:
 	void OnClose(wxCommandEvent& event);
 	void OnViewInvert(wxCommandEvent& event);
 	void OnViewChar(wxCommandEvent& event);
+	void OnViewTextBinary(wxCommandEvent& event);
+	void OnViewFont(wxCommandEvent& event);
 
 	L3DiskBinDumpPanel *GetPanel() const { return panel; }
 	L3DiskBinDump *GetDumpPanel() const;
+
+	void SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
+	void AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
+	void ClearDatas();
+
+	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
 	void SetDataChar(int val);
 	void SetDataFont(const wxFont &font);
+	void GetDefaultDataFont(wxFont &font);
+	wxFont GetDefaultFont() const;
 	wxString GetDataFontName() const;
 	int GetDataFontSize() const;
 
@@ -63,7 +76,29 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-WX_DEFINE_ARRAY(wxMemoryBuffer *, L3MemoryBuffers);
+/// データバッファ
+class L3MemoryBuffer : public wxMemoryBuffer
+{
+private:
+	int track_number;
+	int side_number;
+	int sector_number;
+
+public:
+	L3MemoryBuffer(const L3MemoryBuffer &src);
+	L3MemoryBuffer(size_t size);
+
+	const wxUint8 *GetByteData() const { return (const wxUint8 *)GetData(); }
+
+	int GetTrackNumber() const { return track_number; }
+	int GetSideNumber() const { return side_number; }
+	int GetSectorNumber() const { return sector_number; }
+	void SetTrackNumber(int val) { track_number = val; }
+	void SetSideNumber(int val) { side_number = val; }
+	void SetSectorNumber(int val) { sector_number = val; }
+};
+
+WX_DEFINE_ARRAY(L3MemoryBuffer *, L3MemoryBuffers);
 
 /// バイナリダンプパネル
 class L3DiskBinDumpPanel : public wxSplitterWindow
@@ -81,6 +116,7 @@ public:
 
 	L3DiskBinDump *GetDumpPanel() const { return dump; }
 
+	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
 	void SetDataChar(int val);
 	void SetDataFont(const wxFont &font);
@@ -95,6 +131,9 @@ private:
 	wxWindow *parent;
 	L3DiskBinDumpFrame *frame;
 
+	wxRadioButton *radText;
+	wxRadioButton *radBinary;
+
 	wxRadioButton *radCharAscii;
 	wxRadioButton *radCharSJIS;
 	wxCheckBox *chkInvert;
@@ -105,16 +144,20 @@ public:
 	~L3DiskBinDumpAttr();
 
 	enum {
-		IDC_RADIO_CHAR_ASCII = 1,
+		IDC_RADIO_TEXT = 1,
+		IDC_RADIO_BINARY,
+		IDC_RADIO_CHAR_ASCII,
 		IDC_RADIO_CHAR_SJIS,
 		IDC_CHECK_INVERT,
 		IDC_BUTTON_FONT,
 	};
 
+	void OnCheckTextBinary(wxCommandEvent& event);
 	void OnCheckChar(wxCommandEvent& event);
 	void OnCheckInvert(wxCommandEvent& event);
 	void OnClickButton(wxCommandEvent& event);
 
+	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
 	void SetDataChar(int val);
 
@@ -137,20 +180,23 @@ private:
 	int min_y;
 	int txt_height;
 
+	int  text_binary;
 	bool data_invert;
 	int  data_char;
 
 	L3DiskUtils::Dump dump;
 
-	void SetDatasMain(const wxUint8 *buf, size_t len);
-	void AppendDatasMain(const wxUint8 *buf, size_t len);
+	void SetDatasMain(const L3MemoryBuffer *buf);
+	void AppendDatasMain(const L3MemoryBuffer *buf);
+	void SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append);
+	void SetDatasTextMain(const L3MemoryBuffer *buf, bool append);
 
 public:
 	L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parent);
 	~L3DiskBinDump();
 
 	void ClearBuffer();
-	void AppendBuffer(const wxUint8 *buf, size_t len);
+	L3MemoryBuffer *AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 
 	enum {
 		IDC_TXT_HEX = 1,
@@ -160,13 +206,14 @@ public:
 	void OnSize(wxSizeEvent& event);
 	void OnMouseWheelOnChild(wxMouseEvent& event);
 
-	void SetDatas(const wxUint8 *buf, size_t len);
-	void AppendDatas(const wxUint8 *buf, size_t len);
+	void SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
+	void AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	void ClearDatas();
 	void RefreshData();
 
 	void SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py);
 
+	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
 	void SetDataChar(int val);
 	void SetDataFont(const wxFont &font);

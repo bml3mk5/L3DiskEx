@@ -6,7 +6,30 @@
 #include "utils.h"
 #include <wx/xml/xml.h>
 
+
 DiskBasicTemplates gDiskBasicTemplates;
+
+//
+//
+//
+DiskBasicFormat::DiskBasicFormat()
+{
+	type_number = FORMAT_TYPE_NONE;
+	has_volume_name = false;
+	has_volume_number = false;
+}
+DiskBasicFormat::DiskBasicFormat(
+		int	 n_type_number,
+		bool n_has_volume_name,
+		bool n_has_volume_number
+) {
+	type_number = (DiskBasicFormatType)n_type_number;
+	has_volume_name = n_has_volume_name;
+	has_volume_number = n_has_volume_number;
+}
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(DiskBasicFormats);
 
 //
 //
@@ -22,7 +45,7 @@ DiskBasicParam::DiskBasicParam(const DiskBasicParam &src)
 DiskBasicParam::DiskBasicParam(
 	const wxString &	n_basic_type_name,
 	const wxString &	n_basic_category_name,
-	DiskBasicFormatType	n_format_type,
+	const DiskBasicFormat *n_format_type,
 	int					n_sectors_per_group,
 	int					n_sides_on_basic,
 	int					n_sectors_on_basic,
@@ -43,6 +66,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_subdir_group_size,
 	wxUint8				n_dir_space_code,
 	int					n_dir_start_pos,
+	int					n_dir_start_pos_on_root,
 	int					n_dir_start_pos_on_sec,
 	int					n_groups_per_dir_entry,
 	int					n_id_sector_pos,
@@ -56,6 +80,7 @@ DiskBasicParam::DiskBasicParam(
 	wxUint8				n_media_id,
 	bool				n_data_inverted,
 	bool				n_side_reversed,
+	bool				n_mount_each_sides,
 	const wxString &	n_basic_description
 ) {
 	basic_type_name = n_basic_type_name;
@@ -81,6 +106,7 @@ DiskBasicParam::DiskBasicParam(
 	subdir_group_size = n_subdir_group_size;
 	dir_space_code = n_dir_space_code;
 	dir_start_pos = n_dir_start_pos;
+	dir_start_pos_on_root = n_dir_start_pos_on_root;
 	dir_start_pos_on_sec = n_dir_start_pos_on_sec;
 	groups_per_dir_entry = n_groups_per_dir_entry;
 	id_sector_pos = n_id_sector_pos;
@@ -94,13 +120,14 @@ DiskBasicParam::DiskBasicParam(
 	media_id = n_media_id;
 	data_inverted = n_data_inverted;
 	side_reversed = n_side_reversed;
+	mount_each_sides = n_mount_each_sides;
 	basic_description = n_basic_description;
 }
 void DiskBasicParam::ClearBasicParam()
 {
 	basic_type_name.Empty();
 	basic_category_name.Empty();
-	format_type			 = FORMAT_TYPE_NONE;
+	format_type			 = NULL;
 	sectors_per_group	 = 0;
 	sides_on_basic		 = 0;
 	sectors_on_basic	 = -1;
@@ -121,6 +148,7 @@ void DiskBasicParam::ClearBasicParam()
 	subdir_group_size	 = 0;
 	dir_space_code		 = 0x20;
 	dir_start_pos		 = 0;
+	dir_start_pos_on_root = 0;
 	dir_start_pos_on_sec = 0;
 	groups_per_dir_entry = 0;
 	id_sector_pos		 = 0;
@@ -134,6 +162,7 @@ void DiskBasicParam::ClearBasicParam()
 	media_id			 = 0x00;
 	data_inverted		 = false;
 	side_reversed		 = false;
+	mount_each_sides	 = false;
 	basic_description.Empty();
 }
 void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
@@ -161,6 +190,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	subdir_group_size = src.subdir_group_size;
 	dir_space_code = src.dir_space_code;
 	dir_start_pos = src.dir_start_pos;
+	dir_start_pos_on_root = src.dir_start_pos_on_root;
 	dir_start_pos_on_sec = src.dir_start_pos_on_sec;
 	groups_per_dir_entry = src.groups_per_dir_entry;
 	id_sector_pos = src.id_sector_pos;
@@ -174,6 +204,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	media_id = src.media_id;
 	data_inverted = src.data_inverted;
 	side_reversed = src.side_reversed;
+	mount_each_sides = src.mount_each_sides;
 	basic_description = src.basic_description;
 }
 const DiskBasicParam &DiskBasicParam::GetBasicParam() const
@@ -197,32 +228,16 @@ int DiskBasicParam::GetReversedSideNumber(int side_num) const
 {
 	return (side_reversed &&  0 <= side_num && side_num < sides_on_basic ? sides_on_basic - side_num - 1 : side_num);
 }
-
-#if 0
-int DiskBasicParam::GetDirStartSector(int sector_size)
+/// 片面のみ使用するOSで、各面を独立してアクセスできるか
+bool DiskBasicParam::CanMountEachSides() const
 {
-	if (dir_start_sector < 0) {
-		dir_start_sector = reserved_sectors + number_of_fats * sectors_per_fat + 1;
-		dir_end_sector = dir_start_sector + dir_entry_count * 32 / sector_size - 1;
-	}
-	return dir_start_sector;
+	return (mount_each_sides && sides_on_basic == 1);
 }
-int DiskBasicParam::GetDirEndSector(int sector_size)
+/// 説明文でソート
+int DiskBasicParam::SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2)
 {
-	if (dir_end_sector < 0) {
-		dir_start_sector = reserved_sectors + number_of_fats * sectors_per_fat + 1;
-		dir_end_sector = dir_start_sector + dir_entry_count * 32 / sector_size - 1;
-	}
-	return dir_end_sector;
+	return (*item1)->GetBasicDescription().Cmp((*item2)->GetBasicDescription());
 }
-int DiskBasicParam::GetDirEntryCount(int sector_size)
-{
-	if (dir_entry_count < 0) {
-		dir_entry_count = (dir_end_sector - dir_start_sector + 1) * sector_size / 32;
-	}
-	return dir_entry_count;
-}
-#endif
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicParams);
@@ -253,7 +268,7 @@ DiskBasicTemplates::DiskBasicTemplates()
 {
 }
 /// XMLファイル読み込み
-bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_name)
+bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
 {
 	wxXmlDocument doc;
 
@@ -269,7 +284,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			wxString type_category = item->GetAttribute("category");
 			wxXmlNode *itemnode = item->GetChildren();
 			wxArrayInt reserved_groups;
-			int format_type			 = 0;
+			int format_type_number	 = -1;
 			int sides_on_basic		 = 0;
 			int sectors_on_basic	 = -1;
 			int sectors_per_group	 = 0;
@@ -286,13 +301,14 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int subdir_group_size	 = 1;
 			int dir_space_code		 = 0x20;
 			int dir_start_pos		 = 0;
+			int dir_start_pos_on_root = 0;
 			int dir_start_pos_on_sec = 0;
 			int groups_per_dir_entry = 0;
 			int fill_code_on_format	 = 0;
 			int fill_code_on_fat	 = 0;
 			int fill_code_on_dir	 = 0;
 			int delete_code_on_dir	 = 0;
-			int reserved_sectors	 = 0;
+			int reserved_sectors	 = -2;
 			int number_of_fats		 = 1;
 			int sectors_per_fat		 = 0;
 			int media_id			 = 0;
@@ -302,13 +318,14 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int id_sector_pos		 = 0;
 			bool data_inverted		 = false;
 			bool side_reversed		 = false;
+			bool mount_each_sides	 = false;
 			wxString desc, desc_locale;
 			wxString id_string, ipl_string, volume_string;
 
 			while (itemnode) {
 				if (itemnode->GetName() == "FormatType") {
 					wxString str = itemnode->GetNodeContent();
-					format_type = L3DiskUtils::ToInt(str);
+					format_type_number = L3DiskUtils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorsPerGroup") {
 					wxString str = itemnode->GetNodeContent();
 					sectors_per_group = L3DiskUtils::ToInt(str);
@@ -379,6 +396,9 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "DirStartPosition") {
 					wxString str = itemnode->GetNodeContent();
 					dir_start_pos = L3DiskUtils::ToInt(str);
+				} else if (itemnode->GetName() == "DirStartPositionOnRoot") {
+					wxString str = itemnode->GetNodeContent();
+					dir_start_pos_on_root = L3DiskUtils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
 					wxString str = itemnode->GetNodeContent();
 					dir_start_pos_on_sec = L3DiskUtils::ToInt(str);
@@ -409,6 +429,9 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "SideReversed") {
 					wxString str = itemnode->GetNodeContent();
 					side_reversed = L3DiskUtils::ToBool(str);
+				} else if (itemnode->GetName() == "CanMountEachSides") {
+					wxString str = itemnode->GetNodeContent();
+					mount_each_sides = L3DiskUtils::ToBool(str);
 				} else if (itemnode->GetName() == "IDSectorPosition") {
 					wxString str = itemnode->GetNodeContent();
 					id_sector_pos = L3DiskUtils::ToInt(str);
@@ -439,10 +462,11 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			if (!desc_locale.IsEmpty()) {
 				desc = desc_locale;
 			}
+			DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)format_type_number);
 			DiskBasicParam p(
 				type_name,
 				type_category,
-				(DiskBasicFormatType)format_type,
+				format_type,
 				sectors_per_group,
 				sides_on_basic,
 				sectors_on_basic,
@@ -463,6 +487,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				subdir_group_size,
 				dir_space_code,
 				dir_start_pos,
+				dir_start_pos_on_root,
 				dir_start_pos_on_sec,
 				groups_per_dir_entry,
 				id_sector_pos,
@@ -476,9 +501,50 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				media_id,
 				data_inverted,
 				side_reversed,
+				mount_each_sides,
 				desc
 			);
-			types.Add(p);
+			if (FindType(wxEmptyString, type_name) == NULL) {
+				types.Add(p);
+			} else {
+				// タイプ名が重複している
+				errmsgs += wxT("\n");
+				errmsgs += _("Duplicate type name in DiskBasicType : ");
+				errmsgs += type_name;
+				return false;
+			}
+		}
+		else if (item->GetName() == "DiskBasicFormat") {
+			wxString s_type_number = item->GetAttribute("type");
+			int type_number = L3DiskUtils::ToInt(s_type_number);
+//			wxString name = item->GetAttribute("name");
+			wxXmlNode *itemnode = item->GetChildren();
+			wxString str;
+			bool has_volume_name = false;
+			bool has_volume_number = false;
+			while (itemnode) {
+				if (itemnode->GetName() == "HasVolumeName") {
+					str = itemnode->GetNodeContent();
+					has_volume_name = L3DiskUtils::ToBool(str);
+				} else if (itemnode->GetName() == "HasVolumeNumber") {
+					str = itemnode->GetNodeContent();
+					has_volume_number = L3DiskUtils::ToBool(str);
+				}
+				itemnode = itemnode->GetNext();
+			}
+			DiskBasicFormat f(
+				type_number,
+				has_volume_name,
+				has_volume_number
+			);
+			if (FindFormat((DiskBasicFormatType)type_number) == NULL) {
+				formats.Add(f);
+			} else {
+				errmsgs += wxT("\n");
+				errmsgs += _("Duplicate type number in DiskBasicFormat : ");
+				errmsgs += wxString::Format(wxT("%d"), type_number);
+				return false;
+			}
 		}
 		else if (item->GetName() == "DiskBasicCategory") {
 			wxString type_name = item->GetAttribute("name");
@@ -504,7 +570,14 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				type_name,
 				desc
 			);
-			categories.Add(c);
+			if (FindCategory(type_name) == NULL) {
+				categories.Add(c);
+			} else {
+				errmsgs += wxT("\n");
+				errmsgs += _("Duplicate type name in DiskBasicCategory : ");
+				errmsgs += type_name;
+				return false;
+			}
 		}
 		item = item->GetNext();
 	}
@@ -541,21 +614,28 @@ DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const w
 	}
 	return match_item;
 }
-/// カテゴリ、サイド数とセクタ数が一致するパラメータを検索
+/// カテゴリ、タイプ、サイド数とセクタ数が一致するパラメータを検索
+/// @note まず、カテゴリ＆タイプで検索し、なければカテゴリ＆サイド数＆セクタ数で検索
 /// @param [in] n_category   : カテゴリ名 必須
+/// @param [in] n_basic_type : タイプ名 必須
 /// @param [in] n_sides      : サイド数
 /// @param [in] n_sectors    : セクタ数/トラック -1の場合は検索条件からはずす
 /// @return 一致したパラメータ
-DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, int n_sides, int n_sectors)
+DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors)
 {
 	DiskBasicParam *match_item = NULL;
-	for(size_t i=0; i<types.Count(); i++) {
-		DiskBasicParam *item = &types[i];
-		if (n_category == item->GetBasicCategoryName()) {
-			if (n_sides == item->GetSidesOnBasic()) {
-				if (n_sectors < 0 || item->GetSectorsOnBasic() < 0 || n_sectors == item->GetSectorsOnBasic()) {
-					match_item = item;
-					break;
+	// カテゴリ、タイプで一致するか
+	match_item = FindType(n_category, n_basic_type);
+	// カテゴリ、サイド数、セクタ数で一致するか
+	if (!match_item) {
+		for(size_t i=0; i<types.Count(); i++) {
+			DiskBasicParam *item = &types[i];
+			if (n_category == item->GetBasicCategoryName()) {
+				if (n_sides == item->GetSidesOnBasic()) {
+					if (n_sectors < 0 || item->GetSectorsOnBasic() < 0 || n_sectors == item->GetSectorsOnBasic()) {
+						match_item = item;
+						break;
+					}
 				}
 			}
 		}
@@ -572,7 +652,8 @@ size_t DiskBasicTemplates::FindTypes(const wxArrayInt &n_format_types, DiskBasic
 	for(size_t n=0; n<types.Count(); n++) {
 		const DiskBasicParam *item = &types[n];
 		for(size_t i=0; i<n_format_types.Count(); i++) {
-			if (n_format_types.Item(i) == item->GetFormatType()) {
+			const DiskBasicFormat *fmt = item->GetFormatType();
+			if (fmt && n_format_types.Item(i) == fmt->GetTypeNumber()) {
 				n_types.Add(*item);
 			}
 		}
@@ -601,4 +682,50 @@ size_t DiskBasicTemplates::FindTypeNames(const wxString &n_category_name, wxArra
 		}
 	}
 	return n_type_names.Count();
+}
+/// フォーマット種類を検索
+/// @param [in]  format_type  : フォーマット種類
+DiskBasicFormat *DiskBasicTemplates::FindFormat(DiskBasicFormatType format_type)
+{
+	DiskBasicFormat *match = NULL;
+	for(size_t n=0; n<formats.Count(); n++) {
+		DiskBasicFormat *item = &formats.Item(n);
+		if (item->GetTypeNumber() == format_type) {
+			match = item;
+			break;
+		}
+	}
+	return match;
+}
+
+/// タイプリストと一致するパラメータを得る
+/// @note パラメータリストは説明文でソートする
+/// @param [in]  n_type_names     : タイプ名リスト
+/// @param [out] params           : パラメータリスト
+/// @return パラメータリストの数
+size_t DiskBasicTemplates::FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params)
+{
+	for(size_t n = 0; n < n_type_names.Count(); n++) {
+		DiskBasicParam *param = FindType(wxEmptyString, n_type_names.Item(n));
+		if (!param) continue;
+		params.Add(param);
+	}
+	params.Sort(&DiskBasicParam::SortByDescription);
+
+	return params.Count();
+}
+
+/// カテゴリを検索
+/// @param [in]  n_category : カテゴリ名
+DiskBasicCategory *DiskBasicTemplates::FindCategory(const wxString &n_category)
+{
+	DiskBasicCategory *match = NULL;
+	for(size_t n=0; n<categories.Count(); n++) {
+		DiskBasicCategory *item = &categories.Item(n);
+		if (item->GetBasicTypeName() == n_category) {
+			match = item;
+			break;
+		}
+	}
+	return match;
 }

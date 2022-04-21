@@ -38,11 +38,13 @@ L3DiskRPanel::L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int
 	SetMinimumPaneSize(10);
 }
 
+/// パネルの切り替え
 void L3DiskRPanel::ChangePanel(int num)
 {
 	if (bpanel) bpanel->ChangePanel(num);
 }
 
+/// ファイルリストパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
 L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
 {
@@ -50,11 +52,22 @@ L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
 	else return NULL;
 }
 
+/// Rawディスクパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
 L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
 {
 	if (bpanel) return bpanel->GetRawPanel(inst);
 	else return NULL;
+}
+
+/// フォントをセット
+void L3DiskRPanel::SetListFont(const wxFont &font)
+{
+	L3DiskFileList *flist = GetFileListPanel(true);
+	if (flist) flist->SetListFont(font);
+
+	L3DiskRawPanel *rlist = GetRawPanel(true);
+	if (rlist) rlist->SetListFont(font);
 }
 
 //
@@ -105,6 +118,7 @@ L3DiskRBPanel::L3DiskRBPanel(L3DiskFrame *parentframe, L3DiskRPanel *parentwindo
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 //		SplitVertically(rawpanel, bindump, 500);
 		SplitVertically(rawpanel, proppanel, 600);
+		Unsplit(proppanel);
 #endif
 		filelist->Hide();
 		break;
@@ -131,7 +145,7 @@ void L3DiskRBPanel::ChangePanel(int num)
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 		if (GetWindow1() == filelist) {
 			ReplaceWindow(filelist, rawpanel);
-			SplitVertically(rawpanel, proppanel, 640);
+//			SplitVertically(rawpanel, proppanel, 640);
 			rawpanel->Show();
 			filelist->Hide();
 		}
@@ -144,7 +158,7 @@ void L3DiskRBPanel::ChangePanel(int num)
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 		if (GetWindow1() == rawpanel) {
 			ReplaceWindow(rawpanel, filelist);
-			Unsplit(proppanel);
+//			Unsplit(proppanel);
 			filelist->Show();
 			rawpanel->Hide();
 		}

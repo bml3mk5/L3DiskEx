@@ -34,13 +34,6 @@ int DiskBasicTypeCPM::ParseParamOnDisk(DiskD88Disk *disk)
 
 //
 
-#if 0
-/// ルートディレクトリのチェック
-bool DiskBasicTypeCPM::CheckRootDirectory(int start_sector, int end_sector)
-{
-}
-#endif
-
 /// ルートディレクトリをアサイン
 /// @param [in]     start_sector 開始セクタ番号
 /// @param [in]     end_sector   終了セクタ番号
@@ -78,8 +71,15 @@ bool DiskBasicTypeCPM::AssignRootDirectory(int start_sector, int end_sector)
 	return true;
 }
 
+/// 使用可能なディスクサイズを得る
+void DiskBasicTypeCPM::GetUsableDiskSize(int &disk_size, int &group_size) const
+{
+	group_size = basic->GetFatEndGroup() + 1;
+	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+}
+
 /// 残りディスクサイズを計算
-void DiskBasicTypeCPM::CalcDiskFreeSize()
+void DiskBasicTypeCPM::CalcDiskFreeSize(bool wrote)
 {
 	wxUint32 fsize = 0;
 	wxUint32 grps = 0;
@@ -171,9 +171,10 @@ wxUint32 DiskBasicTypeCPM::GetNextEmptyGroupNumber(wxUint32 curr_group)
 /// データサイズ分のグループを確保する
 /// @param [in]  item        ディレクトリアイテム
 /// @param [in]  data_size   確保するデータサイズ（バイト）
+/// @param [in]  flags       新規か追加か
 /// @param [out] group_items 確保したセクタリスト
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
-int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items)
+int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
 	int rc = 0;
 
@@ -325,7 +326,7 @@ void DiskBasicTypeCPM::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 }
 
 /// セクタデータを埋めた後の個別処理
-bool DiskBasicTypeCPM::AdditionalProcessOnFormatted()
+bool DiskBasicTypeCPM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// ディレクトリエリア
 	for(int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {

@@ -119,8 +119,6 @@ public:
 	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 
-//	/// 書き込み/上書き禁止か
-//	bool			IsWriteProtected();
 	/// アイテムを削除できるか
 	bool			IsDeletable();
 	/// ファイル名を編集できるか

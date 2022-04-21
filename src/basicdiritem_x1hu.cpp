@@ -444,6 +444,8 @@ wxString DiskBasicDirItemX1HU::GetFileTimeStr()
 
 void DiskBasicDirItemX1HU::SetFileDate(const struct tm *tm)
 {
+	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
+
 	data->x1hu.date[0] = (((tm->tm_year / 10) % 10) << 4) | (tm->tm_year % 10);	// year BCD
 	data->x1hu.date[1] = (((tm->tm_mon + 1) & 0xf) << 4);	// month
 	data->x1hu.date[2] = ((tm->tm_mday / 10) << 4) | (tm->tm_mday % 10);	// day BCD
@@ -467,6 +469,8 @@ void DiskBasicDirItemX1HU::SetFileDate(const struct tm *tm)
 
 void DiskBasicDirItemX1HU::SetFileTime(const struct tm *tm)
 {
+	if (tm->tm_hour < 0 || tm->tm_min < 0) return;
+
 	data->x1hu.time[0] = ((tm->tm_hour / 10) << 4) | (tm->tm_hour % 10);	// hour BCD
 	data->x1hu.time[1] = ((tm->tm_min / 10) << 4) | (tm->tm_min % 10);	// minute BCD
 
@@ -517,14 +521,6 @@ wxUint32 DiskBasicDirItemX1HU::GetStartGroup() const
 	// X1 Hu-BASIC
 	return (wxUint32)basic->InvertUint8(data->x1hu.start_group_h) << 16 | basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->x1hu.start_group_l));
 }
-
-#if 0
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemX1HU::IsWriteProtected()
-{
-	return ((GetFileType1() & DATATYPE_X1HU_READ_ONLY) != 0);
-}
-#endif
 
 /// ファイルの終端コードをチェックする必要があるか
 bool DiskBasicDirItemX1HU::NeedCheckEofCode()

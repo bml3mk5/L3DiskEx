@@ -12,6 +12,12 @@ Params::Params()
 	mFilePath = wxT("");
 	mExportFilePath = wxT("");
 	mRecentFiles.Empty();
+	mCharCode = 0;
+	mListFontName.Empty();
+	mListFontSize = 0;
+	mDumpFontName.Empty();
+	mDumpFontSize = 0;
+	mTrimUnusedData = true;
 }
 
 void Params::SetFilePath(const wxString &val)
@@ -86,9 +92,11 @@ void Config::Load()
 	// load ini file
 	wxFileConfig *ini = new wxFileConfig(wxEmptyString,wxEmptyString,ini_file,wxEmptyString
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
-
+	// ファイルパス
 	ini->Read(wxT("Path"), &mFilePath, mFilePath);
+	// エクスポート先パス
 	ini->Read(wxT("ExportPath"), &mExportFilePath, mExportFilePath);
+	// 最近使用したファイル
 	for(int i=0; i<MAX_RECENT_FILES; i++) {
 		wxString sval;
 		ini->Read(wxString::Format(wxT("Recent%d"), i), &sval);
@@ -96,6 +104,19 @@ void Config::Load()
 			mRecentFiles.Add(sval);
 		}
 	}
+	// キャラクターコードマップ番号
+	ini->Read(wxT("CharCode"), &mCharCode);
+	// リストウィンドウのフォント名
+	ini->Read(wxT("ListFontName"), &mListFontName);
+	// リストウィンドウのフォントサイズ
+	ini->Read(wxT("ListFontSize"), &mListFontSize);
+	// ダンプウィンドウのフォント名
+	ini->Read(wxT("DumpFontName"), &mDumpFontName);
+	// ダンプウィンドウのフォントサイズ
+	ini->Read(wxT("DumpFontSize"), &mDumpFontSize);
+	// 未使用データを切り落とすか
+	ini->Read(wxT("TrimUnusedData"), &mTrimUnusedData);
+
 	delete ini;
 }
 
@@ -112,15 +133,29 @@ void Config::Save()
 	// save ini file
 	wxFileConfig *ini = new wxFileConfig(wxEmptyString,wxEmptyString,ini_file,wxEmptyString
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
-
+	// ファイルパス
 	ini->Write(wxT("Path"), mFilePath);
+	// エクスポート先パス
 	ini->Write(wxT("ExportPath"), mExportFilePath);
+	// 最近使用したファイル
 	for(int i=0,row=0; row<MAX_RECENT_FILES && i<(int)mRecentFiles.Count(); i++) {
 		wxString sval = mRecentFiles.Item(i);
 		if (sval.IsEmpty()) continue;
 		ini->Write(wxString::Format(wxT("Recent%d"), row), sval);
 		row++;
 	}
+	// キャラクターコードマップ番号
+	ini->Write(wxT("CharCode"), mCharCode);
+	// リストウィンドウのフォント名
+	ini->Write(wxT("ListFontName"), mListFontName);
+	// リストウィンドウのフォントサイズ
+	ini->Write(wxT("ListFontSize"), mListFontSize);
+	// ダンプウィンドウのフォント名
+	ini->Write(wxT("DumpFontName"), mDumpFontName);
+	// ダンプウィンドウのフォントサイズ
+	ini->Write(wxT("DumpFontSize"), mDumpFontSize);
+	// 未使用データを切り落とすか
+	ini->Write(wxT("TrimUnusedData"), mTrimUnusedData);
 
 	// write
 	delete ini;

@@ -70,6 +70,10 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 	wxUint32 track_size = 0;
 	for(sector_pos = 0; sector_pos < sector_max && result->GetValid() >= 0; sector_pos++) {
 		int sector_offset = 0;
+		if (param->IsReversible()) {
+			// 裏返しできる(AB面あり)場合
+			side_number = 0;
+		}
 		if (param->GetNumberingSector() == 1) {
 			// 連番にする場合
 			sector_offset = side_number * sector_max;
@@ -116,7 +120,13 @@ wxUint32 DiskD88Creator::CreateDisk(int disk_number, short mod_flags)
 
 	if (result->GetValid() >= 0) {
 		// ディスクを追加
-		disk->CalcMajorNumber();
+		if (param->GetBasicTypes().IsEmpty()) {
+			// パラメータが手動設定のときはそれらしいテンプレートをさがす
+			disk->CalcMajorNumber();
+		} else {
+			// テンプレートから設定
+			disk->SetDiskParam(*param);
+		}
 		disk->SetSizeWithoutHeader((wxUint32)create_size);
 		file->Add(disk, mod_flags);
 	} else {

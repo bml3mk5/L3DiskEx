@@ -39,22 +39,20 @@ public:
 	//@{
 	/// FATエリアをチェック
 	bool		CheckFat();
-//	/// ディスクから各パラメータを取得
-//	int			ParseParamOnDisk(DiskD88Disk *disk);
 	//@}
 
 	/// @name check / assign directory area
 	//@{
-//	/// ルートディレクトリのチェック
-//	bool		CheckRootDirectory(int start_sector, int end_sector);
 	/// ルートディレクトリをアサイン
 	bool		AssignRootDirectory(int start_sector, int end_sector);
 	//@}
 
 	/// @name disk size
 	//@{
+	/// 使用可能なディスクサイズを得る
+	void		GetUsableDiskSize(int &disk_size, int &group_size) const;
 	/// 残りディスクサイズを計算
-	void		CalcDiskFreeSize();
+	void		CalcDiskFreeSize(bool wrote);
 	//@}
 
 	/// @name file size
@@ -64,7 +62,7 @@ public:
 	/// @name file chain
 	//@{
 	/// データサイズ分のグループを確保する
-	int			AllocateGroups(DiskBasicDirItem *item, int data_size, DiskBasicGroups &group_items);
+	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
 
 	/// グループ番号から開始セクタ番号を得る
 	int			GetStartSectorFromGroup(wxUint32 group_num);
@@ -88,7 +86,7 @@ public:
 	/// セクタデータを指定コードで埋める
 	void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
 	/// セクタデータを埋めた後の個別処理
-	bool		AdditionalProcessOnFormatted();
+	bool		AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
 
 	/// @name data access (read / verify)

@@ -474,7 +474,7 @@ bool IntNameValidator::Validate(wxWindow *parent, const wxString &val)
 			}
 		}
 		if (errormsg.empty()) {
-			item->ValidateFileName(val, errormsg);
+			item->ValidateFileName(parent, val, errormsg);
 		}
 	}
 
@@ -570,21 +570,23 @@ bool DateTimeValidator::Validate(wxWindow *parent)
 	wxString errormsg;
 	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
 	wxRegEx re2("^([0-9]+)[/:.]([0-9]+)$");
-	if (!re.Matches(val)) {
-		if (is_time) {
-			if (!re2.Matches(val)) {
+	if (!val.IsEmpty()) {
+		if (!re.Matches(val)) {
+			if (is_time) {
+				if (!re2.Matches(val)) {
+					errormsg = _("Invalid format is contained in date or time.");
+				}
+			} else {
 				errormsg = _("Invalid format is contained in date or time.");
 			}
-		} else {
-			errormsg = _("Invalid format is contained in date or time.");
 		}
 	}
 	if ( !errormsg.empty() ) {
 		m_validatorWindow->SetFocus();
 		wxMessageBox(errormsg, _("Validation conflict"),
-						wxOK | wxICON_EXCLAMATION, parent);
+						wxOK | wxICON_WARNING, parent);
 
-		return false;
+//		return false;
 	}
 	return true;
 }

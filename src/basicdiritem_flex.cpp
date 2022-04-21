@@ -381,6 +381,8 @@ wxString DiskBasicDirItemFLEX::GetFileTimeStr()
 
 void DiskBasicDirItemFLEX::SetFileDate(const struct tm *tm)
 {
+	if (tm->tm_year < 0 || tm->tm_mon < -1) return;
+
 	data->flex.year = (tm->tm_year % 100);
 	data->flex.month = tm->tm_mon + 1;
 	data->flex.day = tm->tm_mday;
@@ -429,14 +431,6 @@ wxUint32 DiskBasicDirItemFLEX::GetLastGroup() const
 	wxUint32 val = (wxUint32)basic->GetSectorPosFromNum(data->flex.last_track, data->flex.last_sector);
 	return val;
 }
-
-#if 0
-/// 書き込み/上書き禁止か
-bool DiskBasicDirItemFLEX::IsWriteProtected()
-{
-	return false;
-}
-#endif
 
 bool DiskBasicDirItemFLEX::IsDeletable()
 {

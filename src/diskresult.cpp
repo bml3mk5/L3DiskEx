@@ -37,6 +37,12 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("Unknown error. code:%d"),
 	//	ERRV_INVALID_DISK  v:1
 	wxTRANSLATE("[Disk%d] This is invalid or non supported disk."),
+	//  ERRV_DISK_SIZE_ZERO  v:1
+	wxTRANSLATE("[Disk%d] Disk size is zero."),
+	//	ERRV_DISK_TOO_SMALL  v:1
+	wxTRANSLATE("[Disk%d] Disk size is too small."),
+	//  ERRV_DISK_TOO_LARGE  v:1
+	wxTRANSLATE("[Disk%d] Disk size is invalid or too large."),
 	//	ERRV_DISK_HEADER  v:1
 	wxTRANSLATE("[Disk%d] Invalid parameter may exists in the disk header."),
 	//	ERRV_OVERFLOW_OFFSET  v:4
@@ -51,6 +57,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] Invalid id R in track %d. id[C:%d H:%d R:%d] num of sector:%d"),
 	//	ERRV_ID_NUM_OF_SECTOR  v:2
 	wxTRANSLATE("[Disk%d] Mismatch number of sector in track %d and side %d."),
+	// ERRV_TOO_MANY_SECTORS v:5
+	wxTRANSLATE("[Disk%d] Too many sectors. Ignore sectors over %d. id[C:%d H:%d] num of sector:%d"),
 	//	ERRV_SECTOR_SIZE  v:6
 	wxTRANSLATE("[Disk%d] Invalid sector size in sector. id[C:%d H:%d R:%d N:%d] sector size:%d"),
 	//	ERRV_DUPLICATE_TRACK  v:4
@@ -59,6 +67,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] Duplicate sector %d. [track:%d side:%d]"),
 	// ERRV_NO_SECTOR  v:3
 	wxTRANSLATE("[Disk%d] No found sector %d. [track:%d side:%d]"),
+	// ERRV_SHORT_SECTORS v:5
+	wxTRANSLATE("[Disk%d] Number of sector is less than %d. [track:%d side:%d] num of sector:%d"),
 	//	ERRV_IGNORE_DATA  v:4
 	wxTRANSLATE("[Disk%d] Deleted data found. This sector is ignored. id[C:%d H:%d R:%d]"),
 	//	ERRV_END  v:1

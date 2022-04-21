@@ -66,7 +66,7 @@ void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
-bool DiskBasicTypeN88::AdditionalProcessOnFormatted()
+bool DiskBasicTypeN88::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// システムで使用している部分のクラスタ位置を予約済みにする
 	wxArrayInt grps = basic->GetReservedGroups();

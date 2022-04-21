@@ -1,10 +1,10 @@
-﻿/// @file basicselbox.h
+﻿/// @file basicparambox.h
 ///
-/// @brief BASIC種類選択ダイアログ
+/// @brief BASIC情報ダイアログ
 ///
 
-#ifndef _BASICSELBOX_H_
-#define _BASICSELBOX_H_
+#ifndef _BASICPARAMBOX_H_
+#define _BASICPARAMBOX_H_
 
 #include "common.h"
 #include <wx/dialog.h>
@@ -13,52 +13,54 @@
 
 class wxListBox;
 class wxTextCtrl;
+class wxChoice;
 class wxStaticText;
 class DiskBasic;
 class DiskBasicParam;
-class DiskBasicParamPtrs;
 class DiskD88Disk;
 
-/// BASIC種類選択ボックス
-class BasicSelBox : public wxDialog
+/// BASIC情報ボックス
+class BasicParamBox : public wxDialog
 {
 private:
-	wxListBox *comBasic;
+	DiskBasic *basic;
+	DiskBasicParamPtrs params;
+	int show_flags;
+
+//	wxTextCtrl	*txtBasic;
+	wxChoice	*comBasic;
+	int selected_basic;
+
 	wxStaticText *lblVolName;
 	wxTextCtrl *txtVolName;
 	wxStaticText *lblVolNum;
 	wxTextCtrl *txtVolNum;
 
-	DiskBasicParamPtrs params;
-
-	DiskD88Disk *disk;
-
 public:
-	BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, DiskBasic *basic, int show_flags);
+	BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, DiskBasic *basic, int show_flags);
 
 	enum {
-		IDC_LIST_BASIC = 1,
+		IDC_TEXT_BASIC = 1,
+		IDC_LIST_BASIC,
 		IDC_TEXT_VOLNAME,
 		IDC_TEXT_VOLNUM,
 	};
 
 	enum en_show_flags {
-		SHOW_ATTR_CONTROLS = 0x01
+		BASIC_SELECTABLE = 0x01
 	};
 
 	/// @name functions
 	//@{
 	int ShowModal();
-	bool ValidateAllParam();
-
-	void ChangeBasic(int sel);
+	void CommitData();
 	//@}
 
 	// event procedures
-	void OnBasicChanged(wxCommandEvent& event);
 	void OnOK(wxCommandEvent& event);
 
 	// properties
+	bool IsChangedBasic() const;
 	const DiskBasicParam *GetBasicParam() const;
 	wxString GetVolumeName() const;
 	int GetVolumeNumber() const;
@@ -66,5 +68,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _BASICSELBOX_H_ */
+#endif /* _BASICPARAMBOX_H_ */
 

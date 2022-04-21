@@ -1,10 +1,10 @@
-﻿/// @file sectorbox.h
+﻿/// @file rawsectorbox.h
 ///
-/// @brief セクタダイアログ
+/// @brief Raw セクタダイアログ
 ///
 
-#ifndef _SECTORBOX_H_
-#define _SECTORBOX_H_
+#ifndef _RAWSECTORBOX_H_
+#define _RAWSECTORBOX_H_
 
 #define SECTORBOX_TRANS \
 _("Required information entry is empty.") \
@@ -15,11 +15,13 @@ _("'%s' should only contain digits.")
 #include "common.h"
 #include <wx/dialog.h>
 
+#define SECTORBOX_HIDE_SECTOR_NUMS	0x0040
+
 class wxTextCtrl;
 class wxCheckBox;
 
 /// セクタ情報ボックス
-class SectorBox : public wxDialog
+class RawSectorBox : public wxDialog
 {
 private:
 	wxTextCtrl *txtID_C;
@@ -33,7 +35,7 @@ private:
 	wxTextCtrl *txtSecNums;
 
 public:
-	SectorBox(wxWindow* parent, wxWindowID id, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity);
+	RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int hide_flags = 0);
 
 	enum {
 		IDC_TEXT_ID_C = 1,
@@ -66,5 +68,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _SECTORBOX_H_ */
+#endif /* _RAWSECTORBOX_H_ */
 

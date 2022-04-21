@@ -61,7 +61,7 @@ DiskDskParser::~DiskDskParser()
 }
 
 /// セクタデータの作成
-wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int sector_nums, void *user_data, DiskD88Track *track)
+wxUint32 DiskDskParser::ParseSector(wxInputStream &istream, int sector_nums, void *user_data, DiskD88Track *track)
 {
 	cpc_dsk_sector_t *id = (cpc_dsk_sector_t *)user_data;
 
@@ -84,7 +84,7 @@ wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int sector_nums, voi
 	wxUint8 *buf = sector->GetSectorBuffer();
 	int siz = sector->GetSectorBufferSize();
 
-	size_t len = istream->Read(buf, siz).LastRead();
+	size_t len = istream.Read(buf, siz).LastRead();
 	if (len < (size_t)siz) {
 		// ファイルデータが足りない
 		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
@@ -92,7 +92,7 @@ wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int sector_nums, voi
 	if (is_extended) {
 		// バッファが大きいのでスキップ
 		if (id->data_length > siz) {
-			istream->SeekI(id->data_length - siz, wxFromCurrent);
+			istream.SeekI(id->data_length - siz, wxFromCurrent);
 		}
 	}
 
@@ -103,10 +103,10 @@ wxUint32 DiskDskParser::ParseSector(wxInputStream *istream, int sector_nums, voi
 }
 
 /// トラックデータの作成
-wxUint32 DiskDskParser::ParseTrack(wxInputStream *istream, int track_size, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+wxUint32 DiskDskParser::ParseTrack(wxInputStream &istream, int track_size, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
 {
 	cpc_dsk_track_t track_header;
-	size_t len = istream->Read(&track_header, sizeof(track_header)).LastRead();
+	size_t len = istream.Read(&track_header, sizeof(track_header)).LastRead();
 	if (len != sizeof(track_header)) {
 		result->SetError(DiskResult::ERR_NO_TRACK, 0);
 		return 0;
@@ -131,12 +131,14 @@ wxUint32 DiskDskParser::ParseTrack(wxInputStream *istream, int track_size, int o
 	}
 
 	if (result->GetValid() >= 0) {
-		// トラックを追加
+		// トラックサイズ設定
 		track->SetSize(d88_track_size);
 		// サイド番号は各セクタのID Hに合わせる
 		track->SetSideNumber(track->GetMajorIDH());
 
+		// ディスクに追加
 		disk->Add(track);
+		// オフセット設定
 		disk->SetOffset(offset_pos, offset);
 	} else {
 		delete track;
@@ -146,12 +148,12 @@ wxUint32 DiskDskParser::ParseTrack(wxInputStream *istream, int track_size, int o
 }
 
 /// ディスクの解析
-wxUint32 DiskDskParser::ParseDisk(wxInputStream *istream)
+wxUint32 DiskDskParser::ParseDisk(wxInputStream &istream)
 {
 	DiskD88Disk *disk = new DiskD88Disk(file);
 
 	cpc_dsk_header_t header;
-	size_t len = istream->Read(&header, sizeof(header)).LastRead();
+	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len != sizeof(header)) {
 		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 		return 0;
@@ -177,7 +179,7 @@ wxUint32 DiskDskParser::ParseDisk(wxInputStream *istream)
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
-			disk->SetDensity(disk_param->GetDensity());
+			disk->SetDensity(disk_param->GetParamDensity());
 		}
 		file->Add(disk, mod_flags);
 	} else {
@@ -189,28 +191,28 @@ wxUint32 DiskDskParser::ParseDisk(wxInputStream *istream)
 
 /// CPC DSKファイルかどうかをチェック
 /// @param [in] istream    解析対象データ
-/// @return true / false
-bool DiskDskParser::Check(wxInputStream *istream)
+/// @return 0:Ok -1:NG
+int DiskDskParser::Check(wxInputStream &istream)
 {
-	istream->SeekI(0);
+	istream.SeekI(0);
 
 	cpc_dsk_header_t header;
-	size_t len = istream->Read(&header, sizeof(header)).LastRead();
+	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		return false;
+		return -1;
 	}
 
-	istream->SeekI(0);
+	istream.SeekI(0);
 
 	// check identifier
-	bool valid = false;
+	int valid = -1;
 	if (memcmp(header.ident, "MV - CPCEMU Disk-File\r\nDisk-Info\r\n", sizeof(header.ident)) == 0) {
 		is_extended = 0;	// normal
-		valid = true;
+		valid = 0;
 	} else if (memcmp(header.ident, "EXTENDED CPC DSK File\r\nDisk-Info\r\n", sizeof(header.ident)) == 0) {
 		is_extended = 1;	// extended
-		valid = true;
+		valid = 0;
 	}
 	return valid;
 }
@@ -220,7 +222,7 @@ bool DiskDskParser::Check(wxInputStream *istream)
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskDskParser::Parse(wxInputStream *istream)
+int DiskDskParser::Parse(wxInputStream &istream)
 {
 	ParseDisk(istream);
 	return result->GetValid();
