@@ -52,7 +52,7 @@ void DiskBasicTypeFalcom::CalcDiskFreeSize(bool wrote)
 	fat_availability.SetCount(basic->GetFatEndGroup() + 1, FAT_AVAIL_FREE);
 
 	const DiskBasicDirItems *items = dir->GetCurrentItems();
-	for(size_t idx = 0; idx < items->Count(); idx++) {
+	for(size_t idx = 0; items && idx < items->Count(); idx++) {
 		DiskBasicDirItem *item = items->Item(idx);
 		if (!item || !item->IsUsed()) continue;
 
