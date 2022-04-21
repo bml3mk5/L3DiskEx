@@ -206,8 +206,8 @@ public:
 	int				GetFileNameStrSize() const;
 	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
 	virtual void	ConvertFileNameBeforeImportDialog(wxString &filename) const {}
-	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にするなど
-	virtual void	ConvertFileNameAfterRenamed(wxString &filename) const {}
+//	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にするなど
+//	virtual void	ConvertFileNameAfterRenamed(wxString &filename) const {}
 	/// @brief ファイル名に付随する拡張属性を設定
 	virtual void	SetOptionalName(int val) {}
 	/// @brief ファイル名に付随する拡張属性を返す

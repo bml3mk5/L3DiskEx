@@ -397,7 +397,6 @@ void IntNameBox::SetInternalName(const wxString &name)
 }
 
 /// 内部ファイル名を得る
-/// DiskBasicDirItem::ConvertFileNameAfterRenamed()で変換したファイル名
 void IntNameBox::GetInternalName(wxString &name) const
 {
 	if (!txtIntName) return;
@@ -412,8 +411,8 @@ void IntNameBox::GetInternalName(wxString &name) const
 		if (basic->ToUpperAfterRenamed()) {
 			val.MakeUpper();
 		}
-		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理
-		item->ConvertFileNameAfterRenamed(val);
+//		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理
+//		item->ConvertFileNameAfterRenamed(val);
 	}
 
 	name = val;

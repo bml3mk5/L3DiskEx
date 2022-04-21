@@ -1798,6 +1798,21 @@
 		<IPLCompareString type="string">S-DOS Ver 1.1</IPLCompareString>
 		<Description>S-DOS Ver.1.1 (2D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="SDOS11P-2D" type="54" category="SDOS">
+		<FormatSubType>0</FormatSubType>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>32</ReservedSectors>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirStartPositionOnRoot>0x5f</DirStartPositionOnRoot>
+		<DefaultStartAddress type="int">0x8021</DefaultStartAddress>
+		<DefaultExecuteAddress type="int">0</DefaultExecuteAddress>
+		<IPLCompareString type="string">\xfe\xc5(\x08\xf3\x3e\x04\xd31\xc3</IPLCompareString>
+		<Description>S-DOS Ver.1.1(patched) (2D)</Description>
+		<Description lang="ja">S-DOS Ver.1.1(パッチ済) (2D)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="SN88DOS-2D" type="54" category="SDOS">
 		<FormatSubType>1</FormatSubType>
 		<SidesPerDisk>2</SidesPerDisk>

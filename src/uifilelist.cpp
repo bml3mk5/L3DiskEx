@@ -2184,8 +2184,8 @@ bool L3DiskFileList::RenameDataFile(const L3FileListItem &view_item, const wxStr
 	if (basic->ToUpperAfterRenamed()) {
 		filename.GetName().MakeUpper();
 	}
-	// ダイアログ入力後のファイル名文字列を変換
-	item->ConvertFileNameAfterRenamed(filename.GetName());
+//	// ダイアログ入力後のファイル名文字列を変換
+//	item->ConvertFileNameAfterRenamed(filename.GetName());
 	// 拡張属性を得る
 	filename.SetOptional(item->GetOptionalName());
 

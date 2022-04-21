@@ -1034,7 +1034,7 @@ bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name,
 	if (basic->ToUpperAfterRenamed()) {
 		namestr.MakeUpper();
 	}
-	ConvertFileNameAfterRenamed(namestr);
+//	ConvertFileNameAfterRenamed(namestr);
 
 	int tmplen = ConvStringToChars(namestr, tmp, sizeof(tmp));
 	if (tmplen < 0) return false;

@@ -152,12 +152,14 @@ int DiskBasicDirItemL32D::RecalcFileSize(DiskBasicGroups &group_items, int occup
 	return occupied_size;
 }
 
+#if 0
 /// ダイアログ入力後のファイル名文字列を変換
 void DiskBasicDirItemL32D::ConvertFileNameAfterRenamed(wxString &filename) const
 {
 	int file_type_1 = GetFileType1();
 	filename = AddExtension(file_type_1, filename);
 }
+#endif
 
 #include <wx/textctrl.h>
 #include <wx/radiobox.h>

@@ -61,8 +61,8 @@ public:
 	/// @brief ディレクトリアイテムのサイズ
 	size_t	GetDataSize() const;
 
-	/// @brief ダイアログ入力後のファイル名文字列を変換
-	void	ConvertFileNameAfterRenamed(wxString &filename) const;
+//	/// @brief ダイアログ入力後のファイル名文字列を変換
+//	void	ConvertFileNameAfterRenamed(wxString &filename) const;
 
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
