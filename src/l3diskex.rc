@@ -1,0 +1,33 @@
+#include "version.h"
+
+// Version Information resources
+1 VERSIONINFO
+FILEVERSION     APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
+PRODUCTVERSION  APP_VER_MAJOR,APP_VER_MINOR,APP_VER_REV,APP_VER_BUILD
+FILEFLAGSMASK   0x0000003F
+FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "041103a4"
+        {
+            VALUE "FileVersion", APPLICATION_VERSION
+            VALUE "ProductVersion", APPLICATION_VERSION ""PLATFORM""
+            VALUE "FileDescription", "L3DiskExplorer"
+            VALUE "LegalCopyright", APP_COPYRIGHT
+            VALUE "OriginalFilename", "l3diskex.exe"
+            VALUE "ProductName", "L3DiskExplorer"
+            VALUE "InternalName", "l3diskex"
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0411, 0x03A4
+    }
+}
+
+l3diskex ICON "res/l3diskex.ico"
+
+zz_fd_5inch ICON "res/fd_5inch.ico"
+
+#include "wx/msw/wx.rc"

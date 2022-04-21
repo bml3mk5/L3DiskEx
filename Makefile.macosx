@@ -1,0 +1,225 @@
+#
+# for MacOSX
+#
+CC=g++
+
+APPLICATION_VERSION=0.1.0
+
+CDEFS=
+DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
+
+ARCH=-arch i386 -arch x86_64
+MACVERMIN=-mmacosx-version-min=10.7
+
+WXDIR=../../../../Devel/wxWidgets-3.0.2
+WXCONFIG_SH=$(WXDIR)/build_release_shared_unicode/wx-config
+WXCONFIG_ST=$(WXDIR)/build_release_static_unicode/wx-config
+WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode/wx-config
+
+SH_CFLAGS=$(MACVERMIN) -Wall -O2 $(shell $(WXCONFIG_SH) --cppflags)
+ST_CFLAGS=$(MACVERMIN) -Wall -O2 $(shell $(WXCONFIG_ST) --cppflags)
+DBG_CFLAGS=$(MACVERMIN) -g -Wall -O0 $(shell $(WXCONFIG_DBG) --debug --cppflags)
+
+LD=g++
+
+LOCALLIBDIR=/usr/local/lib
+
+SH_LDFLAGS=$(MACVERMIN) $(shell $(WXCONFIG_SH) --libs)
+ST_LDFLAGS=$(MACVERMIN) $(shell $(WXCONFIG_ST) --static --libs)
+DBG_LDFLAGS=$(MACVERMIN) $(shell $(WXCONFIG_DBG) --debug --libs)
+
+EXEFILE=l3diskex
+APPDIR=$(EXEFILE).app
+MACRESDIR=Contents/Resources/
+MACEXEDIR=Contents/MacOS/
+
+BUILDDIR=./build
+SH_BUILDDIR=$(BUILDDIR)/shared
+ST_BUILDDIR=$(BUILDDIR)/static
+DBG_BUILDDIR=$(BUILDDIR)/debug
+
+RELEASEDIR=./Release
+DEBUGDIR=./Debug
+
+DATADIR=data
+
+SRCDIR=src
+
+RESDIR=res
+SRCRES=$(SRCDIR)/$(RESDIR)/
+
+LANGDIR=lang
+SRCLANG=$(LANGDIR)/
+
+DATADIR=data
+SRCDATA=$(DATADIR)/
+
+OBJS=utils.o \
+	basicfmt.o \
+	charcodes.o \
+	config.o \
+	diskd88.o \
+	diskparambox.o \
+	intnamebox.o \
+	rawparambox.o \
+	rawexpbox.o \
+	result.o \
+	sectorbox.o \
+	uibindump.o \
+	uidiskattr.o \
+	uidisklist.o \
+	uifilelist.o \
+	uirawdisk.o \
+	main.o
+
+EXE =$(BUILDDIR)/$(EXEFILE)
+SH_EXE=$(SH_BUILDDIR)/$(EXEFILE)
+ST_EXE=$(ST_BUILDDIR)/$(EXEFILE)
+DBG_EXE=$(DBG_BUILDDIR)/$(EXEFILE)
+
+SH_OBJS=$(OBJS:%=$(SH_BUILDDIR)/%)
+ST_OBJS=$(OBJS:%=$(ST_BUILDDIR)/%)
+DBG_OBJS=$(OBJS:%=$(DBG_BUILDDIR)/%)
+
+SH_DEPS=$(OBJS:%.o=$(SH_BUILDDIR)/%.d)
+ST_DEPS=$(OBJS:%.o=$(ST_BUILDDIR)/%.d)
+DBG_DEPS=$(OBJS:%.o=$(DBG_BUILDDIR)/%.d)
+
+LIBS=$(LOCALLIBS)
+SH_LIBS=
+ST_LIBS=$(LIBS)
+DBG_LIBS=$(LIBS)
+
+#
+#
+#
+
+all: sh_exe
+
+sh_exe: mk_sh_builddir $(SH_EXE)
+
+st_exe: mk_st_builddir $(ST_EXE)
+
+dbg_exe: mk_dbg_builddir $(DBG_EXE)
+
+$(SH_EXE): sh_depend $(SH_OBJS)
+	$(LD) -o $@ $(ARCH) $(SH_OBJS) $(SH_LIBS) $(SH_LDFLAGS)
+
+$(ST_EXE): st_depend $(ST_OBJS)
+	$(LD) -o $@ $(ARCH) $(ST_OBJS) $(ST_LIBS) $(ST_LDFLAGS)
+
+$(DBG_EXE): dbg_depend $(DBG_OBJS)
+	$(LD) -o $@ $(ARCH) $(DBG_OBJS) $(DBG_LIBS) $(DBG_LDFLAGS)
+
+$(SH_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(ARCH) $(CDEFS) $(SH_CFLAGS) -c $< -o $@
+
+$(ST_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(ARCH) $(CDEFS) $(ST_CFLAGS) -c $< -o $@
+
+$(DBG_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+	$(CC) $(ARCH) $(DBG_CDEFS) $(DBG_CFLAGS) -c $< -o $@
+
+# $(SRCDIR)/%_tmp.cpp: $(SRCDIR)/%.cpp
+#	sed '1 s/^.//' $< > $@
+
+install: sh_install
+
+sh_install: sh_exe
+	mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)
+	mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)
+	cp -p $(SH_EXE) $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)
+	SetFile -t APPL $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)$(EXEFILE)
+	cp -p $(SRCRES)/$(EXEFILE).icns $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)
+	sed -e 's/APPLICATION_VERSION/$(APPLICATION_VERSION)/g' $(SRCRES)/Info.plist > $(RELEASEDIR)/$(APPDIR)/Contents/Info.plist
+	echo "APPL????" > $(RELEASEDIR)/$(APPDIR)/Contents/PkgInfo
+	(mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; cp -p $(SRCDATA)/*.* $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; exit 0)
+	for i in $(SRCLANG)/* ;do if [ -d $$i ]; then \
+		mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$$i; cp -p $$i/*.mo $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$$i; \
+	fi; done
+
+st_install: st_exe
+	mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)
+	mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)
+	cp -p $(ST_EXE) $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)
+	SetFile -t APPL $(RELEASEDIR)/$(APPDIR)/$(MACEXEDIR)$(EXEFILE)
+	cp -p $(SRCRES)/$(EXEFILE).icns $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)
+	sed -e 's/APPLICATION_VERSION/$(APPLICATION_VERSION)/g' $(SRCRES)/Info.plist > $(RELEASEDIR)/$(APPDIR)/Contents/Info.plist
+	echo "APPL????" > $(RELEASEDIR)/$(APPDIR)/Contents/PkgInfo
+	(mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; cp -p $(SRCDATA)/*.* $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; exit 0)
+	for i in $(SRCLANG)/* ;do if [ -d $$i ]; then \
+		mkdir -p $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$$i; cp -p $$i/*.mo $(RELEASEDIR)/$(APPDIR)/$(MACRESDIR)/$$i; \
+	fi; done
+
+dbg_install: dbg_exe
+	mkdir -p $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)
+	mkdir -p $(DEBUGDIR)/$(APPDIR)/$(MACEXEDIR)
+	cp -p $(DBG_EXE) $(DEBUGDIR)/$(APPDIR)/$(MACEXEDIR)
+	SetFile -t APPL $(DEBUGDIR)/$(APPDIR)/$(MACEXEDIR)$(EXEFILE)
+	cp -p $(SRCRES)/$(EXEFILE).icns $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)
+	sed -e 's/APPLICATION_VERSION/$(APPLICATION_VERSION)/g' $(SRCRES)/Info.plist > $(DEBUGDIR)/$(APPDIR)/Contents/Info.plist
+	echo "APPL????" > $(DEBUGDIR)/$(APPDIR)/Contents/PkgInfo
+	(mkdir -p $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; cp -p $(SRCDATA)/*.* $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)/$(DATADIR)/; exit 0)
+	for i in $(SRCLANG)/* ;do if [ -d $$i ]; then \
+		mkdir -p $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)/$$i; cp -p $$i/*.mo $(DEBUGDIR)/$(APPDIR)/$(MACRESDIR)/$$i; \
+	fi; done
+
+mk_builddir:
+	mkdir -p $(BUILDDIR)
+
+mk_sh_builddir:
+	mkdir -p $(SH_BUILDDIR)
+
+mk_st_builddir:
+	mkdir -p $(ST_BUILDDIR)
+
+mk_dbg_builddir:
+	mkdir -p $(DBG_BUILDDIR)
+
+clean: sh_clean
+
+sh_clean:
+	rm -rf $(SH_BUILDDIR)
+	rm -f $(BUILDDIR)/Makefile.dep
+
+st_clean:
+	rm -rf $(ST_BUILDDIR)
+	rm -f $(BUILDDIR)/Makefile.dep
+
+dbg_clean:
+	rm -rf $(DBG_BUILDDIR)
+	rm -f $(BUILDDIR)/Makefile.dep
+
+clean_all:
+	rm -rf $(BUILDDIR)
+
+depend: $(SH_BUILDDIR)/Makefile.dep
+
+sh_depend: $(SH_BUILDDIR)/Makefile.dep
+
+st_depend: $(ST_BUILDDIR)/Makefile.dep
+
+dbg_depend: $(DBG_BUILDDIR)/Makefile.dep
+
+$(SH_BUILDDIR)/Makefile.dep: mk_sh_builddir $(SH_DEPS)
+	cat $(SH_DEPS) > $(SH_BUILDDIR)/Makefile.dep
+	cp -f $(SH_BUILDDIR)/Makefile.dep $(BUILDDIR)/Makefile.dep
+
+$(ST_BUILDDIR)/Makefile.dep: mk_st_builddir $(ST_DEPS)
+	cat $(ST_DEPS) > $(ST_BUILDDIR)/Makefile.dep
+	cp -f $(ST_BUILDDIR)/Makefile.dep $(BUILDDIR)/Makefile.dep
+
+$(DBG_BUILDDIR)/Makefile.dep: mk_dbg_builddir $(DBG_DEPS)
+	cat $(DBG_DEPS) > $(DBG_BUILDDIR)/Makefile.dep
+	cp -f $(DBG_BUILDDIR)/Makefile.dep $(BUILDDIR)/Makefile.dep
+
+$(SH_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+	-$(CC) $(CDEFS) $(SH_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
+
+$(ST_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+	-$(CC) $(CDEFS) $(ST_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
+
+$(DBG_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+	-$(CC) $(CDEFS) $(DBG_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
+
+-include $(BUILDDIR)/Makefile.dep

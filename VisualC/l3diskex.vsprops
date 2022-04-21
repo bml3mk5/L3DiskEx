@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="shift_jis"?>
+<VisualStudioPropertySheet
+	ProjectType="Visual C++"
+	Version="8.00"
+	Name="l3diskex"
+	>
+	<UserMacro
+		Name="DevelopDir"
+		Value="D:\Devel\vc\"
+	/>
+	<UserMacro
+		Name="wxWidgetsDir"
+		Value="$(DevelopDir)wxWidgets-3.0.2\"
+	/>
+	<UserMacro
+		Name="wxWidgetsIncludeDir"
+		Value="$(wxWidgetsDir)include\msvc\;$(wxWidgetsDir)include\"
+	/>
+	<UserMacro
+		Name="wxWidgetsLibDirWin32"
+		Value="$(wxWidgetsDir)lib\vc_lib\"
+	/>
+	<UserMacro
+		Name="wxWidgetsLibDirX64"
+		Value="$(wxWidgetsDir)lib\vc_x64_lib\"
+	/>
+	<UserMacro
+		Name="wxWidgetsLibsDebug"
+		Value="wxbase30ud.lib"
+	/>
+	<UserMacro
+		Name="wxWidgetsLibsRelease"
+		Value="wxbase30u.lib"
+	/>
+</VisualStudioPropertySheet>

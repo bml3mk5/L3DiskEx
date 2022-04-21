@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<L3DiskBasicTypes version="1.0">
+	<DiskBasicType name="1S">
+		<FormatType>0</FormatType>
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<ManageTrackNumber>20</ManageTrackNumber>
+		<FATStartSector>1</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>5</FATStartPosition>
+		<FATEndGroup>155</FATEndGroup>
+		<DirStartSector>7</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<FillCodeOnFormat>e5</FillCodeOnFormat>
+		<Description>L3 DISK BASIC (3inch)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="2D">
+		<FormatType>1</FormatType>
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<ManageTrackNumber>20</ManageTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>1</FATStartPosition>
+		<FATEndGroup>151</FATEndGroup>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>23</DirEndSector>
+		<FillCodeOnFormat>40</FillCodeOnFormat>
+		<Description>L3/S1 DISK BASIC (5inch 2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="2HD">
+		<FormatType>3</FormatType>
+		<SectorsPerGroup>26</SectorsPerGroup>
+		<ManageTrackNumber>37</ManageTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>1</FATStartPosition>
+		<FATEndGroup>145</FATEndGroup>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>23</DirEndSector>
+		<FillCodeOnFormat>40</FillCodeOnFormat>
+		<Description>L3/S1 DISK BASIC (8inch 2D/5inch 2HD)</Description>
+	</DiskBasicType>
+</L3DiskBasicTypes>

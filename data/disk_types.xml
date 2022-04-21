@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<L3DiskTypes version="1.0">
+	<DiskType name="1S">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0</Density>
+		<SingleDensity track="ALL" />
+	</DiskType>
+	<DiskType name="1S x2" type="1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<SectorSize>128</SectorSize>
+		<Density>0</Density>
+		<SingleDensity track="ALL" />
+	</DiskType>
+	<DiskType name="2D L3">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0</Density>
+		<SingleDensity track="0" side="0" />
+	</DiskType>
+	<DiskType name="2D S1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0</Density>
+	</DiskType>
+	<DiskType name="2HD S1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>2</Density>
+		<SingleDensity track="0" side="0" />
+	</DiskType>
+	<DiskType name="2HD">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>2</Density>
+	</DiskType>
+</L3DiskTypes>

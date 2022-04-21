@@ -1,0 +1,504 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D916204E1BF261BC00DB06A7 /* rawparambox.cpp */; };
+		D9C49E8C1BF1BDB100831032 /* basicfmt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E7C1BF1BDB100831032 /* basicfmt.cpp */; };
+		D9C49E8E1BF1BDB100831032 /* charcodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E7E1BF1BDB100831032 /* charcodes.cpp */; };
+		D9C49E911BF1BDB100831032 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E811BF1BDB100831032 /* config.cpp */; };
+		D9C49E931BF1BDB100831032 /* diskd88.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E831BF1BDB100831032 /* diskd88.cpp */; };
+		D9C49E951BF1BDB100831032 /* diskparambox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E851BF1BDB100831032 /* diskparambox.cpp */; };
+		D9C49E971BF1BDB100831032 /* intnamebox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E871BF1BDB100831032 /* intnamebox.cpp */; };
+		D9C49E9A1BF1BDB100831032 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E8A1BF1BDB100831032 /* main.cpp */; };
+		D9C49EAD1BF1BDC000831032 /* result.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E9C1BF1BDC000831032 /* result.cpp */; };
+		D9C49EAF1BF1BDC000831032 /* sectorbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E9E1BF1BDC000831032 /* sectorbox.cpp */; };
+		D9C49EB11BF1BDC000831032 /* uibindump.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EA01BF1BDC000831032 /* uibindump.cpp */; };
+		D9C49EB31BF1BDC000831032 /* uidiskattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EA21BF1BDC000831032 /* uidiskattr.cpp */; };
+		D9C49EB51BF1BDC000831032 /* uidisklist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EA41BF1BDC000831032 /* uidisklist.cpp */; };
+		D9C49EB71BF1BDC000831032 /* uifilelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EA61BF1BDC000831032 /* uifilelist.cpp */; };
+		D9C49EB91BF1BDC000831032 /* uirawdisk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EA81BF1BDC000831032 /* uirawdisk.cpp */; };
+		D9C49EBB1BF1BDC000831032 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49EAA1BF1BDC000831032 /* utils.cpp */; };
+		D9C49EBF1BF1C01400831032 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EBE1BF1C01400831032 /* IOKit.framework */; };
+		D9C49EC11BF1C02200831032 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EC01BF1C02200831032 /* Carbon.framework */; };
+		D9C49EC31BF1C02D00831032 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EC21BF1C02D00831032 /* Cocoa.framework */; };
+		D9C49EC51BF1C03700831032 /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EC41BF1C03700831032 /* AudioToolbox.framework */; };
+		D9C49EC71BF1C05900831032 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EC61BF1C05900831032 /* OpenGL.framework */; };
+		D9C49EF21BF1CA4100831032 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9C49EF11BF1CA4100831032 /* WebKit.framework */; };
+		D9C49F001BF1D38800831032 /* basic_types.xml in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9C49EF41BF1D26400831032 /* basic_types.xml */; };
+		D9C49F011BF1D38A00831032 /* char_codes.xml in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9C49EF51BF1D26400831032 /* char_codes.xml */; };
+		D9C49F021BF1D38C00831032 /* disk_types.xml in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9C49EF61BF1D26400831032 /* disk_types.xml */; };
+		D9C49F041BF1D3B600831032 /* l3diskex.mo in CopyFiles */ = {isa = PBXBuildFile; fileRef = D9C49EFC1BF1D2C700831032 /* l3diskex.mo */; };
+		D9C49F061BF1D4CB00831032 /* l3diskex.icns in Resources */ = {isa = PBXBuildFile; fileRef = D9C49F051BF1D4CB00831032 /* l3diskex.icns */; };
+		D9D2D4CA1BFF12F300AA70F8 /* rawexpbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D2D4C81BFF12F300AA70F8 /* rawexpbox.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D9C49EFF1BF1D37200831032 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = Data;
+			dstSubfolderSpec = 7;
+			files = (
+				D9C49F001BF1D38800831032 /* basic_types.xml in CopyFiles */,
+				D9C49F011BF1D38A00831032 /* char_codes.xml in CopyFiles */,
+				D9C49F021BF1D38C00831032 /* disk_types.xml in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D9C49F031BF1D39000831032 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = lang/ja;
+			dstSubfolderSpec = 7;
+			files = (
+				D9C49F041BF1D3B600831032 /* l3diskex.mo in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		D916204E1BF261BC00DB06A7 /* rawparambox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rawparambox.cpp; sourceTree = "<group>"; };
+		D916204F1BF261BC00DB06A7 /* rawparambox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rawparambox.h; sourceTree = "<group>"; };
+		D9C49E571BF1BCA200831032 /* l3diskex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = l3diskex.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D9C49E7A1BF1BD8700831032 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../src/res/Info.plist; sourceTree = "<group>"; };
+		D9C49E7C1BF1BDB100831032 /* basicfmt.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = basicfmt.cpp; path = ../../src/basicfmt.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E7D1BF1BDB100831032 /* basicfmt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = basicfmt.h; path = ../../src/basicfmt.h; sourceTree = SOURCE_ROOT; };
+		D9C49E7E1BF1BDB100831032 /* charcodes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = charcodes.cpp; path = ../../src/charcodes.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E7F1BF1BDB100831032 /* charcodes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = charcodes.h; path = ../../src/charcodes.h; sourceTree = SOURCE_ROOT; };
+		D9C49E801BF1BDB100831032 /* common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../../src/common.h; sourceTree = SOURCE_ROOT; };
+		D9C49E811BF1BDB100831032 /* config.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = config.cpp; path = ../../src/config.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E821BF1BDB100831032 /* config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = config.h; path = ../../src/config.h; sourceTree = SOURCE_ROOT; };
+		D9C49E831BF1BDB100831032 /* diskd88.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = diskd88.cpp; path = ../../src/diskd88.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E841BF1BDB100831032 /* diskd88.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = diskd88.h; path = ../../src/diskd88.h; sourceTree = SOURCE_ROOT; };
+		D9C49E851BF1BDB100831032 /* diskparambox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = diskparambox.cpp; path = ../../src/diskparambox.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E861BF1BDB100831032 /* diskparambox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = diskparambox.h; path = ../../src/diskparambox.h; sourceTree = SOURCE_ROOT; };
+		D9C49E871BF1BDB100831032 /* intnamebox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = intnamebox.cpp; path = ../../src/intnamebox.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E881BF1BDB100831032 /* intnamebox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = intnamebox.h; path = ../../src/intnamebox.h; sourceTree = SOURCE_ROOT; };
+		D9C49E8A1BF1BDB100831032 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../src/main.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E8B1BF1BDB100831032 /* main.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = main.h; path = ../../src/main.h; sourceTree = SOURCE_ROOT; };
+		D9C49E9C1BF1BDC000831032 /* result.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = result.cpp; path = ../../src/result.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E9D1BF1BDC000831032 /* result.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = result.h; path = ../../src/result.h; sourceTree = SOURCE_ROOT; };
+		D9C49E9E1BF1BDC000831032 /* sectorbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = sectorbox.cpp; path = ../../src/sectorbox.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49E9F1BF1BDC000831032 /* sectorbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = sectorbox.h; path = ../../src/sectorbox.h; sourceTree = SOURCE_ROOT; };
+		D9C49EA01BF1BDC000831032 /* uibindump.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = uibindump.cpp; path = ../../src/uibindump.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EA11BF1BDC000831032 /* uibindump.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = uibindump.h; path = ../../src/uibindump.h; sourceTree = SOURCE_ROOT; };
+		D9C49EA21BF1BDC000831032 /* uidiskattr.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = uidiskattr.cpp; path = ../../src/uidiskattr.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EA31BF1BDC000831032 /* uidiskattr.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = uidiskattr.h; path = ../../src/uidiskattr.h; sourceTree = SOURCE_ROOT; };
+		D9C49EA41BF1BDC000831032 /* uidisklist.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = uidisklist.cpp; path = ../../src/uidisklist.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EA51BF1BDC000831032 /* uidisklist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = uidisklist.h; path = ../../src/uidisklist.h; sourceTree = SOURCE_ROOT; };
+		D9C49EA61BF1BDC000831032 /* uifilelist.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = uifilelist.cpp; path = ../../src/uifilelist.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EA71BF1BDC000831032 /* uifilelist.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = uifilelist.h; path = ../../src/uifilelist.h; sourceTree = SOURCE_ROOT; };
+		D9C49EA81BF1BDC000831032 /* uirawdisk.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = uirawdisk.cpp; path = ../../src/uirawdisk.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EA91BF1BDC000831032 /* uirawdisk.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = uirawdisk.h; path = ../../src/uirawdisk.h; sourceTree = SOURCE_ROOT; };
+		D9C49EAA1BF1BDC000831032 /* utils.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = ../../src/utils.cpp; sourceTree = SOURCE_ROOT; };
+		D9C49EAB1BF1BDC000831032 /* utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = utils.h; path = ../../src/utils.h; sourceTree = SOURCE_ROOT; };
+		D9C49EAC1BF1BDC000831032 /* version.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = version.h; path = ../../src/version.h; sourceTree = SOURCE_ROOT; };
+		D9C49EBE1BF1C01400831032 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		D9C49EC01BF1C02200831032 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		D9C49EC21BF1C02D00831032 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		D9C49EC41BF1C03700831032 /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
+		D9C49EC61BF1C05900831032 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		D9C49EF11BF1CA4100831032 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		D9C49EF41BF1D26400831032 /* basic_types.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = basic_types.xml; sourceTree = "<group>"; };
+		D9C49EF51BF1D26400831032 /* char_codes.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = char_codes.xml; sourceTree = "<group>"; };
+		D9C49EF61BF1D26400831032 /* disk_types.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = disk_types.xml; sourceTree = "<group>"; };
+		D9C49EFC1BF1D2C700831032 /* l3diskex.mo */ = {isa = PBXFileReference; lastKnownFileType = file; path = l3diskex.mo; sourceTree = "<group>"; };
+		D9C49EFD1BF1D2C700831032 /* l3diskex.po */ = {isa = PBXFileReference; lastKnownFileType = text; path = l3diskex.po; sourceTree = "<group>"; };
+		D9C49F051BF1D4CB00831032 /* l3diskex.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = l3diskex.icns; path = ../../src/res/l3diskex.icns; sourceTree = "<group>"; };
+		D9D2D4C81BFF12F300AA70F8 /* rawexpbox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = rawexpbox.cpp; sourceTree = "<group>"; };
+		D9D2D4C91BFF12F300AA70F8 /* rawexpbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rawexpbox.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D9C49E541BF1BCA200831032 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9C49EC71BF1C05900831032 /* OpenGL.framework in Frameworks */,
+				D9C49EC51BF1C03700831032 /* AudioToolbox.framework in Frameworks */,
+				D9C49EC31BF1C02D00831032 /* Cocoa.framework in Frameworks */,
+				D9C49EC11BF1C02200831032 /* Carbon.framework in Frameworks */,
+				D9C49EBF1BF1C01400831032 /* IOKit.framework in Frameworks */,
+				D9C49EF21BF1CA4100831032 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		D9C49E4E1BF1BCA200831032 = {
+			isa = PBXGroup;
+			children = (
+				D9C49F071BF1D4E500831032 /* Resources */,
+				D9C49EF01BF1C55F00831032 /* Frameworks */,
+				D9C49E591BF1BCA200831032 /* Sources */,
+				D9C49E581BF1BCA200831032 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		D9C49E581BF1BCA200831032 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49E571BF1BCA200831032 /* l3diskex.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		D9C49E591BF1BCA200831032 /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49E7C1BF1BDB100831032 /* basicfmt.cpp */,
+				D9C49E7D1BF1BDB100831032 /* basicfmt.h */,
+				D9C49E7E1BF1BDB100831032 /* charcodes.cpp */,
+				D9C49E7F1BF1BDB100831032 /* charcodes.h */,
+				D9C49E801BF1BDB100831032 /* common.h */,
+				D9C49E811BF1BDB100831032 /* config.cpp */,
+				D9C49E821BF1BDB100831032 /* config.h */,
+				D9C49E831BF1BDB100831032 /* diskd88.cpp */,
+				D9C49E841BF1BDB100831032 /* diskd88.h */,
+				D9C49E851BF1BDB100831032 /* diskparambox.cpp */,
+				D9C49E861BF1BDB100831032 /* diskparambox.h */,
+				D9C49E871BF1BDB100831032 /* intnamebox.cpp */,
+				D9C49E881BF1BDB100831032 /* intnamebox.h */,
+				D9C49E8A1BF1BDB100831032 /* main.cpp */,
+				D9C49E8B1BF1BDB100831032 /* main.h */,
+				D9D2D4C81BFF12F300AA70F8 /* rawexpbox.cpp */,
+				D9D2D4C91BFF12F300AA70F8 /* rawexpbox.h */,
+				D916204E1BF261BC00DB06A7 /* rawparambox.cpp */,
+				D916204F1BF261BC00DB06A7 /* rawparambox.h */,
+				D9C49E9C1BF1BDC000831032 /* result.cpp */,
+				D9C49E9D1BF1BDC000831032 /* result.h */,
+				D9C49E9E1BF1BDC000831032 /* sectorbox.cpp */,
+				D9C49E9F1BF1BDC000831032 /* sectorbox.h */,
+				D9C49EA01BF1BDC000831032 /* uibindump.cpp */,
+				D9C49EA11BF1BDC000831032 /* uibindump.h */,
+				D9C49EA21BF1BDC000831032 /* uidiskattr.cpp */,
+				D9C49EA31BF1BDC000831032 /* uidiskattr.h */,
+				D9C49EA41BF1BDC000831032 /* uidisklist.cpp */,
+				D9C49EA51BF1BDC000831032 /* uidisklist.h */,
+				D9C49EA61BF1BDC000831032 /* uifilelist.cpp */,
+				D9C49EA71BF1BDC000831032 /* uifilelist.h */,
+				D9C49EA81BF1BDC000831032 /* uirawdisk.cpp */,
+				D9C49EA91BF1BDC000831032 /* uirawdisk.h */,
+				D9C49EAA1BF1BDC000831032 /* utils.cpp */,
+				D9C49EAB1BF1BDC000831032 /* utils.h */,
+				D9C49EAC1BF1BDC000831032 /* version.h */,
+			);
+			name = Sources;
+			path = ../../src;
+			sourceTree = SOURCE_ROOT;
+		};
+		D9C49EF01BF1C55F00831032 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49EF11BF1CA4100831032 /* WebKit.framework */,
+				D9C49EC61BF1C05900831032 /* OpenGL.framework */,
+				D9C49EC41BF1C03700831032 /* AudioToolbox.framework */,
+				D9C49EC21BF1C02D00831032 /* Cocoa.framework */,
+				D9C49EC01BF1C02200831032 /* Carbon.framework */,
+				D9C49EBE1BF1C01400831032 /* IOKit.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		D9C49EF31BF1D26400831032 /* data */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49EF41BF1D26400831032 /* basic_types.xml */,
+				D9C49EF51BF1D26400831032 /* char_codes.xml */,
+				D9C49EF61BF1D26400831032 /* disk_types.xml */,
+			);
+			name = data;
+			path = ../../data;
+			sourceTree = "<group>";
+		};
+		D9C49EFA1BF1D2C700831032 /* lang */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49EFB1BF1D2C700831032 /* ja */,
+			);
+			name = lang;
+			path = ../../lang;
+			sourceTree = "<group>";
+		};
+		D9C49EFB1BF1D2C700831032 /* ja */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49EFC1BF1D2C700831032 /* l3diskex.mo */,
+				D9C49EFD1BF1D2C700831032 /* l3diskex.po */,
+			);
+			path = ja;
+			sourceTree = "<group>";
+		};
+		D9C49F071BF1D4E500831032 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				D9C49E7A1BF1BD8700831032 /* Info.plist */,
+				D9C49F051BF1D4CB00831032 /* l3diskex.icns */,
+				D9C49EF31BF1D26400831032 /* data */,
+				D9C49EFA1BF1D2C700831032 /* lang */,
+			);
+			name = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D9C49E561BF1BCA200831032 /* l3diskex */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D9C49E741BF1BCA300831032 /* Build configuration list for PBXNativeTarget "l3diskex" */;
+			buildPhases = (
+				D9C49E531BF1BCA200831032 /* Sources */,
+				D9C49E541BF1BCA200831032 /* Frameworks */,
+				D9C49E551BF1BCA200831032 /* Resources */,
+				D9C49EFF1BF1D37200831032 /* CopyFiles */,
+				D9C49F031BF1D39000831032 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = l3diskex;
+			productName = l3diskex;
+			productReference = D9C49E571BF1BCA200831032 /* l3diskex.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		D9C49E4F1BF1BCA200831032 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0640;
+				ORGANIZATIONNAME = Sasaji;
+				TargetAttributes = {
+					D9C49E561BF1BCA200831032 = {
+						CreatedOnToolsVersion = 6.4;
+					};
+				};
+			};
+			buildConfigurationList = D9C49E521BF1BCA200831032 /* Build configuration list for PBXProject "l3diskex" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = D9C49E4E1BF1BCA200831032;
+			productRefGroup = D9C49E581BF1BCA200831032 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D9C49E561BF1BCA200831032 /* l3diskex */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D9C49E551BF1BCA200831032 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D9C49F061BF1D4CB00831032 /* l3diskex.icns in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D9C49E531BF1BCA200831032 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */,
+				D9C49EAD1BF1BDC000831032 /* result.cpp in Sources */,
+				D9C49EAF1BF1BDC000831032 /* sectorbox.cpp in Sources */,
+				D9C49EB11BF1BDC000831032 /* uibindump.cpp in Sources */,
+				D9C49EB31BF1BDC000831032 /* uidiskattr.cpp in Sources */,
+				D9C49EB51BF1BDC000831032 /* uidisklist.cpp in Sources */,
+				D9C49EB71BF1BDC000831032 /* uifilelist.cpp in Sources */,
+				D9C49EB91BF1BDC000831032 /* uirawdisk.cpp in Sources */,
+				D9C49EBB1BF1BDC000831032 /* utils.cpp in Sources */,
+				D9C49E8C1BF1BDB100831032 /* basicfmt.cpp in Sources */,
+				D9C49E8E1BF1BDB100831032 /* charcodes.cpp in Sources */,
+				D9C49E911BF1BDB100831032 /* config.cpp in Sources */,
+				D9D2D4CA1BFF12F300AA70F8 /* rawexpbox.cpp in Sources */,
+				D9C49E931BF1BDB100831032 /* diskd88.cpp in Sources */,
+				D9C49E951BF1BDB100831032 /* diskparambox.cpp in Sources */,
+				D9C49E971BF1BDB100831032 /* intnamebox.cpp in Sources */,
+				D9C49E9A1BF1BDB100831032 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		D9C49E721BF1BCA300831032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++98";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DYLIB_CURRENT_VERSION = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(WX_WIDGET_INCLUDE)",
+				);
+				LIBRARY_SEARCH_PATHS = "$(WX_WIDGET_LIB)";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = "$(WX_WIDGET_CFLAGS)";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"$(WX_WIDGET_LIBS)",
+					"$(WX_WIDGET_LDFLAGS)",
+				);
+				SDKROOT = macosx;
+				WX_H = wx_osx_cocoau_;
+				WX_WIDGET_BASE = "../../../../../../Devel/wxWidgets-3.0.2/";
+				WX_WIDGET_CFLAGS = "-D_FILE_OFFSET_BITS=64 -DwxDEBUG_LEVEL=0 -D__WXMAC__ -D__WXOSX__ -D__WXOSX_COCOA__";
+				WX_WIDGET_DIR = "$(WX_WIDGET_BASE)build_debug_static_unicode/";
+				WX_WIDGET_INCLUDE = "$(WX_WIDGET_DIR)lib/wx/include/osx_cocoa-unicode-static-3.0 $(WX_WIDGET_BASE)include";
+				WX_WIDGET_LDFLAGS = "-lz -lpthread -liconv -lexpat";
+				WX_WIDGET_LIB = "$(WX_WIDGET_DIR)lib/";
+				WX_WIDGET_LIBS = "-lwxscintilla-3.0 -lwxregexu-3.0 -lwxtiff-3.0 -lwxjpeg-3.0 -lwxpng-3.0 -lwx_baseu-3.0 -lwx_baseu_xml-3.0 -lwx_baseu_net-3.0 -l$(WX_H)adv-3.0 -l$(WX_H)aui-3.0 -l$(WX_H)core-3.0 -l$(WX_H)gl-3.0 -l$(WX_H)html-3.0 -l$(WX_H)media-3.0 -l$(WX_H)propgrid-3.0 -l$(WX_H)qa-3.0 -l$(WX_H)ribbon-3.0 -l$(WX_H)richtext-3.0 -l$(WX_H)stc-3.0 -l$(WX_H)xrc-3.0";
+			};
+			name = Debug;
+		};
+		D9C49E731BF1BCA300831032 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++98";
+				CLANG_CXX_LIBRARY = "libstdc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DYLIB_CURRENT_VERSION = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(WX_WIDGET_INCLUDE)",
+				);
+				LIBRARY_SEARCH_PATHS = "$(WX_WIDGET_LIB)";
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = "$(WX_WIDGET_CFLAGS)";
+				OTHER_CPLUSPLUSFLAGS = "$(OTHER_CFLAGS)";
+				OTHER_LDFLAGS = (
+					"$(WX_WIDGET_LIBS)",
+					"$(WX_WIDGET_LDFLAGS)",
+				);
+				SDKROOT = macosx;
+				WX_H = wx_osx_cocoau_;
+				WX_WIDGET_BASE = "../../../../../../Devel/wxWidgets-3.0.2/";
+				WX_WIDGET_CFLAGS = "-D_FILE_OFFSET_BITS=64 -DwxDEBUG_LEVEL=0 -D__WXMAC__ -D__WXOSX__ -D__WXOSX_COCOA__";
+				WX_WIDGET_DIR = "$(WX_WIDGET_BASE)build_debug_static_unicode/";
+				WX_WIDGET_INCLUDE = "$(WX_WIDGET_DIR)lib/wx/include/osx_cocoa-unicode-static-3.0 $(WX_WIDGET_BASE)include";
+				WX_WIDGET_LDFLAGS = "-lz -lpthread -liconv -lexpat";
+				WX_WIDGET_LIB = "$(WX_WIDGET_DIR)lib/";
+				WX_WIDGET_LIBS = "-lwxscintilla-3.0 -lwxregexu-3.0 -lwxtiff-3.0 -lwxjpeg-3.0 -lwxpng-3.0 -lwx_baseu-3.0 -lwx_baseu_xml-3.0 -lwx_baseu_net-3.0 -l$(WX_H)adv-3.0 -l$(WX_H)aui-3.0 -l$(WX_H)core-3.0 -l$(WX_H)gl-3.0 -l$(WX_H)html-3.0 -l$(WX_H)media-3.0 -l$(WX_H)propgrid-3.0 -l$(WX_H)qa-3.0 -l$(WX_H)ribbon-3.0 -l$(WX_H)richtext-3.0 -l$(WX_H)stc-3.0 -l$(WX_H)xrc-3.0";
+			};
+			name = Release;
+		};
+		D9C49E751BF1BCA300831032 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/../../src/res/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		D9C49E761BF1BCA300831032 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = "$(SRCROOT)/../../src/res/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		D9C49E521BF1BCA200831032 /* Build configuration list for PBXProject "l3diskex" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9C49E721BF1BCA300831032 /* Debug */,
+				D9C49E731BF1BCA300831032 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D9C49E741BF1BCA300831032 /* Build configuration list for PBXNativeTarget "l3diskex" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D9C49E751BF1BCA300831032 /* Debug */,
+				D9C49E761BF1BCA300831032 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = D9C49E4F1BF1BCA200831032 /* Project object */;
+}
