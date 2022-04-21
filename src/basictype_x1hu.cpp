@@ -95,7 +95,7 @@ double DiskBasicTypeX1HU::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting
 	if (basic->GetFatEndGroup() == 0) {
 		wxUint32 end_grp = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() - 1;
 		if (end_grp >= 0x80) {
-			end_grp = 0x80;
+			end_grp += 0x80;
 		}
 		basic->SetFatEndGroup(end_grp);
 	}
@@ -344,15 +344,16 @@ void DiskBasicTypeX1HU::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// FATエリアの初期化
-	fat->Fill(basic->GetFillCodeOnFAT());
+	fat->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));
 	// DIRエリアの初期化
 	dir->ClearRoot();
+
 	// IPL (MZ用)
 	int len = (int)basic->GetVariousStringParam(wxT("IPLString")).Length();
 	if (len > 0) {
 		DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
 		if (sector) {
-			sector->Fill(basic->GetFillCodeOnFAT() ^ 0xff, 32);	// invert
+			sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()), 32);	// invert
 			wxUint8 buf[32];
 			if (len > 32) len = 32;
 			memcpy(buf, basic->GetVariousStringParam(wxT("IPLString")).To8BitData(), len);
@@ -370,13 +371,16 @@ bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	for(wxUint32 gnum = basic->GetFatEndGroup() + 1; gnum <= 0x7f; gnum++) {
 		SetGroupNumber(gnum, 0x8f);
 	}
+
 	// システム領域のグループを埋める
 	int trk_num, sid_num;
 	int sec_num = basic->GetDirEndSector();
 	DiskD88Track *trk = basic->GetManagedTrack(sec_num - 1, &sid_num, &sec_num);
 	trk_num = trk->GetTrackNumber();
 
-	/// FATエリアの初め
+	if (basic->IsDataInverted()) sid_num = 1 - sid_num;
+
+	// FATエリアの初め
 	int sec_pos = basic->CalcSectorPosFromNumForGroup(trk_num, sid_num, sec_num);
 	wxUint32 gend = (sec_pos / basic->GetSectorsPerGroup()); 
 	for(wxUint32 gnum = 0; gnum <= gend; gnum++) {

@@ -1070,7 +1070,7 @@
 		<FATStartSector>15</FATStartSector>
 		<FATEndSector>15</FATEndSector>
 		<FATStartPosition>0</FATStartPosition>
-		<FATEndGroup>79</FATEndGroup>
+		<!-- FATEndGroup>79</FATEndGroup -->
 		<DirStartSector>17</DirStartSector>
 		<DirEndSector>32</DirEndSector>
 		<DirStartPositionOnRoot>32</DirStartPositionOnRoot>
@@ -1121,7 +1121,7 @@
 		<FATStartSector>15</FATStartSector>
 		<FATEndSector>15</FATEndSector>
 		<FATStartPosition>0</FATStartPosition>
-		<FATEndGroup>79</FATEndGroup>
+		<!-- FATEndGroup>79</FATEndGroup -->
 		<DirStartSector>17</DirStartSector>
 		<DirEndSector>32</DirEndSector>
 		<DirStartPositionOnRoot>32</DirStartPositionOnRoot>

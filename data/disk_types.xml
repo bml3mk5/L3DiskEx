@@ -212,6 +212,8 @@
 			<Type p="major">MZ-2D</Type>
 			<Type>N66-1D</Type>
 			<Type>MZFD-2D</Type>
+			<Type>MZHU-2D</Type>
+			<Type>MZHU-2D-INV</Type>
 			<Type p="major">CDOS-2D</Type>
 			<Type p="major">CDOS-2D-INV</Type>
 			<Type>PA-2D</Type>
