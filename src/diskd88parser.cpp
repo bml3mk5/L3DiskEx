@@ -90,7 +90,7 @@ DiskD88Parser::~DiskD88Parser()
 }
 
 /// セクタデータの解析
-wxUint32 DiskD88Parser::ParseSector(int disk_number, int track_number, int sector_nums, DiskD88Track *track)
+wxUint32 DiskD88Parser::ParseSector(int disk_number, int track_number, int &sector_nums, DiskD88Track *track)
 {
 	d88_sector_header_t sector_header;
 
@@ -108,6 +108,10 @@ wxUint32 DiskD88Parser::ParseSector(int disk_number, int track_number, int secto
 	int sector_number = sector_header.id.r;
 	if (sector_number <= 0 || sector_nums < sector_number) {
 		result->SetWarn(DiskD88Result::ERR_ID_SECTOR, disk_number, track_number, sector_header.id.c, sector_header.id.h, sector_header.id.r, sector_nums);
+	}
+	// nums of sector is valid ?
+	if (sector_nums > sector_header.secnums && sector_header.secnums > 2) {
+		sector_nums = sector_header.secnums;
 	}
 	// deleted data ?
 //	if (sector_ptr->deleted != 0) {
@@ -155,6 +159,10 @@ wxUint32 DiskD88Parser::ParseTrack(size_t start_pos, int offset_pos, wxUint32 of
 	int side_number = track_header.id.h;
 	int sector_nums = track_header.secnums;
 	int sector_size_id = track_header.id.n;
+
+	if (sector_nums > 64) {
+		sector_nums = 64;
+	}
 
 	DiskD88Track *track = new DiskD88Track(track_number, side_number, offset_pos, offset, 1);
 
@@ -284,8 +292,14 @@ wxUint32 DiskD88Parser::ParseDisk(size_t start_pos, int disk_number)
 
 		// オフセットがディスクサイズを超えている？
 		if (offset >= disk_size) {
-			result->SetError(DiskD88Result::ERR_OVERFLOW, disk_number, offset, disk_size);
-			break;
+			if (pos < 160) {
+				result->SetError(DiskD88Result::ERR_OVERFLOW, disk_number, offset, disk_size);
+				break;
+			} else {
+				// 一部ヘッダのオフセットが少ないものがある
+				result->SetWarn(DiskD88Result::ERR_OVERFLOW, disk_number, offset, disk_size);
+				break;
+			}
 		}
 
 		ParseTrack(start_pos, pos, offset, disk_number, disk);

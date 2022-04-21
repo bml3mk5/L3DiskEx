@@ -1,7 +1,7 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.2.1
-                                                                2017/07/02
+                                                              Version 0.2.2
+                                                                2017/08/06
 
                             Copyright(C) Sasaji 2015-2017 All Rights Reserved.
 ==============================================================================
@@ -17,7 +17,7 @@
 ● 動作確認環境
 
   ◆Windows ... Windows10 / Windows7 SP1 / WindowsXP SP3
-  ◆MacOSX .... El Capitan(10.11.6)(64bit) / Lion(10.7.5)(64bit)
+  ◆MacOSX .... Sierra(10.12.3) / El Capitan(10.11.6) / Lion(10.7.5)(64bit)
 
 ● インストール
 

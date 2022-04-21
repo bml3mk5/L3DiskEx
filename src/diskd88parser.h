@@ -52,7 +52,7 @@ private:
 	DiskD88File *file;
 	DiskD88Result *result;
 
-	wxUint32 ParseSector(int disk_number, int track_number, int sector_nums, DiskD88Track *track);
+	wxUint32 ParseSector(int disk_number, int track_number, int &sector_nums, DiskD88Track *track);
 	wxUint32 ParseTrack(size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, DiskD88Disk *disk);
 	wxUint32 ParseDisk(size_t start_pos, int disk_number);
 
