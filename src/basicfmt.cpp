@@ -588,6 +588,13 @@ void DiskBasicDirItem::SetFileNameAndAttr(const wxString &filename, int file_typ
 	}
 }
 
+void DiskBasicDirItem::ClearFileNameAndAttr()
+{
+	if (data) {
+		memset(data, 0, sizeof(directory_t));
+	}
+}
+
 int DiskBasicDirItem::GetFileType()
 {
 	return (data->type <= 2 ? data->type : 0);
@@ -694,7 +701,7 @@ bool DiskBasicDirItem::ConvFromNativeNameWithExtension(int format_type, int file
 	gCharCodes.ConvToString(src, 8, dst);
 	dst.Trim(true);
 	if (format_type != 0) {
-		if (ext && ext[0] != 0x00 && ext[0] != 0x20) {
+		if (ext && ext[0] != 0x00 && ext[0] != 0x20 && ext[0] != 0xff) {
 			dst += wxT(".");
 			gCharCodes.ConvToString(ext, 3, dst);
 			dst.Trim(true);
@@ -1370,6 +1377,7 @@ bool DiskBasic::SaveFile(DiskBasicDirItem *item, wxInputStream *istream, const w
 	}
 
 	// ファイル名属性を設定
+	item->ClearFileNameAndAttr();
 	item->SetFileNameAndAttr(filename, file_type, data_type);
 
 	int sizeremain = (int)istream->GetLength();

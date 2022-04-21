@@ -91,6 +91,8 @@ public:
 	void OnFormatDisk(wxCommandEvent& event);
 
 	void OnPropertyDisk(wxCommandEvent& event);
+
+	void OnChar(wxKeyEvent& event);
 	//@}
 	/// @name functions
 	//@{

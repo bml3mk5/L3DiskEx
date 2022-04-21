@@ -31,8 +31,8 @@ void Params::AddRecentFile(const wxString &val)
 	// 追加
 	mRecentFiles.Insert(fpath.GetFullPath(), 0);
 	// 10を超える分は消す
-	if (mRecentFiles.Count() > 10) {
-		mRecentFiles.RemoveAt(10);
+	if (mRecentFiles.Count() > MAX_RECENT_FILES) {
+		mRecentFiles.RemoveAt(MAX_RECENT_FILES);
 	}
 }
 
@@ -70,7 +70,7 @@ void Config::Load()
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
 
 	ini->Read(_T("Path"), &mFilePath, mFilePath);
-	for(size_t i=0; i<10; i++) {
+	for(int i=0; i<MAX_RECENT_FILES; i++) {
 		wxString sval;
 		ini->Read(wxString::Format(_T("Recent%d"), i), &sval);
 		if (!sval.IsEmpty()) {
@@ -95,7 +95,7 @@ void Config::Save()
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
 
 	ini->Write(_T("Path"), mFilePath);
-	for(size_t i=0,row=0; row<10 && i<mRecentFiles.Count(); i++) {
+	for(int i=0,row=0; row<MAX_RECENT_FILES && i<(int)mRecentFiles.Count(); i++) {
 		wxString sval = mRecentFiles.Item(i);
 		if (sval.IsEmpty()) continue;
 		ini->Write(wxString::Format(_T("Recent%d"), row), sval);

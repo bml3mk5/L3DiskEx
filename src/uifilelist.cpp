@@ -75,6 +75,7 @@ wxEND_EVENT_TABLE()
 L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
        : wxPanel(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
+	initialized = false;
 	parent   = parentwindow;
 	frame    = parentframe;
 
@@ -122,6 +123,9 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY, _("&Property"));
 
+	// key
+	list->Bind(wxEVT_CHAR, &L3DiskFileList::OnChar, this);
+
 #if 0
 	UINT fno = 0;
 	char fname[257];
@@ -132,6 +136,8 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	} while(fno != 0);
 	::CloseClipboard();
 #endif
+
+	initialized = true;
 }
 
 L3DiskFileList::~L3DiskFileList()
@@ -152,6 +158,8 @@ void L3DiskFileList::OnSize(wxSizeEvent& event)
 /// 選択
 void L3DiskFileList::OnSelectionChanged(wxDataViewEvent& event)
 {
+	if (!initialized) return;
+
 	if (GetSelectedRow() == wxNOT_FOUND) {
 		// 非選択
 		UnselectItem();
@@ -236,6 +244,19 @@ void L3DiskFileList::OnProperty(wxCommandEvent& event)
 	ShowFileAttr();
 }
 
+/// キー押下
+void L3DiskFileList::OnChar(wxKeyEvent& event)
+{
+	switch(event.GetKeyCode()) {
+	case WXK_RETURN:
+		ShowFileAttr();
+		break;
+	case WXK_DELETE:
+		DeleteDataFile();
+		break;
+	}
+}
+
 /// ポップアップメニュー表示
 void L3DiskFileList::ShowPopupMenu()
 {
@@ -305,7 +326,7 @@ void L3DiskFileList::RefreshFiles()
 		lval = dir->Item(i).GetGroupSize();
 		data.push_back( lval >= 0 ? wxNumberFormatter::ToString(lval) : wxT("---") );	// 使用グループ数
 		lval = dir->Item(i).GetStartGroup();
-		data.push_back( wxString::Format(wxT("%02x"), lval));	// 開始グループ
+		data.push_back( wxString::Format(wxT("%02x"), (int)lval));	// 開始グループ
 
 		int track_num = -1;
 		int side_num = -1;

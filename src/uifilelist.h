@@ -57,6 +57,8 @@ private:
 	// BASICフォーマットの情報
 	DiskBasic basic;
 
+	bool initialized;
+
 	int ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg);
 
 public:
@@ -77,6 +79,7 @@ public:
 	void OnDeleteFile(wxCommandEvent& event);
 	void OnRenameFile(wxCommandEvent& event);
 	void OnProperty(wxCommandEvent& event);
+	void OnChar(wxKeyEvent& event);
 	//@}
 
 	void ShowPopupMenu();

@@ -659,6 +659,7 @@ wxEND_EVENT_TABLE()
 L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow)
        : wxDataViewListCtrl(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
+	initialized = false;
 	parent   = parentwindow;
 	frame    = parentframe;
 
@@ -690,6 +691,8 @@ L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *paren
 	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY_SECTOR, _("&Property"));
+
+	initialized = true;
 }
 
 L3DiskRawSector::~L3DiskRawSector()
@@ -701,6 +704,8 @@ L3DiskRawSector::~L3DiskRawSector()
 /// 選択
 void L3DiskRawSector::OnSelectionChanged(wxDataViewEvent& event)
 {
+	if (!initialized) return;
+
 	if (GetSelectedRow() == wxNOT_FOUND || !track) {
 		// 非選択
 		UnselectItem();

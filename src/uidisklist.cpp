@@ -116,6 +116,9 @@ L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY_DISK, _("Disk &Information"));
 
+	// key
+	Bind(wxEVT_CHAR, &L3DiskList::OnChar, this);
+
 	ClearFileName();
 }
 
@@ -229,6 +232,19 @@ void L3DiskList::OnFormatDisk(wxCommandEvent& event)
 void L3DiskList::OnPropertyDisk(wxCommandEvent& event)
 {
 	ShowDiskAttr();
+}
+
+/// キー入力
+void L3DiskList::OnChar(wxKeyEvent& event)
+{
+	switch(event.GetKeyCode()) {
+	case WXK_RETURN:
+		ShowDiskAttr();
+		break;
+	case WXK_DELETE:
+		DeleteDisk();
+		break;
+	}
 }
 
 /// ポップアップメニュー表示

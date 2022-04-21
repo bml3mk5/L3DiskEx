@@ -245,6 +245,7 @@ public:
 
 	void SetFileName(const wxString &filename);
 	void SetFileNameAndAttr(const wxString &filename, int file_type, int data_type);
+	void ClearFileNameAndAttr();
 	int GetFileType();
 	int GetDataType();
 	wxString GetFileNameStr();

@@ -148,6 +148,8 @@ private:
 
 	wxDataViewItem selected_item;
 
+	bool initialized;
+
 public:
 	L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *parent);
 	~L3DiskRawSector();
