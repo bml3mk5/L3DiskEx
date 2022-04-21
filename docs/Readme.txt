@@ -1,9 +1,9 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.4.4
-                                                                2019/12/14
+                                                              Version 0.4.5
+                                                                2020/02/11
 
-                            Copyright(C) Sasaji 2015-2019 All Rights Reserved.
+                            Copyright(C) Sasaji 2015-2020 All Rights Reserved.
 ==============================================================================
 
 ● はじめに
@@ -1052,7 +1052,7 @@
 ・CP/M Operating System Manual - DIGITAL RESERCH
 ・THE PROGRAMMER'S CP/M HANDBOOK - Osborne/McGraw-Hill
 ・Retro PC Gallery
-  (http://www.mindspring.com/~thasegaw/rpcg/index.html)
+  (http://haserin09.la.coocan.jp/index.html)
 ・アルゴの記憶
   (http://www.geocities.co.jp/SiliconValley-Sunnyvale/2521/)
 ・T.Fukui's Classic PC Web

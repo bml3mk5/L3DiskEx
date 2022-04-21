@@ -128,6 +128,7 @@ public:
 	int GetNumberingSector() const;
 	wxString GetDiskName() const;
 	int GetDensity() const;
+	wxUint8 GetDensityValue() const;
 	bool IsWriteProtected() const;
 	int  GetSingleNumber() const;
 	int  GetSingleSectorsPerTrack() const;

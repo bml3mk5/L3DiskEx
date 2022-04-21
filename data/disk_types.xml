@@ -1061,6 +1061,7 @@
 			<Type>L3S1-2HD</Type>
 			<Type p="major">X1HU-2HD</Type>
 			<Type p="major">X1HU-2HD-2D</Type>
+			<Type>OS9-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
@@ -1092,6 +1093,7 @@
 		<Interleave>2</Interleave>
 		<DiskBasicTypes>
 			<Type>N88-2HD</Type>
+			<Type>OS9-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>

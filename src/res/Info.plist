@@ -7,7 +7,7 @@
 	<key>CFBundleExecutable</key>
 	<string>l3diskex</string>
 	<key>CFBundleGetInfoString</key>
-	<string>L3DiskExplorer version APPLICATION_VERSION, (c) 2015-2019 Sasaji</string>
+	<string>L3DiskExplorer version APPLICATION_VERSION, (c) 2015-2020 Sasaji</string>
 	<key>CFBundleIconFile</key>
 	<string>l3diskex.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -19,7 +19,7 @@
 		<string>jp</string>
 	</array>
 	<key>CFBundleLongVersionString</key>
-	<string>APPLICATION_VERSION, (c) 2015-2019 Sasaji</string>
+	<string>APPLICATION_VERSION, (c) 2015-2020 Sasaji</string>
 	<key>CFBundleName</key>
 	<string>L3DiskExproler</string>
 	<key>CFBundlePackageType</key>
@@ -37,6 +37,6 @@
 	<key>LSRequiresCarbon</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright 2015-2019 Sasaji</string>
+	<string>Copyright 2015-2020 Sasaji</string>
 </dict>
 </plist>

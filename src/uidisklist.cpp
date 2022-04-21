@@ -1081,7 +1081,7 @@ bool L3DiskList::InitializeDisk()
 				DiskParam param;
 				dlg.GetParam(param);
 				selected_disk->SetName(dlg.GetDiskName());
-				selected_disk->SetDensity(dlg.GetDensity());
+				selected_disk->SetDensity(dlg.GetDensityValue());
 				selected_disk->SetWriteProtect(dlg.IsWriteProtected());
 				selected_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
 				sts = selected_disk->Rebuild(param, selected_side);
@@ -1232,7 +1232,7 @@ void L3DiskList::ShowDiskAttr()
 		DiskParam param;
 		dlg.GetParam(param);
 		selected_disk->SetName(dlg.GetDiskName());
-		selected_disk->SetDensity(dlg.GetDensity());
+		selected_disk->SetDensity(dlg.GetDensityValue());
 		selected_disk->SetWriteProtect(dlg.IsWriteProtected());
 		selected_disk->SetModify();
 		// ディスク名をセット

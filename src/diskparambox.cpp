@@ -285,18 +285,22 @@ bool DiskParamBox::ValidateAllParam()
 	int sec = GetSectorsPerTrack();
 	int inl = GetInterleave();
 	if (disk_params) {
-		int i = comTemplate->GetSelection();
-		if (i < ((int)disk_params->Count() - 1)) {
-			if (disk_params->Item(i) == NULL) {
-				return false;
+		if (comTemplate) {
+			int i = comTemplate->GetSelection();
+			if (i < ((int)disk_params->Count() - 1)) {
+				if (disk_params->Item(i) == NULL) {
+					return false;
+				}
 			}
 		}
 	} else {
-		int i = comTemplate->GetSelection();
-		int temp_pos = -1;
-		if (i >= 0) temp_pos = (int)(intptr_t)comTemplate->GetClientData((wxUint32)i);
-		if (temp_pos < 0) {
-			return false;
+		if (comTemplate) {
+			int i = comTemplate->GetSelection();
+			int temp_pos = -1;
+			if (i >= 0) temp_pos = (int)(intptr_t)comTemplate->GetClientData((wxUint32)i);
+			if (temp_pos < 0) {
+				return false;
+			}
 		}
 	}
 	if (trk * sid > DISKD88_MAX_TRACKS) {
@@ -488,7 +492,7 @@ void DiskParamBox::SetParamFromDisk(const DiskD88Disk *disk)
 	SetParamToControl(disk);
 	if (txtDiskName) txtDiskName->SetValue(disk->GetName(true));
 	if (chkWprotect) chkWprotect->SetValue(disk->IsWriteProtected());
-	if (comDensity) comDensity->SetSelection(disk->GetDensity());
+	if (comDensity) comDensity->SetSelection(disk->FindDensity(disk->GetDensity()));
 
 	txtTracks->Enable(false);
 	txtSides->Enable(false);
@@ -642,7 +646,7 @@ void DiskParamBox::GetParamForManual(DiskParam &param)
 		GetSectorsPerTrack(),
 		GetSectorSize(),
 		GetNumberingSector(),
-		GetDensity(),
+		GetDensityValue(),
 		GetInterleave(),
 		sd,
 		pt,
@@ -726,11 +730,18 @@ wxString DiskParamBox::GetDiskName() const
 	return txtDiskName ? txtDiskName->GetValue() : wxT("");
 }
 
-/// 密度を返す
+/// 密度（セレクトボックスの位置）を返す
 /// @return 0:2D 1:2DD 2:2HD
 int DiskParamBox::GetDensity() const
 {
 	return comDensity ? comDensity->GetSelection() : 0;
+}
+
+/// 密度を表す値を返す
+/// @return 0x00:2D 0x10:2DD 0x20:2HD
+wxUint8 DiskParamBox::GetDensityValue() const
+{
+	return gDiskDensity[GetDensity()].val;
 }
 
 /// ディスク書き込み禁止か
