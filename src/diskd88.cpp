@@ -325,6 +325,21 @@ DiskD88Sector::~DiskD88Sector()
 	delete [] data_origin;
 }
 
+/// セクタのデータを置き換える
+/// セクタサイズは変更しない
+bool DiskD88Sector::Replace(DiskD88Sector *src_sector)
+{
+	wxUint8 *src_data = src_sector->data;
+	if (!src_data) {
+		// データなし
+		return false;
+	}
+	memset(data, 0, header.size);
+	memcpy(data, src_data, header.size);
+	SetModify();
+	return true;
+}
+
 void DiskD88Sector::SetModify()
 {
 	modified = (memcmp(&header_origin, &header, sizeof(header)) != 0);
@@ -453,6 +468,27 @@ size_t DiskD88Track::Add(DiskD88Sector *newsec)
 	if (!sectors) sectors = new DiskD88Sectors;
 	sectors->Add(newsec);
 	return sectors->Count();
+}
+
+/// トラック内のセクタデータを置き換える
+/// @param [in] src_track
+/// @return 0:正常 -1:エラー 1:置換できないセクタあり
+int DiskD88Track::Replace(DiskD88Track *src_track)
+{
+	int rc = 0;
+	if (!sectors) return -1;
+	for(size_t i=0; i<sectors->Count(); i++) {
+		DiskD88Sector *sector = sectors->Item(i);
+		DiskD88Sector *src_sector = src_track->GetSector(sector->GetSectorNumber());
+		if (!src_sector) {
+			// セクタなし
+			continue;
+		}
+		if (!sector->Replace(src_sector)) {
+			rc = 1;
+		}
+	}
+	return rc;
 }
 
 DiskD88Sector *DiskD88Track::GetSector(int sector_number)
@@ -683,6 +719,7 @@ DiskD88Disk::~DiskD88Disk()
 //	delete [] buffer;
 }
 
+/// ディスクにトラックを追加
 size_t DiskD88Disk::Add(DiskD88Track *newtrk)
 {
 //	if (!tracks) tracks = new DiskD88Tracks(DiskD88Track::Compare);
@@ -690,6 +727,30 @@ size_t DiskD88Disk::Add(DiskD88Track *newtrk)
 	if (!tracks) tracks = new DiskD88Tracks;
 	tracks->Add(newtrk);
 	return tracks->Count();
+}
+
+/// ディスクの内容を置き換える
+/// @param [in] side_number : サイド番号
+/// @param [in] src_disk : 置換元のディスクイメージ
+/// @param [in] src_side_number : 置換元のディスクイメージのサイド番号
+int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_number)
+{
+	int rc = 0;
+	if (!tracks) return -1;
+	for(size_t i=0; i<tracks->Count(); i++) {
+		DiskD88Track *track = tracks->Item(i);
+		int curr_side_number = track->GetSideNumber();
+		if (side_number >= 0) {
+			if (curr_side_number != side_number) {
+				continue;
+			}
+			curr_side_number = src_side_number;
+		}
+		DiskD88Track *src_track = src_disk->GetTrack(track->GetTrackNumber(), curr_side_number);
+		int rct = track->Replace(src_track);
+		if (rct != 0) rc = rct;
+	}
+	return rc;
 }
 
 void DiskD88Disk::SetModify()
@@ -717,10 +778,10 @@ bool DiskD88Disk::IsModified()
 	return modified;
 }
 
-wxString DiskD88Disk::GetName()
+wxString DiskD88Disk::GetName(bool real)
 {
-	wxString name(header.diskname, 16);
-	if (name.IsEmpty()) {
+	wxString name((const char *)header.diskname);
+	if (!real && name.IsEmpty()) {
 		name = _("(no name)");
 	}
 	return name;
@@ -733,6 +794,7 @@ void DiskD88Disk::SetName(const wxString &val)
 		name.Empty();
 	}
 	strncpy((char *)header.diskname, name.ToAscii(), 16);
+	header.diskname[16] = 0;
 }
 
 DiskD88Track *DiskD88Disk::GetTrack(int track_number, int side_number)
@@ -1072,6 +1134,15 @@ void DiskD88Result::SetMessage(int error_number, va_list ap)
 	case ERR_NO_DISK:
 		msg = (_("No disk exists."));
 		break;
+	case ERR_REPLACE:
+		msg = (_("Couldn't replace a part of sector."));
+		break;
+	case ERR_FILE_ONLY_1S:
+		msg = (_("Supported file is only single side and single density (1S)."));
+		break;
+	case ERR_FILE_SAME:
+		msg = (_("Must be the same disk image type."));
+		break;
 	default:
 		msg = wxString::Format(_("Unknown error. code:%d"), error_number);
 		break;
@@ -1204,9 +1275,19 @@ wxUint32 DiskD88Parser::ParseDisk(size_t start_pos, int disk_number)
 	d88_header_t disk_header;
 
 	wxUint32 read_size = (wxUint32)stream->Read((void *)&disk_header, sizeof(d88_header_t)).LastRead();
-//	if (read_size > 0) {
-//		stream->SeekI((int)read_size * -1, wxFromCurrent);
-//	}
+
+	// EOF(0x1a)ならスキップ
+	wxByte *p = (wxByte *)&disk_header;
+	bool all_eot = true;
+	for(wxUint32 pos = 0; pos < read_size; pos++) {
+		if (p[pos] != 0x1a) {
+			all_eot = false;
+			break;
+		}
+	}
+	if (all_eot) {
+		return read_size;
+	}
 
 	// ディスクサイズが小さすぎる
 	if (read_size < sizeof(d88_header_t)) {
@@ -1513,7 +1594,7 @@ int DiskD88::Save(const wxString &filepath)
 	return result.GetValid();
 }
 /// ストリームの内容をファイルに保存
-int DiskD88::SaveDisk(int disk_number, const wxString &filepath)
+int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath)
 {
 	result.Clear();
 	if (!file) {
@@ -1528,7 +1609,12 @@ int DiskD88::SaveDisk(int disk_number, const wxString &filepath)
 	}
 
 	DiskD88Disk *disk = file->GetDisk(disk_number);
-	SaveDisk(disk, &fstream); 
+
+	if (side_number < 0) {
+		SaveDisk(disk, &fstream);
+	} else {
+		SaveDisk(disk, side_number, &fstream); 
+	}
 
 	return result.GetValid();
 }
@@ -1573,6 +1659,40 @@ int DiskD88::SaveDisk(DiskD88Disk *disk, wxOutputStream *stream)
 
 	return result.GetValid();
 }
+/// ディスクの1つサイドだけを保存(1S用)
+int DiskD88::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *stream)
+{
+	if (!disk) {
+		result.SetError(DiskD88Result::ERR_NO_DISK);
+		return result.GetValid();
+	}
+
+	// 1S用のディスクを作成
+	SingleDensities singles;
+	singles.Add(new SingleDensity(-1, -1));
+	DiskParam param("1S", 0, 1, 40, 16, 128, 0, singles);
+
+	DiskD88File tmpfile;
+	DiskD88Creator cr("", param, false, &tmpfile, result);
+	int valid_disk = cr.Create();
+	if (valid_disk != 0) {
+		return valid_disk;
+	}
+
+	DiskD88Disk *tmpdisk = tmpfile.GetDisk(0);
+	if (!tmpdisk) {
+		result.SetError(DiskD88Result::ERR_NO_DATA);
+		return result.GetValid();
+	}
+
+	// 新しいディスクにコピーする
+	valid_disk = tmpdisk->Replace(0, disk, side_number);
+	if (valid_disk != 0) {
+		result.SetError(DiskD88Result::ERR_REPLACE);
+	}
+
+	return SaveDisk(tmpdisk, stream);
+}
 /// ディスクを削除
 bool DiskD88::Delete(size_t disk_number)
 {
@@ -1581,6 +1701,65 @@ bool DiskD88::Delete(size_t disk_number)
 	file->SetModify();
 	return true;
 }
+/// ファイルでディスクを置換
+/// @return 0:正常 -1:エラーあり 1:警告あり
+int DiskD88::ReplaceDisk(int disk_number, int side_number, const wxString &filepath)
+{
+	if (!file) return 0;
+
+	result.Clear();
+
+	wxFileInputStream fstream(filepath);
+	if (!fstream.IsOk()) {
+		result.SetError(DiskD88Result::ERR_CANNOT_OPEN);
+		return -1;
+	}
+
+	DiskD88File tmpfile;
+	DiskD88Parser ps(&fstream, &tmpfile, result);
+	int valid_disk = ps.Parse();
+
+	// エラーあり
+	if (valid_disk < 0) {
+		return valid_disk;
+	}
+
+	// ディスクを選択 
+	DiskD88Disk *disk = file->GetDisk(disk_number);
+	if (!disk) {
+		result.SetError(DiskD88Result::ERR_NO_DATA);
+		return result.GetValid();
+	}
+	DiskD88Disk *src_disk = tmpfile.GetDisk(0);
+	if (!src_disk) {
+		result.SetError(DiskD88Result::ERR_NO_DATA);
+		return result.GetValid();
+	}
+	if (side_number >= 0) {
+		// AB面選択時、対象ディスクは1Sのみ
+		if (src_disk->GetDiskTypeName() != "1S") {
+			result.SetError(DiskD88Result::ERR_FILE_ONLY_1S);
+			return result.GetValid();
+		}
+	} else {
+		// 同じディスクタイプのみ
+		if (src_disk->GetDiskTypeName() != disk->GetDiskTypeName()) {
+			result.SetError(DiskD88Result::ERR_FILE_SAME);
+			return result.GetValid();
+		}
+	}
+
+	int src_side_number = 0;
+	valid_disk = disk->Replace(side_number, src_disk, src_side_number);
+	if (valid_disk != 0) {
+		result.SetError(DiskD88Result::ERR_REPLACE);
+	}
+
+	file->SetModify();
+
+	return valid_disk;
+}
+
 
 /// ディスク名を設定
 bool DiskD88::SetDiskName(size_t disk_number, const wxString &newname)
@@ -1595,11 +1774,11 @@ bool DiskD88::SetDiskName(size_t disk_number, const wxString &newname)
 	}
 	return false;
 }
-const wxString DiskD88::GetDiskName(size_t disk_number)
+const wxString DiskD88::GetDiskName(size_t disk_number, bool real)
 {
 	DiskD88Disk *disk = GetDisk(disk_number);
 	if (!disk) return wxEmptyString;
-	return disk->GetName();
+	return disk->GetName(real);
 }
 
 /// ファイル構造体を作成
@@ -1657,6 +1836,11 @@ int DiskD88::GetDiskTypeNumber(size_t index)
 wxString DiskD88::GetFileName() const
 {
 	return filename.GetFullName();
+}
+
+wxString DiskD88::GetFileNameBase() const
+{
+	return filename.GetName();
 }
 
 wxString DiskD88::GetFilePath() const

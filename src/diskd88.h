@@ -149,6 +149,7 @@ public:
 	DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density = false);
 	~DiskD88Sector();
 
+	bool Replace(DiskD88Sector *src_sector); 
 	int GetSectorNumber() { return num; }
 	bool IsDeleted() { return deleted; }
 	void SetDeletedMark(bool val);
@@ -204,6 +205,7 @@ public:
 	~DiskD88Track();
 
 	size_t Add(DiskD88Sector *newsec);
+	int Replace(DiskD88Track *src_track); 
 	int GetTrackNumber() const { return trk_num; }
 	int GetSideNumber() const { return sid_num; }
 	void SetSideNumber(int val) { sid_num = val; }
@@ -255,9 +257,10 @@ public:
 	~DiskD88Disk();
 
 	size_t Add(DiskD88Track *newtrk);
+	int Replace(int side_number, DiskD88Disk *src_disk, int src_side_number); 
 
 	int GetNumber() const { return num; }
-	wxString GetName();
+	wxString GetName(bool real = false);
 	void SetName(const wxString &val);
 //	int GetDiskType() { return disk_type; }
 
@@ -343,6 +346,9 @@ public:
 		ERR_IGNORE_DATA,
 		ERR_NO_DATA,
 		ERR_NO_DISK,
+		ERR_REPLACE,
+		ERR_FILE_ONLY_1S,
+		ERR_FILE_SAME,
 	};
 
 	void SetMessage(int error_number, va_list ap);
@@ -416,12 +422,14 @@ public:
 	int Open(const wxString &filepath);
 	void Close();
 	int Save(const wxString &filepath);
-	int SaveDisk(int disk_number, const wxString &filepath);
+	int SaveDisk(int disk_number, int side_number, const wxString &filepath);
 	int SaveDisk(DiskD88Disk *disk, wxOutputStream *stream);
+	int SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *stream);
 	bool Delete(size_t disk_number);
+	int ReplaceDisk(int disk_number, int side_number, const wxString &filepath);
 
 	bool SetDiskName(size_t disk_number, const wxString &newname);
-	const wxString GetDiskName(size_t disk_number);
+	const wxString GetDiskName(size_t disk_number, bool real = false);
 
 
 	bool IsModified();
@@ -433,6 +441,7 @@ public:
 	int GetDiskTypeNumber(size_t index);
 
 	wxString GetFileName() const;
+	wxString GetFileNameBase() const;
 	wxString GetFilePath() const;
 	wxString GetPath() const;
 

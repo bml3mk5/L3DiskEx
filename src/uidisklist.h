@@ -85,6 +85,7 @@ public:
 	void OnSaveDisk(wxCommandEvent& event);
 	void OnAddNewDisk(wxCommandEvent& event);
 	void OnAddDiskFromFile(wxCommandEvent& event);
+	void OnReplaceDisk(wxCommandEvent& event);
 	void OnDeleteDisk(wxCommandEvent& event);
 	void OnRenameDisk(wxCommandEvent& event);
 	void OnInitializeDisk(wxCommandEvent& event);
@@ -115,14 +116,17 @@ public:
 	/// @name properties
 	//@{
 	int  GetSelectedDiskNumber();
+	int  GetSelectedDiskSide();
 	bool IsSelectedDiskImage();
 	bool IsSelectedDisk();
+	bool IsSelectedDiskSide();
 	//@}
 
 	enum {
 		IDM_SAVE_DISK = 1,
 		IDM_ADD_DISK_NEW,
 		IDM_ADD_DISK_FROM_FILE,
+		IDM_REPLACE_DISK_FROM_FILE,
 		IDM_DELETE_DISK_FROM_FILE,
 		IDM_RENAME_DISK,
 		IDM_INITIALIZE_DISK,

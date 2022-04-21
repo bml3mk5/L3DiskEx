@@ -67,6 +67,7 @@ wxBEGIN_EVENT_TABLE(L3DiskList, wxDataViewTreeCtrl)
 	EVT_MENU(IDM_SAVE_DISK, L3DiskList::OnSaveDisk)
 	EVT_MENU(IDM_ADD_DISK_NEW, L3DiskList::OnAddNewDisk)
 	EVT_MENU(IDM_ADD_DISK_FROM_FILE, L3DiskList::OnAddDiskFromFile)
+	EVT_MENU(IDM_REPLACE_DISK_FROM_FILE, L3DiskList::OnReplaceDisk)
 	EVT_MENU(IDM_DELETE_DISK_FROM_FILE, L3DiskList::OnDeleteDisk)
 	EVT_MENU(IDM_RENAME_DISK, L3DiskList::OnRenameDisk)
 
@@ -106,7 +107,9 @@ L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	menuPopup->AppendSeparator();
 		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
 		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
-	menuPopup->AppendSubMenu(sm, _("Add &Disk") );
+	menuPopup->AppendSubMenu(sm, _("&Add Disk") );
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
 	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
 	menuPopup->Append(IDM_RENAME_DISK, _("&Rename Disk") );
@@ -204,6 +207,12 @@ void L3DiskList::OnAddDiskFromFile(wxCommandEvent& WXUNUSED(event))
 	frame->ShowAddFileDialog();
 }
 
+/// ディスクイメージを置換
+void L3DiskList::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
+{
+	frame->ShowReplaceDiskDialog(GetSelectedDiskNumber(),GetSelectedDiskSide());
+}
+
 /// ディスクを削除
 void L3DiskList::OnDeleteDisk(wxCommandEvent& WXUNUSED(event))
 {
@@ -259,6 +268,7 @@ void L3DiskList::ShowPopupMenu()
 	menuPopup->Enable(IDM_ADD_DISK_FROM_FILE, opened);
 
 	opened = (opened && (disk != NULL));
+	menuPopup->Enable(IDM_REPLACE_DISK_FROM_FILE, opened);
 	menuPopup->Enable(IDM_SAVE_DISK, opened);
 	menuPopup->Enable(IDM_DELETE_DISK_FROM_FILE, opened);
 	menuPopup->Enable(IDM_RENAME_DISK, opened);
@@ -409,7 +419,7 @@ void L3DiskList::ShowSaveDiskDialog()
 {
 	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return;
-	frame->ShowSaveDiskDialog(cd->GetNumber());
+	frame->ShowSaveDiskDialog(cd->GetNumber(), cd->GetSubNumber());
 }
 
 #if 0
@@ -507,6 +517,14 @@ int L3DiskList::GetSelectedDiskNumber()
 	if (!cd) return wxNOT_FOUND;
 	return cd->GetNumber();
 }
+/// 選択しているディスクイメージのサイド番号を返す
+int L3DiskList::GetSelectedDiskSide()
+{
+	if (!disk) return wxNOT_FOUND;
+	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	if (!cd) return wxNOT_FOUND;
+	return cd->GetSubNumber();
+}
 
 /// ディスクイメージを選択しているか
 bool L3DiskList::IsSelectedDiskImage()
@@ -518,6 +536,12 @@ bool L3DiskList::IsSelectedDiskImage()
 bool L3DiskList::IsSelectedDisk()
 {
 	return selected_disk;
+}
+
+/// ディスクを選択しているか(AB面どちらか)
+bool L3DiskList::IsSelectedDiskSide()
+{
+	return (selected_disk && disk != NULL && disk->GetDiskType() == 1);	// AB面あり;
 }
 
 //

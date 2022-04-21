@@ -203,6 +203,8 @@ wxBEGIN_EVENT_TABLE(L3DiskFrame, wxFrame)
 	EVT_MENU(IDM_ADD_DISK_NEW, L3DiskFrame::OnAddNewDisk)
 	EVT_MENU(IDM_ADD_DISK_FROM_FILE, L3DiskFrame::OnAddDiskFromFile)
 
+	EVT_MENU(IDM_REPLACE_DISK_FROM_FILE, L3DiskFrame::OnReplaceDisk)
+
 	EVT_MENU(IDM_DELETE_DISK_FROM_FILE, L3DiskFrame::OnDeleteDiskFromFile)
 	EVT_MENU(IDM_RENAME_DISK, L3DiskFrame::OnRenameDisk)
 
@@ -260,6 +262,8 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
 		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
 	menuFile->AppendSubMenu(sm, _("Add D&isk") );
+	menuFile->AppendSeparator();
+	menuFile->Append( IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
 	menuFile->AppendSeparator();
 	menuFile->Append( IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
 	menuFile->Append( IDM_RENAME_DISK, _("&Rename Disk") );
@@ -502,7 +506,7 @@ void L3DiskFrame::OnSaveDisk(wxCommandEvent& WXUNUSED(event))
 {
 	L3DiskList *list = GetDiskListPanel();
 	if (!list) return;
-	ShowSaveDiskDialog(list->GetSelectedDiskNumber());
+	ShowSaveDiskDialog(list->GetSelectedDiskNumber(), list->GetSelectedDiskSide());
 }
 /// ディスクを新規に追加
 void L3DiskFrame::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
@@ -513,6 +517,13 @@ void L3DiskFrame::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
 void L3DiskFrame::OnAddDiskFromFile(wxCommandEvent& WXUNUSED(event))
 {
 	ShowAddFileDialog();
+}
+/// ディスクを置換
+void L3DiskFrame::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
+{
+	L3DiskList *list = GetDiskListPanel();
+	if (!list) return;
+	ShowReplaceDiskDialog(list->GetSelectedDiskNumber(), list->GetSelectedDiskSide());
 }
 /// ファイルからディスクを削除
 void L3DiskFrame::OnDeleteDiskFromFile(wxCommandEvent& WXUNUSED(event))
@@ -810,6 +821,7 @@ void L3DiskFrame::UpdateToolBar()
 void L3DiskFrame::UpdateMenuDiskList(L3DiskList *list)
 {
 	bool opened = (list != NULL && list->IsSelectedDiskImage());
+	menuFile->Enable(IDM_REPLACE_DISK_FROM_FILE, opened);
 	menuFile->Enable(IDM_SAVE_DISK, opened);
 	menuFile->Enable(IDM_DELETE_DISK_FROM_FILE, opened);
 	menuFile->Enable(IDM_RENAME_DISK, opened);
@@ -1167,14 +1179,21 @@ void L3DiskFrame::SaveDataFile(const wxString &path)
 	}
 }
 /// ディスクをファイルに保存ダイアログ（指定ディスク）
-void L3DiskFrame::ShowSaveDiskDialog(int disk_number)
+void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number)
 {
-	wxString filename = d88.GetDiskName(disk_number);
-	if (filename.IsEmpty()) filename = d88.GetFileName() + wxString::Format(wxT("%02d"), disk_number);
+
+	wxString filename = d88.GetDiskName(disk_number, true);
+	if (filename.IsEmpty()) {
+		filename = d88.GetFileNameBase();
+		filename += wxString::Format(wxT("_%02d"), disk_number);
+	}
+	if (side_number >= 0) filename += wxString::Format(wxT("_%c"), side_number + 0x41);
 	filename += wxT(".d88");
 
+	wxString title = _("Save Disk");
+	if (side_number >= 0) title += wxString::Format(_(" (side %c)"), side_number + 0x41);
 	L3DiskFileDialog dlg(
-		_("Save Disk"),
+		title,
 		GetRecentPath(),
 		filename,
 		_("Supported files (*.d88)|*.d88|All files (*.*)|*.*"),
@@ -1184,17 +1203,53 @@ void L3DiskFrame::ShowSaveDiskDialog(int disk_number)
 	wxString path = dlg.GetPath();
 
 	if (rc == wxID_OK) {
-		SaveDataDisk(disk_number, path);
+		SaveDataDisk(disk_number, side_number, path);
 	}
 }
 /// 指定したファイルに保存（指定ディスク）
-void L3DiskFrame::SaveDataDisk(int disk_number, const wxString &path)
+void L3DiskFrame::SaveDataDisk(int disk_number, int side_number, const wxString &path)
 {
 	// set recent file path
 	SetRecentPath(path);
 
 	// save disk
-	int rc = d88.SaveDisk(disk_number, path);
+	int rc = d88.SaveDisk(disk_number, side_number, path);
+	if (rc >= 0) {
+		// update window
+		UpdateDataOnWindow(wxEmptyString);
+	}
+	if (rc != 0) {
+		// message
+		L3DiskErrorMessageBox(rc, d88.GetErrorMessage());
+	}
+}
+/// ディスクイメージ置換ダイアログ
+void L3DiskFrame::ShowReplaceDiskDialog(int disk_number, int side_number)
+{
+	wxString title = _("Replace Disk Data");
+	if (side_number >= 0) title += wxString::Format(_(" (side %c)"), side_number + 0x41);
+	L3DiskFileDialog dlg(
+		title,
+		GetRecentPath(),
+		wxEmptyString,
+		_("Supported files (*.d88)|*.d88|All files (*.*)|*.*"),
+		wxFD_OPEN);
+
+	int rc = dlg.ShowModal();
+	wxString path = dlg.GetPath();
+
+	if (rc == wxID_OK) {
+		ReplaceDisk(disk_number, side_number, path);
+	}
+}
+/// 指定したディスクイメージ置換
+void L3DiskFrame::ReplaceDisk(int disk_number, int side_number, const wxString &path)
+{
+	// set recent file path
+	SetRecentPath(path);
+
+	// open disk
+	int rc = d88.ReplaceDisk(disk_number, side_number, path);
 	if (rc >= 0) {
 		// update window
 		UpdateDataOnWindow(wxEmptyString);

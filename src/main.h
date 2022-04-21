@@ -129,6 +129,8 @@ public:
 	void OnAddNewDisk(wxCommandEvent& event);
 	void OnAddDiskFromFile(wxCommandEvent& event);
 
+	void OnReplaceDisk(wxCommandEvent& event);
+
 	void OnDeleteDiskFromFile(wxCommandEvent& event);
 	void OnRenameDisk(wxCommandEvent& event);
 
@@ -186,8 +188,10 @@ public:
 	bool CloseDataFile(bool force = false);
 	void ShowSaveFileDialog();
 	void SaveDataFile(const wxString &path);
-	void ShowSaveDiskDialog(int disk_number);
-	void SaveDataDisk(int disk_number, const wxString &path);
+	void ShowSaveDiskDialog(int disk_number, int side_number);
+	void SaveDataDisk(int disk_number, int side_number, const wxString &path);
+	void ShowReplaceDiskDialog(int disk_number, int side_number);
+	void ReplaceDisk(int disk_number, int side_number, const wxString &path);
 	void DeleteDisk();
 	void RenameDisk();
 	void ExportFileFromDisk();
@@ -254,6 +258,8 @@ public:
 		IDM_ADD_DISK,
 		IDM_ADD_DISK_NEW,
 		IDM_ADD_DISK_FROM_FILE,
+
+		IDM_REPLACE_DISK_FROM_FILE,
 
 		IDM_DELETE_DISK_FROM_FILE,
 		IDM_RENAME_DISK,
