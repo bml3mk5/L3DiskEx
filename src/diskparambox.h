@@ -34,10 +34,12 @@ private:
 	wxTextCtrl *txtSides;
 	wxTextCtrl *txtSectors;
 	wxComboBox *comSecSize;
+	wxTextCtrl *txtSecIntl;
 
 	wxTextCtrl *txtDiskName;
 	wxComboBox *comDensity;
 	wxCheckBox *chkWprotect;
+	wxCheckBox *chkSingle00;
 
 	wxUint32 disable_flags;
 
@@ -55,6 +57,7 @@ public:
 		IDC_TEXT_DISKNAME,
 		IDC_COMBO_DENSITY,
 		IDC_CHK_WPROTECT,
+		IDC_CHK_SINGLE00,
 	};
 
 	/// @name functions
@@ -76,9 +79,11 @@ public:
 	int GetSidesPerDisk();
 	int GetSectorsPerTrack();
 	int GetSectorSize();
+	int GetInterleave();
 	wxString GetDiskName() const;
 	int GetDensity();
 	bool GetWriteProtect();
+	bool IsSingleOnTrack00();
 	void SetDisableFlags(wxUint32 val);
 
 	wxDECLARE_EVENT_TABLE();

@@ -170,6 +170,7 @@ DiskD88Track::DiskD88Track()
 	offset  = 0;
 	sectors = NULL;
 	size    = 0;
+	interleave = 1;
 }
 
 DiskD88Track::DiskD88Track(const DiskD88Track &src)
@@ -177,7 +178,7 @@ DiskD88Track::DiskD88Track(const DiskD88Track &src)
 	// cannot copy
 }
 
-DiskD88Track::DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset)
+DiskD88Track::DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset, int newinterleave)
 {
 	trk_num = newtrknum;
 	sid_num = newsidnum;
@@ -185,6 +186,7 @@ DiskD88Track::DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32
 	offset  = newoffset;
 	sectors = NULL;
 	size    = 0;
+	interleave = newinterleave;
 }
 
 #if 0
@@ -201,6 +203,7 @@ DiskD88Track::DiskD88Track(int newtrknum, int newsidnum, wxUint32 newoffset, Dis
 		}
 	}
 	size    = 0;
+	interleave = 1;
 }
 #endif
 
@@ -389,6 +392,7 @@ DiskD88Disk::DiskD88Disk() : DiskParam()
 
 	memset(&header_origin, 0, sizeof(header_origin));
 
+//	max_track_num = 0;
 //	buffer = NULL;
 //	buffer_size = 0;
 
@@ -400,6 +404,7 @@ DiskD88Disk::DiskD88Disk(const wxString &newname, int newnum, const DiskParam &p
 	num = newnum;
 	memset(&header, 0, sizeof(header));
 	tracks = NULL;
+//	max_track_num = 0;
 
 	memset(&header_origin, 0xff, sizeof(header_origin));
 
@@ -420,11 +425,13 @@ DiskD88Disk::DiskD88Disk(int newnum, const d88_header_t &newhdr) : DiskParam()
 	num = newnum;
 	header = newhdr;
 	tracks = NULL;
+//	max_track_num = 0;
 
 	header_origin = newhdr;
 
 //	buffer = NULL;
 //	buffer_size = 0;
+	this->density = (newhdr.disk_density >> 4);
 
 	modified = false;
 }
@@ -435,6 +442,7 @@ DiskD88Disk::DiskD88Disk(wxUint8 *newbuf, size_t newbuflen, int newnum)
 	num = newnum;
 	write_protect = newwriteprotect;
 	tracks = NULL;
+//	max_track_num = 0;
 
 	buffer = newbuf;
 	buffer_size = newbuflen;
@@ -451,6 +459,7 @@ DiskD88Disk::DiskD88Disk(int newnum, d88_header_t *newhdr, DiskD88Tracks *newtrk
 	header = newhdr;
 //	tracks = new DiskD88Tracks(DiskD88Track::Compare);
 	tracks = new DiskD88Tracks;
+//	max_track_num = 0;
 	if (newtrks) {
 		for(size_t i=0; i<newtrks->Count(); i++) {
 			newtrks->Add(new DiskD88Track(*newtrks->Item(i)));
@@ -481,6 +490,7 @@ size_t DiskD88Disk::Add(DiskD88Track *newtrk)
 //	return tracks->Add(new DiskD88Track(newtrk));
 	if (!tracks) tracks = new DiskD88Tracks;
 	tracks->Add(newtrk);
+//	SetMaxTrackNumber(newtrk->GetTrackNumber());
 	return tracks->Count();
 }
 
@@ -502,6 +512,9 @@ int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_nu
 			curr_side_number = src_side_number;
 		}
 		DiskD88Track *src_track = src_disk->GetTrack(track->GetTrackNumber(), curr_side_number);
+		if (!src_track) {
+			continue;
+		}
 		int rct = track->Replace(src_track);
 		if (rct != 0) rc = rct;
 	}
@@ -822,7 +835,7 @@ bool DiskD88Disk::Initialize(int selected_side)
 bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 {
 	if (selected_side >= 0) {
-		SetDiskParam(param.GetSidesPerDisk(), param.GetTracksPerSide(), param.GetSectorsPerTrack(), param.GetSectorSize(), param.GetDensity(), param.GetSingles()); 
+		SetDiskParam(param.GetSidesPerDisk(), param.GetTracksPerSide(), param.GetSectorsPerTrack(), param.GetSectorSize(), param.GetDensity(), param.GetInterleave(), param.GetSingles()); 
 	} else {
 		SetDiskParam(param);
 	}
@@ -893,6 +906,18 @@ bool DiskD88Disk::ExistTrack(int side_number)
 	}
 	return found;
 }
+
+//void DiskD88Disk::SetMaxTrackNumber(int track_number)
+//{
+//	if (max_track_num < track_number) {
+//		max_track_num = track_number;
+//	}
+//}
+
+//int DiskD88Disk::GetMaxTrackNumber()
+//{
+//	return max_track_num;
+//}
 
 //
 //
@@ -1210,7 +1235,7 @@ int DiskD88::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *stream
 	// 1S用のディスクを作成
 	SingleDensities singles;
 	singles.Add(new SingleDensity(-1, -1));
-	DiskParam param("1S", 0, 1, 40, 16, 128, 0, singles);
+	DiskParam param("1S", 0, 1, 40, 16, 128, 0, disk->GetInterleave(), singles);
 
 	DiskD88File tmpfile;
 	DiskD88Creator cr("", param, false, &tmpfile, result);

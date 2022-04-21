@@ -14,7 +14,7 @@ int DumpBinary(const wxUint8 *buffer, size_t bufsize, wxString &str)
 	int rows = 0;
 	str += wxT("    :");
 	for(size_t col = 0; col < 16; col++) {
-		str += wxString::Format(wxT(" +%x"), col);
+		str += wxString::Format(wxT(" +%x"), (int)col);
 	}
 	str += wxT("\n");
 	str += wxT("-----");
@@ -44,7 +44,7 @@ wxString DumpAscii(const wxUint8 *buffer, size_t bufsize)
 	wxString str;
 	gCharCodes.SetMap(wxT("hankaku"));
 	for(size_t col = 0; col < 16; col++) {
-		str += wxString::Format(wxT("%x"), col);
+		str += wxString::Format(wxT("%x"), (int)col);
 	}
 	str += wxT("\n");
 	for(size_t col = 0; col < 16; col++) {

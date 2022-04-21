@@ -116,13 +116,14 @@ private:
 	int offset_pos;	///< offset position
 	wxUint32 offset;	///< offset on diskimage
 	wxUint32 size;	///< track size
+	int interleave;	///< interleave of sector
 	DiskD88Sectors *sectors;
 
 	DiskD88Track(const DiskD88Track &src);
 
 public:
 	DiskD88Track();
-	DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset);
+	DiskD88Track(int newtrknum, int newsidnum, int newoffpos, wxUint32 newoffset, int newinterleave);
 //	DiskD88Track(int newnum, int newsidnum, wxUint32 newoffset, DiskD88Sectors *newsecs);
 	~DiskD88Track();
 
@@ -137,6 +138,8 @@ public:
 	int GetMaxSectorSize();
 	wxUint32 GetSize() { return size; }
 	void SetSize(wxUint32 val) { size = val; }
+	void SetInterleave(int val) { interleave = val; }
+	int GetInterleave() { return interleave; }
 
 	DiskD88Sectors *GetSectors() { return sectors; }
 	DiskD88Sector  *GetSector(int sector_number);
@@ -167,7 +170,8 @@ private:
 
 	d88_header_t header_origin;
 
-	//	wxUint8 *buffer;
+//	int max_track_num;
+//	wxUint8 *buffer;
 //	size_t buffer_size;
 
 	bool modified;	///< 変更したか
@@ -229,6 +233,9 @@ public:
 	void ClearModify();
 
 	bool ExistTrack(int side_number);
+
+//	void SetMaxTrackNumber(int track_number);
+//	int GetMaxTrackNumber();
 
 	static int Compare(DiskD88Disk *item1, DiskD88Disk *item2);
 };

@@ -38,6 +38,7 @@ public:
 		ERR_REPLACE,
 		ERR_FILE_ONLY_1S,
 		ERR_FILE_SAME,
+		ERR_INTERLEAVE,
 	};
 
 	void SetMessage(int error_number, va_list ap);

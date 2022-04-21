@@ -146,10 +146,12 @@ void L3DiskApp::SetAppPath()
 	app_path = wxFileName::FileName(argv[0]).GetPath(wxPATH_GET_SEPARATOR);
 #ifdef __WXOSX__
 	if (app_path.Find(_T("MacOS")) >= 0) {
-		wxFileName file = wxFileName::FileName(app_path+"../../");
+		wxFileName file = wxFileName::FileName(app_path+"../../../");
 		file.Normalize();
 		ini_path = file.GetPath(wxPATH_GET_SEPARATOR);
-		res_path = ini_path+_T("Contents/Resources/");
+		file = wxFileName::FileName(app_path+"../../Contents/Resources/");
+		file.Normalize();
+		res_path = file.GetPath(wxPATH_GET_SEPARATOR);
 	} else
 #endif
 	{

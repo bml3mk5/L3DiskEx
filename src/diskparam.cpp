@@ -28,7 +28,7 @@ WX_DEFINE_OBJARRAY(SingleDensities);
 /// 全ての値が一致するか
 bool operator==(const SingleDensities &src, const SingleDensities &dst)
 {
-	bool match = false;
+	bool match = true;
 	if (src.Count() != dst.Count()) {
 		match = false;
 	} else {
@@ -43,9 +43,11 @@ bool operator==(const SingleDensities &src, const SingleDensities &dst)
 				}
 			}
 			if (!sm) {
+				match = false;
 				break;
 			}
 		}
+
 	}
 	return match;
 }
@@ -61,11 +63,11 @@ DiskParam::DiskParam(const DiskParam &src)
 {
 	this->SetDiskParam(src);
 }
-DiskParam::DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles)
+DiskParam::DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles)
 {
-	this->SetDiskParam(n_type_name, n_disk_type, n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_density, n_singles);
+	this->SetDiskParam(n_type_name, n_disk_type, n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_density, n_interleave, n_singles);
 }
-void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles)
+void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles)
 {
 	disk_type_name = n_type_name;
 	disk_type = n_disk_type;
@@ -74,10 +76,11 @@ void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, 
 	sectors_per_track = n_sectors_per_track;
 	sector_size = n_sector_size;
 	density = n_density;
+	interleave = n_interleave;
 	if (density < 0 || 2 < density) density = 0;
 	singles = n_singles;
 }
-void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density)
+void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave)
 {
 	disk_type_name = n_type_name;
 	disk_type = n_disk_type;
@@ -87,9 +90,10 @@ void DiskParam::SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, 
 	sector_size = n_sector_size;
 	density = n_density;
 	if (density < 0 || 2 < density) density = 0;
+	interleave = n_interleave;
 	singles.Empty();
 }
-void DiskParam::SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles)
+void DiskParam::SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles)
 {
 	sides_per_disk = n_sides_per_disk;
 	tracks_per_side = n_tracks_per_side;
@@ -97,6 +101,7 @@ void DiskParam::SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_
 	sector_size = n_sector_size;
 	density = n_density;
 	if (density < 0 || 2 < density) density = 0;
+	interleave = n_interleave;
 	singles = n_singles;
 }
 void DiskParam::SetDiskParam(const DiskParam &src)
@@ -108,6 +113,7 @@ void DiskParam::SetDiskParam(const DiskParam &src)
 	sectors_per_track = src.sectors_per_track;
 	sector_size = src.sector_size;
 	density = src.density;
+	interleave = src.interleave;
 	singles = src.singles;
 }
 void DiskParam::ClearDiskParam()
@@ -119,6 +125,7 @@ void DiskParam::ClearDiskParam()
 	sectors_per_track = 0;
 	sector_size = 0;
 	density = 0;
+	interleave = 1;
 	singles.Empty();
 }
 /// 一致するか
@@ -205,8 +212,9 @@ bool DiskTypes::Load(const wxString &data_path)
 		if (item->GetName() == "DiskType") {
 			wxString type_name = item->GetAttribute("name");
 			wxXmlNode *itemnode = item->GetChildren();
-			long typ, spd, tps, spt, ss, den, strk, ssid;
+			long typ, spd, tps, spt, ss, den, inl, strk, ssid;
 			typ = spd = tps = spt = ss = den = strk = ssid = 0;
+			inl = 1;
 			wxString type_str = item->GetAttribute("type");
 			if (!type_str.IsEmpty()) {
 				type_str.ToLong(&typ);
@@ -229,6 +237,9 @@ bool DiskTypes::Load(const wxString &data_path)
 				} else if (itemnode->GetName() == "Density") {
 					str = itemnode->GetNodeContent();
 					str.ToLong(&den);
+				} else if (itemnode->GetName() == "Interleave") {
+					str = itemnode->GetNodeContent();
+					str.ToLong(&inl);
 				} else if (itemnode->GetName() == "SingleDensity") {
 					str = itemnode->GetAttribute("track");
 					if (str.IsEmpty() || str.Upper() == wxT("ALL")) {
@@ -247,7 +258,7 @@ bool DiskTypes::Load(const wxString &data_path)
 				}
 				itemnode = itemnode->GetNext();
 			}
-			DiskParam p(type_name, (int)typ, (int)spd, (int)tps, (int)spt, (int)ss, (int)den, sigs);
+			DiskParam p(type_name, (int)typ, (int)spd, (int)tps, (int)spt, (int)ss, (int)den, (int)inl, sigs);
 			types.Add(p);
 		}
 		item = item->GetNext();

@@ -65,6 +65,9 @@ void DiskD88Result::SetMessage(int error_number, va_list ap)
 	case ERR_FILE_SAME:
 		msg = (_("Must be the same disk image type."));
 		break;
+	case ERR_INTERLEAVE:
+		msg = (_("Couldn't create the disk specified interleave."));
+		break;
 	default:
 		msg = wxString::Format(_("Unknown error. code:%d"), error_number);
 		break;
@@ -153,12 +156,41 @@ wxUint32 DiskD88Parser::ParseTrack(size_t start_pos, int offset_pos, wxUint32 of
 	int sector_nums = track_header.secnums;
 	int sector_size_id = track_header.id.n;
 
-	DiskD88Track *track = new DiskD88Track(track_number, side_number, offset_pos, offset);
+	DiskD88Track *track = new DiskD88Track(track_number, side_number, offset_pos, offset, 1);
 
 	// sectors
 	wxUint32 track_size = 0;
 	for(int sec_pos = 0; sec_pos < sector_nums && result->GetValid() >= 0; sec_pos++) {
 		track_size += ParseSector(disk_number, track_number, sector_nums, track);
+	}
+
+	if (result->GetValid() >= 0) {
+		// interleave of sector check
+		DiskD88Sectors *ss = track->GetSectors();
+		int state = 0;
+		int intl = 0;
+		for(int sec_pos = 0; sec_pos < (int)ss->Count(); sec_pos++) {
+			DiskD88Sector *s = ss->Item(sec_pos);
+			switch(state) {
+			case 1:
+				intl++;
+				if (s->GetSectorNumber() == 2) {
+					state = 2;
+					sec_pos = (int)ss->Count();
+				}
+				break;
+			default:
+				if (s->GetSectorNumber() == 1) {
+					state = 1;
+					intl = 0;
+				}
+				break;
+			}
+		}
+		if (intl <= 0) {
+			intl = 1;
+		}
+		track->SetInterleave(intl);
 	}
 
 	if (result->GetValid() >= 0) {
@@ -187,6 +219,9 @@ wxUint32 DiskD88Parser::ParseTrack(size_t start_pos, int offset_pos, wxUint32 of
 		}
 		// トラックを追加
 		track->SetSize(track_size);
+		if (disk->GetInterleave() < track->GetInterleave()) {
+			disk->SetInterleave(track->GetInterleave());
+		}
 		disk->Add(track);
 	} else {
 		delete track;

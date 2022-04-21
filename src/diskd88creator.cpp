@@ -37,12 +37,35 @@ wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sec
 /// トラックデータの作成
 wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
 {
-	DiskD88Track *track = new DiskD88Track(track_number, side_number, offset_pos, offset);
+	DiskD88Track *track = new DiskD88Track(track_number, side_number, offset_pos, offset, param->GetInterleave());
+	int sector_max = param->GetSectorsPerTrack();
+	int *sector_nums = new int[sector_max + 1];
+
+	// interleave
+	memset(sector_nums, 0, sizeof(int) * (sector_max + 1));
+	int sector_pos = 0;
+	int err = 0;
+	for(int sector_number = 1; sector_number <= sector_max && err == 0; sector_number++) {
+		if (sector_pos >= sector_max) {
+			sector_pos -= sector_max;
+			while (sector_nums[sector_pos] > 0) {
+				sector_pos++;
+				if (sector_pos >= sector_max) {
+					// ?? error
+					err = 1;
+					result->SetError(DiskD88Result::ERR_INTERLEAVE);
+					break;
+				}
+			}
+		}
+		sector_nums[sector_pos] = sector_number;
+		sector_pos += param->GetInterleave();
+	}
 
 	// create sectors
 	wxUint32 track_size = 0;
-	for(int sector_number = 1; sector_number <= param->GetSectorsPerTrack() && result->GetValid() >= 0; sector_number++) {
-		track_size += CreateSector(track_number, side_number, sector_number, track);
+	for(sector_pos = 0; sector_pos < sector_max && result->GetValid() >= 0; sector_pos++) {
+		track_size += CreateSector(track_number, side_number, sector_nums[sector_pos], track);
 	}
 
 	if (result->GetValid() >= 0) {
@@ -53,6 +76,7 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 		delete track;
 	}
 
+	delete [] sector_nums;
 	return track_size;
 }
 

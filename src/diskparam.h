@@ -39,18 +39,19 @@ protected:
 	int sectors_per_track;		///< セクタ数
 	int sector_size;			///< セクタサイズ
 	int density;				///< 0:2D 1:2DD 2:2HD
+	int interleave;				///< セクタの間隔
 	SingleDensities singles;	///< 単密度にするトラック
 
 public:
 	DiskParam();
 	DiskParam(const DiskParam &src);
-	DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles);
+	DiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
 	virtual ~DiskParam() {}
 
 	void SetDiskParam(const DiskParam &src);
-	void SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, const SingleDensities &n_singles);
-	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density);
+	void SetDiskParam(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
+	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave, const SingleDensities &n_singles);
+	void SetDiskParam(const wxString &n_type_name, wxUint32 n_disk_type, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_density, int n_interleave);
 
 	void ClearDiskParam();
 	bool Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, const SingleDensities &n_singles);
@@ -64,6 +65,8 @@ public:
 	int GetSectorsPerTrack() const { return sectors_per_track; }
 	int GetSectorSize() const { return sector_size; }
 	int GetDensity() const { return density; }
+	int GetInterleave() const { return interleave; }
+	void SetInterleave(int val) { interleave = val; }
 	const SingleDensities &GetSingles() const { return singles; }
 };
 

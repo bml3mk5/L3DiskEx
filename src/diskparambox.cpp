@@ -40,6 +40,7 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 			str += wxT("  ") + wxString::Format(wxT("%d"), item->GetSidesPerDisk()) + _("Side(s)/Disk");
 			str += wxT("  ") + wxString::Format(wxT("%d"), item->GetSectorsPerTrack()) + _("Sectors/Track");
 			str += wxT("  ") + wxString::Format(wxT("%d"), item->GetSectorSize()) + _("bytes/Sector");
+			str += wxT("  ") + _("Interleave") + wxString::Format(wxT(":%d"), item->GetInterleave());
 
 			comTemplate->Append(str);
 		}
@@ -57,17 +58,20 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	txtTracks = new wxTextCtrl(this, IDC_TEXT_TRACKS, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtTracks->SetMaxLength(2);
 	hbox->Add(txtTracks, 0);
-	hbox->Add(new wxStaticText(this, wxID_ANY, _("Tracks/Side")), flagsR);
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("Tracks/Side")), flags);
+	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
 	txtSides = new wxTextCtrl(this, IDC_TEXT_SIDES, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSides->SetMaxLength(1);
 	hbox->Add(txtSides, 0);
-	hbox->Add(new wxStaticText(this, wxID_ANY, _("Side(s)/Disk")), flagsR);
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("Side(s)/Disk")), flags);
+	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
 	txtSectors = new wxTextCtrl(this, IDC_TEXT_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSectors->SetMaxLength(2);
 	hbox->Add(txtSectors, 0);
-	hbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flagsR);
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flags);
+	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
 	size.x = 80; size.y = -1;
 	comSecSize = new wxComboBox(this, IDC_COMBO_SECSIZE, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
@@ -77,6 +81,13 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	comSecSize->SetSelection(0);
 	hbox->Add(comSecSize, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("bytes/Sector")), flags);
+	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
+
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("Interleave")), flags);
+	size.x = 40; size.y = -1;
+	txtSecIntl = new wxTextCtrl(this, IDC_TEXT_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
+	txtSecIntl->SetMaxLength(2);
+	hbox->Add(txtSecIntl, 0);
 
 	szrAll->Add(hbox, flags);
 
@@ -95,6 +106,10 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	hbox->Add(comDensity, flagsH);
 	chkWprotect = new wxCheckBox(this, IDC_CHK_WPROTECT, _("Write Protect"));
 	hbox->Add(chkWprotect, flagsH);
+	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
+
+	chkSingle00 = new wxCheckBox(this, IDC_CHK_SINGLE00, _("Single Density on Track 0 and Side 0 (128bytes/sector)"));
+	hbox->Add(chkSingle00, flagsH);
 
 	szrAll->Add(hbox, flags);
 
@@ -155,6 +170,7 @@ bool DiskParamBox::ValidateAllParam()
 	int trk = GetTracksPerSide();
 	int sid = GetSidesPerDisk();
 	int sec = GetSectorsPerTrack();
+	int inl = GetInterleave();
 	if (trk * sid > DISKD88_MAX_TRACKS) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += wxString::Format(_("Track x side size should be less equal %d."), DISKD88_MAX_TRACKS);
@@ -172,7 +188,12 @@ bool DiskParamBox::ValidateAllParam()
 	}
 	if (sec < 1 || 32 < sec) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
-		msg += _("Sector size should be betwern 1 or 32.");
+		msg += _("Sector size should be between 1 to 32.");
+		valid = false;
+	}
+	if (inl < 1 || sec < inl) {
+		if (!msg.IsEmpty()) msg += wxT("\n");
+		msg += _("Interleave size should be between 1 to sector numbers.");
 		valid = false;
 	}
 	if (!valid) {
@@ -195,20 +216,26 @@ void DiskParamBox::SetParamOfIndex(size_t index)
 		txtSides->SetValue(wxString::Format(wxT("%d"), item->GetSidesPerDisk()));
 		txtSectors->SetValue(wxString::Format(wxT("%d"), item->GetSectorsPerTrack()));
 		comSecSize->SetValue(wxString::Format(wxT("%d"), item->GetSectorSize()));
+		txtSecIntl->SetValue(wxString::Format(wxT("%d"), item->GetInterleave()));
 		comDensity->SetSelection(item->GetDensity());
+		chkSingle00->SetValue(item->FindSingleDensity(0, 0));
 
 		txtTracks->Enable(false);
 		txtSides->Enable(false);
 		txtSectors->Enable(false);
 		comSecSize->Enable(false);
+		txtSecIntl->Enable(false);
 		comDensity->Enable(false);
+		chkSingle00->Enable(false);
 	} else {
 		// manual
 		txtTracks->Enable(true);
 		txtSides->Enable(true);
 		txtSectors->Enable(true);
 		comSecSize->Enable(true);
+		txtSecIntl->Enable(true);
 		comDensity->Enable((disable_flags & DiskParamBox_Density) == 0);
+		chkSingle00->Enable(true);
 	}
 	txtDiskName->Enable((disable_flags & DiskParamBox_DiskName) == 0);
 	chkWprotect->Enable((disable_flags & DiskParamBox_WriteProtect) == 0);
@@ -220,13 +247,17 @@ void DiskParamBox::SetParamFromDisk(DiskD88Disk *disk)
 	txtSides->SetValue(wxString::Format(wxT("%d"), disk->GetSidesPerDisk()));
 	txtSectors->SetValue(wxString::Format(wxT("%d"), disk->GetSectorsPerTrack()));
 	comSecSize->SetValue(wxString::Format(wxT("%d"), disk->GetSectorSize()));
+	txtSecIntl->SetValue(wxString::Format(wxT("%d"), disk->GetInterleave()));
 	txtDiskName->SetValue(disk->GetName(true));
 	chkWprotect->SetValue(disk->GetWriteProtect());
 	comDensity->SetValue(disk->GetDensityText());
+	chkSingle00->SetValue(disk->FindSingleDensity(0, 0));
 	txtTracks->Enable(false);
 	txtSides->Enable(false);
 	txtSectors->Enable(false);
 	comSecSize->Enable(false);
+	txtSecIntl->Enable(false);
+	chkSingle00->Enable(false);
 }
 
 /// @param [out] param
@@ -240,8 +271,13 @@ bool DiskParamBox::GetParam(DiskParam &param)
 		return true;
 	} else {
 		// manual
+		SingleDensities sd;
+		if (IsSingleOnTrack00()) {
+			SingleDensity s(0, 0);
+			sd.Add(s);
+		}
 		param.SetDiskParam(wxT(""), 0
-			, GetSidesPerDisk(), GetTracksPerSide(), GetSectorsPerTrack(), GetSectorSize(), GetDensity());
+			, GetSidesPerDisk(), GetTracksPerSide(), GetSectorsPerTrack(), GetSectorSize(), GetDensity(), GetInterleave(), sd);
 		return false;
 	}
 }
@@ -281,6 +317,13 @@ int DiskParamBox::GetSectorSize()
 	return gSectorSizes[idx];
 }
 
+int DiskParamBox::GetInterleave()
+{
+	long val;
+	txtSecIntl->GetValue().ToLong(&val);
+	return (int)val;
+}
+
 wxString DiskParamBox::GetDiskName() const
 {
 	return txtDiskName->GetValue();
@@ -294,6 +337,11 @@ int DiskParamBox::GetDensity()
 bool DiskParamBox::GetWriteProtect()
 {
 	return chkWprotect->GetValue();
+}
+
+bool DiskParamBox::IsSingleOnTrack00()
+{
+	return chkSingle00->GetValue();
 }
 
 void DiskParamBox::SetDisableFlags(wxUint32 val)

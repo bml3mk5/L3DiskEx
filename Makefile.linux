@@ -10,7 +10,7 @@ DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
 #ARCH=-m64
 
 WXDIR=../../../../Devel/wxWidgets-3.0.2
-WXCONFIG_SH=$(WXDIR)/build_release_shared_unicode/wx-config
+WXCONFIG_SH=wx-config
 WXCONFIG_ST=$(WXDIR)/build_release_static_unicode/wx-config
 WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode/wx-config
 
