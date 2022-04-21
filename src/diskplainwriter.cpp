@@ -5,7 +5,6 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#include "diskwriter.h"
 #include "diskplainwriter.h"
 #include <wx/stream.h>
 #include "diskd88.h"
@@ -16,13 +15,8 @@
 //
 // べた形式で保存
 //
-DiskPlainWriter::DiskPlainWriter(DiskWriter *dw, DiskResult *result)
-{
-	this->dw = dw;
-	this->result = result;
-}
-
-DiskPlainWriter::~DiskPlainWriter()
+DiskPlainWriter::DiskPlainWriter(DiskWriter *dw_, DiskResult *result_)
+	: DiskInhWriterBase(dw_, result_)
 {
 }
 
@@ -65,6 +59,11 @@ int DiskPlainWriter::SaveDisk(DiskD88 *image, int disk_number, int side_number, 
 }
 
 /// べたイメージでディスク1つを保存
+/// @param [in,out] disk        ディスク1つのイメージ
+/// @param [in]     side_number サイド番号(0-) / -1のときは両面 
+/// @param [out]    ostream     出力先
+/// @retval  0 正常
+/// @retval -1 エラー
 int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream)
 {
 	if (!disk) {

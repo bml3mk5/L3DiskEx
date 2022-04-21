@@ -1,21 +1,19 @@
-﻿/// @file basictype_fat12.cpp
+﻿/// @file basictype_fat16.cpp
 ///
 /// @brief disk basic fat type
 ///
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#include "basictype_fat12.h"
+#include "basictype_fat16.h"
 #include "basicfmt.h"
-#include "basicdir.h"
 #include "basicdiritem.h"
-#include "logging.h"
 
 
 //
 //
 //
-DiskBasicTypeFAT12::DiskBasicTypeFAT12(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
+DiskBasicTypeFAT16::DiskBasicTypeFAT16(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
 	: DiskBasicTypeFATBase(basic, fat, dir)
 {
 }
@@ -25,31 +23,30 @@ DiskBasicTypeFAT12::DiskBasicTypeFAT12(DiskBasic *basic, DiskBasicFat *fat, Disk
 /// @retval 1.0       正常
 /// @retval 0.0 - 1.0 警告あり
 /// @retval <0.0      エラーあり
-double DiskBasicTypeFAT12::CheckFat(bool is_formatting)
+double DiskBasicTypeFAT16::CheckFat(bool is_formatting)
 {
 	// 重複チェック
-	double valid_ratio = CheckFatDuplicated(is_formatting, 2, 0x1ff);
+	double valid_ratio = CheckFatDuplicated(is_formatting, 2, 0x1fff);
 
 	return valid_ratio;
 }
 
 /// 残りディスクサイズを計算
-void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
+void DiskBasicTypeFAT16::CalcDiskFreeSize(bool wrote)
 {
-	CalcDiskFreeSizeBase(wrote, 2, 0xff8);
+	CalcDiskFreeSizeBase(wrote, 2, 0xfff8);
 }
 
 /// FAT位置をセット
 /// @param [in] num グループ番号(0...)
 /// @param [in] val 値
-void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
+void DiskBasicTypeFAT16::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
-	fat->GetDiskBasicFatArea()->SetData12LE(num, val);
+	fat->GetDiskBasicFatArea()->SetData16LE(num, val);
 }
-
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
-wxUint32 DiskBasicTypeFAT12::GetGroupNumber(wxUint32 num) const
+wxUint32 DiskBasicTypeFAT16::GetGroupNumber(wxUint32 num) const
 {
-	return fat->GetDiskBasicFatArea()->GetData12LE(0, num);
+	return fat->GetDiskBasicFatArea()->GetData16LE(0, num);
 }

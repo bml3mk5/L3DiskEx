@@ -13,8 +13,8 @@
 		<Description lang="ja">CPC DSK形式ファイル</Description>
 	</FileFormatType>
 	<FileFormatType name="fdi">
-		<Description>FDI format file</Description>
-		<Description lang="ja">FDI形式ファイル</Description>
+		<Description>Anex98 FDI format file</Description>
+		<Description lang="ja">Anex98 FDI形式ファイル</Description>
 	</FileFormatType>
 	<FileFormatType name="cqmimg">
 		<Description>CopyQM IMG format file</Description>
@@ -27,6 +27,10 @@
 	<FileFormatType name="difcdim">
 		<Description>DIFC.X DIM format file</Description>
 		<Description lang="ja">DIFC.X DIM形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="v98fdd">
+		<Description>Virtual98 FDD format file</Description>
+		<Description lang="ja">Virtual98 FDD形式ファイル</Description>
 	</FileFormatType>
 
 	<FileType ext="d88">
@@ -87,6 +91,13 @@
 			<DiskTypeHint>2D-40-18-1</DiskTypeHint>
 		</Format>
 		<Description>DSK file</Description>
+	</FileType>
+	<FileType ext="fdd">
+		<Format type="v98fdd" />
+		<Format type="plain">
+			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
+		</Format>
+		<Description>FDD file</Description>
 	</FileType>
 	<FileType ext="fdi">
 		<Format type="fdi" />

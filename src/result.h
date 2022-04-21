@@ -49,6 +49,7 @@ public:
 	virtual int GetValid() const { return valid; }
 
 	static void ShowMessage(int level, const wxArrayString &msgs);
+	static int  ShowErrWarnMessage(int code, const wxArrayString &msgs);
 };
 
 #endif /* _RESULTINFO_H_ */

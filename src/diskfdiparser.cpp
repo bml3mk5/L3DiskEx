@@ -96,13 +96,13 @@ int DiskFDIParser::Check(DiskParser &dp, wxInputStream &istream, const wxArraySt
 		return result->GetValid();
 	}
 	int sides_per_disk = (int)wxUINT32_SWAP_ON_BE(header.sides_per_disk);
-	if (sides_per_disk <= 0 || sides_per_disk > 2) {
+	if (sides_per_disk <= 0 || sides_per_disk > 16) {
 		// invalid
 		result->SetError(DiskResult::ERRV_SIDES_HEADER, 0, sides_per_disk);
 		return result->GetValid();
 	}
 	int tracks_per_side = (int)wxUINT32_SWAP_ON_BE(header.tracks_per_side);
-	if (tracks_per_side < 35 || tracks_per_side > 82) {
+	if (tracks_per_side < 35 || tracks_per_side > 255) {
 		// invalid
 		result->SetError(DiskResult::ERRV_TRACKS_HEADER, 0, tracks_per_side);
 		return result->GetValid();

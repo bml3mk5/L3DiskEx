@@ -223,7 +223,9 @@ void FileTypes::MakeWildcard()
 	wcard_for_load += _("All files");
 	wcard_for_load += wxT(" (*.*)|*.*");
 
+	exts_for_save.Clear();
 	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
+		exts_for_save.Add(n);
 		if (n > 1) wcard_for_save += wxT("|");
 		wcard_for_save += desc[n];
 		wcard_for_save += wxT(" (");
@@ -237,6 +239,7 @@ void FileTypes::MakeWildcard()
 #endif
 	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
 		for(size_t i=0; i<exts[n].Count(); i+=dir) {
+			exts_for_save.Add(n);
 			wcard_for_save += wxT("|");
 			wcard_for_save += desc[n];
 			wcard_for_save += wxT(" (");
@@ -256,6 +259,8 @@ void FileTypes::MakeWildcard()
 }
 
 /// 拡張子をさがす
+/// @param[in] n_ext 拡張子(".d88"など)
+/// @return FileFormat
 FileParam *FileTypes::FindExt(const wxString &n_ext)
 {
 	FileParam *match = NULL;
@@ -271,6 +276,8 @@ FileParam *FileTypes::FindExt(const wxString &n_ext)
 }
 
 /// ディスクイメージフォーマット形式をさがす
+/// @param[in] n_name 名前("d88"など)
+/// @return FileFormat
 FileFormat *FileTypes::FindFormat(const wxString &n_name)
 {
 	FileFormat *match = NULL;
@@ -285,14 +292,19 @@ FileFormat *FileTypes::FindFormat(const wxString &n_name)
 }
 
 /// ファイル保存時の保存形式のフォーマットを返す
+/// @param[in] index ダイアログ内にある拡張子リストの位置
+/// @return FileFormat
 FileFormat *FileTypes::GetFilterForSave(int index)
 {
 	FileFormat *match = NULL;
-	for(int n=1; cFileFormatTypeNamesForSave[n] != NULL; n++) {
-		if (index + 1 == n) {
-			match = FindFormat(cFileFormatTypeNamesForSave[n]);
-			break;
-		}
+	if (index < 0 || index >= (int)exts_for_save.Count()) {
+		return match;
 	}
+	int n = exts_for_save.Item(index);
+	if (n <= 0 || n + 1 >= (int)(sizeof(cFileFormatTypeNamesForSave) / sizeof(const char *))) {
+		return match;
+	}
+	match = FindFormat(cFileFormatTypeNamesForSave[n]);
+
 	return match;
 }

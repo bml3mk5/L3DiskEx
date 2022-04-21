@@ -422,6 +422,23 @@
 			<DataBinary name="DAT" />
 		</AttributesByExtension>
 	</DiskBasicFormat>
+	<DiskBasicFormat type="55" name="MDOS">
+		<HasVolumeName>false</HasVolumeName>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<DirTerminateCode>0</DirTerminateCode>
+		<GroupFinalCode>0xffff</GroupFinalCode>
+		<GroupSystemCode>0xeeee</GroupSystemCode>
+		<GroupUnusedCode>0x0000</GroupUnusedCode>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<FileNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>\"\\,*?/:</InvalidCharSet>
+		</FileNameCharacters>
+	</DiskBasicFormat>
 	<DiskBasicFormat type="61" name="XDOS">
 		<HasVolumeName>true</HasVolumeName>
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -508,6 +525,23 @@
 			<DataAscii name="TXT" value="0x04" mask="0xff" /><!-- ASC -->
 			<System name="CMD" value="0x0a" mask="0xff" /><!-- SYS -->
 		</AttributesByExtension>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="91" name="FALCOM">
+		<HasVolumeName>false</HasVolumeName>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<DirTerminateCode>0</DirTerminateCode>
+		<GroupFinalCode>0xffff</GroupFinalCode>
+		<GroupSystemCode>0xeeee</GroupSystemCode>
+		<GroupUnusedCode>0x0000</GroupUnusedCode>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<FileNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>\"\\,*?/:</InvalidCharSet>
+		</FileNameCharacters>
 	</DiskBasicFormat>
 </DiskBasicFormats>
 
@@ -596,6 +630,9 @@
 	</DiskBasicCategory>
 	<DiskBasicCategory name="FROST">
 		<Description>Frost-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MDOS">
+		<Description>MDOS</Description>
 	</DiskBasicCategory>
 </DiskBasicCategories>
 
@@ -1281,6 +1318,15 @@
 		<Description>FLEX (2D, 18sectors)</Description>
 		<Description lang="ja">FLEX (2D, 18セクタ)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="FLEX-2DD-18" type="8" category="FLEX">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>18</DirEndSector>
+		<Description>FLEX (2DD, 18sectors)</Description>
+		<Description lang="ja">FLEX (2DD, 18セクタ)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="FLEX-2HD" type="8" category="FLEX">
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>26</SectorsPerTrack>
@@ -1288,6 +1334,14 @@
 		<DirStartSector>5</DirStartSector>
 		<DirEndSector>26</DirEndSector>
 		<Description>FLEX (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FLEX-HDD" type="8" category="FLEX">
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>255</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>26</DirEndSector>
+		<Description>FLEX (HDD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="OS9-1D" type="9" category="OS9">
 		<SidesPerDisk>1</SidesPerDisk>
@@ -1827,6 +1881,18 @@
 		<IPLCompareString type="string">Sn88-DOS Ver</IPLCompareString>
 		<Description>Sn88-DOS (2D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="MDOS-2D" type="55" category="MDOS">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<NumberOfFATs>1</NumberOfFATs>
+		<FATStartSector>7</FATStartSector>
+		<FATEndSector>7</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<DirStartSector>6</DirStartSector>
+		<DirEndSector>6</DirEndSector>
+		<Description>MDOS (2D)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="XDOS-2D" type="61" category="XDOS">
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>10</SectorsPerTrack>
@@ -2004,6 +2070,42 @@
 		<IPLString type="string">\x01</IPLString>
 		<Description>MZ Floppy DOS (2D)</Description>
 		<Description lang="ja">MZ Floppy DOS (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FALCOM-2D" type="91" category="FALCOM">
+		<FormatSubType>0</FormatSubType>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>6</DirStartSector>
+		<DirEndSector>7</DirEndSector>
+		<Description>Falcom DOS (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FALCOM-2DD" type="91" category="FALCOM">
+		<FormatSubType>1</FormatSubType>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>6</DirStartSector>
+		<DirEndSector>7</DirEndSector>
+		<Description>Falcom DOS (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FALCOM-2DD-M" type="91" category="FALCOM">
+		<FormatSubType>1</FormatSubType>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>2</DirStartSector>
+		<DirEndSector>7</DirEndSector>
+		<Description>Falcom DOS (2DD for MSX)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FALCOM-2HD" type="91" category="FALCOM">
+		<FormatSubType>1</FormatSubType>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>6</DirStartSector>
+		<DirEndSector>7</DirEndSector>
+		<Description>Falcom DOS (2HD)</Description>
 	</DiskBasicType>
 </DiskBasicTypes>
 </DiskBasics>

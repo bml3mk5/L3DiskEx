@@ -10,7 +10,7 @@
 
 #include "common.h"
 #include "basiccommon.h"
-#include "basictype_fat12.h"
+#include "basictype_msdos.h"
 
 
 /** @class DiskBasicTypeMSX
@@ -21,11 +21,11 @@ DiskBasicParam
 @li MediaID : メディアID
 
 */
-class DiskBasicTypeMSX : public DiskBasicTypeFAT12
+class DiskBasicTypeMSX : public DiskBasicTypeMSDOS
 {
 private:
-	DiskBasicTypeMSX() : DiskBasicTypeFAT12() {}
-	DiskBasicTypeMSX(const DiskBasicType &src) : DiskBasicTypeFAT12(src) {}
+	DiskBasicTypeMSX() : DiskBasicTypeMSDOS() {}
+	DiskBasicTypeMSX(const DiskBasicType &src) : DiskBasicTypeMSDOS(src) {}
 public:
 	DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
 

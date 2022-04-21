@@ -134,7 +134,7 @@ void L3DiskDiskAttr::ShowChangeDisk()
 {
 	if (!disk) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Change Disk Parameter"), -1, disk, NULL, NULL, DiskParamBox::SHOW_TEMPLATE_ALL);
+	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::CHANGE_DISK_PARAM, -1, disk, NULL, NULL, DiskParamBox::SHOW_TEMPLATE_ALL);
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
 		DiskParam param;

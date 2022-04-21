@@ -90,6 +90,8 @@ private:
 	wxString wcard_for_load;	///< ファイルダイアログ用 ワイルドカード
 	wxString wcard_for_save;	///< ファイルダイアログ用 ワイルドカード
 
+	wxArrayInt exts_for_save;
+
 	void MakeWildcard();
 
 public:

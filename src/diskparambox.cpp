@@ -36,14 +36,15 @@ BEGIN_EVENT_TABLE(DiskParamBox, wxDialog)
 	EVT_BUTTON(wxID_OK, DiskParamBox::OnOK)
 END_EVENT_TABLE()
 
-DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags)
-	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags)
+	: wxDialog(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	wxSizerFlags flagsH = wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 4);
 //	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxLEFT | wxTOP | wxBOTTOM, 4).Border(wxRIGHT, 8);
 	wxSize size;
 	long style = 0;
+	this->ope_flags = ope_flags;
 	this->show_flags = show_flags;
 	this->disk_params = params;
 	this->manual_param = manual_param;
@@ -92,19 +93,19 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
 	size.x = 40; size.y = -1;
 	txtTracks = new wxTextCtrl(this, IDC_TEXT_TRACKS, wxEmptyString, wxDefaultPosition, size, style, validigits);
-	txtTracks->SetMaxLength(2);
+	txtTracks->SetMaxLength(4);
 	hbox->Add(txtTracks, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Tracks/Side")), flags);
 	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
 	txtSides = new wxTextCtrl(this, IDC_TEXT_SIDES, wxEmptyString, wxDefaultPosition, size, style, validigits);
-	txtSides->SetMaxLength(1);
+	txtSides->SetMaxLength(2);
 	hbox->Add(txtSides, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Side(s)/Disk")), flags);
 	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
 	txtSectors = new wxTextCtrl(this, IDC_TEXT_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
-	txtSectors->SetMaxLength(2);
+	txtSectors->SetMaxLength(3);
 	hbox->Add(txtSectors, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flags);
 	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
@@ -162,7 +163,7 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 
 	size.x = 40; size.y = -1;
 	txtSingleSectors = new wxTextCtrl(this, IDC_TEXT_SINGLE_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
-	txtSingleSectors->SetMaxLength(2);
+	txtSingleSectors->SetMaxLength(3);
 	sbox->Add(txtSingleSectors, 0);
 	sbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flags);
 	sbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
@@ -204,6 +205,34 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &capt
 		hbox->Add(chkWprotect, flagsH);
 
 		szrAll->Add(hbox, flags);
+	}
+
+	//
+	//
+	//
+
+	switch(ope_flags) {
+	case SELECT_DISK_TYPE:
+		SetTitle(_("Select Disk Type"));
+		break;
+	case ADD_NEW_DISK:
+		SetTitle(_("Add New Disk"));
+		break;
+	case CREATE_NEW_DISK:
+		SetTitle(_("Create New Disk"));
+		break;
+	case CHANGE_DISK_PARAM:
+		SetTitle(_("Change Disk Parameter"));
+		break;
+	case SHOW_DISK_PARAM:
+		SetTitle(_("Disk Parameter"));
+		break;
+	case REBUILD_TRACKS:
+		SetTitle(_("Rebuild Tracks"));
+			break;
+	default:
+		SetTitle(_("Unknown"));
+		break;
 	}
 
 	//
@@ -276,9 +305,10 @@ void DiskParamBox::OnOK(wxCommandEvent& event)
 	}
 }
 
+/// Validate entered parameters
 bool DiskParamBox::ValidateAllParam()
 {
-	bool valid = true;
+	int valid = 0;
 	wxString msg;
 	int trk = GetTracksPerSide();
 	int sid = GetSidesPerDisk();
@@ -306,32 +336,51 @@ bool DiskParamBox::ValidateAllParam()
 	if (trk * sid > DISKD88_MAX_TRACKS) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += wxString::Format(_("Track x side size should be less equal %d."), DISKD88_MAX_TRACKS);
-		valid = false;
+		valid = 1;	// warning
 	}
 	if (trk < 1 || 82 < trk) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += _("Track size should be between 1 to 82.");
-		valid = false;
+		valid = (trk < 1 ? -1 : 1 /* warning */);
 	}
 	if (sid < 1 || 2 < sid) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += _("Side size should be 1 or 2.");
-		valid = false;
+		valid = (sid < 1 ? -1 : 1 /* warning */);
 	}
 	if (sec < 1 || 32 < sec) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += _("Sector size should be between 1 to 32.");
-		valid = false;
+		valid = (sec < 1 || 255 < sec ? -1 : 1 /* warning */);
 	}
 	if (inl < 1 || sec < inl) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
 		msg += _("Interleave size should be between 1 to sector numbers.");
-		valid = false;
+		valid = -1;	// error
 	}
-	if (!valid) {
-		wxMessageBox(msg, _("Invalid parameter"), wxOK | wxICON_EXCLAMATION);
+	if (valid > 0) {
+		if (!msg.IsEmpty()) msg += wxT("\n\n");
+		switch(ope_flags) {
+		case ADD_NEW_DISK:
+		case CREATE_NEW_DISK:
+			msg += _("Are you sure to create a disk forcely?");
+			break;
+		case REBUILD_TRACKS:
+			msg += _("Are you sure to create tracks forcely?");
+			break;
+		case CHANGE_DISK_PARAM:
+			msg += _("Are you sure to change it forcely?");
+			break;
+		default:
+			msg += _("Are you sure to read the disk forcely?");
+			break;
+		}
+		int ans = wxMessageBox(msg, _("Invalid parameter"), wxYES_NO | wxICON_EXCLAMATION);
+		valid = (ans == wxYES ? 0 : -1);
+	} else if (valid < 0) {
+		wxMessageBox(msg, _("Invalid parameter"), wxOK | wxICON_ERROR);
 	}
-	return valid;
+	return (valid >= 0);
 }
 
 void DiskParamBox::OnCategoryChanged(wxCommandEvent& event)

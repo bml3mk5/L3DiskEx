@@ -13,6 +13,7 @@
 #include "diskcqmparser.h"
 #include "disktd0parser.h"
 #include "diskdimparser.h"
+#include "diskvfdparser.h"
 #include "diskd88.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -182,6 +183,11 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 		DiskDIMParser ps(file, mod_flags, result);
 		rc = ps.Parse(*stream, disk_param);
 		support = true;
+	} else if (type == wxT("v98fdd")) {
+		// Virtual98 FDD形式
+		DiskVFDParser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream);
+		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
 		DiskPlainParser ps(file, mod_flags, result);
@@ -234,6 +240,11 @@ int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hi
 		// DIFC.X DIM形式
 		DiskDIMParser ps(file, mod_flags, result);
 		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	} else if (type == wxT("v98fdd")) {
+		// Virtual98 FDD形式
+		DiskVFDParser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ

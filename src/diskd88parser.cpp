@@ -186,9 +186,9 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 	PreParseSectors(istream, disk_number, track_number, side_number, sector_nums, sector_size);
 
 	// セクタ数が多すぎる
-	if (sector_nums > 64) {
-		result->SetWarn(DiskResult::ERRV_TOO_MANY_SECTORS, disk_number, 64, track_number, side_number, sector_nums);
-		sector_nums = 64;
+	if (sector_nums > 255) {
+		result->SetWarn(DiskResult::ERRV_TOO_MANY_SECTORS, disk_number, 255, track_number, side_number, sector_nums);
+		sector_nums = 255;
 	}
 	// セクタがない場合
 	if (sector_nums == 0) {

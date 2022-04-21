@@ -33,6 +33,24 @@ class DiskD88Disk;
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
 {
+public:
+	enum OpeFlags {
+		SELECT_DISK_TYPE = 1,
+		ADD_NEW_DISK,
+		CREATE_NEW_DISK,
+		CHANGE_DISK_PARAM,
+		SHOW_DISK_PARAM,
+		REBUILD_TRACKS,
+	};
+
+	enum en_show_flags {
+		SHOW_ALL			 = 0xffff,
+		SHOW_CATEGORY		 = 0x0001,
+		SHOW_TEMPLATE		 = 0x0002,
+		SHOW_TEMPLATE_ALL	 = 0x0003,
+		SHOW_DISKLABEL_ALL	 = 0x0010,
+	};
+
 private:
 	wxChoice   *comCategory;
 	wxChoice   *comTemplate;
@@ -50,6 +68,7 @@ private:
 	wxTextCtrl *txtSingleSectors;
 	wxComboBox *comSingleSecSize;
 
+	OpeFlags ope_flags;
 	int show_flags;
 	const DiskParamPtrs *disk_params;
 	const DiskParam *manual_param;
@@ -67,7 +86,7 @@ private:
 	void GetParamForManual(DiskParam &param);
 
 public:
-	DiskParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags);
+	DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags);
 
 	enum {
 		IDC_COMBO_CATEGORY = 1,
@@ -87,14 +106,6 @@ public:
 		IDC_RADIO_SINGLE_T0A,
 		IDC_TEXT_SINGLE_SECTORS,
 		IDC_COMBO_SINGLE_SECSIZE,
-	};
-
-	enum en_show_flags {
-		SHOW_ALL			 = 0xffff,
-		SHOW_CATEGORY		 = 0x0001,
-		SHOW_TEMPLATE		 = 0x0002,
-		SHOW_TEMPLATE_ALL	 = 0x0003,
-		SHOW_DISKLABEL_ALL	 = 0x0010,
 	};
 
 	/// @name functions

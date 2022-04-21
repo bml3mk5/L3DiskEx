@@ -47,6 +47,13 @@
 		D94170D52185937B003B8A45 /* basictype_dos80.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94170D22185937B003B8A45 /* basictype_dos80.cpp */; };
 		D94CE7A221BFE8BC001D60AE /* uicdlistctrl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94CE79D21BFE8BC001D60AE /* uicdlistctrl.cpp */; };
 		D94CE7A321BFE8BC001D60AE /* uiclistctrl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D94CE79F21BFE8BC001D60AE /* uiclistctrl.cpp */; };
+		D96E45FC240FC4E000731891 /* basicdiritem_falcom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45EE240FC4E000731891 /* basicdiritem_falcom.cpp */; };
+		D96E45FD240FC4E000731891 /* basicdiritem_mdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45F0240FC4E000731891 /* basicdiritem_mdos.cpp */; };
+		D96E45FE240FC4E000731891 /* basictype_falcom.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45F2240FC4E000731891 /* basictype_falcom.cpp */; };
+		D96E45FF240FC4E000731891 /* basictype_fat_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45F4240FC4E000731891 /* basictype_fat_base.cpp */; };
+		D96E4600240FC4E000731891 /* basictype_fat16.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45F6240FC4E000731891 /* basictype_fat16.cpp */; };
+		D96E4601240FC4E000731891 /* basictype_mdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45F8240FC4E000731891 /* basictype_mdos.cpp */; };
+		D96E4602240FC4E000731891 /* diskvfdparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96E45FA240FC4E000731891 /* diskvfdparser.cpp */; };
 		D96F292321DCA83B0075ACAF /* basicdiritem_frost.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96F291321DCA83B0075ACAF /* basicdiritem_frost.cpp */; };
 		D96F292421DCA83B0075ACAF /* basicdiritem_magical.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96F291521DCA83B0075ACAF /* basicdiritem_magical.cpp */; };
 		D96F292521DCA83B0075ACAF /* basicdiritem_sdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D96F291721DCA83B0075ACAF /* basicdiritem_sdos.cpp */; };
@@ -233,6 +240,20 @@
 		D94CE79F21BFE8BC001D60AE /* uiclistctrl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uiclistctrl.cpp; sourceTree = "<group>"; };
 		D94CE7A021BFE8BC001D60AE /* uiclistctrl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uiclistctrl.h; sourceTree = "<group>"; };
 		D94CE7A121BFE8BC001D60AE /* uicommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = uicommon.h; sourceTree = "<group>"; };
+		D96E45EE240FC4E000731891 /* basicdiritem_falcom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_falcom.cpp; sourceTree = "<group>"; };
+		D96E45EF240FC4E000731891 /* basicdiritem_falcom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_falcom.h; sourceTree = "<group>"; };
+		D96E45F0240FC4E000731891 /* basicdiritem_mdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_mdos.cpp; sourceTree = "<group>"; };
+		D96E45F1240FC4E000731891 /* basicdiritem_mdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_mdos.h; sourceTree = "<group>"; };
+		D96E45F2240FC4E000731891 /* basictype_falcom.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_falcom.cpp; sourceTree = "<group>"; };
+		D96E45F3240FC4E000731891 /* basictype_falcom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_falcom.h; sourceTree = "<group>"; };
+		D96E45F4240FC4E000731891 /* basictype_fat_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_fat_base.cpp; sourceTree = "<group>"; };
+		D96E45F5240FC4E000731891 /* basictype_fat_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_fat_base.h; sourceTree = "<group>"; };
+		D96E45F6240FC4E000731891 /* basictype_fat16.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_fat16.cpp; sourceTree = "<group>"; };
+		D96E45F7240FC4E000731891 /* basictype_fat16.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_fat16.h; sourceTree = "<group>"; };
+		D96E45F8240FC4E000731891 /* basictype_mdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_mdos.cpp; sourceTree = "<group>"; };
+		D96E45F9240FC4E000731891 /* basictype_mdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_mdos.h; sourceTree = "<group>"; };
+		D96E45FA240FC4E000731891 /* diskvfdparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskvfdparser.cpp; sourceTree = "<group>"; };
+		D96E45FB240FC4E000731891 /* diskvfdparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskvfdparser.h; sourceTree = "<group>"; };
 		D96F291321DCA83B0075ACAF /* basicdiritem_frost.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_frost.cpp; sourceTree = "<group>"; };
 		D96F291421DCA83B0075ACAF /* basicdiritem_frost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_frost.h; sourceTree = "<group>"; };
 		D96F291521DCA83B0075ACAF /* basicdiritem_magical.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_magical.cpp; sourceTree = "<group>"; };
@@ -480,6 +501,8 @@
 				D9A3F3CB2143EC160090DA99 /* basicdiritem_cpm.h */,
 				D94170D02185937B003B8A45 /* basicdiritem_dos80.cpp */,
 				D94170D12185937B003B8A45 /* basicdiritem_dos80.h */,
+				D96E45EE240FC4E000731891 /* basicdiritem_falcom.cpp */,
+				D96E45EF240FC4E000731891 /* basicdiritem_falcom.h */,
 				D9917171213296F10086F44F /* basicdiritem_fat8.cpp */,
 				D9917172213296F10086F44F /* basicdiritem_fat8.h */,
 				D9A3F3CC2143EC160090DA99 /* basicdiritem_flex.cpp */,
@@ -500,6 +523,8 @@
 				D936DFE121F5A39700587B31 /* basicdiritem_losa.h */,
 				D96F291521DCA83B0075ACAF /* basicdiritem_magical.cpp */,
 				D96F291621DCA83B0075ACAF /* basicdiritem_magical.h */,
+				D96E45F0240FC4E000731891 /* basicdiritem_mdos.cpp */,
+				D96E45F1240FC4E000731891 /* basicdiritem_mdos.h */,
 				D9917179213296F10086F44F /* basicdiritem_msdos.cpp */,
 				D991717A213296F10086F44F /* basicdiritem_msdos.h */,
 				D991717B213296F10086F44F /* basicdiritem_msx.cpp */,
@@ -542,10 +567,16 @@
 				D9A3F3D12143EC160090DA99 /* basictype_cpm.h */,
 				D94170D22185937B003B8A45 /* basictype_dos80.cpp */,
 				D94170D32185937B003B8A45 /* basictype_dos80.h */,
+				D96E45F2240FC4E000731891 /* basictype_falcom.cpp */,
+				D96E45F3240FC4E000731891 /* basictype_falcom.h */,
+				D96E45F4240FC4E000731891 /* basictype_fat_base.cpp */,
+				D96E45F5240FC4E000731891 /* basictype_fat_base.h */,
 				D991718B213296F10086F44F /* basictype_fat8.cpp */,
 				D991718C213296F10086F44F /* basictype_fat8.h */,
 				D991718D213296F10086F44F /* basictype_fat12.cpp */,
 				D991718E213296F10086F44F /* basictype_fat12.h */,
+				D96E45F6240FC4E000731891 /* basictype_fat16.cpp */,
+				D96E45F7240FC4E000731891 /* basictype_fat16.h */,
 				D9A3F3D22143EC160090DA99 /* basictype_flex.cpp */,
 				D9A3F3D32143EC160090DA99 /* basictype_flex.h */,
 				D991718F213296F10086F44F /* basictype_fm.cpp */,
@@ -562,6 +593,8 @@
 				D9917194213296F10086F44F /* basictype_l32d.h */,
 				D96F291B21DCA83B0075ACAF /* basictype_magical.cpp */,
 				D96F291C21DCA83B0075ACAF /* basictype_magical.h */,
+				D96E45F8240FC4E000731891 /* basictype_mdos.cpp */,
+				D96E45F9240FC4E000731891 /* basictype_mdos.h */,
 				D91F9B282178D5130060D5BB /* basictype_msdos.cpp */,
 				D91F9B292178D5130060D5BB /* basictype_msdos.h */,
 				D9917195213296F10086F44F /* basictype_msx.cpp */,
@@ -630,6 +663,8 @@
 				D99171A5213296F10086F44F /* diskresult.h */,
 				D936DFE821F5A39700587B31 /* disktd0parser.cpp */,
 				D936DFE921F5A39700587B31 /* disktd0parser.h */,
+				D96E45FA240FC4E000731891 /* diskvfdparser.cpp */,
+				D96E45FB240FC4E000731891 /* diskvfdparser.h */,
 				D996BCE0213CF34000902715 /* diskwriter.cpp */,
 				D996BCE1213CF34000902715 /* diskwriter.h */,
 				D99171A6213296F10086F44F /* fileparam.cpp */,
@@ -830,6 +865,7 @@
 				D91F9B2A2178D5130060D5BB /* basictype_msdos.cpp in Sources */,
 				D99171AF213296F10086F44F /* basicdiritem_msx.cpp in Sources */,
 				D99171A8213296F10086F44F /* basiccommon.cpp in Sources */,
+				D96E4601240FC4E000731891 /* basictype_mdos.cpp in Sources */,
 				D99171C0213296F10086F44F /* basictype.cpp in Sources */,
 				D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */,
 				D9C49EAD1BF1BDC000831032 /* result.cpp in Sources */,
@@ -842,6 +878,7 @@
 				D9C49EB31BF1BDC000831032 /* uidiskattr.cpp in Sources */,
 				D9DA0AD421899BAD00649C28 /* basicparambox.cpp in Sources */,
 				D9C49EB51BF1BDC000831032 /* uidisklist.cpp in Sources */,
+				D96E45FE240FC4E000731891 /* basictype_falcom.cpp in Sources */,
 				D99171B8213296F10086F44F /* basictype_fat12.cpp in Sources */,
 				D9C49EB71BF1BDC000831032 /* uifilelist.cpp in Sources */,
 				D936DFED21F5A39700587B31 /* diskcqmparser.cpp in Sources */,
@@ -860,6 +897,7 @@
 				D96F292521DCA83B0075ACAF /* basicdiritem_sdos.cpp in Sources */,
 				D99171B2213296F10086F44F /* basicdiritem_x1hu.cpp in Sources */,
 				D99171B5213296F10086F44F /* basicparam.cpp in Sources */,
+				D96E4600240FC4E000731891 /* basictype_fat16.cpp in Sources */,
 				D9DA0AD02189981800649C28 /* basicdiritem_xdos.cpp in Sources */,
 				D91D52B021BAA9E100CCF847 /* configbox.cpp in Sources */,
 				D99EAF9021C0B856000F5265 /* uicdtreectrl.cpp in Sources */,
@@ -867,6 +905,7 @@
 				D9106E8E2193334C00DF05E9 /* basictype_tfdos.cpp in Sources */,
 				D9C49EBB1BF1BDC000831032 /* utils.cpp in Sources */,
 				D99171AA213296F10086F44F /* basicdiritem_fat8.cpp in Sources */,
+				D96E45FD240FC4E000731891 /* basicdiritem_mdos.cpp in Sources */,
 				D96F292A21DCA83B0075ACAF /* diskfdiparser.cpp in Sources */,
 				D9C49E8C1BF1BDB100831032 /* basicfmt.cpp in Sources */,
 				D99171B1213296F10086F44F /* basicdiritem_n88.cpp in Sources */,
@@ -876,6 +915,7 @@
 				D996BCED213CF34000902715 /* diskplainwriter.cpp in Sources */,
 				D99171BA213296F10086F44F /* basictype_l31s.cpp in Sources */,
 				D923192121A549DA00EB1FCD /* basictype_cdos.cpp in Sources */,
+				D96E45FC240FC4E000731891 /* basicdiritem_falcom.cpp in Sources */,
 				D9A3F3D92143EC160090DA99 /* basicdiritem_flex.cpp in Sources */,
 				D99171B3213296F10086F44F /* basicdiritem.cpp in Sources */,
 				D9A3F3DD2143EC160090DA99 /* basictype_os9.cpp in Sources */,
@@ -910,6 +950,7 @@
 				D91DA3FA21900F3F00C27018 /* diskreplacebox.cpp in Sources */,
 				D99171BD213296F10086F44F /* basictype_mz.cpp in Sources */,
 				D94CE7A221BFE8BC001D60AE /* uicdlistctrl.cpp in Sources */,
+				D96E4602240FC4E000731891 /* diskvfdparser.cpp in Sources */,
 				D94CE7A321BFE8BC001D60AE /* uiclistctrl.cpp in Sources */,
 				D9D2D4CA1BFF12F300AA70F8 /* rawexpbox.cpp in Sources */,
 				D99171BE213296F10086F44F /* basictype_n88.cpp in Sources */,
@@ -921,6 +962,7 @@
 				D9DD181721E2228000B00240 /* basictype_pa.cpp in Sources */,
 				D99171B9213296F10086F44F /* basictype_fm.cpp in Sources */,
 				D99171C4213296F10086F44F /* diskresult.cpp in Sources */,
+				D96E45FF240FC4E000731891 /* basictype_fat_base.cpp in Sources */,
 				D99171BC213296F10086F44F /* basictype_msx.cpp in Sources */,
 				D99171BB213296F10086F44F /* basictype_l32d.cpp in Sources */,
 				D99171AD213296F10086F44F /* basicdiritem_l32d.cpp in Sources */,

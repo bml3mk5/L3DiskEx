@@ -454,6 +454,31 @@ typedef struct st_directory_fp {
 	wxUint8  reserved[2];
 } directory_fp_t;
 
+/// ディレクトリエントリ MDOS (16bytes)
+typedef struct st_directory_mdos {
+	wxUint8  name[8];
+	wxUint8  ext[3];
+	wxUint8  unknown;
+	wxUint16 start_group;	// little endien
+	wxUint16 file_size;		// big endien
+} directory_mdos_t;
+
+/// ディレクトリエントリ Falcom (16bytes)
+typedef struct st_directory_falcom {
+	wxUint8  name[6];
+	wxUint16 exec_addr;
+	wxUint16 start_addr;
+	wxUint16 end_addr;
+	struct {
+		wxUint8 track;
+		wxUint8 sector;
+	} start_group;
+	struct {
+		wxUint8 track;
+		wxUint8 sector;
+	} end_group;
+} directory_falcom_t;
+
 /// ディレクトリエントリ サイズに注意！
 typedef union un_directory {
 	wxUint8				name[16];
@@ -478,6 +503,8 @@ typedef union un_directory {
 	directory_mz_fdos_t	fdos;
 	directory_hu68k_t	hu68k;
 	directory_losa_t	losa;
+	directory_mdos_t	mdos;
+	directory_falcom_t  falcom;
 } directory_t;
 #pragma pack()
 
@@ -505,10 +532,12 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_FROST	= 52,
 	FORMAT_TYPE_MAGICAL	= 53,
 	FORMAT_TYPE_SDOS	= 54,
+	FORMAT_TYPE_MDOS	= 55,
 	FORMAT_TYPE_XDOS	= 61,
 	FORMAT_TYPE_TFDOS	= 71,
 	FORMAT_TYPE_CDOS	= 72,
 	FORMAT_TYPE_MZ_FDOS	= 73,
+	FORMAT_TYPE_FALCOM	= 91,
 };
 
 //////////////////////////////////////////////////////////////////////

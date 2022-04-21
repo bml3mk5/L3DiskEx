@@ -5,7 +5,6 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#include "diskwriter.h"
 #include "diskd88writer.h"
 #include <wx/stream.h>
 #include "diskd88.h"
@@ -16,14 +15,52 @@
 //
 // D88形式で保存
 //
-DiskD88Writer::DiskD88Writer(DiskWriter *dw, DiskResult *result)
+DiskD88Writer::DiskD88Writer(DiskWriter *dw_, DiskResult *result_)
+	: DiskInhWriterBase(dw_, result_)
 {
-	this->dw = dw;
-	this->result = result;
 }
 
-DiskD88Writer::~DiskD88Writer()
+/// ストリームの内容をファイルに保存できるか
+/// @param [in,out] image ディスクイメージ
+/// @param [in]     disk_number ディスク番号(0-) / -1のときは全体 
+/// @param [in]     side_number サイド番号(0-) / -1のときは両面 
+/// @retval  0 正常
+/// @retval  1 警告あり
+/// @retval -1 エラー
+int DiskD88Writer::ValidateDisk(DiskD88 *image, int disk_number, int side_number)
 {
+	result->Clear();
+
+	DiskD88File *file = image->GetFile();
+	if (!file) {
+		result->SetError(DiskResult::ERR_NO_DATA);
+		return result->GetValid();
+	}
+
+	if (disk_number < 0) {
+		// 全体を保存できるか
+		DiskD88Disks *disks = file->GetDisks();
+		if (!disks || disks->Count() <= 0) {
+			result->SetError(DiskResult::ERR_NO_DISK);
+			return result->GetValid();
+		}
+		for(size_t disk_num = 0; disk_num < disks->Count(); disk_num++) {
+			DiskD88Disk *disk = disks->Item(disk_num);
+			DiskD88Tracks *tracks = disk->GetTracks();
+			if (tracks && tracks->Count() > DISKD88_MAX_TRACKS) {
+				result->SetWarn(DiskResult::ERRV_TOO_MANY_TRACKS, disk_num, DISKD88_MAX_TRACKS);
+			}
+		}
+	} else {
+		// 指定したディスクを保存できるか
+		DiskD88Disk *disk = file->GetDisk(disk_number);
+		DiskD88Tracks *tracks = disk->GetTracks();
+		if (tracks && tracks->Count() > DISKD88_MAX_TRACKS) {
+			result->SetWarn(DiskResult::ERRV_TOO_MANY_TRACKS, disk_number, DISKD88_MAX_TRACKS);
+		}
+	}
+
+	return result->GetValid();
 }
 
 /// ストリームの内容をファイルに保存
@@ -106,7 +143,7 @@ int DiskD88Writer::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *
 
 	size_t track_offpos = 0;
 	size_t track_offset = (size_t)disk->GetOffsetStart();
-	for(size_t track_num = track_start; track_num < track_count; track_num += track_step) {
+	for(size_t track_num = track_start; track_num < track_count && track_offpos < DISKD88_MAX_TRACKS; track_num += track_step) {
 		DiskD88Track *track = tracks->Item(track_num);
 		if (!track) continue;
 		size_t track_size = 0;

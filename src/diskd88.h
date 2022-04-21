@@ -366,6 +366,8 @@ public:
 	DiskD88Tracks *GetTracks() const { return tracks; }
 	/// 指定トラックを返す
 	DiskD88Track  *GetTrack(int track_number, int side_number);
+	/// 指定トラックを返す
+	DiskD88Track  *GetTrack(int index);
 	/// 指定オフセット値からトラックを返す
 	DiskD88Track  *GetTrackByOffset(wxUint32 offset);
 	/// 指定セクタを返す
@@ -537,12 +539,14 @@ public:
 	int Check(const wxString &filepath, wxString &file_format, DiskParamPtrs &params, DiskParam &manual_param);
 	/// 閉じる
 	void Close();
+	/// ストリームの内容をファイルに保存できるか
+	int CanSave(const wxString &file_format);
 	/// ストリームの内容をファイルに保存
 	int Save(const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options);
 	/// ストリームの内容をファイルに保存
 	int SaveDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options);
 	/// ディスクを削除
-	bool Delete(size_t disk_number);
+	bool Delete(int disk_number);
 	/// 置換元のディスクを解析
 	int ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskD88File &src_file, DiskD88Disk* &tag_disk);
 	/// ファイルでディスクを置換
@@ -594,6 +598,8 @@ public:
 	const wxArrayString &GetErrorMessage(int maxrow = 20);
 	/// エラーメッセージを表示
 	void  ShowErrorMessage();
+	/// エラー警告メッセージを表示
+	int   ShowErrWarnMessage();
 };
 
 #endif /* _DISKD88_H_ */

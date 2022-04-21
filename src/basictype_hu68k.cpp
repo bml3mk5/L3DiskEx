@@ -30,7 +30,7 @@ double DiskBasicTypeHU68K::ParseParamOnDisk(DiskD88Disk *disk, bool is_formattin
 
 	double valid_ratio = 1.0;
 	if (!basic->GetVariousBoolParam(wxT("IgnoreParameter"))) {
-		valid_ratio = DiskBasicTypeFAT12::ParseParamOnDisk(disk, is_formatting);
+		valid_ratio = ParseMSDOSParamOnDisk(disk, is_formatting);
 	}
 	if (valid_ratio >= 0.0) {
 		// セクタ０

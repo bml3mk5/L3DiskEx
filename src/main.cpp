@@ -518,7 +518,7 @@ wxEND_EVENT_TABLE()
 
 // 翻訳用
 #define DIALOG_BUTTON_STRING _("OK"),_("Cancel")
-#define APPLE_MENU_STRING _("Hide l3diskex"),_("Hide Others"),_("Show All"),_("Quit l3diskex"),_("Services"),_("Preferences…"),_("Window")
+#define APPLE_MENU_STRING _("Hide l3diskex"),_("Hide Others"),_("Show All"),_("Quit l3diskex"),_("Services"),_("Preferences…"),_("Minimize"),_("Zoom"),_("Bring All to Front")
 
 L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 #if defined(__WXOSX__)
@@ -614,6 +614,10 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 	menuView->Append( IDM_FILELIST_COLUMN, _("Columns of File &List...") );
 	menuView->AppendSeparator();
 	menuView->Append( IDM_CHANGE_FONT, _("&Font...") );
+#if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
+	// view system menu on mac os x
+	menuView->AppendSeparator();
+#endif
 	// help menu
 	menuHelp->Append( wxID_ABOUT, _("&About...") );
 
@@ -625,7 +629,7 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 	menuBar->Append( menuView, _("&View") );
 #if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
 	// window system menu on mac os x
-	menuBar->Append( new wxMenu(), _("Window") );
+	menuBar->Append( new wxMenu(), _("&Window") );
 #endif
 	menuBar->Append( menuHelp, _("&Help") );
 
@@ -1488,7 +1492,7 @@ void L3DiskFrame::ShowCreateFileDialog()
 {
 	if (!CloseDataFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Create New Disk"), 0, NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
+	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::CREATE_NEW_DISK, 0, NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1525,7 +1529,7 @@ void L3DiskFrame::ShowAddNewDiskDialog()
 {
 	if (!d88.GetFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, _("Add New Disk"), d88.GetDiskTypeNumber(0), NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
+	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::ADD_NEW_DISK, d88.GetDiskTypeNumber(0), NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1747,7 +1751,7 @@ bool L3DiskFrame::ShowFileSelectDialog(const wxString &path, wxString &file_form
 bool L3DiskFrame::ShowParamSelectDialog(const wxString &path, const DiskParamPtrs &disk_params, const DiskParam *manual_param, DiskParam &param_hint)
 {
 	// パラメータを選択
-	DiskParamBox dlg(this, wxID_ANY, _("Select Disk Type"), 0, NULL, &disk_params, manual_param, DiskParamBox::SHOW_TEMPLATE);
+	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::SELECT_DISK_TYPE, 0, NULL, &disk_params, manual_param, DiskParamBox::SHOW_TEMPLATE);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) {
 		return false;
@@ -1823,8 +1827,17 @@ void L3DiskFrame::SaveDataFile(const wxString &path, const wxString &file_format
 	// set recent file path
 	SetIniRecentPath(path);
 
+	int rc;
+
+	// validate disk
+	rc = d88.CanSave(file_format);
+	if (rc != 0) {
+		rc = d88.ShowErrWarnMessage();
+		if (rc < 0) return;
+	}
+
 	// save disk
-	int rc = d88.Save(path, file_format,
+	rc = d88.Save(path, file_format,
 		DiskWriteOptions(
 			gConfig.IsTrimUnusedData()
 		)
@@ -1883,8 +1896,17 @@ void L3DiskFrame::SaveDataDisk(int disk_number, int side_number, const wxString 
 	// set recent file path
 	SetIniRecentPath(path);
 
+	int rc;
+
+	// validate disk
+	rc = d88.CanSave(file_format);
+	if (rc != 0) {
+		rc = d88.ShowErrWarnMessage();
+		if (rc < 0) return;
+	}
+
 	// save disk
-	int rc = d88.SaveDisk(disk_number, side_number, path, file_format,
+	rc = d88.SaveDisk(disk_number, side_number, path, file_format,
 		DiskWriteOptions(
 			gConfig.IsTrimUnusedData()
 		)

@@ -22,12 +22,14 @@
 #include "basicdiritem_frost.h"
 #include "basicdiritem_magical.h"
 #include "basicdiritem_sdos.h"
+#include "basicdiritem_mdos.h"
 #include "basicdiritem_fp.h"
 #include "basicdiritem_xdos.h"
 #include "basicdiritem_cdos.h"
 #include "basicdiritem_mz_fdos.h"
 #include "basicdiritem_hu68k.h"
 #include "basicdiritem_losa.h"
+#include "basicdiritem_falcom.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
@@ -113,6 +115,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	case FORMAT_TYPE_SDOS:
 		item = new DiskBasicDirItemSDOS(basic);
 		break;
+	case FORMAT_TYPE_MDOS:
+		item = new DiskBasicDirItemMDOS(basic);
+		break;
 	case FORMAT_TYPE_XDOS:
 		item = new DiskBasicDirItemXDOS(basic);
 		break;
@@ -133,6 +138,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 		break;
 	case FORMAT_TYPE_CDOS2:
 		item = new DiskBasicDirItemMSDOS(basic);
+		break;
+	case FORMAT_TYPE_FALCOM:
+		item = new DiskBasicDirItemFalcom(basic);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic);
@@ -209,6 +217,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, int newpos, wxUin
 	case FORMAT_TYPE_SDOS:
 		item = new DiskBasicDirItemSDOS(basic, newsec, newpos, newdata);
 		break;
+	case FORMAT_TYPE_MDOS:
+		item = new DiskBasicDirItemMDOS(basic, newsec, newpos, newdata);
+		break;
 	case FORMAT_TYPE_XDOS:
 		item = new DiskBasicDirItemXDOS(basic, newsec, newpos, newdata);
 		break;
@@ -229,6 +240,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, int newpos, wxUin
 		break;
 	case FORMAT_TYPE_CDOS2:
 		item = new DiskBasicDirItemMSDOS(basic, newsec, newpos, newdata);
+		break;
+	case FORMAT_TYPE_FALCOM:
+		item = new DiskBasicDirItemFalcom(basic, newsec, newpos, newdata);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newsec, newdata);
@@ -306,6 +320,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 	case FORMAT_TYPE_SDOS:
 		item = new DiskBasicDirItemSDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
+	case FORMAT_TYPE_MDOS:
+		item = new DiskBasicDirItemMDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
 	case FORMAT_TYPE_XDOS:
 		item = new DiskBasicDirItemXDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
@@ -326,6 +343,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 		break;
 	case FORMAT_TYPE_CDOS2:
 		item = new DiskBasicDirItemMSDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_FALCOM:
+		item = new DiskBasicDirItemFalcom(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);

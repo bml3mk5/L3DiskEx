@@ -293,6 +293,23 @@
 		<Description>[FLEX]</Description>
 		<Description lang="ja">[FLEX]</Description>
 	</DiskType>
+	<DiskType name="2D-40-5-1-MD">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<SectorSize>1024</SectorSize>
+		<Density>0x00</Density>
+		<Interleave>1</Interleave>
+		<ParticularTrack track="0" side="0" sectors="16" size="256" />
+		<DiskBasicTypes>
+			<Type>MDOS-2D</Type>
+			<Type>FALCOM-2D</Type>
+		</DiskBasicTypes>
+		<DensityName>2D</DensityName>
+		<DensityName lang="ja">2D</DensityName>
+		<Description>, Track0 and side0 is 16sectors</Description>
+		<Description lang="ja">トラック0,サイド0は16セクタ</Description>
+	</DiskType>
 	<DiskType name="2D-40-6-1-FR">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>40</TracksPerSide>
@@ -788,6 +805,23 @@
 		<Description>[SMC-777]</Description>
 		<Description lang="ja">[SMC-777用]</Description>
 	</DiskType>
+	<DiskType name="2DD-80-5-1-MD">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<SectorSize>1024</SectorSize>
+		<Density>0x10</Density>
+		<Interleave>1</Interleave>
+		<ParticularTrack track="0" side="0" sectors="16" size="256" />
+		<DiskBasicTypes>
+			<Type>MDOS-2DD</Type>
+			<Type>FALCOM-2DD</Type>
+		</DiskBasicTypes>
+		<DensityName>2DD</DensityName>
+		<DensityName lang="ja">2DD</DensityName>
+		<Description>, Track0 and side0 is 16sectors</Description>
+		<Description lang="ja">トラック0,サイド0は16セクタ</Description>
+	</DiskType>
 	<DiskType name="2DD-80-8-1">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>80</TracksPerSide>
@@ -821,6 +855,7 @@
 			<Type>MSDOS-2DD</Type>
 			<Type>PCPM-1DD-9-512</Type>
 			<Type>PCPM-2DD-9-512</Type>
+			<Type>FALCOM-2DD-M</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
@@ -902,6 +937,38 @@
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>[OS-9]</Description>
 		<Description lang="ja">[OS-9]</Description>
+	</DiskType>
+	<DiskType name="2DD-80-18-1-FL">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<NumberingSector>track</NumberingSector>
+		<Density>0x10</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>FLEX-2DD-18</Type>
+		</DiskBasicTypes>
+		<DensityName>2DD</DensityName>
+		<DensityName lang="ja">2DD</DensityName>
+		<Description>[FLEX]</Description>
+		<Description lang="ja">[FLEX用]</Description>
+	</DiskType>
+	<DiskType name="2HD-77-5-1-MD">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>5</SectorsPerTrack>
+		<SectorSize>1024</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<ParticularTrack track="0" side="0" sectors="16" size="256" />
+		<DiskBasicTypes>
+			<Type>FALCOM-2HD</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+		<Description>, Track0 and side0 is 16sectors</Description>
+		<Description lang="ja">トラック0,サイド0は16セクタ</Description>
 	</DiskType>
 	<DiskType name="2HD-77-16-1">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1177,5 +1244,18 @@
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>[PC-AT DOS]</Description>
 		<Description lang="ja">[PC-AT DOS用]</Description>
+	</DiskType>
+	<DiskType name="HDD-FL">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>255</TracksPerSide>
+		<SectorsPerTrack>255</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>FLEX-HDD</Type>
+		</DiskBasicTypes>
+		<DensityName>HDD</DensityName>
+		<Description>[FLEX]</Description>
 	</DiskType>
 </DiskTypes>

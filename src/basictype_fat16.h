@@ -1,31 +1,31 @@
-﻿/// @file basictype_fat12.h
+﻿/// @file basictype_fat16.h
 ///
 /// @brief disk basic type
 ///
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FAT12_H_
-#define _BASICTYPE_FAT12_H_
+#ifndef _BASICTYPE_FAT16_H_
+#define _BASICTYPE_FAT16_H_
 
 #include "common.h"
 #include "basiccommon.h"
 #include "basictype_fat_base.h"
 
 
-/** @class DiskBasicTypeFAT12
+/** @class DiskBasicTypeFAT16
 
-@brief FAT12の処理
+@brief FAT16の処理
 
 */
-class DiskBasicTypeFAT12 : public DiskBasicTypeFATBase
+class DiskBasicTypeFAT16 : public DiskBasicTypeFATBase
 {
 protected:
-	DiskBasicTypeFAT12() : DiskBasicTypeFATBase() {}
-	DiskBasicTypeFAT12(const DiskBasicType &src) : DiskBasicTypeFATBase(src) {}
+	DiskBasicTypeFAT16() : DiskBasicTypeFATBase() {}
+	DiskBasicTypeFAT16(const DiskBasicType &src) : DiskBasicTypeFATBase(src) {}
 public:
-	DiskBasicTypeFAT12(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
-	virtual ~DiskBasicTypeFAT12() {}
+	DiskBasicTypeFAT16(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
+	virtual ~DiskBasicTypeFAT16() {}
 
 	/// @name access to FAT area
 	//@{
@@ -74,4 +74,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_FAT12_H_ */
+#endif /* _BASICTYPE_FAT16_H_ */

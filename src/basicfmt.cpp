@@ -29,12 +29,14 @@
 #include "basictype_frost.h"
 #include "basictype_magical.h"
 #include "basictype_sdos.h"
+#include "basictype_mdos.h"
 #include "basictype_fp.h"
 #include "basictype_xdos.h"
 #include "basictype_cdos.h"
 #include "basictype_mz_fdos.h"
 #include "basictype_smc.h"
 #include "basictype_hu68k.h"
+#include "basictype_falcom.h"
 #include "utils.h"
 
 
@@ -230,6 +232,9 @@ void DiskBasic::CreateType()
 	case FORMAT_TYPE_SDOS:
 		type = new DiskBasicTypeSDOS(this, fat, dir);
 		break;
+	case FORMAT_TYPE_MDOS:
+		type = new DiskBasicTypeMDOS(this, fat, dir);
+		break;
 	case FORMAT_TYPE_XDOS:
 		type = new DiskBasicTypeXDOS(this, fat, dir);
 		break;
@@ -250,6 +255,9 @@ void DiskBasic::CreateType()
 		break;
 	case FORMAT_TYPE_CDOS2:
 		type = new DiskBasicTypeMSDOS(this, fat, dir);
+		break;
+	case FORMAT_TYPE_FALCOM:
+		type = new DiskBasicTypeFalcom(this, fat, dir);
 		break;
 	default:
 //		type = new DiskBasicType(this, fat, dir);
@@ -366,6 +374,8 @@ double DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam 
 //	sectors_on_basic = GetSectorsOnBasic() >= 0 ? GetSectorsOnBasic() : GetSectorsPerTrack();
 	// トラック数はBASICで指定している側を優先
 	if (GetTracksPerSideOnBasic() < 0) SetTracksPerSideOnBasic(GetTracksPerSide());
+	// サイド数はBASICで指定している側を優先
+	if (GetSidesPerDiskOnBasic() <= 0) SetSidesPerDiskOnBasic(GetSidesPerDisk());
 
 	CalcDirStartEndSector(GetSectorSize());
 	CreateType();

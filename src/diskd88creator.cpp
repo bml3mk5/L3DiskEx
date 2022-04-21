@@ -28,6 +28,14 @@ DiskD88Creator::~DiskD88Creator()
 }
 
 /// セクタデータの作成
+/// @param[in] track_number      トラック番号
+/// @param[in] side_number       サイド番号
+/// @param[in] sector_number     セクタ番号
+/// @param[in] sector_size       セクタサイズ
+/// @param[in] sectors_per_track セクタ数
+/// @param[in] single_density    単密度か？
+/// @param[in,out] track         トラック
+/// @return 作成したセクタのサイズ（ヘッダ含む）
 wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, bool single_density, DiskD88Track *track)
 {
 	// 特殊なセクタにするか
@@ -46,6 +54,12 @@ wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sec
 }
 
 /// トラックデータの作成
+/// @param[in] track_number トラック番号
+/// @param[in] side_number  サイド番号
+/// @param[in] offset_pos   オフセット番号
+/// @param[in] offset       トラックのあるオフセット位置
+/// @param[in,out] disk     ディスク
+/// @return 作成したトラックサイズ
 wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
 {
 	// トラック作成
@@ -93,6 +107,9 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 }
 
 /// ディスクデータの作成
+/// @param[in] disk_number ディスク番号
+/// @param[in] mod_flags   新規 or 追加？(DiskD88File::MODIFY_NONE/MODIFY_ADD)
+/// @return 作成したディスクサイズ
 wxUint32 DiskD88Creator::CreateDisk(int disk_number, short mod_flags)
 {
 	DiskD88Disk *disk = new DiskD88Disk(file, diskname, disk_number, *param, write_protect);
@@ -101,7 +118,7 @@ wxUint32 DiskD88Creator::CreateDisk(int disk_number, short mod_flags)
 	size_t create_size = 0;
 	int track_num = 0;
 	int side_num = 0;
-	for(int pos = 0; pos < DISKD88_MAX_TRACKS && result->GetValid() >= 0; pos++) {
+	for(int pos = 0; /* pos < DISKD88_MAX_TRACKS && */ result->GetValid() >= 0; pos++) {
 		disk->SetOffsetWithoutHeader(pos, (wxUint32)create_size);
 		disk->SetMaxTrackNumber(pos);
 

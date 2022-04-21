@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: l3basic\n"
-"POT-Creation-Date: 2019-02-15 00:44+0900\n"
-"PO-Revision-Date: 2019-02-15 00:44+0900\n"
+"POT-Creation-Date: 2020-04-29 21:02+0900\n"
+"PO-Revision-Date: 2020-04-29 21:02+0900\n"
 "Last-Translator: Sasaji <s-sasaji@ddo.jp>\n"
 "Language-Team: \n"
 "Language: Japanese\n"
@@ -50,7 +50,7 @@ msgid "File Attributes"
 msgstr "ファイル属性"
 
 #: src/basicdiritem_cdos.cpp:447 src/basicdiritem_mz.cpp:670
-#: src/basicdiritem_tfdos.cpp:380 src/diskparambox.cpp:203
+#: src/basicdiritem_tfdos.cpp:380 src/diskparambox.cpp:204
 #: src/uidiskattr.cpp:60
 msgid "Write Protect"
 msgstr "書き込み禁止"
@@ -153,7 +153,7 @@ msgstr "LAバイナリ"
 msgid "Super User"
 msgstr "スーパーユーザ"
 
-#: src/basicdiritem_magical.cpp:84
+#: src/basicdiritem_magical.cpp:84 src/diskparambox.cpp:234
 msgid "Unknown"
 msgstr "不明"
 
@@ -398,7 +398,7 @@ msgid "Path is too deep."
 msgstr "パスが深すぎます。"
 
 #: src/basicerror.cpp:77 src/basicerror.cpp:112 src/diskresult.cpp:41
-#: src/diskresult.cpp:87
+#: src/diskresult.cpp:89
 #, c-format
 msgid "Unknown error. code:%d"
 msgstr "不明なエラー code:%d"
@@ -483,7 +483,7 @@ msgstr "ファイル'%ls'はすでに削除されています。"
 msgid "File '%ls' already exists."
 msgstr "ファイル'%ls'はすでに存在します。"
 
-#: src/basicfmt.cpp:449
+#: src/basicfmt.cpp:457
 #, c-format
 msgid " [Free:%sbytes(%sgroups)]"
 msgstr " [空き:%sバイト(%sグループ)]"
@@ -626,7 +626,7 @@ msgstr "ディスクイメージ保存時に未使用データを切り落とす
 msgid "Show deleted and hidden files on the file list."
 msgstr "削除した＆隠されたファイルをファイルリストに表示する。"
 
-#: src/configbox.cpp:65 src/main.cpp:758
+#: src/configbox.cpp:65 src/main.cpp:762
 msgid "Export"
 msgstr "エクスポート"
 
@@ -634,7 +634,7 @@ msgstr "エクスポート"
 msgid "Add extension suitable for file attribute to filename."
 msgstr "属性から適した拡張子をファイル名に追加する。"
 
-#: src/configbox.cpp:79 src/main.cpp:761
+#: src/configbox.cpp:79 src/main.cpp:765
 msgid "Import"
 msgstr "インポート"
 
@@ -679,7 +679,7 @@ msgstr "テンポラリのフォルダを選択してください。"
 msgid "Select the application for editing binary data."
 msgstr "バイナリデータを編集するためのアプリケーションを選択してください。"
 
-#: src/diskd88.cpp:1336 src/diskd88.cpp:1347
+#: src/diskd88.cpp:1343 src/diskd88.cpp:1355
 msgid "(no name)"
 msgstr "(名前なし)"
 
@@ -700,118 +700,165 @@ msgstr "各サイドごと(デフォルト)"
 msgid "By each track (for FLEX)"
 msgstr "各トラックごと(FLEX向け)"
 
-#: src/diskparambox.cpp:66
+#: src/diskparambox.cpp:67
 msgid "Category:"
 msgstr "カテゴリー:"
 
-#: src/diskparambox.cpp:70
+#: src/diskparambox.cpp:71
 msgid "All"
 msgstr "すべて"
 
-#: src/diskparambox.cpp:80
+#: src/diskparambox.cpp:81
 msgid "Template:"
 msgstr "テンプレート:"
 
-#: src/diskparambox.cpp:97
+#: src/diskparambox.cpp:98
 msgid "Tracks/Side"
 msgstr "トラック/サイド"
 
-#: src/diskparambox.cpp:103
+#: src/diskparambox.cpp:104
 msgid "Side(s)/Disk"
 msgstr "サイド/ディスク"
 
-#: src/diskparambox.cpp:109 src/diskparambox.cpp:167
+#: src/diskparambox.cpp:110 src/diskparambox.cpp:168
 msgid "Sectors/Track"
 msgstr "セクタ/トラック"
 
-#: src/diskparambox.cpp:119 src/diskparambox.cpp:177
+#: src/diskparambox.cpp:120 src/diskparambox.cpp:178
 msgid "bytes/Sector"
 msgstr "バイト/セクタ"
 
-#: src/diskparambox.cpp:127
+#: src/diskparambox.cpp:128
 msgid "Interleave"
 msgstr "セクタ間隔(インターリーブ)"
 
-#: src/diskparambox.cpp:135
+#: src/diskparambox.cpp:136
 msgid "Numbering Sector"
 msgstr "セクタ付番方法"
 
-#: src/diskparambox.cpp:150 src/rawparambox.cpp:134 src/rawsectorbox.cpp:58
+#: src/diskparambox.cpp:151 src/rawparambox.cpp:134 src/rawsectorbox.cpp:58
 msgid "Single Density"
 msgstr "単密度"
 
-#: src/diskparambox.cpp:152
+#: src/diskparambox.cpp:153
 msgid "None"
 msgstr "なし"
 
-#: src/diskparambox.cpp:154
+#: src/diskparambox.cpp:155
 msgid "All Tracks"
 msgstr "全トラック"
 
-#: src/diskparambox.cpp:156
+#: src/diskparambox.cpp:157
 msgid "Track0 and Side0"
 msgstr "トラック0, サイド0"
 
-#: src/diskparambox.cpp:158
+#: src/diskparambox.cpp:159
 msgid "Track0 and Both Sides"
 msgstr "トラック0, 両面"
 
-#: src/diskparambox.cpp:191
+#: src/diskparambox.cpp:192
 msgid "Disk Name"
 msgstr "ディスク名"
 
-#: src/diskparambox.cpp:304
+#: src/diskparambox.cpp:216
+msgid "Select Disk Type"
+msgstr "ディスク種類を選択"
+
+#: src/diskparambox.cpp:219
+msgid "Add New Disk"
+msgstr "ディスクを追加"
+
+#: src/diskparambox.cpp:222
+msgid "Create New Disk"
+msgstr "ディスクの新規作成"
+
+#: src/diskparambox.cpp:225
+msgid "Change Disk Parameter"
+msgstr "ディスクパラメータを変更"
+
+#: src/diskparambox.cpp:228
+msgid "Disk Parameter"
+msgstr "ディスクパラメータ"
+
+#: src/diskparambox.cpp:231
+msgid "Rebuild Tracks"
+msgstr "トラックを再構築"
+
+#: src/diskparambox.cpp:338
 #, c-format
 msgid "Track x side size should be less equal %d."
 msgstr "トラック x サイドサイズは%d以下である必要があります。"
 
-#: src/diskparambox.cpp:309
+#: src/diskparambox.cpp:343
 msgid "Track size should be between 1 to 82."
 msgstr "トラックサイズは1～82である必要があります。"
 
-#: src/diskparambox.cpp:314
+#: src/diskparambox.cpp:348
 msgid "Side size should be 1 or 2."
 msgstr "サイドサイズは1か2である必要があります。"
 
-#: src/diskparambox.cpp:319
+#: src/diskparambox.cpp:353
 msgid "Sector size should be between 1 to 32."
 msgstr "セクタサイズは1～32である必要があります。"
 
-#: src/diskparambox.cpp:324
+#: src/diskparambox.cpp:358
 msgid "Interleave size should be between 1 to sector numbers."
 msgstr "セクタ間隔は1～セクタ数である必要があります。"
 
-#: src/diskparambox.cpp:328
+#: src/diskparambox.cpp:366
+msgid "Are you sure to create a disk forcely?"
+msgstr "強制的にディスクを作成しますか？"
+
+#: src/diskparambox.cpp:369
+msgid "Are you sure to create tracks forcely?"
+msgstr "強制的にトラックを作成しますか？"
+
+#: src/diskparambox.cpp:372
+msgid "Are you sure to change it forcely?"
+msgstr "強制的に変更しますか？"
+
+#: src/diskparambox.cpp:375
+msgid "Are you sure to read the disk forcely?"
+msgstr "強制的にディスクを読み込みますか？"
+
+#: src/diskparambox.cpp:378 src/diskparambox.cpp:381
 msgid "Invalid parameter"
 msgstr "不正なパラメータ"
 
-#: src/diskparambox.cpp:366 src/diskparambox.cpp:414
+#: src/diskparambox.cpp:419 src/diskparambox.cpp:467
 msgid "Manual Setting"
 msgstr "手動設定"
 
-#: src/diskreplacebox.cpp:31
+#: src/diskreplacebox.cpp:48
 msgid "Replace data in a disk"
 msgstr "ディスクのデータを置換"
 
-#: src/diskreplacebox.cpp:38
+#: src/diskreplacebox.cpp:55
 msgid "Select a source disk to replace:"
 msgstr "置き換え元のディスクを選択してください："
 
-#: src/diskreplacebox.cpp:48 src/diskreplacebox.cpp:58
+#: src/diskreplacebox.cpp:66 src/diskreplacebox.cpp:96
 #, c-format
 msgid "[disk %d]"
 msgstr "[ディスク %d]"
 
-#: src/diskreplacebox.cpp:55
+#: src/diskreplacebox.cpp:72 src/diskreplacebox.cpp:83
+#: src/diskreplacebox.cpp:101 src/utils.cpp:520
+#, c-format
+msgid "side %c"
+msgstr "%c面"
+
+#: src/diskreplacebox.cpp:74 src/diskreplacebox.cpp:85
+#: src/diskreplacebox.cpp:103 src/utils.cpp:518
+#, c-format
+msgid "side %d"
+msgstr "サイド%d"
+
+#: src/diskreplacebox.cpp:93
 msgid "Target disk:"
 msgstr "ターゲットディスク："
 
-#: src/diskreplacebox.cpp:65
-#, c-format
-msgid "I'll replace the data on side %d only."
-msgstr "サイド%dのデータだけを置き換えます。"
-
-#: src/diskreplacebox.cpp:70
+#: src/diskreplacebox.cpp:109
 msgid "Are you sure to replace data in target disk by the selected disk?"
 msgstr "選択したディスクのデータで置き換えてもいいですか？"
 
@@ -993,6 +1040,11 @@ msgid "[Disk%d] Deleted data found. This sector is ignored. id[C:%d H:%d R:%d]"
 msgstr ""
 "[ディスク%d] 削除データです。このセクタは無視されます。 id[C:%d H:%d R:%d]"
 
+#: src/diskresult.cpp:87
+#, c-format
+msgid "[Disk%d] Too many tracks. Ignore tracks after %dth."
+msgstr "[ディスク%d] トラックが多すぎます。%d以降のトラックは無視します。"
+
 #: src/fileparam.cpp:217
 msgid "Supported files"
 msgstr "サポートファイル"
@@ -1111,40 +1163,40 @@ msgstr "分割"
 msgid "Skip the confirmation after this."
 msgstr "これ以降の確認をスキップ"
 
-#: src/intnamebox.cpp:764
+#: src/intnamebox.cpp:763
 msgid "File name is too long."
 msgstr "ファイル名が長すぎます。"
 
-#: src/intnamebox.cpp:766
+#: src/intnamebox.cpp:765
 #, c-format
 msgid "The char '%s' is not able to use in the first of file name."
 msgstr "文字'%s'はファイル名の最初の文字に使用できません。"
 
-#: src/intnamebox.cpp:768 src/intnamebox.cpp:770
+#: src/intnamebox.cpp:767 src/intnamebox.cpp:769
 #, c-format
 msgid "The char '%s' is not able to use in file name."
 msgstr "文字'%s'はファイル名に使用できません。"
 
-#: src/intnamebox.cpp:772
+#: src/intnamebox.cpp:771
 #, c-format
 msgid "The char '%s' is duplicated, so is not able to set in file name."
 msgstr "文字'%s'が重複するため、ファイル名に設定できません。"
 
-#: src/intnamebox.cpp:787
+#: src/intnamebox.cpp:786
 msgid "Invalid char is contained in file name."
 msgstr "ファイル名に使用できない文字があります。"
 
-#: src/intnamebox.cpp:797 src/intnamebox.cpp:955 src/intnamebox.cpp:1001
+#: src/intnamebox.cpp:796 src/intnamebox.cpp:954 src/intnamebox.cpp:1000
 #: src/diskparambox.h:14 src/rawexpbox.h:14 src/rawparambox.h:14
 #: src/rawsectorbox.h:14
 msgid "Validation conflict"
 msgstr "不正な文字があります。"
 
-#: src/intnamebox.cpp:944 src/intnamebox.cpp:949
+#: src/intnamebox.cpp:943 src/intnamebox.cpp:948
 msgid "Invalid format is contained in date or time."
 msgstr "日時に不正な記述が含まれています。"
 
-#: src/intnamebox.cpp:996
+#: src/intnamebox.cpp:995
 msgid "Invalid format is contained in address."
 msgstr "アドレスに不正な記述が含まれています。"
 
@@ -1193,7 +1245,8 @@ msgid "Cannot load disk types data file."
 msgstr "disk typesデータファイルをロードできません。"
 
 #: src/main.cpp:112 src/main.cpp:118 src/main.cpp:122 src/main.cpp:126
-#: src/rawexpbox.cpp:129 src/rawparambox.cpp:99 src/result.cpp:116
+#: src/rawexpbox.cpp:129 src/rawparambox.cpp:99 src/result.cpp:124
+#: src/result.cpp:155
 msgid "Error"
 msgstr "エラー"
 
@@ -1241,9 +1294,17 @@ msgstr "サービス"
 msgid "Preferences…"
 msgstr "環境設定…"
 
-#: src/main.cpp:521 src/main.cpp:628
-msgid "Window"
-msgstr "ウィンドウ"
+#: src/main.cpp:521
+msgid "Minimize"
+msgstr ""
+
+#: src/main.cpp:521
+msgid "Zoom"
+msgstr ""
+
+#: src/main.cpp:521
+msgid "Bring All to Front"
+msgstr ""
 
 #: src/main.cpp:552
 msgid "&New..."
@@ -1265,11 +1326,11 @@ msgstr "名前を付けて保存(&A)..."
 msgid "Save A Disk..."
 msgstr "ディスクを保存..."
 
-#: src/main.cpp:560 src/main.cpp:751 src/uidisklist.cpp:191
+#: src/main.cpp:560 src/main.cpp:755 src/uidisklist.cpp:191
 msgid "&New Disk..."
 msgstr "新規ディスク(&N)..."
 
-#: src/main.cpp:561 src/main.cpp:752 src/uidisklist.cpp:192
+#: src/main.cpp:561 src/main.cpp:756 src/uidisklist.cpp:192
 msgid "From &File..."
 msgstr "ファイルから(&F)..."
 
@@ -1309,8 +1370,8 @@ msgstr "終了(&X)"
 msgid "&Export..."
 msgstr "エクスポート(&E)..."
 
-#: src/main.cpp:579 src/uifilelist.cpp:627 src/uirawdisk.cpp:515
-#: src/uirawdisk.cpp:1657
+#: src/main.cpp:579 src/uifilelist.cpp:627 src/uirawdisk.cpp:546
+#: src/uirawdisk.cpp:1702
 msgid "&Import..."
 msgstr "インポート(&I)..."
 
@@ -1334,7 +1395,7 @@ msgstr "ペースト(&P)..."
 msgid "Make Directory(&F)..."
 msgstr "ディレクトリを作成(&F)..."
 
-#: src/main.cpp:589 src/uirawdisk.cpp:531 src/uirawdisk.cpp:1673
+#: src/main.cpp:589 src/uirawdisk.cpp:562 src/uirawdisk.cpp:1718
 msgid "&Property"
 msgstr "プロパティ(&P)"
 
@@ -1374,123 +1435,115 @@ msgstr "ファイルリストの列(&L)..."
 msgid "&Font..."
 msgstr "フォント(&F)..."
 
-#: src/main.cpp:618
+#: src/main.cpp:622
 msgid "&About..."
 msgstr "バージョン情報(&A)..."
 
-#: src/main.cpp:622 src/uibindump.cpp:87
+#: src/main.cpp:626 src/uibindump.cpp:87
 msgid "&File"
 msgstr "ファイル(&F)"
 
-#: src/main.cpp:623
+#: src/main.cpp:627
 msgid "&Data"
 msgstr "データ(&D)"
 
-#: src/main.cpp:624
+#: src/main.cpp:628
 msgid "&Mode"
 msgstr "モード(&M)"
 
-#: src/main.cpp:625 src/uibindump.cpp:88
+#: src/main.cpp:629 src/uibindump.cpp:88
 msgid "&View"
 msgstr "表示(&V)"
 
-#: src/main.cpp:630
+#: src/main.cpp:632
+msgid "&Window"
+msgstr "ウィンドウ"
+
+#: src/main.cpp:634
 msgid "&Help"
 msgstr "ヘルプ(&H)"
 
-#: src/main.cpp:738
+#: src/main.cpp:742
 msgid "New"
 msgstr "新規"
 
-#: src/main.cpp:740
+#: src/main.cpp:744
 msgid "New disk image"
 msgstr "新規ディスクイメージ"
 
-#: src/main.cpp:741
+#: src/main.cpp:745
 msgid "Open"
 msgstr "開く"
 
-#: src/main.cpp:743
+#: src/main.cpp:747
 msgid "Open disk image"
 msgstr "ディスクイメージを開く"
 
-#: src/main.cpp:744
+#: src/main.cpp:748
 msgid "Save As"
 msgstr "保存"
 
-#: src/main.cpp:746
+#: src/main.cpp:750
 msgid "Save disk image"
 msgstr "ディスクイメージを保存"
 
-#: src/main.cpp:747
+#: src/main.cpp:751
 msgid "Add"
 msgstr "追加"
 
-#: src/main.cpp:749
+#: src/main.cpp:753
 msgid "Add a disk on disk image"
 msgstr "ディスクイメージにディスクを追加"
 
-#: src/main.cpp:760
+#: src/main.cpp:764
 msgid "Export a file from the disk"
 msgstr "ディスクからファイルをエクスポート"
 
-#: src/main.cpp:763
+#: src/main.cpp:767
 msgid "Import a file to the disk"
 msgstr "ディスクへファイルをインポート"
 
-#: src/main.cpp:1468
+#: src/main.cpp:1472
 msgid "(new file)"
 msgstr "(新規ファイル)"
 
-#: src/main.cpp:1491
-msgid "Create New Disk"
-msgstr "ディスクの新規作成"
-
-#: src/main.cpp:1528
-msgid "Add New Disk"
-msgstr "ディスクを追加"
-
-#: src/main.cpp:1563
+#: src/main.cpp:1567
 msgid "Open File"
 msgstr "ファイルを開く"
 
-#: src/main.cpp:1669
+#: src/main.cpp:1673
 msgid "Add File"
 msgstr "ファイルを追加"
 
-#: src/main.cpp:1750
-msgid "Select Disk Type"
-msgstr "ディスク種類を選択"
-
-#: src/main.cpp:1766
+#: src/main.cpp:1770
 msgid "This file is modified. Do you want to save it?"
 msgstr "このファイルは変更されています。保存しますか？"
 
-#: src/main.cpp:1766
+#: src/main.cpp:1770
 msgid "Close File"
 msgstr "ファイルを閉じる"
 
-#: src/main.cpp:1804
+#: src/main.cpp:1808
 msgid "Save File"
 msgstr "ファイルを保存"
 
-#: src/main.cpp:1859
+#: src/main.cpp:1872
 msgid "Save Disk"
 msgstr "ディスクを保存"
 
-#: src/main.cpp:1907
+#: src/main.cpp:1929
 msgid "Replace Disk Data"
 msgstr "ディスクデータを置換"
 
-#: src/main.cpp:2543
+#: src/main.cpp:2566
 msgid "Dump View"
 msgstr "ダンプビュー"
 
-#: src/main.cpp:2641
+#: src/main.cpp:2664
 msgid "Availability"
 msgstr "使用状況"
 
-#: src/main.cpp:2925
+#: src/main.cpp:2948
 msgid "About..."
 msgstr "About..."
 
@@ -1498,11 +1551,11 @@ msgstr "About..."
 msgid "Sector"
 msgstr "セクタ"
 
-#: src/rawexpbox.cpp:64 src/uirawdisk.cpp:510 src/uirawdisk.cpp:1653
+#: src/rawexpbox.cpp:64 src/uirawdisk.cpp:541 src/uirawdisk.cpp:1698
 msgid "Invert datas."
 msgstr "データを反転する。"
 
-#: src/rawexpbox.cpp:67 src/uirawdisk.cpp:511
+#: src/rawexpbox.cpp:67 src/uirawdisk.cpp:542
 msgid "Descend side number order."
 msgstr "サイド番号を降順にする。"
 
@@ -1608,18 +1661,22 @@ msgstr "余分なデータのサイズ :"
 msgid "Total Size of This Track :"
 msgstr "このトラックの合計サイズ :"
 
-#: src/result.cpp:95
+#: src/result.cpp:100
 #, c-format
 msgid "And have more %d messages..."
 msgstr "さらに%dのメッセージがあります。"
 
-#: src/result.cpp:119
+#: src/result.cpp:127 src/result.cpp:158
 msgid "Warning"
 msgstr "警告"
 
-#: src/result.cpp:122
+#: src/result.cpp:130 src/result.cpp:163
 msgid "Information"
 msgstr "情報"
+
+#: src/result.cpp:160
+msgid "Do you want to continue?"
+msgstr "続けますか？"
 
 #: src/uibindump.cpp:69 src/uibindump.cpp:335
 msgid "Text"
@@ -1656,10 +1713,6 @@ msgstr "カラム表示を変更"
 #: src/uidiskattr.cpp:49 src/uifilelist.cpp:592
 msgid "Change"
 msgstr "変更"
-
-#: src/uidiskattr.cpp:137
-msgid "Change Disk Parameter"
-msgstr "ディスクパラメータを変更"
 
 #: src/uidiskattr.cpp:173
 msgid "Original: "
@@ -1703,10 +1756,6 @@ msgstr "%s上のすべてのファイルとデータが削除されます。本�
 msgid "Initialize Disk"
 msgstr "ディスクの初期化"
 
-#: src/uidisklist.cpp:1063 src/uidisklist.cpp:1078
-msgid "Rebuild Tracks"
-msgstr "トラックを再構築"
-
 #: src/uidisklist.cpp:1132
 #, c-format
 msgid "All files and datas will delete on %s. Do you really want to format it?"
@@ -1725,10 +1774,6 @@ msgstr "%sは削除されます。本当に削除していいですか？"
 #: src/uidisklist.cpp:1201
 msgid "Delete Disk"
 msgstr "ディスク削除"
-
-#: src/uidisklist.cpp:1229
-msgid "Disk Parameter"
-msgstr "ディスクパラメータ"
 
 #: src/uifilelist.cpp:61
 msgid "File Name"
@@ -1770,8 +1815,8 @@ msgstr "プロパティ(&R)"
 msgid "Export a file"
 msgstr "ファイルをエクスポート"
 
-#: src/uifilelist.cpp:1306 src/uifilelist.cpp:1643 src/uirawdisk.cpp:960
-#: src/uirawdisk.cpp:1062 src/uirawdisk.cpp:2098 src/uirawdisk.cpp:2163
+#: src/uifilelist.cpp:1306 src/uifilelist.cpp:1643 src/uirawdisk.cpp:1002
+#: src/uirawdisk.cpp:1104 src/uirawdisk.cpp:2143 src/uirawdisk.cpp:2208
 msgid "All files (*.*)|*.*"
 msgstr "すべてのファイル(*.*)|*.*"
 
@@ -1936,154 +1981,144 @@ msgstr "削除"
 msgid "SingleDensity"
 msgstr "単密度"
 
-#: src/uirawdisk.cpp:512 src/uirawdisk.cpp:1654
+#: src/uirawdisk.cpp:543 src/uirawdisk.cpp:1699
 msgid "Behavior When In/Out"
 msgstr "入出力時の振る舞い"
 
-#: src/uirawdisk.cpp:514
+#: src/uirawdisk.cpp:545
 msgid "&Export Track..."
 msgstr "トラックをエクスポート(&E)..."
 
-#: src/uirawdisk.cpp:517
+#: src/uirawdisk.cpp:548
 msgid "Modify All H On This Disk"
 msgstr "このディスクのHを一括変更"
 
-#: src/uirawdisk.cpp:518
+#: src/uirawdisk.cpp:549
 msgid "Modify All N On This Disk"
 msgstr "このディスクのNを一括変更"
 
-#: src/uirawdisk.cpp:519
+#: src/uirawdisk.cpp:550
 msgid "Modify All Density On This Disk"
 msgstr "このディスクの密度を一括変更"
 
-#: src/uirawdisk.cpp:521 src/uirawdisk.cpp:1659
+#: src/uirawdisk.cpp:552 src/uirawdisk.cpp:1704
 msgid "Modify All C On This Track"
 msgstr "このトラックのCを一括変更"
 
-#: src/uirawdisk.cpp:522 src/uirawdisk.cpp:1660
+#: src/uirawdisk.cpp:553 src/uirawdisk.cpp:1705
 msgid "Modify All H On This Track"
 msgstr "このトラックのHを一括変更"
 
-#: src/uirawdisk.cpp:523 src/uirawdisk.cpp:1661
+#: src/uirawdisk.cpp:554 src/uirawdisk.cpp:1706
 msgid "Modify All N On This Track"
 msgstr "このトラックのNを一括変更"
 
-#: src/uirawdisk.cpp:524 src/uirawdisk.cpp:1662
+#: src/uirawdisk.cpp:555 src/uirawdisk.cpp:1707
 msgid "Modify All Density On This Track"
 msgstr "このトラックの密度を一括変更"
 
-#: src/uirawdisk.cpp:525 src/uirawdisk.cpp:1663
+#: src/uirawdisk.cpp:556 src/uirawdisk.cpp:1708
 msgid "Modify All Num Of Sectors On This Track"
 msgstr "このトラックのセクタ数を一括変更"
 
-#: src/uirawdisk.cpp:526 src/uirawdisk.cpp:1664
+#: src/uirawdisk.cpp:557 src/uirawdisk.cpp:1709
 msgid "Modify All Sector Size On This Track"
 msgstr "このトラックのセクタサイズを一括変更"
 
-#: src/uirawdisk.cpp:528
+#: src/uirawdisk.cpp:559
 msgid "Append New Track"
 msgstr "新規トラックを追加"
 
-#: src/uirawdisk.cpp:529
+#: src/uirawdisk.cpp:560
 msgid "Delete All Tracks Below Current Track"
 msgstr "現在のトラック以下を一括削除"
 
-#: src/uirawdisk.cpp:942
+#: src/uirawdisk.cpp:984
 msgid "Export data from track"
 msgstr "トラックからデータをエクスポート"
 
-#: src/uirawdisk.cpp:1056
+#: src/uirawdisk.cpp:1098
 msgid "Import data to track"
 msgstr "トラックへデータをインポート"
 
-#: src/uirawdisk.cpp:1084
+#: src/uirawdisk.cpp:1126
 msgid "Import data to the disk"
 msgstr "ディスクへデータをインポート"
 
-#: src/uirawdisk.cpp:1347
+#: src/uirawdisk.cpp:1389
 msgid "Do you really want to delete tracks?"
 msgstr "本当にトラックを削除していいですか？"
 
-#: src/uirawdisk.cpp:1348
+#: src/uirawdisk.cpp:1390
 msgid "Delete Tracks"
 msgstr "トラック削除"
 
-#: src/uirawdisk.cpp:1656
+#: src/uirawdisk.cpp:1701
 msgid "&Export Sector..."
 msgstr "セクタをエクスポート(&E)..."
 
-#: src/uirawdisk.cpp:1666
+#: src/uirawdisk.cpp:1711
 msgid "Append New Sector"
 msgstr "新規セクタを追加"
 
-#: src/uirawdisk.cpp:1667
+#: src/uirawdisk.cpp:1712
 msgid "Delete Current Sector"
 msgstr "現在のセクタを削除"
 
-#: src/uirawdisk.cpp:1669
+#: src/uirawdisk.cpp:1714
 msgid "Delete Sectors More Than Current Sector Number"
 msgstr "現在のセクタ番号以上のセクタを一括削除"
 
-#: src/uirawdisk.cpp:1671
+#: src/uirawdisk.cpp:1716
 msgid "Edit Current Sector"
 msgstr "現在のセクタを編集"
 
-#: src/uirawdisk.cpp:2095
+#: src/uirawdisk.cpp:2140
 msgid "Export data from sector"
 msgstr "セクタからデータをエクスポート"
 
-#: src/uirawdisk.cpp:2111
+#: src/uirawdisk.cpp:2156
 msgid "Export each datas from selected sector"
 msgstr "選択したセクタから各データをエクスポート"
 
-#: src/uirawdisk.cpp:2160
+#: src/uirawdisk.cpp:2205
 msgid "Import data to sector"
 msgstr "セクタへデータをインポート"
 
-#: src/uirawdisk.cpp:2187
+#: src/uirawdisk.cpp:2232
 msgid "Sector Information"
 msgstr "セクタ情報"
 
-#: src/uirawdisk.cpp:2199
+#: src/uirawdisk.cpp:2244
 #, c-format
 msgid "Need expand the buffer size to %d bytes. Are you sure to do it?"
 msgstr ""
 "バッファサイズを%dバイトに拡張する必要があります。それを行ってもよろしいです"
 "か？"
 
-#: src/uirawdisk.cpp:2200
+#: src/uirawdisk.cpp:2245
 msgid "Expand Sector Size"
 msgstr "セクタサイズを拡張"
 
-#: src/uirawdisk.cpp:2346
+#: src/uirawdisk.cpp:2391
 msgid "Add Sector"
 msgstr "セクタを追加"
 
-#: src/uirawdisk.cpp:2375
+#: src/uirawdisk.cpp:2420
 msgid "Do you really want to delete current sector?"
 msgstr "本当に現在のセクタを削除していいですか？"
 
-#: src/uirawdisk.cpp:2376
+#: src/uirawdisk.cpp:2421
 msgid "Delete Sector"
 msgstr "セクタを削除"
 
-#: src/uirawdisk.cpp:2462
+#: src/uirawdisk.cpp:2507
 msgid "Do you really want to delete sectors?"
 msgstr "本当にセクタを削除していいですか？"
 
-#: src/uirawdisk.cpp:2463
+#: src/uirawdisk.cpp:2508
 msgid "Delete Sectors"
 msgstr "セクタを削除"
-
-#: src/utils.cpp:518
-#, c-format
-msgid "side %d"
-msgstr "サイド%d"
-
-#: src/utils.cpp:520
-#, c-format
-msgid "side %c"
-msgstr "%c面"
 
 #: src/diskparambox.h:12 src/rawexpbox.h:12 src/rawparambox.h:12
 #: src/rawsectorbox.h:12
@@ -2095,6 +2130,9 @@ msgstr "名前は空にはできません。"
 #, c-format
 msgid "'%s' is invalid"
 msgstr "'%s'に不正な文字が含まれています。"
+
+#~ msgid "I'll replace the data on side %d only."
+#~ msgstr "サイド%dのデータだけを置き換えます。"
 
 #~ msgid "The char '%s' is not able to use the first char of filename."
 #~ msgstr "文字'%s'はファイル名の最初の文字に使用できません。"

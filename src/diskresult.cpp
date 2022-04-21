@@ -83,6 +83,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] No found sector %d. [track:%d side:%d]"),
 	//	ERRV_IGNORE_DATA  v:4
 	wxTRANSLATE("[Disk%d] Deleted data found. This sector is ignored. id[C:%d H:%d R:%d]"),
+	//	ERRV_TOO_MANY_TRACKS  v:2
+	wxTRANSLATE("[Disk%d] Too many tracks. Ignore tracks after %dth."),
 	//	ERRV_END  v:1
 	wxTRANSLATE("Unknown error. code:%d"),
 	NULL

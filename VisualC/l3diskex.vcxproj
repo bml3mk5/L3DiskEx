@@ -44,6 +44,7 @@
     <ClCompile Include="..\src\basicdiritem_cdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_cpm.cpp" />
     <ClCompile Include="..\src\basicdiritem_dos80.cpp" />
+    <ClCompile Include="..\src\basicdiritem_falcom.cpp" />
     <ClCompile Include="..\src\basicdiritem_fat8.cpp" />
     <ClCompile Include="..\src\basicdiritem_flex.cpp" />
     <ClCompile Include="..\src\basicdiritem_fm.cpp" />
@@ -54,6 +55,7 @@
     <ClCompile Include="..\src\basicdiritem_l32d.cpp" />
     <ClCompile Include="..\src\basicdiritem_losa.cpp" />
     <ClCompile Include="..\src\basicdiritem_magical.cpp" />
+    <ClCompile Include="..\src\basicdiritem_mdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_msdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_msx.cpp" />
     <ClCompile Include="..\src\basicdiritem_mz.cpp" />
@@ -74,8 +76,11 @@
     <ClCompile Include="..\src\basictype_cdos.cpp" />
     <ClCompile Include="..\src\basictype_cpm.cpp" />
     <ClCompile Include="..\src\basictype_dos80.cpp" />
+    <ClCompile Include="..\src\basictype_falcom.cpp" />
     <ClCompile Include="..\src\basictype_fat12.cpp" />
+    <ClCompile Include="..\src\basictype_fat16.cpp" />
     <ClCompile Include="..\src\basictype_fat8.cpp" />
+    <ClCompile Include="..\src\basictype_fat_base.cpp" />
     <ClCompile Include="..\src\basictype_flex.cpp" />
     <ClCompile Include="..\src\basictype_fm.cpp" />
     <ClCompile Include="..\src\basictype_fp.cpp" />
@@ -84,6 +89,7 @@
     <ClCompile Include="..\src\basictype_l31s.cpp" />
     <ClCompile Include="..\src\basictype_l32d.cpp" />
     <ClCompile Include="..\src\basictype_magical.cpp" />
+    <ClCompile Include="..\src\basictype_mdos.cpp" />
     <ClCompile Include="..\src\basictype_msdos.cpp" />
     <ClCompile Include="..\src\basictype_msx.cpp" />
     <ClCompile Include="..\src\basictype_mz.cpp" />
@@ -118,6 +124,7 @@
     <ClCompile Include="..\src\diskreplacebox.cpp" />
     <ClCompile Include="..\src\diskresult.cpp" />
     <ClCompile Include="..\src\disktd0parser.cpp" />
+    <ClCompile Include="..\src\diskvfdparser.cpp" />
     <ClCompile Include="..\src\diskwriter.cpp" />
     <ClCompile Include="..\src\fileparam.cpp" />
     <ClCompile Include="..\src\fileselbox.cpp" />
@@ -150,6 +157,7 @@
     <ClInclude Include="..\src\basicdiritem_cdos.h" />
     <ClInclude Include="..\src\basicdiritem_cpm.h" />
     <ClInclude Include="..\src\basicdiritem_dos80.h" />
+    <ClInclude Include="..\src\basicdiritem_falcom.h" />
     <ClInclude Include="..\src\basicdiritem_fat8.h" />
     <ClInclude Include="..\src\basicdiritem_flex.h" />
     <ClInclude Include="..\src\basicdiritem_fm.h" />
@@ -160,6 +168,7 @@
     <ClInclude Include="..\src\basicdiritem_l32d.h" />
     <ClInclude Include="..\src\basicdiritem_losa.h" />
     <ClInclude Include="..\src\basicdiritem_magical.h" />
+    <ClInclude Include="..\src\basicdiritem_mdos.h" />
     <ClInclude Include="..\src\basicdiritem_msdos.h" />
     <ClInclude Include="..\src\basicdiritem_msx.h" />
     <ClInclude Include="..\src\basicdiritem_mz.h" />
@@ -180,8 +189,11 @@
     <ClInclude Include="..\src\basictype_cdos.h" />
     <ClInclude Include="..\src\basictype_cpm.h" />
     <ClInclude Include="..\src\basictype_dos80.h" />
+    <ClInclude Include="..\src\basictype_falcom.h" />
     <ClInclude Include="..\src\basictype_fat12.h" />
+    <ClInclude Include="..\src\basictype_fat16.h" />
     <ClInclude Include="..\src\basictype_fat8.h" />
+    <ClInclude Include="..\src\basictype_fat_base.h" />
     <ClInclude Include="..\src\basictype_flex.h" />
     <ClInclude Include="..\src\basictype_fm.h" />
     <ClInclude Include="..\src\basictype_fp.h" />
@@ -190,6 +202,7 @@
     <ClInclude Include="..\src\basictype_l31s.h" />
     <ClInclude Include="..\src\basictype_l32d.h" />
     <ClInclude Include="..\src\basictype_magical.h" />
+    <ClInclude Include="..\src\basictype_mdos.h" />
     <ClInclude Include="..\src\basictype_msdos.h" />
     <ClInclude Include="..\src\basictype_msx.h" />
     <ClInclude Include="..\src\basictype_mz.h" />
@@ -224,6 +237,7 @@
     <ClInclude Include="..\src\diskreplacebox.h" />
     <ClInclude Include="..\src\diskresult.h" />
     <ClInclude Include="..\src\disktd0parser.h" />
+    <ClInclude Include="..\src\diskvfdparser.h" />
     <ClInclude Include="..\src\diskwriter.h" />
     <ClInclude Include="..\src\fileparam.h" />
     <ClInclude Include="..\src\fileselbox.h" />

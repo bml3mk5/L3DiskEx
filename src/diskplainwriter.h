@@ -9,6 +9,7 @@
 #define _DISKPLAIN_WRITER_H_
 
 #include "common.h"
+#include "diskwriter.h"
 
 
 class wxOutputStream;
@@ -18,18 +19,14 @@ class DiskD88Disk;
 class DiskResult;
 
 /// べたディスクライター
-class DiskPlainWriter
+class DiskPlainWriter : public DiskInhWriterBase
 {
 private:
-	DiskWriter *dw;
-	DiskResult *result;
-
 	/// ディスク1つを保存
 	int SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream);
 
 public:
-	DiskPlainWriter(DiskWriter *dw, DiskResult *result);
-	~DiskPlainWriter();
+	DiskPlainWriter(DiskWriter *dw_, DiskResult *result_);
 
 	/// ストリームの内容をファイルに保存
 	int SaveDisk(DiskD88 *image, int disk_number, int side_number, wxOutputStream *ostream);

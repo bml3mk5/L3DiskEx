@@ -13,7 +13,7 @@
 //
 //
 DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
-	: DiskBasicTypeFAT12(basic, fat, dir)
+	: DiskBasicTypeMSDOS(basic, fat, dir)
 {
 }
 
@@ -27,7 +27,7 @@ double DiskBasicTypeMSX::ParseParamOnDisk(DiskD88Disk *disk, bool is_formatting)
 {
 	if (is_formatting) return 0;
 
-	double valid_ratio = DiskBasicTypeFAT12::ParseParamOnDisk(disk, is_formatting);
+	double valid_ratio = ParseMSDOSParamOnDisk(disk, is_formatting);
 	if (valid_ratio >= 0.0) {
 		DiskD88Sector *sector = disk->GetSector(0, 0, 1);
 		if (!sector) return -1.0;

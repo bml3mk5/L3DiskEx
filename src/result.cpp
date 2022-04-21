@@ -73,10 +73,15 @@ void ResultInfo::SetInfo(int error_number, va_list ap)
 	SetMessage(error_number, ap);
 	if (valid == 0) valid = 2;
 }
+/// メッセージ配列を返す
+/// @param[out] arr メッセージの配列
 void ResultInfo::GetMessages(wxArrayString &arr)
 {
 	arr = msgs;
 }
+/// メッセージをログに出力＆配列で返す
+/// @param[in] maxrow 配列の最大行 -1:無限
+/// @return メッセージの配列
 const wxArrayString &ResultInfo::GetMessages(int maxrow)
 {
 	bufs.Empty();
@@ -100,6 +105,9 @@ const wxArrayString &ResultInfo::GetMessages(int maxrow)
 	}
 }
 
+/// 結果ダイアログを表示
+/// @param[in] level 0:正常 -1:エラー時 1:警告時
+/// @param[in] msgs メッセージ配列
 void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
 {
 	wxString msg;
@@ -124,4 +132,38 @@ void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
 	}
 
 	wxMessageBox(msg, caption, style);
+}
+
+/// メッセージダイアログを表示
+/// @param[in] code -1:エラー時 1:警告時
+/// @param[in] msgs メッセージ配列
+/// @retval 0  警告時YESを押下した
+/// @retval -1 エラー or 警告時NOを押下した
+int ResultInfo::ShowErrWarnMessage(int code, const wxArrayString &msgs)
+{
+	wxString msg;
+	for(size_t i=0; i<msgs.Count(); i++) {
+		msg += msgs[i];
+		msg += wxT("\n");
+	}
+	if (msg.IsEmpty()) return 0;
+
+	wxString caption;
+	int style = 0;
+
+	if (code < 0) {
+		caption = _("Error");
+		style = (wxOK | wxICON_HAND);
+	} else if (code > 0) {
+		caption = _("Warning");
+		msg += wxT("\n");
+		msg += _("Do you want to continue?");
+		style = (wxYES_NO | wxICON_EXCLAMATION);
+	} else {
+		caption = _("Information");
+		style = (wxOK | wxICON_INFORMATION);
+	}
+
+	int ans = wxMessageBox(msg, caption, style);
+	return (code == 0 || ans == wxYES ? 0 : -1);
 }

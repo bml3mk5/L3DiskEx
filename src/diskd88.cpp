@@ -1334,6 +1334,8 @@ bool DiskD88Disk::IsModified()
 }
 
 /// ディスク名を返す
+/// @param[in] real 名称が空白の時そのまま返すか
+/// @return ディスク名
 wxString DiskD88Disk::GetName(bool real) const
 {
 	wxString name(header ? (const char *)header->diskname : "");
@@ -1344,6 +1346,7 @@ wxString DiskD88Disk::GetName(bool real) const
 }
 
 /// ディスク名を設定
+/// @param[in] val ディスク名
 void DiskD88Disk::SetName(const wxString &val)
 {
 	if (!header) return;
@@ -1359,6 +1362,8 @@ void DiskD88Disk::SetName(const wxString &val)
 }
 
 /// ディスク名を設定
+/// @param[in] buf ディスク名
+/// @param[in] len 長さ
 void DiskD88Disk::SetName(const wxUint8 *buf, size_t len)
 {
 	if (!header) return;
@@ -1370,6 +1375,9 @@ void DiskD88Disk::SetName(const wxUint8 *buf, size_t len)
 }
 
 /// 指定トラックを返す
+/// @param[in] track_number トラック番号（シリンダ）
+/// @param[in] side_number  サイド番号（ヘッド）
+/// @return トラック
 DiskD88Track *DiskD88Disk::GetTrack(int track_number, int side_number)
 {
 	DiskD88Track *track = NULL;
@@ -1385,7 +1393,21 @@ DiskD88Track *DiskD88Disk::GetTrack(int track_number, int side_number)
 	return track;
 }
 
+/// 指定トラックを返す
+/// @param[in] index 位置
+/// @return トラック
+DiskD88Track *DiskD88Disk::GetTrack(int index)
+{
+	DiskD88Track *track = NULL;
+	if (tracks && index < (int)tracks->Count()) {
+		track = tracks->Item(index);
+	}
+	return track;
+}
+
 /// 指定オフセット値からトラックを返す
+/// @param[in] offset オフセット位置
+/// @return トラック
 DiskD88Track *DiskD88Disk::GetTrackByOffset(wxUint32 offset)
 {
 	DiskD88Track *track = NULL;
@@ -1404,6 +1426,10 @@ DiskD88Track *DiskD88Disk::GetTrackByOffset(wxUint32 offset)
 }
 
 /// 指定セクタを返す
+/// @param[in] track_number  トラック番号（シリンダ）
+/// @param[in] side_number   サイド番号（ヘッド）
+/// @param[in] sector_number セクタ番号（レコード）
+/// @return セクタ
 DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sector_number)
 {
 	DiskD88Track *trk = GetTrack(track_number, side_number);
@@ -1412,6 +1438,7 @@ DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sec
 }
 
 /// ディスクの中でもっともらしいパラメータを設定
+/// @return パラメータ
 const DiskParam *DiskD88Disk::CalcMajorNumber()
 {
 	IntHashMap sector_number_map[2];
@@ -1437,7 +1464,9 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 			int sid_num = t->GetSideNumber();
 
 			track_number_max = IntHashMapUtil::MaxValue(track_number_max, trk_num);
-			side_number_max = IntHashMapUtil::MaxValue(side_number_max, sid_num);
+			if (sid_num < 16) {
+				side_number_max = IntHashMapUtil::MaxValue(side_number_max, sid_num);
+			}
 			IntHashMapUtil::IncleaseValue(sector_size_map, t->GetMaxSectorSize());	// セクタサイズはディスク内で最も使用されているサイズ
 			IntHashMapUtil::IncleaseValue(interleave_map, t->GetInterleave());
 
@@ -1463,10 +1492,10 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	sector_masize = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_size_map);
 	interleave_max = IntHashMapUtil::GetMaxKeyOnMaxValue(interleave_map);
 
-	// サイド番号のチェック
-	if (side_number_max > 1) {
-		side_number_max = 1;
-	}
+//	// サイド番号のチェック
+//	if (side_number_max > 1) {
+//		side_number_max = 1;
+//	}
 
 	// トラック番号のチェック
 	if (tracks) {
@@ -1556,18 +1585,21 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 }
 
 /// 書き込み禁止かどうかを返す
+/// @return true:書き込み禁止
 bool DiskD88Disk::IsWriteProtected() const
 {
 	return (!header || header->write_protect != 0);
 }
 
 /// 書き込み禁止かどうかを設定
+/// @param[in] val 書き込み禁止ならtrue
 void DiskD88Disk::SetWriteProtect(bool val)
 {
 	if (header) header->write_protect = (val ? 0x10 : 0);
 }
 
 /// 密度を返す
+/// @return 密度名称(2D,2HD)
 wxString DiskD88Disk::GetDensityText() const
 {
 	wxUint8 num = (header ? header->disk_density : 0);
@@ -1576,19 +1608,21 @@ wxString DiskD88Disk::GetDensityText() const
 }
 
 /// 密度を返す
+/// @return D88形式での密度の値(0x10, 0x20)
 int DiskD88Disk::GetDensity() const
 {
 	return (header ? header->disk_density : 0);
 }
 
 /// 密度を設定
+/// @param[in] val D88形式での密度の値(0x10, 0x20)
 void DiskD88Disk::SetDensity(int val)
 {
 	header->disk_density = val;
 }
 
 /// 密度を検索
-/// @param [in] val 密度の値
+/// @param [in] val D88形式での密度の値
 int DiskD88Disk::FindDensity(int val)
 {
 	int match = -1;
@@ -2100,13 +2134,32 @@ void DiskD88::Close()
 	filename.Clear();
 }
 
+/// ストリームの内容をファイルに保存できるか
+/// @param[in] file_format 保存ファイルのフォーマット
+int DiskD88::CanSave(const wxString &file_format)
+{
+	DiskWriter dw(this, &result);
+	return dw.CanSave(file_format);
+}
 /// ストリームの内容をファイルに保存
+/// @param[in] filepath    保存先ファイルパス
+/// @param[in] file_format 保存ファイルのフォーマット
+/// @param[in] options     保存時のオプション
+/// @retval  0:正常
+/// @retval -1:エラー
 int DiskD88::Save(const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
 	DiskWriter dw(this, filepath, options, &result);
 	return dw.Save(file_format);
 }
 /// ストリームの内容をファイルに保存
+/// @param[in] disk_number ディスク番号
+/// @param[in] side_number サイド番号
+/// @param[in] filepath    保存先ファイルパス
+/// @param[in] file_format 保存ファイルのフォーマット
+/// @param[in] options     保存時のオプション
+/// @retval  0:正常
+/// @retval -1:エラー
 int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
 	DiskWriter dw(this, filepath, options, &result);
@@ -2114,10 +2167,12 @@ int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath
 }
 
 /// ディスクを削除
-bool DiskD88::Delete(size_t disk_number)
+/// @param[in] disk_number ディスク番号
+/// @return true
+bool DiskD88::Delete(int disk_number)
 {
 	if (!file) return false;
-	file->Delete(disk_number);
+	file->Delete((size_t)disk_number);
 //	file->SetModify();
 	return true;
 }
@@ -2366,4 +2421,10 @@ const wxArrayString &DiskD88::GetErrorMessage(int maxrow)
 void  DiskD88::ShowErrorMessage()
 {
 	ResultInfo::ShowMessage(result.GetValid(), result.GetMessages());
+}
+
+/// エラー警告メッセージを表示
+int DiskD88::ShowErrWarnMessage()
+{
+	return ResultInfo::ShowErrWarnMessage(result.GetValid(), result.GetMessages(-1));
 }

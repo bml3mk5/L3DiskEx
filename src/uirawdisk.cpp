@@ -248,7 +248,9 @@ bool L3DiskRawPanel::ShowSectorAttr()
 	return rpanel->ShowSectorAttr();
 }
 
-/// ファイル名
+/// ファイル名を生成
+/// @param[in] sector セクタ
+/// @return ファイル名
 wxString L3DiskRawPanel::MakeFileName(DiskD88Sector *sector)
 {
 	return MakeFileName(
@@ -257,7 +259,14 @@ wxString L3DiskRawPanel::MakeFileName(DiskD88Sector *sector)
 	);
 }
 
-/// ファイル名
+/// ファイル名を生成
+/// @param[in] st_c 開始トラック番号
+/// @param[in] st_h 開始サイド番号
+/// @param[in] st_r 開始セクタ番号
+/// @param[in] ed_c 終了トラック番号
+/// @param[in] ed_h 終了サイド番号
+/// @param[in] ed_r 終了セクタ番号
+/// @return ファイル名
 wxString L3DiskRawPanel::MakeFileName(int st_c, int st_h, int st_r, int ed_c, int ed_h, int ed_r)
 {
 	return wxString::Format(wxT("%02d-%02d-%02d--%02d-%02d-%02d.bin"),
@@ -266,6 +275,7 @@ wxString L3DiskRawPanel::MakeFileName(int st_c, int st_h, int st_r, int ed_c, in
 }
 
 /// フォントをセット
+/// @param[in] font フォントデータ
 void L3DiskRawPanel::SetListFont(const wxFont &font)
 {
 	lpanel->SetFont(font);
@@ -340,10 +350,20 @@ L3DiskRawTrackListCtrl::L3DiskRawTrackListCtrl(L3DiskFrame *parentframe, wxWindo
 }
 
 /// リストデータを設定
+/// @param[in] disk ディスク
+/// @param[in] pos  ディスク内のトラック位置(0～)
+/// @param[in] row  リストの行位置
+/// @param[in] idx  リスト内の通し番号
+/// @param[out] values 整形した値を返す
 void L3DiskRawTrackListCtrl::SetListData(DiskD88Disk *disk, int pos, int row, int idx, L3RawTrackListValue *values)
 {
 	wxUint32 offset = disk->GetOffset(pos);
-	DiskD88Track *trk = disk->GetTrackByOffset(offset);
+	DiskD88Track *trk = NULL;
+	if (offset > 0) {
+		trk = disk->GetTrackByOffset(offset);
+	} else {
+		trk = disk->GetTrack(pos);
+	}
 	int trk_num = -1;
 	int sid_num = -1;
 	int sec_trk = -1;
@@ -361,6 +381,10 @@ void L3DiskRawTrackListCtrl::SetListData(DiskD88Disk *disk, int pos, int row, in
 }
 
 /// リストにデータを挿入
+/// @param[in] disk ディスク
+/// @param[in] pos  ディスク内のトラック位置(0～)
+/// @param[in] row  リストの行位置
+/// @param[in] idx  リスト内の通し番号
 void L3DiskRawTrackListCtrl::InsertListData(DiskD88Disk *disk, int pos, int row, int idx)
 {
 	L3RawTrackListValue values[TRACKCOL_END];
@@ -371,6 +395,10 @@ void L3DiskRawTrackListCtrl::InsertListData(DiskD88Disk *disk, int pos, int row,
 }
 
 /// リストデータを更新
+/// @param[in] disk ディスク
+/// @param[in] pos  ディスク内のトラック位置(0～)
+/// @param[in] row  リストの行位置
+/// @param[in] idx  リスト内の通し番号
 void L3DiskRawTrackListCtrl::UpdateListData(DiskD88Disk *disk, int pos, int row, int idx)
 {
 	L3RawTrackListValue values[TRACKCOL_END];
@@ -393,6 +421,9 @@ struct st_track_list_sort_exp {
 };
 
 /// アイテムをソート
+/// @param[in] disk        ディスク
+/// @param[in] side_number サイド番号
+/// @param[in] col         リストの列位置
 void L3DiskRawTrackListCtrl::SortDataItems(DiskD88Disk *disk, int side_number, int col)
 {
 	struct st_track_list_sort_exp exp;
@@ -682,14 +713,22 @@ void L3DiskRawTrack::SelectData()
 {
 	int num = GetListSelectedNum();
 	wxUint32 offset = disk->GetOffset(num);
+	DiskD88Track *trk = NULL;
 	if (offset > 0) {
-		parent->SetSectorListData(disk->GetTrackByOffset(offset));
+		trk = disk->GetTrackByOffset(offset);
+	} else {
+		trk = disk->GetTrack(num);
+	}
+	if (trk) {
+		parent->SetSectorListData(trk);
 	} else {
 		parent->ClearSectorListData();
 	}
 }
 
 /// トラックリストをセット
+/// @param[in] newdisk    表示対象ディスク
+/// @param[in] newsidenum 表示対象ディスクのサイド番号
 void L3DiskRawTrack::SetTracks(DiskD88Disk *newdisk, int newsidenum)
 {
 	if (!newdisk) return;
@@ -723,7 +762,10 @@ void L3DiskRawTrack::SetTracks()
 	int row = 0;
 	int row_count = (int)GetItemCount();
 
-	for(int pos=(side_number >= 0 ? side_number : 0); pos < DISKD88_MAX_TRACKS; pos+=(side_number >= 0 ? sides : 1)) {
+	int max_pos = disk->GetTracksPerSide() * sides;
+	if (max_pos < DISKD88_MAX_TRACKS) max_pos = DISKD88_MAX_TRACKS;
+	
+	for(int pos = (side_number >= 0 ? side_number : 0); pos < max_pos; pos+=(side_number >= 0 ? sides : 1)) {
 		if (row < row_count) {
 			UpdateListData(disk, pos, row, pos);
 		} else {
@@ -1350,7 +1392,10 @@ void L3DiskRawTrack::DeleteTracks()
 		disk->DeleteTracks(num, -1, side_number);
 
 		// 画面更新
-		parent->RefreshAllData();
+//		parent->RefreshAllData();
+		RefreshTracks();
+		// セクタリストはクリア
+		parent->ClearSectorListData();
 	}
 }
 

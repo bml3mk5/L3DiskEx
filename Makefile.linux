@@ -50,8 +50,10 @@ OBJS=	utils.o \
 	basicparam.o \
 	basicerror.o \
 	basictype.o \
+	basictype_fat_base.o \
 	basictype_fat8.o \
 	basictype_fat12.o \
+	basictype_fat16.o \
 	basictype_fm.o \
 	basictype_l31s.o \
 	basictype_l32d.o \
@@ -73,9 +75,11 @@ OBJS=	utils.o \
 	basictype_frost.o \
 	basictype_magical.o \
 	basictype_sdos.o \
+	basictype_mdos.o \
 	basictype_smc.o \
 	basictype_xdos.o \
 	basictype_hu68k.o \
+	basictype_falcom.o \
 	basicfat.o \
 	basicdiritem_fat8.o \
 	basicdiritem_fm.o \
@@ -98,9 +102,11 @@ OBJS=	utils.o \
 	basicdiritem_frost.o \
 	basicdiritem_magical.o \
 	basicdiritem_sdos.o \
+	basicdiritem_mdos.o \
 	basicdiritem_xdos.o \
 	basicdiritem_hu68k.o \
 	basicdiritem_losa.o \
+	basicdiritem_falcom.o \
 	basicdiritem.o \
 	basicdir.o \
 	basicfmt.o \
@@ -118,6 +124,7 @@ OBJS=	utils.o \
 	diskcqmparser.o \
 	disktd0parser.o \
 	diskdimparser.o \
+	diskvfdparser.o \
 	diskparser.o \
 	diskd88writer.o \
 	diskplainwriter.o \

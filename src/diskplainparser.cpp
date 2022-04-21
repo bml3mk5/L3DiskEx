@@ -130,9 +130,11 @@ wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, con
 			bool single_density = disk_param->FindSingleDensity(track_num, side_num, &sector_nums, &sector_size);
 			offset += ParseTrack(istream, offset_pos, offset, disk_number, disk_param, track_num, side_num, sector_nums, sector_size, single_density, side_num == dummy_side, disk); 
 			offset_pos++;
+#if 0
 			if (offset_pos >= DISKD88_MAX_TRACKS) {
 				result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, offset);
 			}
+#endif
 		}
 	}
 	disk->SetSize(offset);
