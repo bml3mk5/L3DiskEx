@@ -27,7 +27,7 @@ DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL31S::InvalidateChars() const
+wxString DiskBasicDirItemL31S::GetDefaultInvalidateChars() const
 {
 	return wxT("\":");
 }

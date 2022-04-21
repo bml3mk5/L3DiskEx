@@ -147,7 +147,7 @@ public:
 	/// @name save / write
 	//@{
 	/// ファイルをセーブする前の準備を行う
-	bool		PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo);
+	bool		PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo);
 	/// データの書き込み終了後の処理
 	void		AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
 

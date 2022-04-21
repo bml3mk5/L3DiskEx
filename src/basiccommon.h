@@ -31,6 +31,7 @@ enum en_file_type_mask {
 	FILE_TYPE_NONSHARE_MASK	 = 0x08000,
 	FILE_TYPE_UNDELETE_MASK	 = 0x10000,
 	FILE_TYPE_WRITEONLY_MASK = 0x20000,
+	FILE_TYPE_TEMPORARY_MASK = 0x40000,
 };
 /// 共通属性フラグ位置
 enum en_file_type_pos {
@@ -51,6 +52,7 @@ enum en_file_type_pos {
 	FILE_TYPE_NONSHARE_POS	= 15,
 	FILE_TYPE_UNDELETE_POS	= 16,
 	FILE_TYPE_WRITEONLY_POS	= 17,
+	FILE_TYPE_TEMPORARY_POS	= 18,
 };
 
 //
@@ -300,6 +302,7 @@ public:
 	bool MatchType(int mask, int value) const;
 	bool UnmatchType(int mask, int value) const;
 
+	bool IsAscii() const;
 	bool IsVolume() const;
 	bool IsDirectory() const;
 };

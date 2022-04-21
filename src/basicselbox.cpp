@@ -135,5 +135,5 @@ wxString BasicSelBox::GetVolumeName() const
 
 int BasicSelBox::GetVolumeNumber() const
 {
-	return L3DiskUtils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
+	return Utils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
 }

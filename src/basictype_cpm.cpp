@@ -25,6 +25,10 @@ bool DiskBasicTypeCPM::CheckFat()
 {
 	bool valid = true;
 
+	// 最終グループ番号
+	wxUint32 max_group = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup() - 1;
+	basic->SetFatEndGroup(max_group);
+
 	return valid;
 }
 
@@ -347,11 +351,12 @@ bool DiskBasicTypeCPM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 }
 
 /// ファイルをセーブする前の準備を行う
-/// @param [in]     istream ストリームバッファ
-/// @param [in]     pitem   ファイル名、属性を持っているディレクトリアイテム
-/// @param [in]     nitem   確保したディレクトリアイテム
-/// @param [in,out] errinfo エラー情報
-bool DiskBasicTypeCPM::PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
+/// @param [in]     istream   ストリームバッファ
+/// @param [in,out] file_size 出力サイズ
+/// @param [in]     pitem     ファイル名、属性を持っているディレクトリアイテム
+/// @param [in]     nitem     確保したディレクトリアイテム
+/// @param [in,out] errinfo   エラー情報
+bool DiskBasicTypeCPM::PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
 {
 	DiskBasicDirItemCPM *ditem = (DiskBasicDirItemCPM *)nitem;
 	// グループエントリ数

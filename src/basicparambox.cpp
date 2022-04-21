@@ -287,5 +287,5 @@ wxString BasicParamBox::GetVolumeName() const
 /// ボリューム番号を返す
 int BasicParamBox::GetVolumeNumber() const
 {
-	return L3DiskUtils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
+	return Utils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
 }

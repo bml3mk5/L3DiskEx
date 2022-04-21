@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: l3basic\n"
-"POT-Creation-Date: 2018-11-22 21:43+0900\n"
-"PO-Revision-Date: 2018-11-22 21:44+0900\n"
+"POT-Creation-Date: 2018-11-26 20:52+0900\n"
+"PO-Revision-Date: 2018-11-26 20:52+0900\n"
 "Last-Translator: Sasaji <s-sasaji@ddo.jp>\n"
 "Language-Team: \n"
 "Language: Japanese\n"
@@ -35,12 +35,12 @@ msgid "Archive"
 msgstr "アーカイブ"
 
 #: src/basicdiritem_cpm.cpp:27 src/basicdiritem_fat8.cpp:28
-#: src/basicdiritem_n88.cpp:22 src/uibindump.cpp:58 src/uibindump.cpp:313
+#: src/basicdiritem_n88.cpp:22 src/uibindump.cpp:67 src/uibindump.cpp:322
 msgid "Binary"
 msgstr "バイナリ"
 
 #: src/basicdiritem_cpm.cpp:28 src/basicdiritem_fat8.cpp:29
-#: src/basicdiritem_n88.cpp:21 src/uibindump.cpp:61 src/uibindump.cpp:323
+#: src/basicdiritem_n88.cpp:21 src/uibindump.cpp:70 src/uibindump.cpp:332
 #: src/uifilelist.cpp:408
 msgid "Ascii"
 msgstr "アスキー"
@@ -51,9 +51,9 @@ msgstr "ファイル種類を選択"
 
 #: src/basicdiritem_cpm.cpp:605 src/basicdiritem_flex.cpp:523
 #: src/basicdiritem_msdos.cpp:572 src/basicdiritem_msx.cpp:89
-#: src/basicdiritem_mz.cpp:599 src/basicdiritem_n88.cpp:374
-#: src/basicdiritem_os9.cpp:730 src/basicdiritem_tfdos.cpp:372
-#: src/basicdiritem_x1hu.cpp:613
+#: src/basicdiritem_mz.cpp:601 src/basicdiritem_n88.cpp:376
+#: src/basicdiritem_os9.cpp:730 src/basicdiritem_tfdos.cpp:380
+#: src/basicdiritem_x1hu.cpp:616
 msgid "File Attributes"
 msgstr "ファイル属性"
 
@@ -77,9 +77,9 @@ msgstr "機械語"
 msgid "Random Access"
 msgstr "ランダムアクセス"
 
-#: src/basicdiritem_fat8.cpp:272 src/basicdiritem_mz.cpp:595
-#: src/basicdiritem_n88.cpp:371 src/basicdiritem_tfdos.cpp:361
-#: src/basicdiritem_x1hu.cpp:592
+#: src/basicdiritem_fat8.cpp:272 src/basicdiritem_mz.cpp:597
+#: src/basicdiritem_n88.cpp:373 src/basicdiritem_tfdos.cpp:363
+#: src/basicdiritem_x1hu.cpp:595
 msgid "File Type"
 msgstr "ファイル種類"
 
@@ -97,7 +97,7 @@ msgstr "ライトオンリー"
 
 #: src/basicdiritem_flex.cpp:24 src/basicdiritem_msdos.cpp:22
 #: src/basicdiritem_msdos.cpp:32 src/basicdiritem_tfdos.cpp:29
-#: src/basicdiritem_tfdos.cpp:376 src/basicdiritem_x1hu.cpp:31
+#: src/basicdiritem_tfdos.cpp:384 src/basicdiritem_x1hu.cpp:31
 msgid "Hidden"
 msgstr "隠し"
 
@@ -155,11 +155,11 @@ msgstr ""
 msgid "Write Protected"
 msgstr "書き込み禁止"
 
-#: src/basicdiritem_mz.cpp:29 src/basicdiritem_mz.cpp:603
+#: src/basicdiritem_mz.cpp:29 src/basicdiritem_mz.cpp:605
 msgid "Seamless"
 msgstr "シームレス"
 
-#: src/basicdiritem_mz.cpp:600 src/basicdiritem_tfdos.cpp:373
+#: src/basicdiritem_mz.cpp:602 src/basicdiritem_tfdos.cpp:381
 #: src/diskparambox.cpp:203 src/uidiskattr.cpp:55
 msgid "Write Protect"
 msgstr "書き込み禁止"
@@ -176,12 +176,12 @@ msgstr "リードアフターライト"
 msgid "Encrypted"
 msgstr "暗号化"
 
-#: src/basicdiritem_n88.cpp:255 src/basicdiritem_x1hu.cpp:472
+#: src/basicdiritem_n88.cpp:256 src/basicdiritem_x1hu.cpp:473
 #, c-format
 msgid "Is '%s' a random access file?"
 msgstr "'%s'はランダムアクセスファイルですか？"
 
-#: src/basicdiritem_n88.cpp:256 src/basicdiritem_x1hu.cpp:473
+#: src/basicdiritem_n88.cpp:257 src/basicdiritem_x1hu.cpp:474
 msgid "Select file type."
 msgstr "ファイル種類を選択"
 
@@ -240,6 +240,10 @@ msgstr ""
 #: src/basicdiritem_tfdos.cpp:27
 msgid "DBB"
 msgstr ""
+
+#: src/basicdiritem_tfdos.cpp:373
+msgid "Treat as BASE compatible text."
+msgstr "BASE互換のテキストとして扱う"
 
 #: src/basicdiritem_x1hu.cpp:23
 msgid "Bin"
@@ -438,15 +442,15 @@ msgstr "ファイル'%ls'はすでに存在します。"
 msgid " [Free:%sbytes(%sgroups)]"
 msgstr " [空き:%sバイト(%sグループ)]"
 
-#: src/basicparam.cpp:601
+#: src/basicparam.cpp:583
 msgid "Duplicate type name in DiskBasicType : "
 msgstr "DiskBasicTypeのタイプ名が重複しています : "
 
-#: src/basicparam.cpp:645
+#: src/basicparam.cpp:657
 msgid "Duplicate type number in DiskBasicFormat : "
 msgstr "DiskBasicFormatのタイプ番号が重複しています : "
 
-#: src/basicparam.cpp:691
+#: src/basicparam.cpp:703
 msgid "Duplicate type name in DiskBasicCategory : "
 msgstr "DiskBasicCategoryのタイプ名が重複しています : "
 
@@ -471,7 +475,7 @@ msgid "Usable Size :"
 msgstr "使用可能サイズ :"
 
 #: src/basicparambox.cpp:112 src/basicparambox.cpp:125
-#: src/basicparambox.cpp:138 src/intnamebox.cpp:178
+#: src/basicparambox.cpp:138 src/intnamebox.cpp:199
 msgid "bytes"
 msgstr "バイト"
 
@@ -533,7 +537,7 @@ msgstr "ボリューム名"
 msgid "Volume Number"
 msgstr "ボリューム番号"
 
-#: src/basicselbox.cpp:28 src/uifilelist.cpp:1798
+#: src/basicselbox.cpp:28 src/uifilelist.cpp:1792
 msgid "Select BASIC Type"
 msgstr "BASIC種類を選択"
 
@@ -859,102 +863,110 @@ msgstr "フォント"
 msgid "Default"
 msgstr "デフォルト"
 
-#: src/intnamebox.cpp:25 src/diskparambox.h:16
+#: src/intnamebox.cpp:26 src/diskparambox.h:16
 #, c-format
 msgid "'%s' should only contain ASCII characters."
 msgstr "'%s'はアスキー文字を指定する必要があります。"
 
-#: src/intnamebox.cpp:26
+#: src/intnamebox.cpp:27
 #, c-format
 msgid "'%s' should only contain alphabetic characters."
 msgstr "'%s'はアルファベットである必要があります。"
 
-#: src/intnamebox.cpp:27
+#: src/intnamebox.cpp:28
 #, c-format
 msgid "'%s' should only contain alphabetic or numeric characters."
 msgstr "'%s'はアルファベットと数値である必要があります。"
 
-#: src/intnamebox.cpp:28 src/diskparambox.h:15 src/rawexpbox.h:15
+#: src/intnamebox.cpp:29 src/diskparambox.h:15 src/rawexpbox.h:15
 #: src/rawparambox.h:15 src/rawsectorbox.h:15
 #, c-format
 msgid "'%s' should only contain digits."
 msgstr "'%s'は数字を指定する必要があります。"
 
-#: src/intnamebox.cpp:29
+#: src/intnamebox.cpp:30
 #, c-format
 msgid "'%s' should be numeric."
 msgstr "'%s'は数値である必要があります。"
 
-#: src/intnamebox.cpp:30
+#: src/intnamebox.cpp:31
 #, c-format
 msgid "'%s' doesn't consist only of valid characters"
 msgstr "'%s'に不正な文字が含まれています。"
 
-#: src/intnamebox.cpp:31
+#: src/intnamebox.cpp:32
 #, c-format
 msgid "'%s' contains illegal characters"
 msgstr "'%s'に不正な文字が含まれています。"
 
-#: src/intnamebox.cpp:95
+#: src/intnamebox.cpp:103
 msgid "File Name In The Disk Image"
 msgstr "ディスクイメージ内のファイル名"
 
-#: src/intnamebox.cpp:126
+#: src/intnamebox.cpp:137
 msgid "Load Address"
 msgstr "ロードアドレス"
 
-#: src/intnamebox.cpp:126 src/intnamebox.cpp:134
+#: src/intnamebox.cpp:137 src/intnamebox.cpp:145 src/intnamebox.cpp:153
 msgid "(Hex)"
 msgstr "(16進)"
 
-#: src/intnamebox.cpp:134
+#: src/intnamebox.cpp:145
+msgid "End Address"
+msgstr "終了アドレス"
+
+#: src/intnamebox.cpp:153
 msgid "Execute Address"
 msgstr "実行アドレス"
 
-#: src/intnamebox.cpp:175
+#: src/intnamebox.cpp:188
+msgid "Ignore date and time."
+msgstr "日付を無視する。"
+
+#: src/intnamebox.cpp:196
 msgid "File Size:"
 msgstr "ファイルサイズ:"
 
-#: src/intnamebox.cpp:182
+#: src/intnamebox.cpp:210
 msgid "Occupied Groups:"
 msgstr "占有しているグループ:"
 
-#: src/intnamebox.cpp:189
+#: src/intnamebox.cpp:217
 msgid "Group"
 msgstr "グループ"
 
-#: src/intnamebox.cpp:190 src/rawexpbox.cpp:42 src/uifilelist.cpp:111
+#: src/intnamebox.cpp:218 src/rawexpbox.cpp:42 src/uifilelist.cpp:111
 #: src/uifilelist.cpp:123 src/uirawdisk.cpp:260
 msgid "Track"
 msgstr "トラック"
 
-#: src/intnamebox.cpp:191 src/rawexpbox.cpp:48 src/uifilelist.cpp:112
+#: src/intnamebox.cpp:219 src/rawexpbox.cpp:48 src/uifilelist.cpp:112
 #: src/uifilelist.cpp:124 src/uirawdisk.cpp:261
 msgid "Side"
 msgstr "サイド"
 
-#: src/intnamebox.cpp:192 src/rawexpbox.cpp:40
+#: src/intnamebox.cpp:220 src/rawexpbox.cpp:40
 msgid "Start Sector"
 msgstr "開始セクタ"
 
-#: src/intnamebox.cpp:193 src/rawexpbox.cpp:40
+#: src/intnamebox.cpp:221 src/rawexpbox.cpp:40
 msgid "End Sector"
 msgstr "終了セクタ"
 
-#: src/intnamebox.cpp:500
+#: src/intnamebox.cpp:594
 msgid "File name is too long."
 msgstr "ファイル名が長すぎます。"
 
-#: src/intnamebox.cpp:502 src/intnamebox.cpp:504 src/intnamebox.cpp:506
+#: src/intnamebox.cpp:596 src/intnamebox.cpp:598 src/intnamebox.cpp:600
 msgid "Invalid char is contained in file name."
 msgstr "ファイル名に使用できない文字があります。"
 
-#: src/intnamebox.cpp:522 src/intnamebox.cpp:625 src/diskparambox.h:14
+#: src/intnamebox.cpp:616 src/intnamebox.cpp:719 src/diskparambox.h:14
 #: src/rawexpbox.h:14 src/rawparambox.h:14 src/rawsectorbox.h:14
 msgid "Validation conflict"
 msgstr "不正な文字があります。"
 
-#: src/intnamebox.cpp:616 src/intnamebox.cpp:619
+#: src/intnamebox.cpp:710 src/intnamebox.cpp:713
 msgid "Invalid format is contained in date or time."
 msgstr "日時に不正な記述が含まれています。"
 
@@ -1060,7 +1072,7 @@ msgstr "新規作成(&N)..."
 msgid "&Open..."
 msgstr "開く(&O)..."
 
-#: src/main.cpp:412 src/uibindump.cpp:56
+#: src/main.cpp:412 src/uibindump.cpp:65
 msgid "&Close"
 msgstr "閉じる(&C)"
 
@@ -1170,7 +1182,7 @@ msgstr "ダンプウィンドウ(&D)"
 msgid "&Availability Window"
 msgstr "使用状況ウィンドウ(&A)"
 
-#: src/main.cpp:458 src/uibindump.cpp:66
+#: src/main.cpp:458 src/uibindump.cpp:75
 msgid "&Font..."
 msgstr "フォント(&F)..."
 
@@ -1178,7 +1190,7 @@ msgstr "フォント(&F)..."
 msgid "&About..."
 msgstr "バージョン情報(&A)..."
 
-#: src/main.cpp:464 src/uibindump.cpp:70
+#: src/main.cpp:464 src/uibindump.cpp:79
 msgid "&File"
 msgstr "ファイル(&F)"
 
@@ -1421,31 +1433,31 @@ msgstr "警告"
 msgid "Information"
 msgstr "情報"
 
-#: src/uibindump.cpp:59 src/uibindump.cpp:315
+#: src/uibindump.cpp:68 src/uibindump.cpp:324
 msgid "Text"
 msgstr "テキスト"
 
-#: src/uibindump.cpp:62 src/uibindump.cpp:325 src/uifilelist.cpp:410
+#: src/uibindump.cpp:71 src/uibindump.cpp:334 src/uifilelist.cpp:410
 msgid "Shift JIS"
 msgstr "シフトJIS"
 
-#: src/uibindump.cpp:64
+#: src/uibindump.cpp:73
 msgid "&Invert Datas"
 msgstr "データを反転(&I)"
 
-#: src/uibindump.cpp:71
+#: src/uibindump.cpp:80
 msgid "&View"
 msgstr "表示(&V)"
 
-#: src/uibindump.cpp:322 src/uifilelist.cpp:406
+#: src/uibindump.cpp:331 src/uifilelist.cpp:406
 msgid "Charactor Code"
 msgstr "キャラクターコード"
 
-#: src/uibindump.cpp:332
+#: src/uibindump.cpp:341
 msgid "Invert Datas"
 msgstr "データを反転"
 
-#: src/uibindump.cpp:337
+#: src/uibindump.cpp:346
 msgid "Font..."
 msgstr "フォント..."
 
@@ -1625,11 +1637,11 @@ msgstr "ファイル'%s'はすでに存在します。"
 msgid "File Attribute"
 msgstr "ファイル属性"
 
-#: src/uifilelist.cpp:1822
+#: src/uifilelist.cpp:1816
 msgid "BASIC Information"
 msgstr "BASIC情報"
 
-#: src/uifilelist.cpp:1846
+#: src/uifilelist.cpp:1840
 msgid "New Directory Name"
 msgstr "新規ディレクトリ名"
 
@@ -1792,12 +1804,12 @@ msgstr "本当にセクタを削除していいですか？"
 msgid "Delete Sectors"
 msgstr "セクタを削除"
 
-#: src/utils.cpp:326
+#: src/utils.cpp:327
 #, c-format
 msgid "side %d"
 msgstr "サイド%d"
 
-#: src/utils.cpp:328
+#: src/utils.cpp:329
 #, c-format
 msgid "side %c"
 msgstr "%c面"

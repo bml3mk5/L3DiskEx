@@ -24,7 +24,7 @@ const char *gTypeNameMZ[] = {
 	wxTRANSLATE("BRD"),
 	wxTRANSLATE("<DIR>"),
 	wxTRANSLATE("<VOL>"),
-	("???"),
+	wxTRANSLATE("<VOL>sw"),
 	wxTRANSLATE("Write Protected"),
 	wxTRANSLATE("Seamless"),
 	NULL
@@ -112,7 +112,7 @@ bool DiskBasicDirItemMZ::Check(bool &last)
 
 	bool valid = true;
 	wxUint8 t = GetFileType1();
-	if ((t & 0x70) != 0 && basic->MatchVolumeAttr(t) != true) {
+	if ((t & 0x70) != 0 && basic->FindSpecialAttr(t) == NULL) {
 		valid = false;
 	}
 	return valid;
@@ -137,6 +137,7 @@ void DiskBasicDirItemMZ::SetFileAttr(const DiskBasicFileType &file_type)
 		val = FILETYPE_MZ_DIR;
 	} else if (ftype & FILE_TYPE_VOLUME_MASK) {
 		val = FILETYPE_MZ_VOL;
+		if (ftype & FILE_TYPE_TEMPORARY_MASK) val = FILETYPE_MZ_VOLSWAP;
 	}
 	SetFileType1(val);
 
@@ -187,13 +188,12 @@ DiskBasicFileType DiskBasicDirItemMZ::GetFileAttr() const
 	case FILETYPE_MZ_VOL:
 		val = FILE_TYPE_VOLUME_MASK;		// Volume
 		break;
-//	case 0x81:
-//		attr = wxGetTranslation(gTypeNameMZ[6]);	// ???
-//		break;
+	case FILETYPE_MZ_VOLSWAP:
+		val = FILE_TYPE_VOLUME_MASK;		// Volume
+		val |= FILE_TYPE_TEMPORARY_MASK;	// temporary
+		break;
 	default:
-		if (basic->MatchVolumeAttr(t1)) {
-			val = FILE_TYPE_VOLUME_MASK;	// Volume
-		}
+		val = basic->GetTypeByValueOfSpecialAttr(t1);
 		break;
 	}
 	int t2 = GetFileType2();
@@ -361,14 +361,14 @@ wxString DiskBasicDirItemMZ::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemMZ::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
-	return L3DiskUtils::FormatHMStr(&tm);
+	return Utils::FormatHMStr(&tm);
 }
 
 void DiskBasicDirItemMZ::SetFileDate(const struct tm *tm)
@@ -469,7 +469,7 @@ wxString DiskBasicDirItemMZ::RemakeFileNameStr(const wxString &filepath) const
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMZ::InvalidateChars() const
+wxString DiskBasicDirItemMZ::GetDefaultInvalidateChars() const
 {
 	return wxT("\"\\/:*?");
 }
@@ -528,8 +528,11 @@ int DiskBasicDirItemMZ::GetFileType1Pos() const
 	case FILETYPE_MZ_VOL:
 		val = TYPE_NAME_MZ_VOL;
 		break;
+	case FILETYPE_MZ_VOLSWAP:
+		val = TYPE_NAME_MZ_VOLSWAP;
+		break;
 	default:
-		if (basic->MatchVolumeAttr(t1)) {
+		if (basic->FindSpecialAttr(FILE_TYPE_VOLUME_MASK, t1)) {
 			val = TYPE_NAME_MZ_VOL;	// Volume
 		}
 		break;
@@ -568,6 +571,8 @@ void DiskBasicDirItemMZ::SetFileTypeForAttrDialog(int show_flags, const wxString
 			file_type_1 = TYPE_NAME_MZ_BSD;
 		} else if (ext == wxT(".BIN")) {
 			file_type_1 = TYPE_NAME_MZ_OBJ;
+		} else {
+			file_type_1 = TYPE_NAME_MZ_BSD;
 		}
 	}
 }
@@ -589,10 +594,10 @@ void DiskBasicDirItemMZ::CreateControlsForAttrDialog(IntNameBox *parent, int sho
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxArrayString types1;
-	for(size_t i=0; i<6; i++) {
+	for(size_t i=TYPE_NAME_MZ_OBJ; i<=TYPE_NAME_MZ_VOLSWAP; i++) {
 		types1.Add(wxGetTranslation(gTypeNameMZ[i]));
 	}
-	radType1 = new wxRadioBox(parent, IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 4, wxRA_SPECIFY_COLS);
+	radType1 = new wxRadioBox(parent, IDC_RADIO_TYPE1, _("File Type"), wxDefaultPosition, wxDefaultSize, types1, 3, wxRA_SPECIFY_COLS);
 	radType1->SetSelection(file_type_1);
 	sizer->Add(radType1, flags);
 
@@ -608,6 +613,18 @@ void DiskBasicDirItemMZ::CreateControlsForAttrDialog(IntNameBox *parent, int sho
 
 	// event handler
 	parent->Bind(wxEVT_RADIOBOX, &IntNameBox::OnChangeType1, parent, IDC_RADIO_TYPE1);
+}
+
+/// ダイアログ内の値を設定
+void DiskBasicDirItemMZ::InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data)
+{
+	// 日付が０なら日付を無視するにチェック
+	struct tm tm;
+	GetFileDateTime(&tm);
+	parent->IgnoreDateTime(
+		tm.tm_mon == -1 && ((tm.tm_mday == 0 && tm.tm_hour == 0 && tm.tm_min == 0)
+		|| (tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61))
+	);
 }
 
 /// 属性を変更した際に呼ばれるコールバック
@@ -666,6 +683,10 @@ int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos)
 		break;
 	case TYPE_NAME_MZ_VOL:
 		val = FILE_TYPE_VOLUME_MASK;		// Volume
+		break;
+	case TYPE_NAME_MZ_VOLSWAP:
+		val = FILE_TYPE_VOLUME_MASK;		// Volume
+		val |= FILE_TYPE_TEMPORARY_MASK;	// temporary
 		break;
 	}
 	return val;

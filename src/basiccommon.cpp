@@ -42,6 +42,11 @@ bool DiskBasicFileType::UnmatchType(int mask, int value) const
 	return ((type & mask) != value);
 }
 
+bool DiskBasicFileType::IsAscii() const
+{
+	return ((type & FILE_TYPE_ASCII_MASK) != 0);
+}
+
 bool DiskBasicFileType::IsVolume() const
 {
 	return ((type & (FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_VOLUME_MASK)) == FILE_TYPE_VOLUME_MASK);

@@ -173,6 +173,8 @@ public:
 	bool			LoadFile(int item_number, const wxString &dstpath);
 	/// 指定したディレクトリアイテムのファイルをロード
 	bool			LoadFile(DiskBasicDirItem *item, const wxString &dstpath);
+	/// 指定したストリームにファイルをロード
+	bool			LoadFile(DiskBasicDirItem *item, wxOutputStream &ostream);
 
 	/// 指定したアイテムのファイルをベリファイ
 	bool			VerifyFile(DiskBasicDirItem *item, const wxString &srcpath);

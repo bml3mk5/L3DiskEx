@@ -55,7 +55,7 @@ bool DiskBasicDirItemL32D::Check(bool &last)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL32D::InvalidateChars() const
+wxString DiskBasicDirItemL32D::GetDefaultInvalidateChars() const
 {
 	return wxT("\":()");
 }

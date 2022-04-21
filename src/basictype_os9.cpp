@@ -395,11 +395,12 @@ wxUint32 DiskBasicTypeOS9::GetNextEmptyGroupNumber(wxUint32 curr_group)
 }
 
 /// ファイルをセーブする前の準備を行う
-/// @param [in]     istream ストリームバッファ
-/// @param [in]     pitem   ファイル名、属性を持っているディレクトリアイテム
-/// @param [in]     nitem   確保したディレクトリアイテム
-/// @param [in,out] errinfo エラー情報
-bool DiskBasicTypeOS9::PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
+/// @param [in]     istream   ストリームバッファ
+/// @param [in,out] file_size 出力サイズ
+/// @param [in]     pitem     ファイル名、属性を持っているディレクトリアイテム
+/// @param [in]     nitem     確保したディレクトリアイテム
+/// @param [in,out] errinfo   エラー情報
+bool DiskBasicTypeOS9::PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
 {
 	// FDセクタを確保する
 	wxUint32 lsn = GetEmptyGroupNumber();

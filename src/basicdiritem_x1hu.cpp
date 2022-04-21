@@ -365,14 +365,14 @@ wxString DiskBasicDirItemX1HU::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemX1HU::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
-	return L3DiskUtils::FormatHMStr(&tm);
+	return Utils::FormatHMStr(&tm);
 }
 
 void DiskBasicDirItemX1HU::SetFileDate(const struct tm *tm)
@@ -462,6 +462,7 @@ bool DiskBasicDirItemX1HU::NeedCheckEofCode()
 	return ((GetFileType1() & FILETYPE_X1HU_ASCII) != 0 && (external_attr == 0));
 }
 
+#if 0
 /// データをエクスポートする前に必要な処理
 /// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
 /// @param [in,out] filename ファイル名
@@ -475,6 +476,7 @@ bool DiskBasicDirItemX1HU::PreExportDataFile(wxString &filename)
 	}
 	return true;
 }
+#endif
 
 /// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 int DiskBasicDirItemX1HU::RecalcFileSizeOnSave(wxInputStream *istream, int file_size)
@@ -543,6 +545,7 @@ int DiskBasicDirItemX1HU::GetFileType2Pos() const
 	val |= (t & DATATYPE_X1HU_HIDDEN ? FILE_TYPE_HIDDEN_MASK : 0);
 	val |= (t & DATATYPE_X1HU_READ_WRITE ? FILE_TYPE_READWRITE_MASK : 0);
 	val |= (t & DATATYPE_X1HU_READ_ONLY ? FILE_TYPE_READONLY_MASK : 0);
+
 	return val;
 }
 
@@ -566,7 +569,7 @@ void DiskBasicDirItemX1HU::SetFileTypeForAttrDialog(int show_flags, const wxStri
 			file_type_1 = TYPE_NAME_X1HU_BINARY;
 		}
 		// パスワードなし
-		file_type_2 = DATATYPE_X1HU_PASSWORD_NONE;
+		file_type_2 &= ~FILE_TYPE_ENCRYPTED_MASK;
 	}
 }
 
@@ -622,7 +625,12 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	staType4->Add(chkReadOnly, flags);
 	chkEncrypt = new wxCheckBox(parent, IDC_CHECK_ENCRYPT, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_PASSWORD]));
 	// ユーザ定義データ X1ではファイルパスワード
-	int passwd = (GetFileType2() & DATATYPE_X1HU_PASSWORD_MASK);
+	int passwd;
+	if (show_flags & INTNAME_NEW_FILE) {
+		passwd = DATATYPE_X1HU_PASSWORD_NONE;
+	} else {
+		passwd = GetFileType2();
+	}
 	parent->SetUserData(passwd);
 	chkEncrypt->SetValue(passwd != DATATYPE_X1HU_PASSWORD_NONE);
 	chkEncrypt->Enable(false);
@@ -635,6 +643,20 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_ASCII);
 	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_DIR);
 	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_RANDOM);
+}
+
+/// ダイアログ内の値を設定
+void DiskBasicDirItemX1HU::InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data)
+{
+	// 日付が０なら日付を無視するにチェック
+	if ((show_flags & INTNAME_NEW_FILE) == 0) {
+		struct tm tm;
+		GetFileDateTime(&tm);
+		parent->IgnoreDateTime(
+			tm.tm_mon == -1 && ((tm.tm_mday == 0 && tm.tm_hour == 0 && tm.tm_min == 0)
+			|| (tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61))
+		);
+	}
 }
 
 /// 属性を変更した際に呼ばれるコールバック

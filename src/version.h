@@ -6,10 +6,10 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define APPLICATION_VERSION	"0.3.6"
+#define APPLICATION_VERSION	"0.3.7"
 #define APP_VER_MAJOR	0
 #define APP_VER_MINOR	3
-#define APP_VER_REV	6
+#define APP_VER_REV	7
 #define APP_VER_BUILD	0
 #define APP_COPYRIGHT	"Copyright (C) 2015-2018 Sasaji"
 

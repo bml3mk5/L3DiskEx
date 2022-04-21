@@ -28,7 +28,6 @@
 	<DiskBasicFormat type="10" name="CPM">
 	</DiskBasicFormat>
 	<DiskBasicFormat type="71" name="TFDOS">
-		<HasVolumeName>true</HasVolumeName>
 		<HasVolumeNumber>true</HasVolumeNumber>
 	</DiskBasicFormat>
 </DiskBasicFormats>
@@ -1171,36 +1170,6 @@
 		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
 		<Description>CP/M for PC-9801 (2HD)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="TFDOS-2D-MZ" category="TFDOS">
-		<FormatType>71</FormatType>
-		<SectorsPerGroup>16</SectorsPerGroup>
-		<SidesPerDisk>2</SidesPerDisk>
-		<SectorsPerTrack>16</SectorsPerTrack>
-		<ManagedTrackNumber>0</ManagedTrackNumber>
-		<FATStartSector>2</FATStartSector>
-		<FATEndSector>2</FATEndSector>
-		<FATStartPosition>0</FATStartPosition>
-		<FATEndGroup>79</FATEndGroup>
-		<ReservedGroups>
-			<Group>0</Group>
-			<Group>1</Group>
-		</ReservedGroups>
-		<GroupFinalCode>0xff</GroupFinalCode>
-		<GroupSystemCode>0xff</GroupSystemCode>
-		<GroupUnusedCode>0x00</GroupUnusedCode>
-		<DirStartSector>3</DirStartSector>
-		<DirEndSector>16</DirEndSector>
-		<DirSpaceCode>0x0d</DirSpaceCode>
-		<FillCodeOnFormat>0xff</FillCodeOnFormat>
-		<FillCodeOnFAT>0x00</FillCodeOnFAT>
-		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
-		<DataInverted>false</DataInverted>
-		<SideReversed>false</SideReversed>
-		<IDString>\x01TF-DOS </IDString><!-- IPL for TF-DOS -->
-		<IPLString>\x01</IPLString><!-- IPL for MZ -->
-		<Description>TF-DOS for MZ (2D)</Description>
-		<Description lang="ja">TF-DOS for MZ (2D)</Description>
-	</DiskBasicType>
 	<DiskBasicType name="TFDOS-2D" category="TFDOS">
 		<FormatType>71</FormatType>
 		<SectorsPerGroup>16</SectorsPerGroup>
@@ -1226,8 +1195,96 @@
 		<DataInverted>false</DataInverted>
 		<SideReversed>false</SideReversed>
 		<IDString>\x01TF-DOS </IDString>
+		<VolumeString>TF-DOS</VolumeString>
 		<Description>TF-DOS (2D)</Description>
 		<Description lang="ja">TF-DOS (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TFDOS-2D-INV" category="TFDOS">
+		<FormatType>71</FormatType>
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>79</FATEndGroup>
+		<ReservedGroups>
+			<Group>0</Group>
+		</ReservedGroups>
+		<GroupFinalCode>0xff</GroupFinalCode>
+		<GroupSystemCode>0xff</GroupSystemCode>
+		<GroupUnusedCode>0x00</GroupUnusedCode>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirSpaceCode>0x0d</DirSpaceCode>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DataInverted>true</DataInverted>
+		<SideReversed>true</SideReversed>
+		<IDString>\x01TF-DOS </IDString>
+		<VolumeString>TF-DOS</VolumeString>
+		<Description>TF-DOS (Data Inverted)(2D)</Description>
+		<Description lang="ja">TF-DOS (データ反転)(2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TFDOS-2DD" category="TFDOS">
+		<FormatType>71</FormatType>
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>159</FATEndGroup>
+		<ReservedGroups>
+			<Group>0</Group>
+		</ReservedGroups>
+		<GroupFinalCode>0xff</GroupFinalCode>
+		<GroupSystemCode>0xff</GroupSystemCode>
+		<GroupUnusedCode>0x00</GroupUnusedCode>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirSpaceCode>0x0d</DirSpaceCode>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DataInverted>false</DataInverted>
+		<SideReversed>false</SideReversed>
+		<IDString>\x01TF-DOS </IDString>
+		<VolumeString>TF-DOS</VolumeString>
+		<Description>TF-DOS (2DD)</Description>
+		<Description lang="ja">TF-DOS (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TFDOS-2DD-INV" category="TFDOS">
+		<FormatType>71</FormatType>
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>159</FATEndGroup>
+		<ReservedGroups>
+			<Group>0</Group>
+		</ReservedGroups>
+		<GroupFinalCode>0xff</GroupFinalCode>
+		<GroupSystemCode>0xff</GroupSystemCode>
+		<GroupUnusedCode>0x00</GroupUnusedCode>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirSpaceCode>0x0d</DirSpaceCode>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DataInverted>true</DataInverted>
+		<SideReversed>true</SideReversed>
+		<IDString>\x01TF-DOS </IDString>
+		<VolumeString>TF-DOS</VolumeString>
+		<Description>TF-DOS (Data Inverted)(2DD)</Description>
+		<Description lang="ja">TF-DOS (データ反転)(2DD)</Description>
 	</DiskBasicType>
 </DiskBasicTypes>
 </DiskBasics>

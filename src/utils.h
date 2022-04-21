@@ -14,7 +14,7 @@
 
 
 /// 各種ユーティリティー
-namespace L3DiskUtils
+namespace Utils
 {
 
 /// ダンプ用補助クラス

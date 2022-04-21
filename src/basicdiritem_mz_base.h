@@ -43,7 +43,7 @@ public:
 	/// ファイルパスから内部ファイル名を生成する
 	virtual wxString RemakeFileNameStr(const wxString &filepath) const;
 	/// ファイル名に設定できない文字を文字列にして返す
-	virtual wxString InvalidateChars() const;
+	virtual wxString GetDefaultInvalidateChars() const;
 
 	/// ディレクトリを初期化 未使用にする
 	virtual void	InitialData();

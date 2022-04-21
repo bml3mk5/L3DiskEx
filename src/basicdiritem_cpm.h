@@ -88,7 +88,7 @@ public:
 	bool			Delete(wxUint8 code);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		InvalidateChars() const;
+	wxString		GetDefaultInvalidateChars() const;
 	/// ダイアログ入力前のファイル名を変換 大文字にする
 	void			ConvertToFileNameStr(wxString &filename) const;
 	/// ダイアログ入力後のファイル名文字列を変換 大文字にする

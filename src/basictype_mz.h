@@ -67,6 +67,8 @@ public:
 	//@{
 	/// @brief データサイズ分のグループを確保する
 	int			AllocateGroups(DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items);
+	/// @brief グループを確保して使用中にする
+	int			AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_start, int remain, int sec_size, DiskBasicGroups &group_items, int &file_size, int &groups);
 	//@}
 
 	/// @name directory

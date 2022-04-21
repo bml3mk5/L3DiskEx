@@ -126,6 +126,8 @@ public:
 	bool			HasDateTime() const { return true; }
 	bool			HasDate() const { return true; }
 	bool			HasTime() const { return true; }
+	/// アイテムの時間設定を無視することができるか
+	bool			CanIgnoreDateTime() const { return true; }
 	/// 日付を返す
 	void			GetFileDate(struct tm *tm) const;
 	/// 時間を返す
@@ -155,8 +157,8 @@ public:
 
 	/// ファイルの終端コードをチェックする必要があるか
 	bool			NeedCheckEofCode();
-	/// データをエクスポートする前に必要な処理
-	bool			PreExportDataFile(wxString &filename);
+//	/// データをエクスポートする前に必要な処理
+//	bool			PreExportDataFile(wxString &filename);
 	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 
@@ -165,6 +167,8 @@ public:
 	//@{
 	/// ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// ダイアログ内の値を設定
+	void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// 機種依存の属性を設定する

@@ -191,7 +191,7 @@ bool DiskBasicDirItemMSDOS::IsFileNameEditable() const
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMSDOS::InvalidateChars() const
+wxString DiskBasicDirItemMSDOS::GetDefaultInvalidateChars() const
 {
 	return wxT(" \"\\/:*?<>|");
 }
@@ -363,14 +363,14 @@ wxString DiskBasicDirItemMSDOS::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemMSDOS::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
-	return L3DiskUtils::FormatHMSStr(&tm);
+	return Utils::FormatHMSStr(&tm);
 }
 
 void DiskBasicDirItemMSDOS::SetFileDate(const struct tm *tm)
@@ -400,7 +400,7 @@ wxString DiskBasicDirItemMSDOS::GetCDateStr() const
 	struct tm tm;
 	wxUint16 date = wxUINT16_SWAP_ON_BE(data->msdos.cdate);
 	ConvDateToTm(date, &tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemMSDOS::GetCTimeStr() const
@@ -408,7 +408,7 @@ wxString DiskBasicDirItemMSDOS::GetCTimeStr() const
 	struct tm tm;
 	wxUint16 time = wxUINT16_SWAP_ON_BE(data->msdos.ctime);
 	ConvTimeToTm(time, &tm);
-	return L3DiskUtils::FormatHMSStr(&tm);
+	return Utils::FormatHMSStr(&tm);
 }
 
 wxString DiskBasicDirItemMSDOS::GetADateStr() const
@@ -416,7 +416,7 @@ wxString DiskBasicDirItemMSDOS::GetADateStr() const
 	struct tm tm;
 	wxUint16 date = wxUINT16_SWAP_ON_BE(data->msdos.adate);
 	ConvDateToTm(date, &tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 /// 日付をセット
@@ -599,22 +599,24 @@ void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int 
 
 	sizer->Add(staType4, flags);
 
-	wxSize sz(80, -1);
 	DateTimeValidator date_validate(false);
 	DateTimeValidator time_validate(true);
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	hbox->Add(new wxStaticText(parent, wxID_ANY, _("Created Date:")), stflags);
-	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CDATE, GetCDateStr(), wxDefaultPosition, sz, 0, date_validate);
+	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CDATE, GetCDateStr(), wxDefaultPosition, wxDefaultSize, 0, date_validate);
+	txtCDate->SetMinSize(IntNameBox::GetDateTextExtent(txtCDate));
 	hbox->Add(txtCDate, flags);
-	txtCTime = new wxTextCtrl(parent, IDC_TEXT_CTIME, GetCTimeStr(), wxDefaultPosition, sz, 0, time_validate);
+	txtCTime = new wxTextCtrl(parent, IDC_TEXT_CTIME, GetCTimeStr(), wxDefaultPosition, wxDefaultSize, 0, time_validate);
+	txtCTime->SetMinSize(IntNameBox::GetTimeTextExtent(txtCTime));
 	hbox->Add(txtCTime, flags);
 	sizer->Add(hbox, flags);
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	hbox->Add(new wxStaticText(parent, wxID_ANY, _("Accessed Date:")), stflags);
-	txtADate = new wxTextCtrl(parent, IDC_TEXT_ADATE, GetADateStr(), wxDefaultPosition, sz, 0, date_validate);
+	txtADate = new wxTextCtrl(parent, IDC_TEXT_ADATE, GetADateStr(), wxDefaultPosition, wxDefaultSize, 0, date_validate);
+	txtADate->SetMinSize(IntNameBox::GetDateTextExtent(txtADate));
 	hbox->Add(txtADate, flags);
 	sizer->Add(hbox, flags);
 }
@@ -644,15 +646,15 @@ bool DiskBasicDirItemMSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 
 	struct tm tm;
 	if (txtCDate) {
-		L3DiskUtils::ConvDateStrToTm(txtCDate->GetValue(), &tm);
+		Utils::ConvDateStrToTm(txtCDate->GetValue(), &tm);
 		SetCDate(&tm);
 	}
 	if (txtCTime) {
-		L3DiskUtils::ConvTimeStrToTm(txtCTime->GetValue(), &tm);
+		Utils::ConvTimeStrToTm(txtCTime->GetValue(), &tm);
 		SetCTime(&tm);
 	}
 	if (txtADate) {
-		L3DiskUtils::ConvDateStrToTm(txtADate->GetValue(), &tm);
+		Utils::ConvDateStrToTm(txtADate->GetValue(), &tm);
 		SetADate(&tm);
 	}
 	return true;

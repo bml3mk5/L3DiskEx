@@ -52,7 +52,7 @@ public:
 	bool	Check(bool &last);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString	InvalidateChars() const;
+	wxString	GetDefaultInvalidateChars() const;
 
 	/// ファイルサイズをセット
 	void	SetFileSize(int val);

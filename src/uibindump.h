@@ -206,7 +206,7 @@ private:
 	bool data_invert;
 	int  data_char;
 
-	L3DiskUtils::Dump dump;
+	Utils::Dump dump;
 
 	void SetDatasMain(const L3MemoryBuffer *buf);
 	void AppendDatasMain(const L3MemoryBuffer *buf);

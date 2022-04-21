@@ -20,6 +20,7 @@
 
 class wxTextCtrl;
 class wxListCtrl;
+class wxCheckBox;
 class wxListEvent;
 class L3DiskFrame;
 class DiskBasic;
@@ -53,29 +54,36 @@ private:
 	wxTextCtrl *txtIntName;
 	size_t mNameMaxLen;
 
+	int file_size;
 	int user_data;	// machine depended
 
 	wxTextCtrl *txtStartAddr;
+	wxTextCtrl *txtEndAddr;
 	wxTextCtrl *txtExecAddr;
 
 	wxTextCtrl *txtCDate;
 	wxTextCtrl *txtCTime;
+	wxCheckBox *chkIgnoreDate;
 
 	// 詳細表示用
 	wxTextCtrl *txtFileSize;
 	wxTextCtrl *txtGroups;
 	wxListCtrl *lstGroups;
 
+	void ChangedIgnoreDate(bool check);
+
 public:
 	IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
-		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
+		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int file_size, int show_flags);
 
 	enum {
 		IDC_TEXT_INTNAME = 1,
 		IDC_TEXT_START_ADDR,
+		IDC_TEXT_END_ADDR,
 		IDC_TEXT_EXEC_ADDR,
 		IDC_TEXT_CDATE,
 		IDC_TEXT_CTIME,
+		IDC_CHK_IGNORE_DATE,
 		IDC_TEXT_FILE_SIZE,
 		IDC_TEXT_GROUPS,
 		IDC_LIST_GROUPS,
@@ -84,7 +92,7 @@ public:
 	/// @name functions
 	//@{
 	void CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
-		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
+		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int file_size, int show_flags);
 
 	int ShowModal();
 
@@ -95,6 +103,8 @@ public:
 	//@{
 	void OnOK(wxCommandEvent& event);
 	void OnChangeType1(wxCommandEvent& event);
+	void OnChangeStartAddr(wxCommandEvent& event);
+	void OnChangeIgnoreDate(wxCommandEvent& event);
 
 	void OnListItemSelected(wxListEvent& event);
 	//@}
@@ -113,17 +123,26 @@ public:
 	int GetStartAddress() const;
 	int GetExecuteAddress() const;
 
-	void GetDateTime(struct tm *tm);
-	struct tm GetDateTime();
+	void GetDateTime(struct tm *tm) const;
+	struct tm GetDateTime() const;
 
 	void SetDateTime(const wxString &date, const wxString &time);
 	void SetDateTime(const wxDateTime &date_time);
+
+	bool DoesIgnoreDateTime() const;
+	void IgnoreDateTime(bool val);
 
 	void SetFileSize(long val);
 	void SetGroups(long val, DiskBasicGroups &vals);
 
 	int GetUserData() const { return user_data; }
 	void SetUserData(int val) { user_data = val; }
+	//@}
+
+	/// @name utilities
+	//@{
+	static wxSize GetDateTextExtent(wxTextCtrl *ctrl);
+	static wxSize GetTimeTextExtent(wxTextCtrl *ctrl);
 	//@}
 
 	wxDECLARE_EVENT_TABLE();

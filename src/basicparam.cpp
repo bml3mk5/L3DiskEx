@@ -16,6 +16,82 @@ DiskBasicTemplates gDiskBasicTemplates;
 //
 //
 //
+SpecialAttribute::SpecialAttribute(int n_idx, int n_type, int n_value, int n_mask)
+{
+	idx = n_idx;
+	type = n_type;
+	value = n_value;
+	mask = n_mask;
+}
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(ArrayOfSpecialAttribute);
+
+SpecialAttributes::SpecialAttributes()
+	: ArrayOfSpecialAttribute()
+{
+}
+/// 属性タイプと値に一致するアイテムを返す
+const SpecialAttribute *SpecialAttributes::Find(int type, int value) const
+{
+	const SpecialAttribute *match = NULL;
+	for(size_t i=0; i<Count(); i++) {
+		SpecialAttribute *attr = &Item(i);
+		if (attr->GetType() == type && attr->GetValue() == (value & attr->GetMask())) {
+			match = attr;
+			break;
+		}
+	}
+	return match;
+}
+/// 属性値に一致するアイテムを返す
+const SpecialAttribute *SpecialAttributes::Find(int value) const
+{
+	const SpecialAttribute *match = NULL;
+	for(size_t i=0; i<Count(); i++) {
+		SpecialAttribute *attr = &Item(i);
+		if (attr->GetValue() == (value & attr->GetMask())) {
+			match = attr;
+			break;
+		}
+	}
+	return match;
+}
+/// 属性値に一致するアイテムの位置を返す
+int SpecialAttributes::GetIndexByValue(int value) const
+{
+	int idx = -1;
+	const SpecialAttribute *match = Find(value);
+	if (match) {
+		idx = match->GetIndex();
+	}
+	return idx;
+}
+/// 属性値に一致するアイテムの属性タイプを返す
+int SpecialAttributes::GetTypeByValue(int value) const
+{
+	int type = 0;
+	const SpecialAttribute *match = Find(value);
+	if (match) {
+		type = match->GetType();
+	}
+	return type;
+}
+/// 位置から属性タイプを返す
+int SpecialAttributes::GetTypeByIndex(int idx) const
+{
+	return idx < (int)Count() ? Item(idx).GetType() : 0;
+}
+/// 位置から属性値を返す
+int SpecialAttributes::GetValueByIndex(int idx) const
+{
+	return idx < (int)Count() ? Item(idx).GetValue() : 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
 DiskBasicFormat::DiskBasicFormat()
 {
 	type_number = FORMAT_TYPE_NONE;
@@ -34,20 +110,6 @@ DiskBasicFormat::DiskBasicFormat(
 
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicFormats);
-
-//////////////////////////////////////////////////////////////////////
-//
-//
-//
-SpecialAttribute::SpecialAttribute(int n_type, int n_value, int n_mask)
-{
-	type = n_type;
-	value = n_value;
-	mask = n_mask;
-}
-
-#include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(SpecialAttributes);
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -99,6 +161,7 @@ DiskBasicParam::DiskBasicParam(
 	wxUint8				n_fillcode_on_dir,
 	wxUint8				n_delete_code,
 	wxUint8				n_media_id,
+	const wxString &	n_invalidate_chars,
 	bool				n_data_inverted,
 	bool				n_side_reversed,
 	bool				n_mount_each_sides,
@@ -141,6 +204,7 @@ DiskBasicParam::DiskBasicParam(
 	fillcode_on_dir = n_fillcode_on_dir;
 	delete_code = n_delete_code;
 	media_id = n_media_id;
+	invalidate_chars = n_invalidate_chars;
 	data_inverted = n_data_inverted;
 	side_reversed = n_side_reversed;
 	mount_each_sides = n_mount_each_sides;
@@ -185,6 +249,7 @@ void DiskBasicParam::ClearBasicParam()
 	fillcode_on_dir		 = 0xff;
 	delete_code			 = 0x00;
 	media_id			 = 0x00;
+	invalidate_chars.Empty();
 	data_inverted		 = false;
 	side_reversed		 = false;
 	mount_each_sides	 = false;
@@ -229,6 +294,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	fillcode_on_dir = src.fillcode_on_dir;
 	delete_code = src.delete_code;
 	media_id = src.media_id;
+	invalidate_chars = src.invalidate_chars;
 	data_inverted = src.data_inverted;
 	side_reversed = src.side_reversed;
 	mount_each_sides = src.mount_each_sides;
@@ -261,22 +327,34 @@ bool DiskBasicParam::CanMountEachSides() const
 	return (mount_each_sides && sides_on_basic == 1);
 }
 /// 属性が一致するか
-bool DiskBasicParam::MatchSpecialAttr(int type, int value) const
+const SpecialAttribute *DiskBasicParam::FindSpecialAttr(int type, int value) const
 {
-	bool match = false;
-	for(size_t i=0; i<special_attrs.Count(); i++) {
-		SpecialAttribute *attr = &special_attrs.Item(i);
-		if (attr->GetType() == type && attr->GetValue() == (value & attr->GetMask())) {
-			match = true;
-			break;
-		}
-	}
-	return match;
+	return special_attrs.Find(type, value);
 }
-/// ボリューム属性が一致するか
-bool DiskBasicParam::MatchVolumeAttr(int value) const
+/// 属性が一致するか
+const SpecialAttribute *DiskBasicParam::FindSpecialAttr(int value) const
 {
-	return MatchSpecialAttr(FILE_TYPE_VOLUME_MASK, value);
+	return special_attrs.Find(value);
+}
+/// 特別な属性の位置
+int DiskBasicParam::GetIndexByValueOfSpecialAttr(int value) const
+{
+	return special_attrs.GetIndexByValue(value);
+}
+/// 特別な属性の属性値を返す
+int DiskBasicParam::GetTypeByValueOfSpecialAttr(int value) const
+{
+	return special_attrs.GetTypeByValue(value);
+}
+/// 特別な属性の属性タイプを返す
+int DiskBasicParam::GetTypeByIndexOfSpecialAttr(int idx) const
+{
+	return special_attrs.GetTypeByIndex(idx);
+}
+/// 特別な属性の属性値を返す
+int DiskBasicParam::GetValueByIndexOfSpecialAttr(int idx) const
+{
+	return special_attrs.GetValueByIndex(idx);
 }
 /// 説明文でソート
 int DiskBasicParam::SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2)
@@ -384,6 +462,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			int group_system_code	 = 0;
 			int group_unused_code	 = 0;
 			int id_sector_pos		 = 0;
+			wxString invalidate_chars;
 			bool data_inverted		 = false;
 			bool side_reversed		 = false;
 			bool mount_each_sides	 = false;
@@ -397,146 +476,123 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			while (itemnode) {
 				if (itemnode->GetName() == "FormatType") {
 					wxString str = itemnode->GetNodeContent();
-					format_type_number = L3DiskUtils::ToInt(str);
+					format_type_number = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorsPerGroup") {
 					wxString str = itemnode->GetNodeContent();
-					sectors_per_group = L3DiskUtils::ToInt(str);
+					sectors_per_group = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SidesPerDisk") {
 					wxString str = itemnode->GetNodeContent();
-					sides_on_basic = L3DiskUtils::ToInt(str);
+					sides_on_basic = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorsPerTrack") {
 					wxString str = itemnode->GetNodeContent();
-					sectors_on_basic = L3DiskUtils::ToInt(str);
+					sectors_on_basic = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "TracksPerSide") {
 					wxString str = itemnode->GetNodeContent();
-					tracks_on_basic = L3DiskUtils::ToInt(str);
+					tracks_on_basic = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "ManagedTrackNumber") {
 					wxString str = itemnode->GetNodeContent();
-					managed_track_number = L3DiskUtils::ToInt(str);
+					managed_track_number = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "ReservedSectors") {
 					wxString str = itemnode->GetNodeContent();
-					reserved_sectors = L3DiskUtils::ToInt(str);
+					reserved_sectors = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "NumberOfFATs") {
 					wxString str = itemnode->GetNodeContent();
-					number_of_fats = L3DiskUtils::ToInt(str);
+					number_of_fats = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorsPerFAT") {
 					wxString str = itemnode->GetNodeContent();
-					sectors_per_fat = L3DiskUtils::ToInt(str);
+					sectors_per_fat = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATStartSector") {
 					wxString str = itemnode->GetNodeContent();
-					fat_start_sector = L3DiskUtils::ToInt(str);
+					fat_start_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATEndSector") {
 					wxString str = itemnode->GetNodeContent();
-					fat_end_sector = L3DiskUtils::ToInt(str);
+					fat_end_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATStartPosition") {
 					wxString str = itemnode->GetNodeContent();
-					fat_start_position = L3DiskUtils::ToInt(str);
+					fat_start_position = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATEndGroup") {
 					wxString str = itemnode->GetNodeContent();
-					fat_end_group = L3DiskUtils::ToInt(str);
+					fat_end_group = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATSideNumber") {
 					wxString str = itemnode->GetNodeContent();
-					fat_side_number = L3DiskUtils::ToInt(str);
+					fat_side_number = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "ReservedGroups") {
-					wxXmlNode *citemnode = itemnode->GetChildren();
-					while(citemnode) {
-						if (citemnode->GetName() == "Group") {
-							wxString str = citemnode->GetNodeContent();
-							int reserved_group = L3DiskUtils::ToInt(str);
-							reserved_groups.Add(reserved_group);
-						}
-						citemnode = citemnode->GetNext();
-					}
+					LoadReservedGroupsInTypes(itemnode, locale_name, errmsgs, reserved_groups);
 				} else if (itemnode->GetName() == "GroupFinalCode") {
 					wxString str = itemnode->GetNodeContent();
-					group_final_code = L3DiskUtils::ToInt(str);
+					group_final_code = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "GroupSystemCode") {
 					wxString str = itemnode->GetNodeContent();
-					group_system_code = L3DiskUtils::ToInt(str);
+					group_system_code = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "GroupUnusedCode") {
 					wxString str = itemnode->GetNodeContent();
-					group_unused_code = L3DiskUtils::ToInt(str);
+					group_unused_code = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartSector") {
 					wxString str = itemnode->GetNodeContent();
-					dir_start_sector = L3DiskUtils::ToInt(str);
+					dir_start_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirEndSector") {
 					wxString str = itemnode->GetNodeContent();
-					dir_end_sector = L3DiskUtils::ToInt(str);
+					dir_end_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirEntryCount") {
 					wxString str = itemnode->GetNodeContent();
-					dir_entry_count = L3DiskUtils::ToInt(str);
+					dir_entry_count = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirSpaceCode") {
 					wxString str = itemnode->GetNodeContent();
-					dir_space_code = L3DiskUtils::ToInt(str);
+					dir_space_code = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartPosition") {
 					wxString str = itemnode->GetNodeContent();
-					dir_start_pos = L3DiskUtils::ToInt(str);
+					dir_start_pos = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartPositionOnRoot") {
 					wxString str = itemnode->GetNodeContent();
-					dir_start_pos_on_root = L3DiskUtils::ToInt(str);
+					dir_start_pos_on_root = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
 					wxString str = itemnode->GetNodeContent();
-					dir_start_pos_on_sec = L3DiskUtils::ToInt(str);
+					dir_start_pos_on_sec = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "GroupsPerDirEntry") {
 					wxString str = itemnode->GetNodeContent();
-					groups_per_dir_entry = L3DiskUtils::ToInt(str);
+					groups_per_dir_entry = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SubDirGroupSize") {
 					wxString str = itemnode->GetNodeContent();
-					subdir_group_size = L3DiskUtils::ToInt(str);
+					subdir_group_size = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FillCodeOnFormat") {
 					wxString str = itemnode->GetNodeContent();
-					fill_code_on_format = L3DiskUtils::ToInt(str);
+					fill_code_on_format = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FillCodeOnFAT") {
 					wxString str = itemnode->GetNodeContent();
-					fill_code_on_fat = L3DiskUtils::ToInt(str);
+					fill_code_on_fat = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FillCodeOnDir") {
 					wxString str = itemnode->GetNodeContent();
-					fill_code_on_dir = L3DiskUtils::ToInt(str);
+					fill_code_on_dir = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DeleteCodeOnDir") {
 					wxString str = itemnode->GetNodeContent();
-					delete_code_on_dir = L3DiskUtils::ToInt(str);
+					delete_code_on_dir = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "MediaID") {
 					wxString str = itemnode->GetNodeContent();
-					media_id = L3DiskUtils::ToInt(str);
+					media_id = Utils::ToInt(str);
+				} else if (itemnode->GetName() == "InvalidateChars") {
+					invalidate_chars = Utils::Escape(itemnode->GetNodeContent());
 				} else if (itemnode->GetName() == "DataInverted") {
 					wxString str = itemnode->GetNodeContent();
-					data_inverted = L3DiskUtils::ToBool(str);
+					data_inverted = Utils::ToBool(str);
 				} else if (itemnode->GetName() == "SideReversed") {
 					wxString str = itemnode->GetNodeContent();
-					side_reversed = L3DiskUtils::ToBool(str);
+					side_reversed = Utils::ToBool(str);
 				} else if (itemnode->GetName() == "CanMountEachSides") {
 					wxString str = itemnode->GetNodeContent();
-					mount_each_sides = L3DiskUtils::ToBool(str);
+					mount_each_sides = Utils::ToBool(str);
 				} else if (itemnode->GetName() == "IDSectorPosition") {
 					wxString str = itemnode->GetNodeContent();
-					id_sector_pos = L3DiskUtils::ToInt(str);
+					id_sector_pos = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "IDString") {
-					id_string = L3DiskUtils::Escape(itemnode->GetNodeContent());
+					id_string = Utils::Escape(itemnode->GetNodeContent());
 				} else if (itemnode->GetName() == "IPLString") {
-					ipl_string = L3DiskUtils::Escape(itemnode->GetNodeContent());
+					ipl_string = Utils::Escape(itemnode->GetNodeContent());
 				} else if (itemnode->GetName() == "VolumeString") {
-					volume_string = L3DiskUtils::Escape(itemnode->GetNodeContent());
+					volume_string = Utils::Escape(itemnode->GetNodeContent());
 				} else if (itemnode->GetName() == "SpecialAttributes") {
-					wxXmlNode *citemnode = itemnode->GetChildren();
-					while(citemnode) {
-						if (citemnode->GetName() == "Volume") {
-							wxString sval = item->GetAttribute("value");
-							wxString smsk = item->GetAttribute("mask");
-							int val = L3DiskUtils::ToInt(sval);
-							int msk = L3DiskUtils::ToInt(smsk);
-							special_attrs.Add(SpecialAttribute(FILE_TYPE_VOLUME_MASK, val, msk));
-						}
-						citemnode = citemnode->GetNext();
-					}
+					LoadSpecialAttributesInTypes(itemnode, locale_name, errmsgs, special_attrs);
 				} else if (itemnode->GetName() == "Description") {
-					if (itemnode->HasAttribute("lang")) {
-						wxString lang = itemnode->GetAttribute("lang");
-						if (locale_name.Find(lang) != wxNOT_FOUND) {
-							desc_locale = itemnode->GetNodeContent();
-						}
-					} else {
-						desc = itemnode->GetNodeContent();
-					}
+					LoadDescription(itemnode, locale_name, desc, desc_locale);
 				}
 				itemnode = itemnode->GetNext();
 			}
@@ -588,6 +644,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				fill_code_on_dir,
 				delete_code_on_dir,
 				media_id,
+				invalidate_chars,
 				data_inverted,
 				side_reversed,
 				mount_each_sides,
@@ -608,6 +665,72 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 	return valid;
 }
 
+bool DiskBasicTemplates::LoadDescription(const wxXmlNode *node, const wxString &locale_name, wxString &desc, wxString &desc_locale)
+{
+	if (node->HasAttribute("lang")) {
+		wxString lang = node->GetAttribute("lang");
+		if (locale_name.Find(lang) != wxNOT_FOUND) {
+			desc_locale = node->GetNodeContent();
+		}
+	} else {
+		desc = node->GetNodeContent();
+	}
+	return true;
+}
+
+bool DiskBasicTemplates::LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, wxArrayInt &reserved_groups)
+{
+	wxXmlNode *citemnode = node->GetChildren();
+	while(citemnode) {
+		if (citemnode->GetName() == "Group") {
+			wxString str = citemnode->GetNodeContent();
+			int reserved_group = Utils::ToInt(str);
+			reserved_groups.Add(reserved_group);
+		}
+		citemnode = citemnode->GetNext();
+	}
+	return true;
+}
+
+static const struct st_special_attr_names {
+	const char *name;
+	int type;
+} cSpecialAttrNames[] = {
+	{ "MachineBinary",	FILE_TYPE_MACHINE_MASK | FILE_TYPE_BINARY_MASK },
+	{ "BasicBinary",	FILE_TYPE_BASIC_MASK | FILE_TYPE_BINARY_MASK },
+	{ "BasicAscii",		FILE_TYPE_BASIC_MASK | FILE_TYPE_ASCII_MASK },
+	{ "Binary",			FILE_TYPE_BINARY_MASK },
+	{ "Ascii",			FILE_TYPE_ASCII_MASK },
+	{ "Volume",			FILE_TYPE_VOLUME_MASK },
+	{ NULL, 0 }
+};
+
+bool DiskBasicTemplates::LoadSpecialAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, SpecialAttributes &special_attrs)
+{
+	wxXmlNode *citemnode = node->GetChildren();
+	while(citemnode) {
+		for(int i=0; cSpecialAttrNames[i].name != NULL; i++) {
+			if (citemnode->GetName() == cSpecialAttrNames[i].name) {
+				LoadSpecialAttribute(citemnode, locale_name, cSpecialAttrNames[i].type, special_attrs);
+				break;
+			}
+		}
+		citemnode = citemnode->GetNext();
+	}
+	return true;
+}
+
+bool DiskBasicTemplates::LoadSpecialAttribute(const wxXmlNode *node, const wxString &locale_name, int type, SpecialAttributes &special_attrs)
+{
+	wxString desc, desc_locale;
+	wxString sval = node->GetAttribute("value");
+	wxString smsk = node->GetAttribute("mask");
+	int val = Utils::ToInt(sval);
+	int msk = Utils::ToInt(smsk);
+	special_attrs.Add(SpecialAttribute((int)special_attrs.Count(), type, val, msk));
+	return true;
+}
+
 /// DiskBasicFormatタグのロード
 bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
 {
@@ -616,7 +739,7 @@ bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &loca
 	while(item && valid) {
 		if (item->GetName() == "DiskBasicFormat") {
 			wxString s_type_number = item->GetAttribute("type");
-			int type_number = L3DiskUtils::ToInt(s_type_number);
+			int type_number = Utils::ToInt(s_type_number);
 //			wxString name = item->GetAttribute("name");
 			wxString str;
 			bool has_volume_name = false;
@@ -626,10 +749,10 @@ bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &loca
 			while (itemnode) {
 				if (itemnode->GetName() == "HasVolumeName") {
 					str = itemnode->GetNodeContent();
-					has_volume_name = L3DiskUtils::ToBool(str);
+					has_volume_name = Utils::ToBool(str);
 				} else if (itemnode->GetName() == "HasVolumeNumber") {
 					str = itemnode->GetNodeContent();
-					has_volume_number = L3DiskUtils::ToBool(str);
+					has_volume_number = Utils::ToBool(str);
 				}
 				itemnode = itemnode->GetNext();
 			}

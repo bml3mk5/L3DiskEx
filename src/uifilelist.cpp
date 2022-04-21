@@ -1102,7 +1102,7 @@ bool L3DiskFileList::CreateCustomDataObject(wxCustomDataObject &data_object)
 		dnd_header.format_type = basic->GetFormatTypeNumber();
 		struct tm tm;
 		item->GetFileDateTime(&tm);
-		L3DiskUtils::ConvTmToDateTime(&tm, dnd_header.date,	dnd_header.time);
+		Utils::ConvTmToDateTime(&tm, dnd_header.date,	dnd_header.time);
 		wxFileOffset ostart = ostream.TellO();
 		ostream.Write(&dnd_header, sizeof(directory_for_dnd_t));
 
@@ -1166,7 +1166,7 @@ bool L3DiskFileList::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &
 		}
 
 		// ファイルの読み込み
-		sts = basic->AccessData(item, NULL, &ostream);
+		sts = basic->LoadFile(item, ostream);
 		ostream.Close();
 
 		// ファイルリストに追加
@@ -1320,7 +1320,7 @@ bool L3DiskFileList::ImportDataFile(const wxString &path)
 
 	// ダイアログ生成
 	DiskBasicDirItem *temp_item = basic->CreateDirItem();
-	IntNameBox dlg(frame, this, wxID_ANY, _("Import File"), basic, temp_item, path
+	IntNameBox dlg(frame, this, wxID_ANY, _("Import File"), basic, temp_item, path, file_size
 		, INTNAME_NEW_FILE | INTNAME_SHOW_NO_PROPERTY | INTNAME_INVALID_FILE_TYPE | INTNAME_SPECIFY_FILE_NAME);
 
 	// ダイアログ表示と同じファイルがあるかチェック
@@ -1412,11 +1412,11 @@ bool L3DiskFileList::ImportDataFile(const wxUint8 *buffer, size_t buflen)
 	temp_item->SetExecuteAddress(dnd_header->exec_addr);
 	temp_item->SetExternalAttr(dnd_header->external_attr);
 	struct tm tm;
-	L3DiskUtils::ConvDateTimeToTm(dnd_header->date, dnd_header->time, &tm);
+	Utils::ConvDateTimeToTm(dnd_header->date, dnd_header->time, &tm);
 	temp_item->SetFileDateTime(&tm);
 
 	// ダイアログ表示
-	IntNameBox dlg(frame, this, wxID_ANY, _("Copy File"), basic, temp_item, filename
+	IntNameBox dlg(frame, this, wxID_ANY, _("Copy File"), basic, temp_item, filename, (int)data_buflen
 		, INTNAME_IMPORT_INTERNAL | INTNAME_SHOW_NO_PROPERTY);
 
 	// ダイアログ表示と同じファイルがあるかチェック
@@ -1681,7 +1681,7 @@ void L3DiskFileList::ShowFileAttr()
 bool L3DiskFileList::ShowFileAttr(DiskBasicDirItem *item)
 {
 	IntNameBox *dlg = new IntNameBox(frame, this, wxID_ANY, _("File Attribute"), basic, item,
-		wxEmptyString, INTNAME_SHOW_ALL);
+		wxEmptyString, 0, INTNAME_SHOW_ALL);
 
 	// 占有しているグループを一覧にする
 	DiskBasicGroups arr;
@@ -1755,7 +1755,7 @@ void L3DiskFileList::AcceptSubmittedFileAttr(IntNameBox *dlg)
 	}
 	if (sts) {
 		// 残りの属性を更新
-		sts = dlg_basic->ChangeAttr(item, dlg->GetStartAddress(), dlg->GetExecuteAddress(), &tm);
+		sts = dlg_basic->ChangeAttr(item, dlg->GetStartAddress(), dlg->GetExecuteAddress(), dlg->DoesIgnoreDateTime() ? NULL : &tm);
 	}
 	if (!sts) {
 		dlg_basic->ShowErrorMessage();
@@ -1837,7 +1837,7 @@ bool L3DiskFileList::MakeDirectory()
 
 	// 名前の入力
 	DiskBasicDirItem *temp_item = basic->CreateDirItem();
-	IntNameBox dlg(frame, this, wxID_ANY, _("New Directory Name"), basic, temp_item, wxEmptyString
+	IntNameBox dlg(frame, this, wxID_ANY, _("New Directory Name"), basic, temp_item, wxEmptyString, 0
 		, INTNAME_NEW_FILE | INTNAME_SHOW_TEXT | INTNAME_SPECIFY_FILE_NAME);
 
 	int ans = dlg.ShowModal();

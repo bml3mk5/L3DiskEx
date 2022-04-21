@@ -1628,12 +1628,12 @@ void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number, bool each
 	}
 	if (side_number >= 0) {
 		filename += wxT("_");
-		filename += L3DiskUtils::GetSideNumStr(side_number, each_sides);
+		filename += Utils::GetSideNumStr(side_number, each_sides);
 	}
 	filename += wxT(".d88");
 
 	wxString title = _("Save Disk");
-	title += L3DiskUtils::GetSideStr(side_number, each_sides);
+	title += Utils::GetSideStr(side_number, each_sides);
 	L3DiskFileDialog dlg(
 		title,
 		GetIniRecentPath(),

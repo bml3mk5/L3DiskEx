@@ -163,7 +163,7 @@ wxString DiskBasicDirItemMZBase::RemakeFileNameStr(const wxString &filepath) con
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMZBase::InvalidateChars() const
+wxString DiskBasicDirItemMZBase::GetDefaultInvalidateChars() const
 {
 	return wxT("\"\\/:*?");
 }

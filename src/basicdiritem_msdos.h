@@ -82,7 +82,7 @@ public:
 	/// ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
 	/// ファイル名に設定できない文字を文字列にして返す
-	virtual wxString InvalidateChars() const;
+	virtual wxString GetDefaultInvalidateChars() const;
 	/// ファイル名は必須（空文字不可）か
 	virtual bool	IsFileNameRequired() const { return true; }
 	/// 属性を設定

@@ -245,6 +245,7 @@ bool DiskBasicDirItemN88::NeedCheckEofCode()
 	return (((GetFileType1() & (FILETYPE_N88_MACHINE | FILETYPE_N88_BINARY)) == 0) && (external_attr == 0));
 }
 
+#if 0
 /// データをエクスポートする前に必要な処理
 /// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
 /// @param [in,out] filename ファイル名
@@ -260,6 +261,7 @@ bool DiskBasicDirItemN88::PreExportDataFile(wxString &filename)
 	}
 	return true;
 }
+#endif
 
 /// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合
 int DiskBasicDirItemN88::RecalcFileSizeOnSave(wxInputStream *istream, int file_size)

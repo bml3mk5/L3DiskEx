@@ -528,7 +528,7 @@ void DiskBasicDirItem::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, si
 
 /// ファイル名に設定できない文字を文字列にして返す
 /// @return 文字列
-wxString DiskBasicDirItem::InvalidateChars() const
+wxString DiskBasicDirItem::GetDefaultInvalidateChars() const
 {
 	return wxT("\"\\/:;");
 }

@@ -17,13 +17,53 @@
 
 //////////////////////////////////////////////////////////////////////
 
+/// 特別な属性
+class SpecialAttribute
+{
+private:
+	int idx;
+	int type;
+	int value;
+	int mask;
+
+public:
+	SpecialAttribute(int n_idx, int n_type, int n_value, int n_mask);
+
+	int GetIndex() const { return idx; }
+	int GetType() const { return type; }
+	int GetValue() const { return value; }
+	int GetMask() const { return mask; }
+};
+
+WX_DECLARE_OBJARRAY(SpecialAttribute, ArrayOfSpecialAttribute);
+
+class SpecialAttributes : public ArrayOfSpecialAttribute
+{
+public:
+	SpecialAttributes();
+	/// 属性タイプと値に一致するアイテムを返す
+	const SpecialAttribute *Find(int type, int value) const;
+	/// 属性値に一致するアイテムを返す
+	const SpecialAttribute *Find(int value) const;
+	/// 属性値に一致するアイテムの位置を返す
+	int					GetIndexByValue(int value) const;
+	/// 属性値に一致するアイテムの属性値を返す
+	int					GetTypeByValue(int value) const;
+	/// 位置から属性タイプを返す
+	int					GetTypeByIndex(int idx) const;
+	/// 位置から属性値を返す
+	int					GetValueByIndex(int idx) const;
+};
+
+//////////////////////////////////////////////////////////////////////
+
 /// DISK BASICのフォーマットタイプ
 class DiskBasicFormat
 {
 private:
-	DiskBasicFormatType type_number;
-	bool has_volume_name;
-	bool has_volume_number;
+	DiskBasicFormatType type_number;	///< フォーマットタイプ番号
+	bool has_volume_name;				///< ボリューム名
+	bool has_volume_number;				///< ボリューム番号
 
 public:
 	DiskBasicFormat();
@@ -35,31 +75,11 @@ public:
 	~DiskBasicFormat() {}
 
 	DiskBasicFormatType GetTypeNumber() const { return type_number; }
-	bool HasVolumeName() const { return has_volume_name; }
-	bool HasVolumeNumber() const { return has_volume_number; }
+	bool				HasVolumeName() const { return has_volume_name; }
+	bool				HasVolumeNumber() const { return has_volume_number; }
 };
 
 WX_DECLARE_OBJARRAY(DiskBasicFormat, DiskBasicFormats);
-
-//////////////////////////////////////////////////////////////////////
-
-/// 特別な属性
-class SpecialAttribute
-{
-private:
-	int type;
-	int value;
-	int mask;
-
-public:
-	SpecialAttribute(int n_type, int n_value, int n_mask);
-
-	int GetType() const { return type; }
-	int GetValue() const { return value; }
-	int GetMask() const { return mask; }
-};
-
-WX_DECLARE_OBJARRAY(SpecialAttribute, SpecialAttributes);
 
 //////////////////////////////////////////////////////////////////////
 
@@ -105,6 +125,7 @@ private:
 	wxUint8 fillcode_on_dir;	///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;		///< ファイル削除時にセットするコード
 	wxUint8 media_id;			///< メディアID
+	wxString invalidate_chars;	///< ファイル名に設定できない文字
 	bool data_inverted;			///< データビットが反転してるか
 	bool side_reversed;			///< サイドが反転してるか
 	bool mount_each_sides;		///< 片面のみ使用するOSで各面ごとに独立してアクセスできるか
@@ -151,6 +172,7 @@ public:
 		wxUint8				n_fillcode_on_dir,
 		wxUint8				n_delete_code,
 		wxUint8				n_media_id,
+		const wxString &	n_invalidate_chars,
 		bool				n_data_inverted,
 		bool				n_side_reversed,
 		bool				n_mount_each_sides,
@@ -202,12 +224,17 @@ public:
 	wxUint8				GetFillCodeOnDir() const	{ return fillcode_on_dir; }
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
 	wxUint8				GetMediaId() const			{ return media_id; }
+	const wxString&		GetInvalidateChars() const	{ return invalidate_chars; }
 	bool				IsDataInverted() const		{ return data_inverted; }
 	bool				IsSideReversed() const		{ return side_reversed; }
 	int					GetReversedSideNumber(int side_num) const;
 	bool				CanMountEachSides() const;
-	bool				MatchSpecialAttr(int type, int value) const;
-	bool				MatchVolumeAttr(int value) const;
+	const SpecialAttribute *FindSpecialAttr(int type, int value) const;
+	const SpecialAttribute *FindSpecialAttr(int value) const;
+	int					GetIndexByValueOfSpecialAttr(int value) const;
+	int					GetTypeByValueOfSpecialAttr(int value) const;
+	int					GetTypeByIndexOfSpecialAttr(int idx) const;
+	int					GetValueByIndexOfSpecialAttr(int idx) const;
 
 	const wxString& GetBasicDescription() const		{ return basic_description; }
 
@@ -232,7 +259,7 @@ public:
 	void			SetIDString(const wxString &str)		{ id_string = str; }
 	void			SetIPLString(const wxString &str)		{ ipl_string = str; }
 	void			SetVolumeString(const wxString &str)	{ volume_string = str; }
-	void			GetSpecialAttributes(const SpecialAttributes &arr) { special_attrs = arr; }
+	void			SetSpecialAttributes(const SpecialAttributes &arr) { special_attrs = arr; }
 	void			SetDirEndSector(int val)		{ dir_end_sector = val; }
 	void			SetDirEntryCount(int val)		{ dir_entry_count = val; }
 	void			SetSubDirGroupSize(int val)		{ subdir_group_size = val; }
@@ -245,6 +272,7 @@ public:
 	void			SetFillCodeOnDir(wxUint8 val)	{ fillcode_on_dir = val; }
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
+	void			SetInvalidateChars(const wxString &str)	{ invalidate_chars = str; }
 	void			DataInverted(bool val)			{ data_inverted = val; }
 	void			SideReversed(bool val)			{ side_reversed = val; }
 	void			MountEachSides(bool val)		{ mount_each_sides = val; }
@@ -297,6 +325,12 @@ private:
 	bool LoadTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
 	bool LoadFormats(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
 	bool LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+
+	bool LoadDescription(const wxXmlNode *node, const wxString &locale_name, wxString &desc, wxString &desc_locale);
+
+	bool LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, wxArrayInt &reserved_groups);
+	bool LoadSpecialAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, SpecialAttributes &special_attrs);
+	bool LoadSpecialAttribute(const wxXmlNode *node, const wxString &locale_name, int type, SpecialAttributes &special_attrs);
 
 public:
 	DiskBasicTemplates();

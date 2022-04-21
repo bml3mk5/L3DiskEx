@@ -325,6 +325,49 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, Alloc
 	return rc;
 }
 
+/// グループを確保して使用中にする
+int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_start, int remain, int sec_size, DiskBasicGroups &group_items, int &file_size, int &groups)
+{
+	int rc = 0;
+	wxUint32 group_num = group_start;
+	wxUint32 prev_group = 0;
+
+	int limit = basic->GetFatEndGroup() + 1;
+	while(remain > 0 && limit >= 0) {
+		// 使用しているか
+		bool used_group = IsUsedGroupNumber(group_num);
+		if (!used_group) {
+			if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
+				// 使用済みにする
+				basic->GetNumsFromGroup(prev_group, group_num, sec_size, remain, group_items);
+				SetGroupNumber(prev_group, 1);
+				file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
+				groups++;
+			}
+			remain -= (sec_size * basic->GetSectorsPerGroup());
+			prev_group = group_num;
+		}
+		// 次のグループ
+		group_num++;
+		limit--;
+	}
+	if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
+		// 使用済みにする
+		basic->GetNumsFromGroup(prev_group, 0, sec_size, remain, group_items);
+		SetGroupNumber(prev_group, 1);
+		file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
+		groups++;
+	}
+	if (prev_group > basic->GetFatEndGroup()) {
+		// ファイルがオーバフローしている
+		rc = -2;
+	} else if (limit < 0) {
+		// 無限ループ？
+		rc = -2;
+	}
+	return rc;
+}
+
 /// データの読み込み/比較処理
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL

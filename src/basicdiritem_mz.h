@@ -20,7 +20,7 @@ enum en_type_name_mz {
 	TYPE_NAME_MZ_BRD = 3,
 	TYPE_NAME_MZ_DIR = 4,
 	TYPE_NAME_MZ_VOL = 5,
-	TYPE_NAME_MZ_VOL2 = 6,
+	TYPE_NAME_MZ_VOLSWAP = 6,
 	TYPE_NAME_MZ_READ_ONLY = 7,
 	TYPE_NAME_MZ_SEAMLESS = 8,
 };
@@ -31,7 +31,7 @@ enum en_file_type_mz {
 	FILETYPE_MZ_BRD = 4,
 	FILETYPE_MZ_DIR = 0xf,
 	FILETYPE_MZ_VOL = 0x80,
-	FILETYPE_MZ_VOL2 = 0x81,
+	FILETYPE_MZ_VOLSWAP = 0x81,
 };
 enum en_data_type_mask_mz {
 	DATATYPE_MZ_READ_ONLY = 0x01,
@@ -101,7 +101,7 @@ public:
 	/// ファイルパスから内部ファイル名を生成する
 	wxString RemakeFileNameStr(const wxString &filepath) const;
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString InvalidateChars() const;
+	wxString GetDefaultInvalidateChars() const;
 
 	/// 属性を設定
 	void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -127,6 +127,8 @@ public:
 	bool	HasDateTime() const { return true; }
 	bool	HasDate() const { return true; }
 	bool	HasTime() const { return true; }
+	/// アイテムの時間設定を無視することができるか
+	bool	CanIgnoreDateTime() const { return true; }
 	/// 日付を返す
 	void	GetFileDate(struct tm *tm) const;
 	/// 時間を返す
@@ -162,6 +164,8 @@ public:
 	//@{
 	/// ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// ダイアログ内の値を設定
+	void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// 機種依存の属性を設定する

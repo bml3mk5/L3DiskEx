@@ -132,7 +132,7 @@ bool DiskBasicDirItemFLEX::Check(bool &last)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemFLEX::InvalidateChars() const
+wxString DiskBasicDirItemFLEX::GetDefaultInvalidateChars() const
 {
 	return wxT(" !\"#$%&'()*+,/:;<=>?@[\\]^{|}~");
 }
@@ -362,7 +362,7 @@ wxString DiskBasicDirItemFLEX::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemFLEX::GetFileTimeStr() const

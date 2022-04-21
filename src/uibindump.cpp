@@ -20,7 +20,9 @@
 #include "logging.h"
 
 
-#define SCROLLBAR_UNIT	4
+#define SCROLLBAR_UNIT	(4)
+
+extern const char * fd_5inch_16_1_xpm[];
 
 //
 //
@@ -49,6 +51,13 @@ wxEND_EVENT_TABLE()
 L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size)
        : wxFrame(parent, -1, title, wxDefaultPosition, size, wxDEFAULT_FRAME_STYLE | wxFRAME_FLOAT_ON_PARENT)
 {
+	// icon
+#ifdef __WXMSW__
+	SetIcon(wxIcon(_T("zz_fd_5inch")));
+#elif defined(__WXGTK__) || defined(__WXMOTIF__)
+	SetIcon(wxIcon(fd_5inch_16_1_xpm));
+#endif
+
 	// menu
 	menuFile = new wxMenu;
 	menuView = new wxMenu;

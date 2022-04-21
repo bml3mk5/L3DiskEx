@@ -74,6 +74,9 @@ private:
 	/// データ内のファイルサイズを返す
 	int		GetFileSizeBase() const;
 
+	/// ダイアログでの表示フラグ
+	int m_show_flags;
+
 public:
 	DiskBasicDirItemTFDOS(DiskBasic *basic);
 	DiskBasicDirItemTFDOS(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
@@ -87,7 +90,7 @@ public:
 	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
 	void	ConvertToFileNameStr(wxString &filename) const;
 	/// @brief ファイル名に設定できない文字を文字列にして返す
-	wxString InvalidateChars() const;
+	wxString GetDefaultInvalidateChars() const;
 
 	/// @brief 属性を設定
 	void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -122,6 +125,8 @@ public:
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
+	/// @brief 属性を変更した際に呼ばれるコールバック
+	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// @brief 機種依存の属性を設定する
 	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	/// @brief ファイルサイズが適正か

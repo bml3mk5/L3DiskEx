@@ -311,7 +311,7 @@ bool DiskBasicDirItemOS9::Check(bool &last)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemOS9::InvalidateChars() const
+wxString DiskBasicDirItemOS9::GetDefaultInvalidateChars() const
 {
 	return wxT(" !\"#$%&'()*+,-/:;<=>?@[\\]^{|}~");
 }
@@ -476,14 +476,14 @@ wxString DiskBasicDirItemOS9::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 wxString DiskBasicDirItemOS9::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
-	return L3DiskUtils::FormatHMStr(&tm);
+	return Utils::FormatHMStr(&tm);
 }
 
 void DiskBasicDirItemOS9::SetFileDate(const struct tm *tm)
@@ -520,7 +520,7 @@ wxString DiskBasicDirItemOS9::GetCDateStr() const
 		tm.tm_mon = 0;
 		tm.tm_mday = 0;
 	}
-	return L3DiskUtils::FormatYMDStr(&tm);
+	return Utils::FormatYMDStr(&tm);
 }
 
 /// 日付をセット
@@ -772,23 +772,23 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 
 	sizer->Add(staType5, flags);
 
-	wxSize sz(80, -1);
 	DateTimeValidator date_validate(false);
 	DateTimeValidator time_validate(true);
 
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 	wxSizerFlags stflags = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	hbox->Add(new wxStaticText(parent, wxID_ANY, _("Created Date:")), stflags);
-	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CREATEDATE, GetCDateStr(), wxDefaultPosition, sz, 0, date_validate);
+	txtCDate = new wxTextCtrl(parent, IDC_TEXT_CREATEDATE, GetCDateStr(), wxDefaultPosition, wxDefaultSize, 0, date_validate);
+	txtCDate->SetMinSize(IntNameBox::GetDateTextExtent(txtCDate));
 	hbox->Add(txtCDate, flags);
 	sizer->Add(hbox, flags);
 }
 
 /// ダイアログ内の値を設定
-void DiskBasicDirItemOS9::InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data)
+void DiskBasicDirItemOS9::InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data)
 {
-	if (!(showitems & INTNAME_SHOW_ATTR)) return;
-	if (!(showitems & INTNAME_NEW_FILE)) return;
+	if (!(show_flags & INTNAME_SHOW_ATTR)) return;
+	if (!(show_flags & INTNAME_NEW_FILE)) return;
 
 	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CREATEDATE);
 	wxTextCtrl *txtMDate = (wxTextCtrl *)parent->FindWindow(IntNameBox::IDC_TEXT_CDATE);
@@ -831,7 +831,7 @@ bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 
 	struct tm tm;
 	if (txtCDate) {
-		L3DiskUtils::ConvDateStrToTm(txtCDate->GetValue(), &tm);
+		Utils::ConvDateStrToTm(txtCDate->GetValue(), &tm);
 		SetCDate(&tm);
 	}
 	return true;

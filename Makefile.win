@@ -26,7 +26,7 @@ SH_LDFLAGS=$(shell $(WXCONFIG_SH) --libs)
 ST_LDFLAGS=-static $(shell $(WXCONFIG_ST) --libs)
 DBG_LDFLAGS=-static $(shell $(WXCONFIG_DBG) --libs)
 
-EXEFILE=l3s1basic.exe
+EXEFILE=l3diskex.exe
 
 BUILDDIR=./build
 SH_BUILDDIR=$(BUILDDIR)/shared

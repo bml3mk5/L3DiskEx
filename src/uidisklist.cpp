@@ -632,7 +632,7 @@ void L3DiskList::SubCaption(int type, int side_number, wxString &caption) const
 {
 	if (side_number < 0) return;
 
-	caption = L3DiskUtils::GetSideStr(side_number, type != CD_TYPENUM_NODE_AB);
+	caption = Utils::GetSideStr(side_number, type != CD_TYPENUM_NODE_AB);
 }
 
 /// 選択しているディスクの子供を削除
@@ -829,7 +829,7 @@ bool L3DiskList::InitializeDisk()
 	if (found) {
 		// トラックがある場合は、初期化
 		if (selected_side >= 0) {
-			diskname += L3DiskUtils::GetSideStr(selected_side, cd->GetTypeNumber() != CD_TYPENUM_NODE_AB);
+			diskname += Utils::GetSideStr(selected_side, cd->GetTypeNumber() != CD_TYPENUM_NODE_AB);
 		}
 		wxString msg = wxString::Format(_("All files and datas will delete on %s. Do you really want to initialize it?"), diskname);
 		ans = wxMessageBox(msg, _("Initialize Disk"), wxYES_NO);

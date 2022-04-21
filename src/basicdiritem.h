@@ -189,7 +189,7 @@ public:
 	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にするなど
 	virtual void	ConvertFromFileNameStr(wxString &filename) const {}
 	/// @brief ファイル名に設定できない文字を文字列にして返す
-	virtual wxString InvalidateChars() const;
+	virtual wxString GetDefaultInvalidateChars() const;
 	/// @brief ファイル名は必須（空文字不可）か
 	virtual bool	IsFileNameRequired() const { return false; }
 	/// @brief ファイル名に付随する拡張属性を返す
@@ -265,6 +265,8 @@ public:
 	virtual bool	HasDate() const { return false; }
 	/// @brief アイテムが時間を持っているか
 	virtual bool	HasTime() const { return false; }
+	/// @brief アイテムの時間設定を無視することができるか
+	virtual bool	CanIgnoreDateTime() const { return false; }
 	/// @brief 日付を得る
 	virtual void	GetFileDate(struct tm *tm) const;
 	/// @brief 時間を得る
@@ -370,7 +372,7 @@ public:
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags) {}
 	/// @brief ダイアログ内の値を設定
-	virtual void	InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data) {}
+	virtual void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data) {}
 	/// @brief 属性を変更した際に呼ばれるコールバック
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent) {}
 	/// @brief ファイル名に拡張子を付ける

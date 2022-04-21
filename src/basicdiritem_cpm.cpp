@@ -215,7 +215,7 @@ void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, int length)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemCPM::InvalidateChars() const
+wxString DiskBasicDirItemCPM::GetDefaultInvalidateChars() const
 {
 	return wxT(" \"*,:;<=>?[\\]");
 }

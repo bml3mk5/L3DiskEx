@@ -148,7 +148,7 @@ public:
 	bool			Check(bool &last);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		InvalidateChars() const;
+	wxString		GetDefaultInvalidateChars() const;
 	/// ファイル名は必須（空文字不可）か
 	bool			IsFileNameRequired() const { return true; }
 
@@ -235,7 +235,7 @@ public:
 	/// ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// ダイアログ内の値を設定
-	void	InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data);
+	void	InitializeForAttrDialog(IntNameBox *parent, int show_flags, int *user_data);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// 機種依存の属性を設定する

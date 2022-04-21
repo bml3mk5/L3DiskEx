@@ -38,6 +38,7 @@ struct st_fat_tfdos {
 DiskBasicTypeTFDOS::DiskBasicTypeTFDOS(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
 	: DiskBasicTypeMZBase(basic, fat, dir)
 {
+	is_base_compatible = false;
 }
 
 /// FATエリアをチェック
@@ -48,14 +49,24 @@ bool DiskBasicTypeTFDOS::CheckFat()
 	// グループサイズをトラックごとに調整
 	basic->SetSectorsPerGroup(basic->GetSectorsPerTrack());
 
+	// 最終グループ番号
+	wxUint32 max_group = basic->GetTracksPerSide() * basic->GetSidesPerDiskOnBasic() - 1;
+	basic->SetFatEndGroup(max_group);
+
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	if (!fatbuf) {
 		return false;
 	}
-	// バージョン
+	// ファイル管理番号
 	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->buffer;
-	if (basic->InvertUint8(f->version_number) == 0) {
+	if (basic->InvertUint8(f->ident_number) != 1) {
+		return false;
+	}
+	// ボリューム名
+	wxUint8 volume_name[12];
+	basic->InvertMem(f->volume_name, sizeof(f->volume_name), volume_name);
+	if (memcmp(volume_name, "TF-DOS", 6) != 0) {
 		return false;
 	}
 
@@ -68,6 +79,7 @@ bool DiskBasicTypeTFDOS::CheckFat()
 		}
 	}
 
+#if 0
 	if (valid) {
 		// MZのIPLをチェック
 		if (!basic->GetIPLString().IsEmpty()) {
@@ -79,7 +91,7 @@ bool DiskBasicTypeTFDOS::CheckFat()
 			}
 		}
 	}
-
+#endif
 	return valid;
 }
 
@@ -181,6 +193,21 @@ int DiskBasicTypeTFDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, Al
 	return rc;
 }
 
+#if 0
+/// データの読み込み/比較の前処理
+/// @param [in] item            ディレクトリアイテム
+/// @param [in,out] istream     入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
+/// @param [in,out] ostream     出力先         データ読み出し時に使用 ベリファイ時はNULL
+/// @param [in,out] file_size   ファイルサイズ
+/// @param [in,out] group_items 確保したセクタリスト
+/// @param [in,out] errinfo     エラー情報
+/// @return true/false エラー
+bool DiskBasicTypeTFDOS::PrepareToAccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo)
+{
+	return true;
+}
+#endif
+
 /// データの読み込み/比較処理
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
@@ -193,13 +220,6 @@ int DiskBasicTypeTFDOS::AllocateGroups(DiskBasicDirItem *item, int data_size, Al
 /// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
 int DiskBasicTypeTFDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
-	bool need_chain = item->NeedChainInData();
-
-	if (need_chain) {
-		// セクタの最終バイトはチェイン用セクタ番号がある
-		sector_size -= 2;
-	}
-
 	int size = (remain_size < sector_size ? remain_size : sector_size);
 
 	if (ostream) {
@@ -212,6 +232,7 @@ int DiskBasicTypeTFDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istrea
 		// 読み込んで比較
 		temp.SetSize(size);
 		istream->Read((void *)temp.GetData(), temp.GetSize());
+
 		temp.InvertData(basic->IsDataInverted());
 
 		if (memcmp(temp.GetData(), sector_buffer, temp.GetSize()) != 0) {
@@ -220,6 +241,70 @@ int DiskBasicTypeTFDOS::AccessFile(DiskBasicDirItem *item, wxInputStream *istrea
 		}
 	}
 	return size;
+}
+
+/// 内部ファイルをエクスポートする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicTypeTFDOS::ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	// BASEコンパチファイル
+	is_base_compatible = (item->GetFileAttr().IsAscii() && item->GetExternalAttr() == 1);
+
+	int osize = (int)istream.GetLength();
+
+	if (item->GetFileAttr().IsAscii() && item->GetExternalAttr() > 0) {
+		// BASEコンパチファイル 最終バイトが0かどうかチェック
+		istream.SeekI(-1, wxFromEnd);
+		if (istream.GetC() == 0) {
+			is_base_compatible = true;
+			osize--;	// 最終データは出力しない
+		}
+		istream.SeekI(0);
+	}
+	if (is_base_compatible) {
+		// BASEコンパチの場合、TABコード($14 -> $09)変換
+		temp.SetSize(DISKBASIC_TEMP_DATA_SIZE);
+		while(osize > 0) {
+			int len = (int)istream.Read(temp.GetData(), temp.GetSize()).LastRead();
+			// TABコード($14 -> $09)変換
+			temp.Replace(0x14, 0x09);
+			ostream.Write(temp.GetData(), len > osize ? osize : len);
+			osize -= len;
+		}
+	} else {
+		// 変換しない
+		ostream.Write(istream);
+	}
+	return true;
+}
+
+/// エクスポートしたファイルをベリファイする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicTypeTFDOS::ConvertDataForVerify(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	int osize = (int)istream.GetLength();
+
+	if (is_base_compatible) {
+		// BASEコンパチの場合、TABコード($09 -> $14)変換
+		temp.SetSize(DISKBASIC_TEMP_DATA_SIZE);
+		while(osize > 0) {
+			int len = (int)istream.Read(temp.GetData(), temp.GetSize()).LastRead();
+			// TABコード($09 -> $14)変換
+			temp.Replace(0x09, 0x14);
+			ostream.Write(temp.GetData(), len > osize ? osize : len);
+			osize -= len;
+		}
+		// 最後に$00を出力
+		ostream.PutC(0);
+	} else {
+		// 変換しない
+		ostream.Write(istream);
+	}
+	return true;
 }
 
 /// グループ番号から最終セクタ番号を得る
@@ -265,6 +350,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 			}
 		}
 	}
+#if 0
 	// IPL MZ用
 	sector = basic->GetSectorFromSectorPos(basic->GetSectorsPerTrackOnBasic());
 	if (sector) {
@@ -278,7 +364,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 			mem_invert(sector->GetSectorBuffer(), len);
 		}
 	}
-
+#endif
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	fatbuf->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));
@@ -303,7 +389,12 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	f->ident_number = basic->InvertUint8(1);
 	f->version_number = basic->InvertUint8(2);
 	// ボリューム名を設定
-	wxCharBuffer vol_name = data.GetVolumeName().To8BitData();
+	wxCharBuffer vol_name;
+	if (!data.GetVolumeName().IsEmpty()) {
+		vol_name = data.GetVolumeName().To8BitData();
+	} else {
+		vol_name = basic->GetVolumeString().To8BitData();
+	}
 	mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
 	basic->InvertMem(f->volume_name, sizeof(f->volume_name));
 
@@ -319,6 +410,32 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 
 	return true;
 }
+
+/// ファイルをセーブする前にデータを変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム（ファイル）
+/// @param [out] ostream      出力先ストリーム
+bool DiskBasicTypeTFDOS::ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	// BASEコンパチファイル
+	is_base_compatible = (item->GetFileAttr().IsAscii() && item->GetExternalAttr() == 1);
+
+	// 処理はベリファイと同じ
+	return ConvertDataForVerify(item, istream, ostream);
+}
+
+#if 0
+/// ファイルをセーブする前の準備を行う
+/// @param [in]     istream   ストリームバッファ
+/// @param [in,out] file_size 出力サイズ
+/// @param [in]     pitem     ファイル名、属性を持っているディレクトリアイテム
+/// @param [in]     nitem     確保したディレクトリアイテム
+/// @param [in,out] errinfo   エラー情報
+bool DiskBasicTypeTFDOS::PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo)
+{
+	return true;
+}
+#endif
 
 /// データの書き込み処理
 /// @param [in]	 item			ディレクトリアイテム
@@ -339,7 +456,17 @@ int DiskBasicTypeTFDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 		// 残り少ない
 		if (remain < 0) remain = 0;
 		if (remain > 0) {
-			istream.Read((void *)buffer, remain);
+			temp.SetSize(remain);
+			istream.Read(temp.GetData(), temp.GetSize());
+
+			// BASEコンパチファイルならTAB($09->$14)変換
+			if (is_base_compatible) {
+				temp.Replace(0x09, 0x14);
+				temp.Set(remain - 1, 0);
+			}
+
+			memcpy(buffer, temp.GetData(), temp.GetSize());
+//			istream.Read((void *)buffer, remain);
 		}
 		if (size > remain) {
 			// バッファの余りは0サプレス
@@ -348,7 +475,17 @@ int DiskBasicTypeTFDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 		len = remain;
 	} else {
 		// 継続
-		istream.Read((void *)buffer, size);
+		temp.SetSize(size);
+		istream.Read(temp.GetData(), temp.GetSize());
+
+		// BASEコンパチファイルならTAB($09->$14)変換
+		if (is_base_compatible) {
+			temp.Replace(0x09, 0x14);
+		}
+
+		memcpy(buffer, temp.GetData(), temp.GetSize());
+//		istream.Read((void *)buffer, size);
+
 		len = size;
 	}
 

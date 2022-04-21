@@ -194,6 +194,7 @@
 		<DiskBasicTypes>
 			<Type>MZ-2D-1</Type>
 			<Type>N66-1D</Type>
+			<Type>CPMX1-2D</Type>
 		</DiskBasicTypes>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
@@ -295,7 +296,7 @@
 			<Type>N66-1D</Type>
 			<Type>FLEX-1D-S1</Type>
 			<Type>OS9-2D</Type>
-			<Type>TFDOS-2D-MZ</Type>
+			<Type>TFDOS-2D-INV</Type>
 			<Type>TFDOS-2D</Type>
 			<Type>L3S1-2D</Type>
 			<Type>CPM88-2D</Type>
@@ -571,6 +572,8 @@
 			<Type>MZ-2DD</Type>
 			<Type>N66-1DD</Type>
 			<Type>OS9-2DD</Type>
+			<Type>TFDOS-2DD-INV</Type>
+			<Type>TFDOS-2DD</Type>
 			<Type>CPMMZ-2DD</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>

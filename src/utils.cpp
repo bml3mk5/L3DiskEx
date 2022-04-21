@@ -11,7 +11,7 @@
 #include <wx/regex.h>
 
 
-namespace L3DiskUtils
+namespace Utils
 {
 
 int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert)
@@ -165,6 +165,7 @@ void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, struct tm *tm)
 {
 	tm->tm_year = (int)date[0] | ((int)date[1] & 0xf) << 8;
 	tm->tm_mon  = (date[1] & 0xf0) >> 4;
+	if (tm->tm_mon == 0xf) tm->tm_mon = -1;
 	tm->tm_mday = date[2];
 
 	tm->tm_hour = time[0];
@@ -286,13 +287,19 @@ bool ToBool(const wxString &val)
 	return bval;
 }
 
+// エスケープ文字を展開
+// @note \\\\                \\ そのもの
+// @note \\x[0-9a-f][0-9a-f] 16進数で指定
 wxString Escape(const wxString &src)
 {
 	wxString str = src;
 	wxString rstr;
 
 	while (str.Length() > 0) {
-		if (str.Left(2) == wxT("\\x")) {
+		if (str.Left(2) == wxT("\\\\")) {
+			rstr += wxT("\\");
+			str = str.Mid(2);
+		} else if (str.Left(2) == wxT("\\x")) {
 			long v;
 			str.Mid(2,2).ToLong(&v, 16);
 			rstr += wxString((char)v, 1);

@@ -31,6 +31,21 @@ void DiskBasicTempData::SetData(const wxUint8 *data, size_t len, bool invert)
 	}
 }
 
+void DiskBasicTempData::Set(size_t pos, wxUint8 val)
+{
+	if (pos < size) {
+		data[pos] = val;
+	}
+}
+
+/// 一致するバイトデータを置換
+void DiskBasicTempData::Replace(wxUint8 src, wxUint8 dst)
+{
+	for(size_t pos=0; pos<size; pos++) {
+		if (data[pos] == src) data[pos] = dst;
+	}
+}
+
 void DiskBasicTempData::InvertData(bool invert)
 {
 	if (invert) {
@@ -774,9 +789,39 @@ int DiskBasicType::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wx
 	return sector_size;
 }
 
+/// 内部ファイルをエクスポートする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicType::ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	ostream.Write(istream);
+	return true;
+}
+
+/// エクスポートしたファイルをベリファイする際に内容を変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム
+/// @param [out] ostream      出力先ストリーム（ファイル）
+bool DiskBasicType::ConvertDataForVerify(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	ostream.Write(istream);
+	return true;
+}
+
 //
 // for write
 //
+
+/// ファイルをセーブする前にデータを変換
+/// @param [in] item          ディレクトリアイテム
+/// @param [in] istream       入力ストリーム（ファイル）
+/// @param [out] ostream      出力先ストリーム
+bool DiskBasicType::ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream)
+{
+	ostream.Write(istream);
+	return true;
+}
 
 /// 最後のグループ番号を計算する
 /// @param [in]  group_num		現在のグループ番号

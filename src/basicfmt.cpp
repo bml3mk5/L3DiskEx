@@ -378,7 +378,7 @@ int DiskBasic::GetDiskNumber() const
 /// 選択中のサイド文字列を返す
 wxString DiskBasic::GetSelectedSideStr() const
 {
-	return L3DiskUtils::GetSideStr(selected_side, CanMountEachSides());
+	return Utils::GetSideStr(selected_side, CanMountEachSides());
 }
 
 /// DISK BASICの説明を取得
@@ -574,7 +574,24 @@ bool DiskBasic::LoadFile(DiskBasicDirItem *item, const wxString &dstpath)
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_EXPORT);
 		return false;
 	}
-	return AccessData(item, NULL, &file);
+	return LoadFile(item, file);
+}
+
+/// 指定したストリームにファイルをロード
+/// @param [in]     item    ディレクトリのアイテム
+/// @param [in,out] ostream 出力先ストリーム
+bool DiskBasic::LoadFile(DiskBasicDirItem *item, wxOutputStream &ostream)
+{
+	// ディスクイメージからデータを取り出す
+	wxMemoryOutputStream otemp;
+	bool sts = AccessData(item, NULL, &otemp);
+	if (!sts) {
+		return false;
+	}
+	// 必要なら取り出したデータ内容を変換・置換してファイルに出力
+	wxMemoryInputStream itemp(otemp);
+	sts = type->ConvertDataForLoad(item, itemp, ostream);
+	return sts;
 }
 
 /// 指定したアイテムのファイルをベリファイ
@@ -587,7 +604,16 @@ bool DiskBasic::VerifyFile(DiskBasicDirItem *item, const wxString &srcpath)
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_VERIFY);
 		return false;
 	}
-	return AccessData(item, &file, NULL);
+	// ファイルを必要なら変換
+	wxMemoryOutputStream otemp;
+	bool sts = type->ConvertDataForVerify(item, file, otemp);
+	if (!sts) {
+		return false;
+	}
+	// 変換した内容と内部ファイルとをベリファイ
+	wxMemoryInputStream itemp(otemp);
+	sts = AccessData(item, &itemp, NULL);
+	return sts;
 }
 
 /// ディスクデータにアクセス（ロード/ベリファイで使用）
@@ -616,6 +642,11 @@ bool DiskBasic::AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOut
 	// ファイルのトラック番号、サイド番号、セクタ番号を計算しリストにする
 	DiskBasicGroups gitems;
 	item->GetAllGroups(gitems);
+
+	// アクセス前に機種固有の処理を行う
+	if (!type->PrepareToAccessFile(item, istream, ostream, remain, gitems, errinfo)) {
+		return false;
+	}
 
 	int gidx_end = (int)gitems.Count() - 1;
 	for(int gidx = 0; gidx <= gidx_end && remain > 0 && rc; gidx++) {
@@ -894,19 +925,28 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	// ファイル名属性を設定
 	item->CopyItem(*pitem);
 
-	// ファイルをセーブする前の準備を行う
-	if (!type->PrepareToSaveFile(istream, pitem, item, errinfo)) {
+	// 入力ストリームのデータを変換する
+	wxMemoryOutputStream otemp;
+	if (!type->ConvertDataForSave(item, istream, otemp)) {
 		// 削除する
-		if (!this->DeleteFile(item, false)) {
-			return false;
-		}
+		this->DeleteFile(item, false);
+		return false;
 	}
 
+	wxMemoryInputStream itemp(otemp);
+
 	// 残りサイズ
-	int sizeremain = (int)istream.GetLength();
+	int sizeremain = (int)itemp.GetLength();
+
+	// ファイルをセーブする前の準備を行う
+	if (!type->PrepareToSaveFile(itemp, sizeremain, pitem, item, errinfo)) {
+		// 削除する
+		this->DeleteFile(item, false);
+		return false;
+	}
 
 	// ファイルサイズを再計算する(終端コードが必要な場合など)
-	sizeremain = item->RecalcFileSizeOnSave(&istream, sizeremain);
+	sizeremain = item->RecalcFileSizeOnSave(&itemp, sizeremain);
 	
 #ifndef DEBUG_DISK_FULL_TEST
 	// ディスクに空きがあるか
@@ -966,7 +1006,7 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 			wxUint8 *buf = sector->GetSectorBuffer();
 
 			// ディスク内に書き込む
-			last_size = type->WriteFile(item, istream, buf, bufsize, sizeremain, sector_num, group_num, next_group, sector_end);
+			last_size = type->WriteFile(item, itemp, buf, bufsize, sizeremain, sector_num, group_num, next_group, sector_end);
 			sizeremain -= last_size;
 			file_size += last_size;
 
@@ -991,8 +1031,8 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	item->CalcFileSize();
 
 	// ベリファイ
-	istream.SeekI(0);
-	bool sts = AccessData(item, &istream, NULL);
+	itemp.SeekI(0);
+	bool sts = AccessData(item, &itemp, NULL);
 
 	// 機種個別の処理を行う
 	type->AdditionalProcessOnSavedFile(item);

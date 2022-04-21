@@ -105,8 +105,8 @@ public:
 
 	/// ファイルの終端コードをチェックする必要があるか
 	bool			NeedCheckEofCode();
-	/// データをエクスポートする前に必要な処理
-	bool			PreExportDataFile(wxString &filename);
+//	/// データをエクスポートする前に必要な処理
+//	bool			PreExportDataFile(wxString &filename);
 	/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合など
 	int				RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
 

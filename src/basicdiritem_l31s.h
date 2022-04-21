@@ -24,7 +24,7 @@ public:
 	DiskBasicDirItemL31S(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString	InvalidateChars() const;
+	wxString	GetDefaultInvalidateChars() const;
 
 	/// ダイアログ入力前のファイル名を変換 大文字にする
 	void	ConvertToFileNameStr(wxString &filename) const;

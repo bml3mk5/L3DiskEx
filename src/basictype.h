@@ -29,6 +29,8 @@ public:
 	~DiskBasicTempData() {}
 	void SetSize(size_t val) { size = val < DISKBASIC_TEMP_DATA_SIZE ? val : DISKBASIC_TEMP_DATA_SIZE; }
 	void SetData(const wxUint8 *data, size_t len, bool invert = false);
+	void Set(size_t pos, wxUint8 val);
+	void Replace(wxUint8 src, wxUint8 dst);
 	wxUint8 *GetData() { return data; }
 	size_t GetSize() const { return size; }
 	void InvertData(bool invert);
@@ -187,18 +189,26 @@ public:
 	//@{
 	/// @brief ファイルの最終セクタのデータサイズを求める
 	virtual int		CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size);
+	/// @brief データの読み込み/比較の前処理
+	virtual bool	PrepareToAccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, int &file_size, DiskBasicGroups &group_items, DiskBasicError &errinfo) { return true; }
 	/// @brief データの読み込み/比較処理
 	virtual int		AccessFile(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end);
+	/// @brief 内部ファイルをエクスポートする際に内容を変換
+	virtual bool	ConvertDataForLoad(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
+	/// @brief エクスポートしたファイルをベリファイする際に内容を変換
+	virtual bool	ConvertDataForVerify(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
 	//@}
 
 	/// @name save / write
 	//@{
 	/// @brief 書き込み可能か
 	virtual bool	SupportWriting() const { return true; }
+	/// @brief ファイルをセーブする前にデータを変換
+	virtual bool	ConvertDataForSave(DiskBasicDirItem *item, wxInputStream &istream, wxOutputStream &ostream);
 	/// @brief 最後のグループ番号を計算する
 	virtual wxUint32 CalcLastGroupNumber(wxUint32 group_num, int size_remain);
 	/// @brief ファイルをセーブする前の準備を行う
-	virtual bool	PrepareToSaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo) { return true; }
+	virtual bool	PrepareToSaveFile(wxInputStream &istream, int &file_size, const DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo) { return true; }
 	/// @brief データの書き込み処理
 	virtual int		WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end);
 	/// @brief データの書き込み終了後の処理

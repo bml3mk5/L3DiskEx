@@ -476,7 +476,7 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 			int ssiz				= 0;
 //			wxString type_str = item->GetAttribute("type");
 //			if (!type_str.IsEmpty()) {
-//				disk_type = L3DiskUtils::ToInt(type_str);
+//				disk_type = Utils::ToInt(type_str);
 //			}
 			SingleDensities singles;
 			wxString den_name, den_name_locale;
@@ -485,19 +485,19 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 			while (itemnode) {
 				if (itemnode->GetName() == "Reversible") {
 					str = itemnode->GetNodeContent();
-					reversible = L3DiskUtils::ToBool(str);
+					reversible = Utils::ToBool(str);
 				} else if (itemnode->GetName() == "SidesPerDisk") {
 					str = itemnode->GetNodeContent();
-					sides_per_disk = L3DiskUtils::ToInt(str);
+					sides_per_disk = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "TracksPerSide") {
 					str = itemnode->GetNodeContent();
-					track_per_side = L3DiskUtils::ToInt(str);
+					track_per_side = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorsPerTrack") {
 					str = itemnode->GetNodeContent();
-					sectors_per_track = L3DiskUtils::ToInt(str);
+					sectors_per_track = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "SectorSize") {
 					str = itemnode->GetNodeContent();
-					sector_size = L3DiskUtils::ToInt(str);
+					sector_size = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "NumberingSector") {
 					str = itemnode->GetNodeContent();
 					str = str.Lower();
@@ -506,10 +506,10 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 					}
 				} else if (itemnode->GetName() == "Density") {
 					str = itemnode->GetNodeContent();
-					density = L3DiskUtils::ToInt(str);
+					density = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "Interleave") {
 					str = itemnode->GetNodeContent();
-					interleave = L3DiskUtils::ToInt(str);
+					interleave = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "DiskBasicTypes") {
 					wxXmlNode *citemnode = itemnode->GetChildren();
 					while(citemnode) {
@@ -527,25 +527,25 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 					if (str.IsEmpty() || str.Upper() == wxT("ALL")) {
 						strk = -1;
 					} else {
-						strk = L3DiskUtils::ToInt(str);
+						strk = Utils::ToInt(str);
 					}
 					str = itemnode->GetAttribute("side");
 					if (str.IsEmpty() || str.Upper() == wxT("ALL")) {
 						ssid = -1;
 					} else {
-						ssid = L3DiskUtils::ToInt(str);
+						ssid = Utils::ToInt(str);
 					}
 					str = itemnode->GetAttribute("sectors");
 					if (str.IsEmpty()) {
 						sspt = -1;
 					} else {
-						sspt = L3DiskUtils::ToInt(str);
+						sspt = Utils::ToInt(str);
 					}
 					str = itemnode->GetAttribute("size");
 					if (str.IsEmpty()) {
 						ssiz = 128;
 					} else {
-						ssiz = L3DiskUtils::ToInt(str);
+						ssiz = Utils::ToInt(str);
 					}
 					SingleDensity s((int)strk, (int)ssid, (int)sspt, (int)ssiz);
 					singles.Add(s);
