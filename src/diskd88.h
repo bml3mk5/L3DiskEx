@@ -11,11 +11,15 @@
 #include "common.h"
 #include <wx/string.h>
 #include <wx/filename.h>
-#include <wx/mstream.h>
+//#include <wx/mstream.h>
 #include <wx/dynarray.h>
 #include <wx/hashmap.h>
 #include "diskparam.h"
-#include "diskresult.h"
+#include "diskimg/diskresult.h"
+
+#ifdef DISKD88_USE_MEMORY_INPUT_STREAM
+class wxMemoryInputStream;
+#endif
 
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD
@@ -131,6 +135,8 @@ public:
 	int		GetSize() const;
 	/// セクタデータへのポインタを返す
 	wxUint8 *GetSectorBuffer() { return data; }
+	/// セクタデータへのポインタを返す
+	wxUint8 *GetSectorBuffer(int offset);
 	/// セクタ数を返す
 	wxUint16 GetSectorsPerTrack() const;
 	/// セクタ数を設定

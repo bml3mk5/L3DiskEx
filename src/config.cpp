@@ -29,10 +29,16 @@ Params::Params()
 	mDecideAttrImport = true;
 	mSkipImportDialog = false;
 	mIgnoreDateTime = false;
+#ifdef _DEBUG
+	mShowInterDirItem = true;
+#else
+	mShowInterDirItem = false;
+#endif
 	mWindowWidth = 1000;
 	mWindowHeight = 600;
 	mTemporaryFolder.Empty();
 	mBinaryEditer.Empty();
+	mLanguage.Empty();
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		mListColumnWidth[id]=-1;
 		mListColumnPos[id]=id;
@@ -157,6 +163,8 @@ void Config::Load()
 	ini->Read(wxT("DeleteExtensionWhenImport"), &mDecideAttrImport);
 	// インポートやプロパティ変更時に日時を無視するか
 	ini->Read(wxT("IgnoreDateTime"), &mIgnoreDateTime);
+	// プロパティで内部データをリストで表示するか
+	ini->Read(wxT("ShowInterDirItem"), &mShowInterDirItem);
 	// ウィンドウ幅
 	ini->Read(wxT("WindowWidth"), &mWindowWidth);
 	// ウィンドウ高さ
@@ -165,6 +173,8 @@ void Config::Load()
 	ini->Read(wxT("TemporaryFolder"), &mTemporaryFolder);
 	// バイナリエディタのパス
 	ini->Read(wxT("BinaryEditer"), &mBinaryEditer);
+	// 言語
+	ini->Read(wxT("Language"), &mLanguage);
 	// リストのカラム幅
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");
@@ -227,6 +237,8 @@ void Config::Save()
 	ini->Write(wxT("DeleteExtensionWhenImport"), mDecideAttrImport);
 	// インポートやプロパティ変更時に日時を無視するか
 	ini->Write(wxT("IgnoreDateTime"), mIgnoreDateTime);
+	// プロパティで内部データをリストで表示するか
+	ini->Write(wxT("ShowInterDirItem"), mShowInterDirItem);
 	// ウィンドウ幅
 	ini->Write(wxT("WindowWidth"), mWindowWidth);
 	// ウィンドウ高さ
@@ -235,6 +247,8 @@ void Config::Save()
 	ini->Write(wxT("TemporaryFolder"), mTemporaryFolder);
 	// バイナリエディタのパス
 	ini->Write(wxT("BinaryEditer"), mBinaryEditer);
+	// 言語
+	ini->Write(wxT("Language"), mLanguage);
 	// リストのカラム幅
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");

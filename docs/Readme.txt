@@ -1,7 +1,7 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.4.7
-                                                                2020/05/24
+                                                              Version 0.5.0
+                                                                2020/07/17
 
                             Copyright(C) Sasaji 2015-2020 All Rights Reserved.
 ==============================================================================
@@ -27,6 +27,10 @@
   ・FLEX
   ・OS-9 Level I/II
   ・CP/M Ver.2.2
+  ・Apple DOS 3.3
+  ・Apple ProDOS 8/16
+  ・Commodore 1541 DOS 2.6 (Commodore 64)
+  ・Commodore Amiga DOS / AROS
   ・TF-DOS
   ・キャリーラボ C-DOS
   ・キャリーラボ CDOS II
@@ -81,9 +85,8 @@
 
 ● 動作確認環境
 
-  ◆Windows ... Windows10 / Windows7 SP1 / WindowsXP SP3
-  ◆MacOSX .... High Sierra(10.13.6) / Sierra(10.12.6) / El Capitan(10.11.6) /
-                Lion(10.7.5)(64bit)
+  ◆Windows ... Windows10 / Windows7 SP1
+  ◆MacOSX .... High Sierra(10.13.6)
 
 ------------------------------------------------------------------------------
 
@@ -310,7 +313,8 @@
   「開く」 ................ ディスクイメージファイルを開きます。
         サポートしているディスクイメージは：
           CPC DSK, CopyCQ, Teledisk TD0, Anex86 FDI, Virtual98 FDD,
-          IMageDisk IMD, D88およびべた形式です。
+          IMageDisk IMD, DSKSTR, VICE G64, Apple Disk Copy,
+          D88およびべた形式です。
         形式の判断は、拡張子で行います。
 
    -------------------------------------------------------------------------
@@ -768,6 +772,17 @@
       例: open -a TextEdit
           open -a "/Application/Hex Fiend.app"
 
+  言語(Language) ...
+      メニューなどの表示言語を設定します。設定を反映させるにはこのアプリを再起動
+    する必要があります。
+    ・System Dependent ... システムの言語設定に従います。
+                           なお現状、日本語のみ対応しています。
+    ・不明(Unknown) ...... 表示言語の変換を行いません。英語になります。
+    ・ja ................. 表示言語を日本語にします。システム側で対応して
+                           いないと表示されません。
+      jaが一覧に表示されない場合、一度System Dependentを選択して再起動して
+    してください。
+
 
 ------------------------------------------------------------------------------
 
@@ -1018,12 +1033,12 @@
   Windows版: (CPU: Corei7 4770S 3.1GHz / Mem: 8GB)
     Microsoft Windows10 (64ビット環境)
       Microsoft Visual C++ 2010 Express Edition
-      wxWidgets 3.1.0
+      wxWidgets 3.1.3
 
   MacOSX版: (Mac Mini CPU: Corei5 / Mem: 4GB)
-    Mac OS X El Capitan (10.11.6 Intel x86_64)
-      Xcode
-      wxWidgets 3.1.0
+    Mac OS X High Sierra (10.13.6 Intel x86_64)
+      Xcode 7.x
+      wxWidgets 3.1.3
 
 ------------------------------------------------------------------------------
 
@@ -1053,6 +1068,13 @@
 ・OS-9 Technical Manual - Microware Systems
 ・CP/M Operating System Manual - DIGITAL RESERCH
 ・THE PROGRAMMER'S CP/M HANDBOOK - Osborne/McGraw-Hill
+・AppleII The DOS Manual Disk Operating System - Apple Computer Inc.
+・Beneath Apple DOS - QUALITY SOFTWARE
+・Beneath Apple ProDOS - QUALITY SOFTWARE
+・Apple II GS ProDOS 16 Reference Manual - Apple Computer Inc.
+・COMMODORE 1541 DISK DRIVE USER'S GUIDE - Commodore computer
+・COMMODORE 1541 II DISK DRIVE USER'S GUIDE - Commodore computer
+・Amiga System Programmer's Guide - Abacus
 ・Retro PC Gallery
   (http://haserin09.la.coocan.jp/index.html)
 ・アルゴの記憶
@@ -1061,6 +1083,8 @@
   (http://fukui.s17.xrea.com/comp/index.html)
 ・C-DOS Explorer Ver.0.9説明 - No.046の部屋
   (http://www.hi-sumi.com/CDOSExp.html)
+・The .ADF (Amiga Disk File) format FAQ
+  (http://lclevy.free.fr/adflib/adf_info.html)
 
 ------------------------------------------------------------------------------
 

@@ -2,6 +2,19 @@
  更新履歴
 ==============================================================================
 
+2020-07-17	Version 0.5.0
+・以下の機種のDISK BASIC / OSに対応：
+  ・Apple DOS 3.3
+  ・Apple ProDOS 8 / 16
+  ・Commodore 1541 DOS
+  ・Commodore Amiga DOS / AROS
+・以下のディスクイメージを読み込めるようにした。
+  ・DSKSTR形式
+  ・VICE G64形式
+  ・Apple Disk Copy形式
+
+-----
+
 2020-05-24	Version 0.4.7
 ・IMageDisk IMD形式のイメージを読み込めるようにした。
 ・CP/Mでソフトウェアスキュー(セクタ番号変換)に対応した。

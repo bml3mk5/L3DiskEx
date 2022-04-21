@@ -1,0 +1,823 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\ui">
+      <UniqueIdentifier>{4aa0907a-ecb7-4350-9336-4232f4e596d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ui">
+      <UniqueIdentifier>{3cd223c5-c960-4a40-8ae5-71383a8eb544}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\diskimg">
+      <UniqueIdentifier>{046333c1-52eb-495f-a08e-5db8ad53a94f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\diskimg">
+      <UniqueIdentifier>{35c2cce8-81bb-4723-b8a3-65b56c986253}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\basicfmt">
+      <UniqueIdentifier>{3541e9d4-160a-4417-8fc8-4f087499e5ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\basicfmt">
+      <UniqueIdentifier>{83519ae5-e663-4c28-b824-42f307703662}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\l3diskex.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskd88.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\charcodes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\result.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskparam.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\common.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\logging.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uibindump.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uicdlistctrl.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uicdtreectrl.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uiclistctrl.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uictreectrl.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uidiskattr.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uidisklist.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uifatarea.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uifilelist.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uirawdisk.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uirpanel.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskcqmparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskd88creator.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskd88parser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskd88writer.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskdimparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskdskparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskfdiparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskplainparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskplainwriter.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\disktd0parser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskvfdparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskwriter.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\rawexpbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\rawparambox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\rawsectorbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\rawtrackbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\fileselbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\fontminibox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\intnamebox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\diskparambox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\diskreplacebox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basiccommon.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdir.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_cdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_cpm.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_dos80.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_falcom.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fat8.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_flex.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fm.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fp.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_frost.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_hu68k.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_l31s.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_l32d.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_losa.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_magical.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_msdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_msx.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz_base.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz_fdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_n88.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_os9.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_sdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_tfdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_x1hu.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_xdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicerror.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicfat.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicfmt.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicparam.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_cdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_cpm.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_dos80.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_falcom.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fat_base.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fat8.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fat12.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fat16.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_flex.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fm.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_fp.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_frost.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_hu68k.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_l31s.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_l32d.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_magical.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_mdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_msdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_msx.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_mz.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_mz_base.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_mz_fdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_n88.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_os9.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_pa.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_sdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_smc.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_tfdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_x1hu.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_xdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\configbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\basicparambox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\basicselbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskresult.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\fileparam.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskimdparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskstrparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_apledos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_apledos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_prodos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_prodos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\intnamevalid.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_c1541.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_c1541.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskg64parser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\disk2mgparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskadcparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_amiga.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_amiga.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\main.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\version.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskd88.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\charcodes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\result.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskparam.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\logging.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uibindump.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uirpanel.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uicdlistctrl.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uicdtreectrl.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uiclistctrl.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uicommon.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uictreectrl.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uidiskattr.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uidisklist.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uifatarea.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uifilelist.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uirawdisk.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskcqmparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskd88creator.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskd88parser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskd88writer.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskdimparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskdskparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskfdiparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskplainparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskplainwriter.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\disktd0parser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskvfdparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskwriter.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\rawexpbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\rawparambox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\rawsectorbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\rawtrackbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\fileselbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\fontminibox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\intnamebox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\diskparambox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\diskreplacebox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basiccommon.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdir.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_cdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_cpm.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_dos80.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_falcom.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fat8.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_flex.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fm.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fp.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_frost.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_hu68k.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_l31s.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_l32d.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_losa.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_magical.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_msdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_msx.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz_base.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz_fdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_n88.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_os9.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_sdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_tfdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_x1hu.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_xdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicerror.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicfat.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicfmt.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicparam.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_cdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_cpm.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_dos80.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_falcom.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fat_base.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fat8.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fat12.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fat16.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_flex.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fm.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_fp.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_frost.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_hu68k.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_l31s.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_l32d.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_magical.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_mdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_msdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_msx.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_mz.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_mz_base.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_mz_fdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_n88.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_os9.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_pa.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_sdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_smc.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_tfdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_x1hu.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_xdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\configbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\basicparambox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\basicselbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskresult.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\fileparam.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskimdparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskstrparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_apledos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_apledos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_prodos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_prodos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\intnamevalid.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_c1541.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_c1541.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskg64parser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\disk2mgparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskadcparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_amiga.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_amiga.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\src\res\l3diskex.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\src\res\fd_5inch.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\basic_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\char_codes.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\disk_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\data\file_types.xml">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\lang\ja\l3diskex.mo">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+</Project>

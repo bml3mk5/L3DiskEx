@@ -4,13 +4,7 @@
 ///
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
-/** @mainpage L3 Disk Explorer
 
-    @section notes NOTES
-
-    This application needs library to build:
-    wxWidgets version 3.0 or later.
-*/
 #ifndef _L3DISKEX_MAIN_H_
 #define _L3DISKEX_MAIN_H_
 
@@ -125,7 +119,9 @@ wxDECLARE_APP(L3DiskApp);
 
 //////////////////////////////////////////////////////////////////////
 
-/// ステータスカウンター
+/// @brief ステータスカウンター
+///
+/// ステータスバーなどの表示時間を管理
 class StatusCounter
 {
 private:
@@ -149,6 +145,9 @@ public:
 	wxString GetCurrentMessage() const;
 };
 
+/// @brief ステータスカウンター
+///
+/// ステータスバーなどの表示時間を管理
 class StatusCounters
 {
 private:

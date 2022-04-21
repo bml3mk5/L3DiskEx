@@ -8,6 +8,7 @@
 #include "common.h"
 #include <stdio.h>
 #include <string.h>
+#include <wx/datetime.h>
 
 
 /// 右側の指定文字をトリミング
@@ -105,6 +106,20 @@ int mem_rchr(const void *buf, size_t len, int ch)
 	return match;
 }
 
+/// バッファ末尾から指定文字で埋める
+size_t padding(void *buf, size_t len, char fill)
+{
+	char *p = (char *)buf;
+	p = &p[len - 1];
+	while(len > 0) {
+		if (*p != 0) break;
+		*p = fill;
+		len--;
+		p--;
+	}
+	return len;
+}
+
 /// バッファのアルファベットASCII小文字を大文字にする
 void to_upper(void *src, size_t len)
 {
@@ -124,25 +139,80 @@ TM::TM()
 {
 	Clear();
 }
+TM::TM(const struct tm *src)
+{
+	tm = *src;
+}
 TM::~TM()
 {
 }
 /// 時間構造体を初期化
 void TM::Clear()
 {
-	tm.tm_year = -1;
-	tm.tm_mon = -2;
-	tm.tm_mday = -1;
-	tm.tm_hour = -1;
-	tm.tm_min = -1;
-	tm.tm_sec = -1;
+	ClearDate();
+	ClearTime();
 	tm.tm_isdst = 0;
 	tm.tm_wday = 0;
 	tm.tm_yday = 0;
+}
+/// 日付を初期化
+void TM::ClearDate()
+{
+	tm.tm_year = -1;
+	tm.tm_mon = -2;
+	tm.tm_mday = -1;
+}
+/// 時間を初期化
+void TM::ClearTime()
+{
+	tm.tm_hour = -1;
+	tm.tm_min = -1;
+	tm.tm_sec = -1;
+}
+/// 日時をゼロにする
+void TM::AllZero()
+{
+	tm.tm_year = 0;
+	tm.tm_mon = 0;
+	tm.tm_mday = 0;
+	tm.tm_hour = 0;
+	tm.tm_min = 0;
+	tm.tm_sec = 0;
 }
 /// 時間構造体を代入
 TM &TM::operator=(const TM &src)
 {
 	tm = src.tm;
 	return *this;
+}
+/// 現在日時を得る
+TM &TM::Now()
+{
+	wxDateTime::GetTmNow(&tm);
+	return *this;
+}
+/// 現在日時を得る
+TM TM::GetNow()
+{
+	struct tm tm;
+	wxDateTime::GetTmNow(&tm);
+	return TM(&tm);
+}
+/// 日付が有効な値か
+bool TM::IsValidDate() const
+{
+	return (tm.tm_mon >= -1 && tm.tm_mday >= 0);
+}
+/// 時間が有効な値か
+bool TM::IsValidTime() const
+{
+	return (tm.tm_hour >= 0 && tm.tm_min >= 0);
+}
+/// 日時設定を無視する値か
+bool TM::Ignorable() const
+{
+	return (tm.tm_mon == -1 &&
+	((tm.tm_mday == 0 && tm.tm_hour == 0 && tm.tm_min == 0)
+		|| tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61
+	));
 }

@@ -36,6 +36,22 @@
 		<Description>IMageDisk IMD format file</Description>
 		<Description lang="ja">IMageDisk IMD形式ファイル</Description>
 	</FileFormatType>
+	<FileFormatType name="dskstr">
+		<Description>DSKSTR DSK format file</Description>
+		<Description lang="ja">DSKSTR DSK形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="g64">
+		<Description>VICE G64 format file</Description>
+		<Description lang="ja">VICE G64形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="2mg">
+		<Description>Apple 2MG format file</Description>
+		<Description lang="ja">Apple 2MG形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="adc">
+		<Description>Apple Disk Copy 4 format file</Description>
+		<Description lang="ja">Apple Disk Copy 4 形式ファイル</Description>
+	</FileFormatType>
 
 	<FileType ext="d88">
 		<Format type="d88" />
@@ -79,13 +95,52 @@
 		</Format>
 		<Description>2HD file</Description>
 	</FileType>
+	<FileType ext="2img">
+		<Format type="2mg" />
+		<Description>2IMG file</Description>
+	</FileType>
+	<FileType ext="2mg">
+		<Format type="2mg" />
+		<Description>2MG file</Description>
+	</FileType>
+	<FileType ext="adf">
+		<Format type="plain">
+			<DiskTypeHint>2DD-80-11-1</DiskTypeHint>
+			<DiskTypeHint>2HD-80-22-1</DiskTypeHint>
+		</Format>
+		<Description>ADF file</Description>
+	</FileType>
+	<FileType ext="d13">
+		<Format type="adc" />
+		<Format type="plain">
+			<DiskTypeHint>1D-35-13-1-AP</DiskTypeHint>
+		</Format>
+		<Description>D13 file</Description>
+	</FileType>
+	<FileType ext="d64">
+		<Format type="plain">
+			<DiskTypeHint>1D-35-21-17-1-CO</DiskTypeHint>
+		</Format>
+		<Description>D64 file</Description>
+	</FileType>
 	<FileType ext="dim">
 		<Format type="difcdim" />
 		<Description>DIM file</Description>
 	</FileType>
+	<FileType ext="do">
+		<Format type="adc" />
+		<Format type="plain">
+			<DiskTypeHint>2DD-80-8-12-1-AP</DiskTypeHint>
+			<DiskTypeHint>1D-35-13-1-AP</DiskTypeHint>
+			<DiskTypeHint>1D-35-16-1-AP</DiskTypeHint>
+		</Format>
+		<Description>DO file</Description>
+	</FileType>
 	<FileType ext="dsk">
 		<Format type="cpcdsk" />
 		<Format type="cqmimg" />
+		<Format type="dskstr" />
+		<Format type="adc" />
 		<Format type="plain">
 			<DiskTypeHint>2DD-80-9-1</DiskTypeHint>
 			<DiskTypeHint>1DD-80-9-1</DiskTypeHint>
@@ -93,6 +148,7 @@
 			<DiskTypeHint>1DD-80-8-1</DiskTypeHint>
 			<DiskTypeHint>2D-40-16-1</DiskTypeHint>
 			<DiskTypeHint>2D-40-18-1</DiskTypeHint>
+			<DiskTypeHint>1D-35-16-1-AP</DiskTypeHint>
 		</Format>
 		<Description>DSK file</Description>
 	</FileType>
@@ -114,19 +170,38 @@
 		</Format>
 		<Description>FLP file</Description>
 	</FileType>
+	<FileType ext="g64">
+		<Format type="g64" />
+		<Description>G64 file</Description>
+	</FileType>
 	<FileType ext="hdm">
 		<Format type="plain">
 			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
 		</Format>
 		<Description>HDM file</Description>
 	</FileType>
+	<FileType ext="imd">
+		<Format type="imd" />
+		<Description>IMD file</Description>
+	</FileType>
 	<FileType ext="img">
 		<Format type="cqmimg" />
+		<Format type="dskstr" />
 		<Format type="plain">
 			<DiskTypeHint>2D-40-16-1</DiskTypeHint>
 			<DiskTypeHint>2HD-77-26-1</DiskTypeHint>
+			<DiskTypeHint>2HD-80-18-1</DiskTypeHint>
 		</Format>
 		<Description>IMG file</Description>
+	</FileType>
+	<FileType ext="po">
+		<Format type="adc" />
+		<Format type="plain">
+			<DiskTypeHint>2DD-80-8-12-1-AP</DiskTypeHint>
+			<DiskTypeHint>1D-35-13-1-AP</DiskTypeHint>
+			<DiskTypeHint>1D-35-16-1-AP</DiskTypeHint>
+		</Format>
+		<Description>PO file</Description>
 	</FileType>
 	<FileType ext="td0">
 		<Format type="teletd0" />
@@ -137,9 +212,5 @@
 			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
 		</Format>
 		<Description>XDF file</Description>
-	</FileType>
-	<FileType ext="imd">
-		<Format type="imd" />
-		<Description>IMD file</Description>
 	</FileType>
 </FileTypes>

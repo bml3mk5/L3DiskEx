@@ -81,10 +81,18 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<VolumeNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>\"\\/:*?|</InvalidCharSet>
+			<InvalidCode>0x3c</InvalidCode>
+			<InvalidCode>0x3e</InvalidCode>
+		</VolumeNameCharacters>
 		<FileNameCompareCase>insensitive</FileNameCompareCase>
 		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
 		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
 		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>11</VolumeNameMaxLength>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="4" name="MSX">
 		<GroupFinalCode>0xfff</GroupFinalCode>
@@ -178,10 +186,14 @@
 			<ValidCodeRange first="0x61" last="0x7a" />
 			<DuplicateCharSet>.</DuplicateCharSet>
 		</FileNameCharacters>
+		<VolumeNameCharacters>
+			<ValidCodeRange first="0x20" last="0x7e" />
+		</VolumeNameCharacters>
 		<FileNameCompareCase>insensitive</FileNameCompareCase>
 		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
 		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
 		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>8</VolumeNameMaxLength>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="9" name="OS9">
 		<HasVolumeName>true</HasVolumeName>
@@ -200,8 +212,12 @@
 			<ValidCodeRange first="0x41" last="0x5a" />
 			<ValidCodeRange first="0x61" last="0x7a" />
 		</FileNameCharacters>
+		<VolumeNameCharacters>
+			<ValidCodeRange first="0x20" last="0x7e" />
+		</VolumeNameCharacters>
 		<FileNameCompareCase>insensitive</FileNameCompareCase>
 		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>32</VolumeNameMaxLength>
 		<AttributesByExtension>
 			<Binary name="BIN" />
 			<Binary name="CMD" />
@@ -311,7 +327,118 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</FileNameCharacters>
+		<VolumeNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>\"\\/:*?|</InvalidCharSet>
+			<InvalidCode>0x3c</InvalidCode>
+			<InvalidCode>0x3e</InvalidCode>
+		</VolumeNameCharacters>
 		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>18</VolumeNameMaxLength>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="15" name="APPLEDOS">
+		<HasVolumeNumber>true</HasVolumeNumber>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0xff</DeleteCodeOnDir>
+		<DirStartPositionOnSector>11</DirStartPositionOnSector>
+		<FileNameCharacters>
+			<ValidCharSet> !@#$%()-+/._</ValidCharSet>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
+		<TextTerminateCode>0x00</TextTerminateCode>
+		<AttributesByExtension>
+			<BasicBinary   name="BAS" />
+			<BasicInteger  name="INT" />
+			<MachineBinary name="BIN" />
+			<DataAscii     name="TXT" />
+		</AttributesByExtension>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="16" name="PRODOS">
+		<HasVolumeName>true</HasVolumeName>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DirTerminateCode>0</DirTerminateCode>
+		<DirSpaceCode>0</DirSpaceCode>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DirStartPositionOnGroup>4</DirStartPositionOnGroup>
+		<FileNameCharacters>
+			<ValidCharSet> !@#$%()-+._</ValidCharSet>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
+		<RequireVolumeName>true</RequireVolumeName>
+		<VolumeNameMaxLength>15</VolumeNameMaxLength>
+		<TextTerminateCode>0x00</TextTerminateCode>
+		<AttributesByExtension>
+			<BasicBinary   name="BAS" />
+			<MachineBinary name="BIN" />
+			<DataAscii     name="TXT" />
+		</AttributesByExtension>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="20" name="C1541">
+		<HasVolumeName>true</HasVolumeName>
+		<HasVolumeNumber>true</HasVolumeNumber>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DirTerminateCode>0xa0</DirTerminateCode>
+		<DirSpaceCode>0xa0</DirSpaceCode>
+		<DirTrimmingCode>0xa0</DirTrimmingCode>
+		<SectorSkewForSave type="int">10</SectorSkewForSave>
+		<FileNameCharacters>
+			<ValidCharSet> !@#$%()-+/._</ValidCharSet>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
+		<TextTerminateCode>0x00</TextTerminateCode>
+		<AttributesByExtension>
+			<BasicBinary   name="BAS" />
+			<MachineBinary name="BIN" />
+			<DataAscii     name="TXT" />
+			<DataRandom    name="RND" />
+		</AttributesByExtension>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="21" name="AMIGA">
+		<HasVolumeName>true</HasVolumeName>
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DirTerminateCode>0x00</DirTerminateCode>
+		<DirSpaceCode>0x00</DirSpaceCode>
+		<DirTrimmingCode>0x00</DirTrimmingCode>
+		<FileNameCharacters>
+			<ValidCodeRange first="0x20" last="0x2e" />
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x3b" last="0x40" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x5b" last="0x5f" />
+			<ValidCodeRange first="0x60" last="0x7a" />
+			<ValidCodeRange first="0x7b" last="0x7d" />
+			<ValidCodeRange first="0xa1" last="0xff" encoding="1" />
+		</FileNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<RequireFileName>true</RequireFileName>
+		<TextTerminateCode>0x00</TextTerminateCode>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="31" name="LOSA">
 		<HasVolumeName>false</HasVolumeName>
@@ -404,6 +531,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>\"\\,*?/:</InvalidCharSet>
 		</FileNameCharacters>
+		<VolumeNameMaxLength>80</VolumeNameMaxLength>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="54" name="SDOS">
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -457,6 +585,7 @@
 			<InvalidCharSet>!\"/:,?</InvalidCharSet>
 		</FileNameCharacters>
 		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>80</VolumeNameMaxLength>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="71" name="TFDOS">
 		<HasVolumeNumber>true</HasVolumeNumber>
@@ -502,6 +631,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>\"\\/:*?</InvalidCharSet>
 		</FileNameCharacters>
+		<VolumeNameMaxLength>27</VolumeNameMaxLength>
 		<AttributesByExtension>
 			<DataBinary name="BIN" value="0x01" mask="0xff" /><!-- OBJ -->
 			<DataAscii name="TXT" value="0x02" mask="0xff" /><!-- TEX -->
@@ -521,6 +651,7 @@
 			<InvalidCode>0x7f</InvalidCode>
 			<InvalidCharSet>\".\\/:*?</InvalidCharSet>
 		</FileNameCharacters>
+		<VolumeNameMaxLength>17</VolumeNameMaxLength>
 		<AttributesByExtension>
 			<DataBinary name="BIN" value="0x01" mask="0xff" /><!-- OBJ -->
 			<DataAscii name="TXT" value="0x04" mask="0xff" /><!-- ASC -->
@@ -634,6 +765,22 @@
 	</DiskBasicCategory>
 	<DiskBasicCategory name="MDOS">
 		<Description>MDOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="APPLEDOS">
+		<Description>Apple DOS 3.3</Description>
+		<Description lang="ja">アップル DOS 3.3</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="PRODOS">
+		<Description>Apple ProDOS 8 / 16</Description>
+		<Description lang="ja">アップル ProDOS 8 / 16</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="C1541">
+		<Description>Commodore 1541 DOS (for C64)</Description>
+		<Description lang="ja">コモドール 1541 DOS (C64用)</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="AMIGA">
+		<Description>Commodore Amiga DOS</Description>
+		<Description lang="ja">コモドール Amiga DOS / AROS</Description>
 	</DiskBasicCategory>
 </DiskBasicCategories>
 
@@ -1336,6 +1483,16 @@
 		<DirEndSector>26</DirEndSector>
 		<Description>FLEX (2HD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="FLEX-2HD-18X2" type="8" category="FLEX">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>36</DirEndSector>
+		<GroupsPerSector>2</GroupsPerSector>
+		<Description>FLEX (2HD, 18sectors x2)</Description>
+		<Description lang="ja">FLEX (2HD, 18セクタ x2)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="FLEX-2HD-36" type="8" category="FLEX">
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>36</SectorsPerTrack>
@@ -1442,6 +1599,33 @@
 		<DirEndSector>11</DirEndSector>
 		<SubDirGroupSize>8</SubDirGroupSize>
 		<Description>OS-9 (HDD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPMAP-1D-4" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>3</ManagedTrackNumber>
+		<DirStartSector>0</DirStartSector>
+		<DirEndSector>7</DirEndSector>
+		<SectorSkewMap>
+			<Value>0</Value>
+			<Value>6</Value>
+			<Value>12</Value>
+			<Value>3</Value>
+			<Value>9</Value>
+			<Value>15</Value>
+			<Value>14</Value>
+			<Value>5</Value>
+			<Value>11</Value>
+			<Value>2</Value>
+			<Value>8</Value>
+			<Value>7</Value>
+			<Value>13</Value>
+			<Value>4</Value>
+			<Value>10</Value>
+			<Value>1</Value>
+		</SectorSkewMap>
+		<Description>CP/M for Apple II (1D)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="CPM86-1D-512-2" type="10" category="CPM">
 		<SectorsPerGroup>2</SectorsPerGroup>
@@ -1796,6 +1980,128 @@
 		<OEMName type="string">SCFMT IPL v1.02</OEMName>
 		<IgnoreParameter type="bool">true</IgnoreParameter>
 		<Description>9SCFMT v1.02</Description>
+	</DiskBasicType>
+	<DiskBasicType name="APDOS-1D-13" type="15" category="APPLEDOS">
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>13</SectorsPerTrack>
+		<ManagedTrackNumber>17</ManagedTrackNumber>
+		<DirStartSector>12</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>Apple DOS 3.x (1D, 13sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="APDOS-1D" type="15" category="APPLEDOS">
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>17</ManagedTrackNumber>
+		<DirStartSector>15</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>Apple DOS 3.3 (1D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="PRODOS-1D" type="16" category="PRODOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<DirStartSector>4</DirStartSector>
+		<DirEndSector>10</DirEndSector>
+		<SectorSkewMap>
+			<Value>0</Value>
+			<Value>14</Value>
+			<Value>13</Value>
+			<Value>12</Value>
+			<Value>11</Value>
+			<Value>10</Value>
+			<Value>9</Value>
+			<Value>8</Value>
+			<Value>7</Value>
+			<Value>6</Value>
+			<Value>5</Value>
+			<Value>4</Value>
+			<Value>3</Value>
+			<Value>2</Value>
+			<Value>1</Value>
+			<Value>15</Value>
+		</SectorSkewMap>
+		<Description>Apple ProDOS 8 (1D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="PRODOS-2DD" type="16" category="PRODOS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack start="0" tracks="16">12</SectorsPerTrack>
+		<SectorsPerTrack start="16" tracks="16">11</SectorsPerTrack>
+		<SectorsPerTrack start="32" tracks="16">10</SectorsPerTrack>
+		<SectorsPerTrack start="48" tracks="16">9</SectorsPerTrack>
+		<SectorsPerTrack start="64" tracks="16">8</SectorsPerTrack>
+		<DirStartSector>2</DirStartSector>
+		<DirEndSector>5</DirEndSector>
+		<Description>Apple ProDOS 16 (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="C1541-1D" type="20" category="C1541">
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack start="1" tracks="17">21</SectorsPerTrack>
+		<SectorsPerTrack start="18" tracks="7">19</SectorsPerTrack>
+		<SectorsPerTrack start="25" tracks="6">18</SectorsPerTrack>
+		<SectorsPerTrack start="31" tracks="5">17</SectorsPerTrack>
+		<ManagedTrackNumber>18</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>Commodore 1541 DOS (1D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AMIGA-O-2DD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>11</SectorsPerTrack>
+		<FATEndGroup>1759</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>Commodore Amiga DOS (OFS)(2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AMIGA-F-2DD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>11</SectorsPerTrack>
+		<FATEndGroup>1759</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<FastFileSystem type="bool">true</FastFileSystem>
+		<Description>Commodore Amiga DOS (FFS)(2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AMIGA-O-2HD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>22</SectorsPerTrack>
+		<FATEndGroup>3519</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>Commodore Amiga DOS (OFS)(2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AMIGA-F-2HD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>22</SectorsPerTrack>
+		<FATEndGroup>3519</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<FastFileSystem type="bool">true</FastFileSystem>
+		<Description>Commodore Amiga DOS (FFS)(2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AROS-O-PC-2HD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<FATEndGroup>2879</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<Description>AROS for PC (OFS)(2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="AROS-F-PC-2HD" type="21" category="AMIGA">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<FATEndGroup>2879</FATEndGroup>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>1</DirEndSector>
+		<FastFileSystem type="bool">true</FastFileSystem>
+		<Description>AROS for PC (FFS)(2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="DOS80-1D" type="51" category="DOS80">
 		<SidesPerDisk>1</SidesPerDisk>

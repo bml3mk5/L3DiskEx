@@ -32,10 +32,10 @@ public:
 	virtual void SetError(int error_number, ...);
 	virtual void SetWarn(int error_number, ...);
 	virtual void SetInfo(int error_number, ...);
-	virtual void SetError(int error_number, va_list ap);
-	virtual void SetWarn(int error_number, va_list ap);
-	virtual void SetInfo(int error_number, va_list ap);
-	virtual void SetMessage(int error_number, va_list ap) = 0;
+	virtual void SetErrorV(int error_number, va_list ap);
+	virtual void SetWarnV(int error_number, va_list ap);
+	virtual void SetInfoV(int error_number, va_list ap);
+	virtual void SetMessageV(int error_number, va_list ap) = 0;
 	virtual void GetMessages(wxArrayString &arr);
 	virtual const wxArrayString &GetMessages(int maxrow = 20);
 

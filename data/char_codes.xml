@@ -2,26 +2,31 @@
 <CharCodes version="1.0">
 <Choices version="1.0">
 	<Choice name="main">
-		<Item>Ascii</Item>
+		<Item>Ascii8</Item>
 		<Item>ShiftJIS</Item>
+		<Item>ISO-8859-1</Item>
 		<Item>L3Signs</Item>
 		<Item>FMSigns</Item>
 		<Item>X1Signs</Item>
 		<Item>MZSigns</Item>
+		<Item>C64Signs</Item>
 	</Choice>
 	<Choice name="dump">
 		<Item>Hankaku</Item>
 		<Item>ShiftJIS</Item>
-		<Item>Ascii</Item>
+		<Item>ISO-8859-1</Item>
+		<Item>Ascii8</Item>
+		<Item>Ascii7</Item>
 		<Item>L3Signs</Item>
 		<Item>FMSigns</Item>
 		<Item>X1Signs</Item>
 		<Item>MZSigns</Item>
+		<Item>C64Signs</Item>
 	</Choice>
 </Choices>
 
 <Maps version="1.0">
-	<Map name="Ascii">
+	<Map name="Ascii8">
 		<Description>Ascii and Kata-Hira</Description>
 		<Description lang="ja">アスキー・カタ・ひら</Description>
 		<Char code="96DE">が</Char>
@@ -204,10 +209,20 @@
 		<Char code="FE">■</Char>
 	</Map>
 
-	<Map name="ShiftJIS" type="1">
+	<Map name="Ascii7" type="1">
+		<Description>Ascii 7-bit</Description>
+		<Description lang="ja">アスキー 7ビット</Description>
+	</Map>
+
+	<Map name="ShiftJIS" type="2">
 		<Description>Shift JIS</Description>
 		<Description lang="ja">シフトJIS</Description>
 		<FontEncoding>27</FontEncoding><!-- wxFONTENCODING_CP932 -->
+	</Map>
+
+	<Map name="ISO-8859-1" type="3">
+		<Description>ISO-8859-1</Description>
+		<FontEncoding>1</FontEncoding><!-- wxFONTENCODING_ISO8859_1 -->
 	</Map>
 
 	<Map name="Hankaku">
@@ -921,6 +936,141 @@
 		<Char code="FC">Ⓡ</Char>
 		<Char code="FD">Ⓢ</Char>
 		<Char code="FE">Ⓣ</Char>
+		<Char code="FF">π</Char>
+	</Map>
+
+	<Map name="C64Signs">
+		<Description>C64 Signs</Description>
+		<Description lang="ja">C64記号</Description>
+		<Char code="5E">↑</Char>
+		<Char code="5F">←</Char>
+		<Char code="60">━</Char>
+		<Char code="61">♠</Char>
+		<Char code="62">│</Char>
+		<Char code="63">─</Char>
+		<Char code="64">┉</Char>
+		<Char code="65">▔</Char>
+		<Char code="66">═</Char>
+		<Char code="67">▏</Char>
+		<Char code="68">▕</Char>
+		<Char code="69">╮</Char>
+		<Char code="6A">╰</Char>
+		<Char code="6B">╯</Char>
+		<Char code="6C">┗</Char>
+		<Char code="6D">╲</Char>
+		<Char code="6E">╱</Char>
+		<Char code="6F">┏</Char>
+		<Char code="70">┓</Char>
+		<Char code="71">●</Char>
+		<Char code="72">▁</Char>
+		<Char code="73">♥</Char>
+		<Char code="74">▏</Char>
+		<Char code="75">╭</Char>
+		<Char code="76">╳</Char>
+		<Char code="77">◯</Char>
+		<Char code="78">♣</Char>
+		<Char code="79">┇</Char>
+		<Char code="7A">♦</Char>
+		<Char code="7B">┼</Char>
+		<Char code="7C">░</Char>
+		<Char code="7D">│</Char>
+		<Char code="7E">π</Char>
+		<Char code="7F">◥</Char>
+		<Char code="A0"> </Char>
+		<Char code="A1">▌</Char>
+		<Char code="A2">▄</Char>
+		<Char code="A3">▔</Char>
+		<Char code="A4">▏</Char>
+		<Char code="A5">▒</Char>
+		<Char code="A6">▕</Char>
+		<Char code="A7">▂</Char>
+		<Char code="A8">◤</Char>
+		<Char code="A9">▐</Char>
+		<Char code="AA">├</Char>
+		<Char code="AB">▗</Char>
+		<Char code="AC">└</Char>
+		<Char code="AD">┐</Char>
+		<Char code="AE">▂</Char>
+		<Char code="AF">┌</Char>
+		<Char code="B0">┴</Char>
+		<Char code="B1">┬</Char>
+		<Char code="B2">┤</Char>
+		<Char code="B3">▎</Char>
+		<Char code="B4">▍</Char>
+		<Char code="B5">◨</Char>
+		<Char code="B6">┌</Char>
+		<Char code="B7">▔</Char>
+		<Char code="B8">▀</Char>
+		<Char code="B9">▅</Char>
+		<Char code="BA">▟</Char>
+		<Char code="BB">▖</Char>
+		<Char code="BC">▝</Char>
+		<Char code="BD">┘</Char>
+		<Char code="BE">▘</Char>
+		<Char code="BF">▚</Char>
+		<Char code="C0">━</Char>
+		<Char code="C1">♠</Char>
+		<Char code="C2">│</Char>
+		<Char code="C3">─</Char>
+		<Char code="C4">┉</Char>
+		<Char code="C5">▔</Char>
+		<Char code="C6">═</Char>
+		<Char code="C7">▏</Char>
+		<Char code="C8">▕</Char>
+		<Char code="C9">╮</Char>
+		<Char code="CA">╰</Char>
+		<Char code="CB">╯</Char>
+		<Char code="CC">┗</Char>
+		<Char code="CD">╲</Char>
+		<Char code="CE">╱</Char>
+		<Char code="CF">┏</Char>
+		<Char code="D0">┓</Char>
+		<Char code="D1">●</Char>
+		<Char code="D2">▁</Char>
+		<Char code="D3">♥</Char>
+		<Char code="D4">▏</Char>
+		<Char code="D5">╭</Char>
+		<Char code="D6">╳</Char>
+		<Char code="D7">◯</Char>
+		<Char code="D8">♣</Char>
+		<Char code="D9">┇</Char>
+		<Char code="DA">♦</Char>
+		<Char code="DB">┼</Char>
+		<Char code="DC">░</Char>
+		<Char code="DD">│</Char>
+		<Char code="DE">π</Char>
+		<Char code="DF">◥</Char>
+		<Char code="E0"> </Char>
+		<Char code="E1">▌</Char>
+		<Char code="E2">▄</Char>
+		<Char code="E3">▔</Char>
+		<Char code="E4">▏</Char>
+		<Char code="E5">▒</Char>
+		<Char code="E6">▕</Char>
+		<Char code="E7">▂</Char>
+		<Char code="E8">◤</Char>
+		<Char code="E9">▐</Char>
+		<Char code="EA">├</Char>
+		<Char code="EB">▗</Char>
+		<Char code="EC">└</Char>
+		<Char code="ED">┐</Char>
+		<Char code="EE">▂</Char>
+		<Char code="EF">┌</Char>
+		<Char code="F0">┴</Char>
+		<Char code="F1">┬</Char>
+		<Char code="F2">┤</Char>
+		<Char code="F3">▎</Char>
+		<Char code="F4">▍</Char>
+		<Char code="F5">◨</Char>
+		<Char code="F6">┌</Char>
+		<Char code="F7">▔</Char>
+		<Char code="F8">▀</Char>
+		<Char code="F9">▅</Char>
+		<Char code="FA">▟</Char>
+		<Char code="FB">▖</Char>
+		<Char code="FC">▝</Char>
+		<Char code="FD">┘</Char>
+		<Char code="FE">▘</Char>
 		<Char code="FF">π</Char>
 	</Map>
 </Maps>

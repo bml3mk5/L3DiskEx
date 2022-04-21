@@ -8,19 +8,23 @@
 #include "charcodes.h"
 #include <wx/xml/xml.h>
 #include <wx/translation.h>
+#include "utils.h"
 
 
 CharCodeMaps	gCharCodeMaps;
 CharCodeChoices	gCharCodeChoices;
 
+//////////////////////////////////////////////////////////////////////////////
 //
-//
+// キャラクターコード１文字の変換情報
 //
 CharCode::CharCode()
 {
 	memset(code, 0, sizeof(code));
 	code_len = 0;
 }
+/// @param[in] newstr  : 文字（列）
+/// @param[in] newcode : 文字コード
 CharCode::CharCode(const wxString &newstr, const wxString &newcode)
 {
 	long lcode;
@@ -36,14 +40,17 @@ CharCode::CharCode(const wxString &newstr, const wxString &newcode)
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
-//
+// キャラクターコード変換マップ
 //
 CharCodeMap::CharCodeMap()
 {
 	type = 0;
 	font_encoding = 0;
 }
+/// @param[in] n_name : マップ名
+/// @param[in] n_type : マップ種類 = 0
 CharCodeMap::CharCodeMap(const wxString &n_name, int n_type)
 {
 	name = n_name;
@@ -127,12 +134,17 @@ bool CharCodeMap::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 	return match;
 }
 
-/// wxMBConvを使って変換する Shift-JIS変換用
+//////////////////////////////////////////////////////////////////////////////
+//
+// wxMBConvを使って変換する 2バイト系文字(Shift-JIS)変換用
+//
 CharCodeMapMB::CharCodeMapMB()
 	: CharCodeMap()
 {
 	cs = NULL;
 }
+/// @param[in] n_name : マップ名
+/// @param[in] n_type : マップ種類 = 1
 CharCodeMapMB::CharCodeMapMB(const wxString &n_name, int n_type)
 	: CharCodeMap(n_name, n_type)
 {
@@ -147,7 +159,7 @@ void CharCodeMapMB::Initialize()
 	cs = new wxCSConv((wxFontEncoding)font_encoding);
 }
 
-/// 文字コード１文字を(SJIS)を文字列に変換する
+/// 文字コード１文字を文字列に変換する
 /// @param [in]  src         : 文字コード(1～2バイト)
 /// @param [in]  remain      : srcの残りバイト数
 /// @param [out] dst         : 文字列
@@ -244,8 +256,142 @@ bool CharCodeMapMB::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 	return match;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
+// wxMBConvを使って変換する 1バイト系文字(iso-8859-1)変換用
 //
+CharCodeMapSB::CharCodeMapSB()
+	: CharCodeMapMB()
+{
+}
+/// @param[in] n_name : マップ名
+/// @param[in] n_type : マップ種類 = 1
+CharCodeMapSB::CharCodeMapSB(const wxString &n_name, int n_type)
+	: CharCodeMapMB(n_name, n_type)
+{
+}
+
+/// 文字コード１文字を文字列に変換する
+/// @param [in]  src         : 文字コード(1バイト)
+/// @param [in]  remain      : srcの残りバイト数
+/// @param [out] dst         : 文字列
+/// @param [in]  unknownchar : 変換できない場合に置き換える文字
+/// @return 変換したバイト数
+size_t CharCodeMapSB::FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar)
+{
+	wxUint8 c[2];
+	size_t pos = 0;
+
+	c[0] = src[0];
+	c[1] = 0;
+	if (c[0] < 0x20) {
+		// ascii control char
+		c[0] = unknownchar;
+		dst += wxString((const char *)c, *cs);
+		pos++;
+		return pos;
+	} else if (c[0] < 0x80) {
+		// ascii visible char
+		dst += wxString((const char *)c, *cs);
+		pos++;
+		return pos;
+	}
+
+	wchar_t wc[2];
+	size_t len = cs->ToWChar(wc, 2, (const char *)c, 1);
+	if (len == wxCONV_FAILED) {
+		// 変換できない！
+		dst += unknownchar;
+		pos++;
+	} else {
+		// 変換できた
+		dst += wxString(wc, len);
+		pos += len;
+	}
+
+	return pos;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// Ascii 7-bit用
+//
+CharCodeMap7::CharCodeMap7()
+	: CharCodeMap()
+{
+}
+/// @param[in] n_name : マップ名
+/// @param[in] n_type : マップ種類 = 2
+CharCodeMap7::CharCodeMap7(const wxString &n_name, int n_type)
+	: CharCodeMap(n_name, n_type)
+{
+}
+
+/// コントロールコードを(必要なら)変換する
+/// @param [in,out] str      : 文字列
+/// @param [in]     len      : バッファサイズ
+void CharCodeMap7::ConvCtrlCodes(wxUint8 *str, size_t len)
+{
+	for(size_t i=0; i<len; i++) {
+		wxUint8 ch = str[i];
+		if (0x80 <= ch && ch <= 0x9f) {
+			ch &= 0x7f;
+			str[i] = ch;
+		}
+	}
+}
+
+/// 文字コード１文字を文字列に変換する
+/// @param [in]  src         : 文字コード
+/// @param [in]  remain      : srcの残りバイト数
+/// @param [out] dst         : 文字列
+/// @param [in]  unknownchar : 変換できない場合に置き換える文字
+/// @return 変換したバイト数
+size_t CharCodeMap7::FindString(const wxUint8 *src, size_t remain, wxString &dst, wxUint8 unknownchar)
+{
+//	bool match = false;
+	size_t len = 0;
+
+	if (remain == 0) return len;
+
+	wxUint8 ch = src[0];
+	if (0x80 <= ch) {
+		ch &= 0x7f;
+	}
+	if (0x20 <= ch && ch <= 0x7e) {
+		dst += ch;
+	} else {
+		dst += unknownchar;
+	}
+	len = 1;
+
+	return len;
+}
+
+/// 文字が文字変換テーブルにあるか
+/// @param [in]     src : 文字列(１文字)
+/// @param [in,out] dst : バイト列 Nullable
+/// @param [out]    pos : ある場合、その位置
+/// @retval true  一致した
+/// @retval false 一致しなかった
+bool CharCodeMap7::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
+{
+	wxScopedCharBuffer p = src.To8BitData();
+	wxUint8 c = *p;
+	if (c >= 0x80) {
+		c &= 0x7f;
+	}
+	if (dst) {
+		dst[pos] = c;
+	}
+	pos++;
+
+	return true;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+// キャラクターコード変換マップ一覧リスト
 //
 CharCodeMaps::CharCodeMaps()
 {
@@ -253,35 +399,41 @@ CharCodeMaps::CharCodeMaps()
 
 CharCodeMaps::~CharCodeMaps()
 {
-	for(size_t i=0; i<maps.Count(); i++) {
-		CharCodeMap *item = maps[i];
+	for(size_t i=0; i<Count(); i++) {
+		CharCodeMap *item = Item(i);
 		delete item;
 	}
-	maps.Empty();
+	Empty();
 }
-void CharCodeMaps::Add(CharCodeMap *map)
-{
-	maps.Add(map);
-}
+//void CharCodeMaps::Add(CharCodeMap *map)
+//{
+//	maps.Add(map);
+//}
+
+/// 指定位置のマップを返す
+/// @param[in] index 位置
 CharCodeMap *CharCodeMaps::GetMap(size_t index)
 {
-	return (index < maps.Count() ? maps[index] : NULL);
+	return (index < Count() ? Item(index) : NULL);
 }
 
+/// マップを探す
+/// @param[in] name マップ名
 CharCodeMap *CharCodeMaps::FindMap(const wxString &name)
 {
 	CharCodeMap *match = NULL;
-	for(size_t i=0; i<maps.Count(); i++) {
-		if (name == maps[i]->GetName()) {
-			match = maps[i];
+	for(size_t i=0; i<Count(); i++) {
+		if (name == Item(i)->GetName()) {
+			match = Item(i);
 			break;
 		}
 	}
 	return match;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
-//
+// キャラクターコード選択リスト
 //
 CharCodeChoice::CharCodeChoice(const wxString &n_name, const wxArrayString &n_item_names)
 {
@@ -291,46 +443,57 @@ CharCodeChoice::CharCodeChoice(const wxString &n_name, const wxArrayString &n_it
 CharCodeChoice::~CharCodeChoice()
 {
 }
+
+/// 使用するマップを設定
 void CharCodeChoice::AssignMaps()
 {
 	for(size_t i=0; i<item_names.Count(); i++) {
 		CharCodeMap *map = gCharCodeMaps.FindMap(item_names[i]);
 		if (map) {
-			maps.Add(map);
+			Add(map);
 		}
 	}
 }
-size_t CharCodeChoice::Count() const
-{
-	return maps.Count();
-}
-CharCodeMap *CharCodeChoice::Item(size_t idx) const
-{
-	return maps.Item(idx);
-}
+//size_t CharCodeChoice::Count() const
+//{
+//	return maps.Count();
+//}
+//CharCodeMap *CharCodeChoice::Item(size_t idx) const
+//{
+//	return maps.Item(idx);
+//}
+
+/// マップ名を返す
+/// @param[in] idx インデックス
 const wxString &CharCodeChoice::GetItemName(size_t idx) const
 {
-	if (idx >= maps.Count()) {
+	if (idx >= Count()) {
 		idx = 0;
 	}
-	return maps[idx]->GetName();
+	return Item(idx)->GetName();
 }
+
+/// マップ名に一致するマップを探す
+/// @param[in] name マップ名
 CharCodeMap *CharCodeChoice::Find(const wxString &name) const
 {
 	CharCodeMap *match = NULL;
-	for(size_t i=0; i<maps.Count(); i++) {
-		if (name == maps[i]->GetName()) {
-			match = maps[i];
+	for(size_t i=0; i<Count(); i++) {
+		if (name == Item(i)->GetName()) {
+			match = Item(i);
 			break;
 		}
 	}
 	return match;
 }
+
+/// マップ名に一致するマップを探す
+/// @param[in] name マップ名
 int CharCodeChoice::IndexOf(const wxString &name) const
 {
 	int match = 0;
-	for(size_t i=0; i<maps.Count(); i++) {
-		if (name == maps[i]->GetName()) {
+	for(size_t i=0; i<Count(); i++) {
+		if (name == Item(i)->GetName()) {
 			match = (int)i;
 			break;
 		}
@@ -338,41 +501,51 @@ int CharCodeChoice::IndexOf(const wxString &name) const
 	return match;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
-//
+//　キャラクターコード選択リスト
 //
 CharCodeChoices::CharCodeChoices()
 {
 }
 CharCodeChoices::~CharCodeChoices()
 {
-	for(size_t i=0; i<choices.Count(); i++) {
-		CharCodeChoice *item = choices[i];
+	for(size_t i=0; i<Count(); i++) {
+		CharCodeChoice *item = Item(i);
 		delete item;
 	}
-	choices.Empty();
+	Empty();
 }
+
+/// 使用するマップを設定
 void CharCodeChoices::AssignMaps()
 {
-	for(size_t i=0; i<choices.Count(); i++) {
-		choices[i]->AssignMaps();
+	for(size_t i=0; i<Count(); i++) {
+		Item(i)->AssignMaps();
 	}
 }
-void CharCodeChoices::Add(CharCodeChoice *choice)
-{
-	choices.Add(choice);
-}
+//void CharCodeChoices::Add(CharCodeChoice *choice)
+//{
+//	choices.Add(choice);
+//}
+
+/// 選択リスト名に一致する選択リストを探す
+/// @param[in] n_name リスト名
 CharCodeChoice *CharCodeChoices::Find(const wxString &n_name) const
 {
 	CharCodeChoice *match = NULL;
-	for(size_t i=0; i<choices.Count(); i++) {
-		if (n_name == choices[i]->GetName()) {
-			match = choices[i];
+	for(size_t i=0; i<Count(); i++) {
+		if (n_name == Item(i)->GetName()) {
+			match = Item(i);
 			break;
 		}
 	}
 	return match;
 }
+
+/// 選択リスト名に一致するマップを探す
+/// @param[in] name     リスト名
+/// @param[in] item_idx リスト内の位置
 const wxString &CharCodeChoices::GetItemName(const wxString &name, size_t item_idx) const
 {
 	const CharCodeChoice *choice = Find(name);
@@ -382,6 +555,10 @@ const wxString &CharCodeChoices::GetItemName(const wxString &name, size_t item_i
 		return gCharCodeMaps.GetMap(0)->GetName();
 	}
 }
+
+/// 選択リスト名に一致するマップを探す
+/// @param[in] name      リスト名
+/// @param[in] item_name マップ名
 int CharCodeChoices::IndexOf(const wxString &name, const wxString &item_name) const
 {
 	int idx = 0;
@@ -392,8 +569,9 @@ int CharCodeChoices::IndexOf(const wxString &name, const wxString &item_name) co
 	return idx;
 }
 
+//////////////////////////////////////////////////////////////////////////////
 //
-//
+// キャラクターコード変換操作
 //
 CharCodes::CharCodes()
 {
@@ -403,6 +581,10 @@ CharCodes::~CharCodes()
 {
 }
 /// XMLからパラメータをロード
+/// @param[in]  data_path   : XMLファイルのあるフォルダ
+/// @param[in]  locale_name : ローケル名
+/// @param[out] errmsgs     : エラーメッセージ
+/// @return true / false
 bool CharCodes::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
 {
 	wxXmlDocument doc;
@@ -428,7 +610,11 @@ bool CharCodes::Load(const wxString &data_path, const wxString &locale_name, wxS
 	}
 	return sts;
 }
-
+/// Mapsエレメントをロード
+/// @param[in]  item        : XMLノード
+/// @param[in]  locale_name : ローケル名
+/// @param[out] errmsgs     : エラーメッセージ
+/// @return true / false
 bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs)
 {
 	item = item->GetChildren();
@@ -442,7 +628,13 @@ bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString 
 			stype.ToLong(&type);
 			switch(type) {
 			case 1:
+				map = new CharCodeMap7(sname, (int)type);
+				break;
+			case 2:
 				map = new CharCodeMapMB(sname, (int)type);
+				break;
+			case 3:
+				map = new CharCodeMapSB(sname, (int)type);
 				break;
 			default:
 				map = new CharCodeMap(sname, (int)type);
@@ -457,7 +649,7 @@ bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString 
 					CharCode *p = new CharCode(str, codestr);
 					map->GetList().Add(p);
 				}
-					else if (mitem->GetName() == "FontEncoding") {
+				else if (mitem->GetName() == "FontEncoding") {
 					wxString str = mitem->GetNodeContent();
 					long val = 0;
 					str.ToLong(&val);
@@ -494,7 +686,11 @@ bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString 
 	}
 	return true;
 }
-
+/// Choicesエレメントをロード
+/// @param[in]  item        : XMLノード
+/// @param[in]  locale_name : ローケル名
+/// @param[out] errmsgs     : エラーメッセージ
+/// @return true / false
 bool CharCodes::LoadChoices(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs)
 {
 	item = item->GetChildren();
@@ -560,7 +756,7 @@ void CharCodes::ConvToString(const wxUint8 *src, size_t len, wxString &dst, int 
 /// 文字列を文字コードに変換する
 /// @param [in]  src         : 文字列
 /// @param [out] dst         : 文字コード列
-/// @param [in]  len         : dstバッファイサイズ
+/// @param [in]  len         : dstバッファサイズ
 /// @return  >=0:バイト数  -1: 変換できなかった
 int CharCodes::ConvToChars(const wxString &src, wxUint8 *dst, size_t len)
 {
@@ -572,6 +768,14 @@ int CharCodes::ConvToChars(const wxString &src, wxUint8 *dst, size_t len)
 	}
 	if (dst) dst[pos]='\0';
 	return rc ? (int)pos : -1;
+}
+
+/// コントロールコードを(必要なら)変換する
+/// @param [in,out] str      : 文字列
+/// @param [in]     len      : バッファサイズ
+void CharCodes::ConvCtrlCodes(wxUint8 *str, size_t len)
+{
+	cache->ConvCtrlCodes(str, len);
 }
 
 /// 文字コードが文字変換テーブルにあるか
@@ -596,6 +800,8 @@ bool CharCodes::FindCode(const wxString &src, wxUint8 *dst, size_t &pos)
 	return cache->FindCode(src, dst, pos);
 }
 
+/// マップを設定
+/// @param[in] name マップ名
 void CharCodes::SetMap(const wxString &name)
 {
 	cache = gCharCodeMaps.FindMap(name);
@@ -604,6 +810,8 @@ void CharCodes::SetMap(const wxString &name)
 	}
 }
 
+/// マップを設定
+/// @param[in] idx マップ番号
 void CharCodes::SetMap(int idx)
 {
 	cache = gCharCodeMaps.GetMap(idx);

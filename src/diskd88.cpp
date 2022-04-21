@@ -8,11 +8,11 @@
 #include "diskd88.h"
 #include <wx/wfstream.h>
 #include <wx/xml/xml.h>
-#include "diskparser.h"
-#include "diskwriter.h"
-#include "diskd88creator.h"
-#include "basicparam.h"
-#include "basicfmt.h"
+#include "diskimg/diskparser.h"
+#include "diskimg/diskwriter.h"
+#include "diskimg/diskd88creator.h"
+#include "basicfmt/basicparam.h"
+#include "basicfmt/basicfmt.h"
 
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD, 3: 1DD(unofficial)
@@ -333,11 +333,18 @@ int DiskD88Sector::GetSize() const
 	return (int)sizeof(d88_sector_header_t) + GetSectorBufferSize();
 }
 
+/// セクタデータへのポインタを返す
+wxUint8 *DiskD88Sector::GetSectorBuffer(int offset)
+{
+	return (data && offset < header->size ? &data[offset] : NULL);
+}
+
 /// セクタ数を返す
 wxUint16 DiskD88Sector::GetSectorsPerTrack() const
 {
 	return (header ? header->secnums : 0);
 }
+
 /// セクタ数を設定
 void DiskD88Sector::SetSectorsPerTrack(wxUint16 val)
 {
@@ -942,6 +949,13 @@ int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
 }
 
 /// インターリーブを考慮したセクタ番号リストを返す
+/// @param[in]  interleave    インターリーブ(1...)
+/// @param[in]  sectors_count セクタ数
+/// @param[out] sector_nums   配列
+/// @param[in]  sector_offset オフセット
+///
+/// interleave = 2 の時
+/// sector_nums[0] = sector_offset, sector_nums[2] = sector_offset + 1, sector_nums[4] = sector_offset + 2, ... となる
 bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset)
 {
 	sector_nums.SetCount(sectors_count, 0);
@@ -959,7 +973,7 @@ bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors
 				}
 			}
 		}
-		sector_nums[sector_pos] = (sector_number + sector_offset + 1);
+		sector_nums[sector_pos] = (sector_number + sector_offset);
 		sector_pos += interleave;
 	}
 
@@ -1441,15 +1455,17 @@ DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sec
 /// @return パラメータ
 const DiskParam *DiskD88Disk::CalcMajorNumber()
 {
-	IntHashMap sector_number_map[2];
+	IntHashMap sector_numbers_map[2];
 	IntHashMap sector_size_map;
 	IntHashMap interleave_map;
 //	IntHashMap::iterator it;
 
+	int track_number_min = 0x7fffffff;
 	int track_number_max = 0;
 	int side_number_max = 0;
 
 	int sector_number_max_side0 = 0;
+	int sector_number_min_side0 = 0x7fffffff;
 	int sector_number_min_side1 = 0x7fffffff;
 
 	long sector_masize = 0;
@@ -1457,34 +1473,48 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	DiskParticulars singles;
 
 	if (tracks) {
+		// トラックごとの各値を集計
 		for(size_t ti=0; ti<tracks->Count(); ti++) {
 			DiskD88Track *t = tracks->Item(ti);
 
 			int trk_num = t->GetTrackNumber();
 			int sid_num = t->GetSideNumber();
 
+			// トラック番号の最小値
+			track_number_min = IntHashMapUtil::MinValue(track_number_min, trk_num);
+			// トラック番号の最大値
 			track_number_max = IntHashMapUtil::MaxValue(track_number_max, trk_num);
 			if (sid_num < 16) {
+				// サイド番号の最大値
 				side_number_max = IntHashMapUtil::MaxValue(side_number_max, sid_num);
 			}
-			IntHashMapUtil::IncleaseValue(sector_size_map, t->GetMaxSectorSize());	// セクタサイズはディスク内で最も使用されているサイズ
+			// セクタサイズはディスク内で最も使用されているサイズ
+			IntHashMapUtil::IncleaseValue(sector_size_map, t->GetMaxSectorSize());
+			// インターリーブはディスク内で最も使用されているもの
 			IntHashMapUtil::IncleaseValue(interleave_map, t->GetInterleave());
+
+			// セクタ数
+			if (sid_num >= 0 && sid_num < 2) {
+				IntHashMapUtil::IncleaseValue(sector_numbers_map[sid_num], t->GetSectorsPerTrack());
+			}
 
 			if (trk_num > 0 && sid_num < 2) {
 				// トラック0は除く
+
+				// セクタ番号の最大と最小
 				int sec_num_max = t->GetMaxSectorNumber();
 				int sec_num_min = t->GetMinSectorNumber();
-				IntHashMapUtil::IncleaseValue(sector_number_map[sid_num], sec_num_max);
 				if (sid_num == 0) {
 					sector_number_max_side0 = IntHashMapUtil::MaxValue(sector_number_max_side0, sec_num_max);
+					sector_number_min_side0 = IntHashMapUtil::MinValue(sector_number_min_side0, sec_num_min);
 				} else {
 					sector_number_min_side1 = IntHashMapUtil::MinValue(sector_number_min_side1, sec_num_min);
 				}
 			}
-
+			// 単密度か？
 			DiskD88Sector *s = t->GetSector(1);
 			if (s && s->IsSingleDensity()) {
-				DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), -1, s->GetSectorsPerTrack(), s->GetSectorSize());
+				DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), -1, 1, s->GetSectorsPerTrack(), s->GetSectorSize());
 				singles.Add(sd);
 			}
 		}
@@ -1524,25 +1554,26 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	}
 
 	// 単密度の同じパラメータをまとめる
-	DiskParticular::UniqueTracks(track_number_max + 1, side_number_max + 1, disk_single_type, singles);
+	DiskParticular::UniqueTracks(track_number_max - track_number_min + 1, side_number_max + 1, disk_single_type, singles);
 
-	sides_per_disk = (int)side_number_max + 1;
-	tracks_per_side = (int)track_number_max + 1;
+	// ディスク内で最も多く使われているセクタ数を調べる
+	sides_per_disk = side_number_max + 1;
+	tracks_per_side = track_number_max - track_number_min + 1;
 	sector_size = (int)sector_masize;
 	interleave = (int)interleave_max;
 	if (sides_per_disk > 1 && sector_number_min_side1 != 0x7fffffff && sector_number_max_side0 < sector_number_min_side1) {
 		// セクタ番号がサイドを通して連番になっている
 		numbering_sector = 1;
 		long sec_num_maj = 0;
-		sec_num_maj = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_number_map[0]);
+		sec_num_maj = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_numbers_map[0]);
 		sectors_per_track = (int)sec_num_maj;
 	} else {
 		// セクタ番号はサイド毎
 		numbering_sector = 0;
-		long sec_num_maj[2];
+		int sec_num_maj[2];
 		for(int i=0; i<2; i++) {
-			sec_num_maj[i] = 0;
-			sec_num_maj[i] = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_number_map[i]);
+//			sec_num_maj[i] = 0;
+			sec_num_maj[i] = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_numbers_map[i]);
 		}
 		sectors_per_track = (int)(sec_num_maj[0] > sec_num_maj[1] ? sec_num_maj[0] : sec_num_maj[1]);
 	}
@@ -1556,7 +1587,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 			DiskD88Sectors *ss = t->GetSectors();
 			if (!ss) continue;
 			if ((int)ss->Count() != sectors_per_track) {
-				ptracks.Add(DiskParticular(t->GetTrackNumber(), t->GetSideNumber(), -1, (int)ss->Count(), t->GetMaxSectorSize()));
+				ptracks.Add(DiskParticular(t->GetTrackNumber(), t->GetSideNumber(), -1, 1, (int)ss->Count(), t->GetMaxSectorSize()));
 			}
 		}
 		// 同じパラメータをまとめる
@@ -1564,13 +1595,19 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	}
 
 	// メディアのタイプ
-	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave, numbering_sector, singles, ptracks);
+	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
+		, interleave, track_number_min, sector_number_min_side0, numbering_sector
+		, singles, ptracks);
 	if (disk_param != NULL) {
 		SetDiskTypeName(disk_param->GetDiskTypeName());
 		Reversible(disk_param->IsReversible());
 		SetBasicTypes(disk_param->GetBasicTypes());
 		SetSingles(singles);
+		SetTrackNumberBase(disk_param->GetTrackNumberBase());
+		SetSectorNumberBase(disk_param->GetSectorNumberBase());
+		VariableSectorsPerTrack(disk_param->IsVariableSectorsPerTrack());
 		SetParamDensity(disk_param->GetParamDensity());
+		SetParticularTracks(disk_param->GetParticularTracks());
 		SetDensityName(disk_param->GetDensityName());
 		SetDescription(disk_param->GetDescription());
 	}
@@ -1750,7 +1787,16 @@ bool DiskD88Disk::Initialize(int selected_side)
 bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 {
 	if (selected_side >= 0) {
-		SetDiskParam(param.GetSidesPerDisk(), param.GetTracksPerSide(), param.GetSectorsPerTrack(), param.GetSectorSize(), param.GetParamDensity(), param.GetInterleave(), param.GetSingles()); 
+		SetDiskParam(
+			param.GetSidesPerDisk(),
+			param.GetTracksPerSide(),
+			param.GetSectorsPerTrack(),
+			param.GetSectorSize(),
+			param.GetParamDensity(),
+			param.GetInterleave(),
+			param.GetSingles(),
+			param.GetParticularTracks()
+		); 
 	} else {
 		SetDiskParam(param);
 	}
@@ -1759,7 +1805,8 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 	wxString diskname;
 	DiskD88Creator cr(diskname, param, false, NULL, result);
 	bool rc = true;
-	int trk = 0;
+	int trk = param.GetTrackNumberBase();
+	int trks = param.GetTracksPerSide() + trk;
 	int sid = 0;
 	int sides = param.GetSidesPerDisk();
 	for(int pos=0; pos<DISKD88_MAX_TRACKS; pos++) {
@@ -1795,7 +1842,7 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 			trk++;
 			sid = 0;
 		}
-		if (trk >= param.GetTracksPerSide()) {
+		if (trk >= trks) {
 			SetMaxTrackNumber(pos);
 			break;
 		}
@@ -2231,27 +2278,10 @@ int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk
 
 	result.Clear();
 
-#if 0
-	if (side_number >= 0) {
-		// AB面選択時、対象ディスクは1Sのみ
-		if (src_disk->GetDiskTypeName() != "1S") {
-			result.SetError(DiskResult::ERR_FILE_ONLY_1S);
-			return result.GetValid();
-		}
-	} else {
-		// 同じディスクタイプのみ
-		if (src_disk->GetDiskTypeName() != tag_disk->GetDiskTypeName()) {
-			result.SetError(DiskResult::ERR_FILE_SAME);
-			return result.GetValid();
-		}
-	}
-#endif
 	int valid_disk = tag_disk->Replace(side_number, src_disk, src_side_number);
 	if (valid_disk != 0) {
 		result.SetError(DiskResult::ERR_REPLACE);
 	}
-
-//	file->SetModify();
 
 	return valid_disk;
 }

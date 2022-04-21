@@ -11,7 +11,7 @@
 #include "common.h"
 #include <wx/string.h>
 #include <wx/arrstr.h>
-#include "uifilelist.h"
+#include "ui/uifilelist.h"
 
 
 #define MAX_RECENT_FILES 20
@@ -34,10 +34,12 @@ protected:
 	bool		mDecideAttrImport;	///< インポート時に拡張子で属性を決定したら拡張子を削除するか
 	bool		mSkipImportDialog;	///< インポートダイアログを抑制するか
 	bool		mIgnoreDateTime;	///< インポートやプロパティ変更時に日時を無視するか
+	bool		mShowInterDirItem;	///< プロパティで内部データをリストで表示するか
 	int			mWindowWidth;		///< ウィンドウ幅
 	int			mWindowHeight;		///< ウィンドウ高さ
 	wxString	mTemporaryFolder;	///< テンポラリフォルダのパス
 	wxString	mBinaryEditer;		///< バイナリエディタのパス
+	wxString	mLanguage;			///< 言語
 	int			mListColumnWidth[LISTCOL_END];	///< ファイルリストの各カラムの幅
 	int			mListColumnPos[LISTCOL_END];	///< ファイルリストの各カラムの位置
 
@@ -76,6 +78,8 @@ public:
 	bool			IsSkipImportDialog() const { return mSkipImportDialog; }
 	void			IgnoreDateTime(bool val) { mIgnoreDateTime = val; }
 	bool			DoesIgnoreDateTime() const { return mIgnoreDateTime; }
+	void			ShowInterDirItem(bool val) { mShowInterDirItem = val; }
+	bool			DoesShowInterDirItem() const { return mShowInterDirItem; }
 	void			SetWindowWidth(int val) { mWindowWidth = val; }
 	int				GetWindowWidth() const { return mWindowWidth; }
 	void			SetWindowHeight(int val) { mWindowHeight = val; }
@@ -85,6 +89,8 @@ public:
 	void			ClearTemporaryFolder() { mTemporaryFolder.Empty(); }
 	void			SetBinaryEditer(const wxString &val);
 	const wxString &GetBinaryEditer() const { return mBinaryEditer; }
+	void			SetLanguage(const wxString &val) { mLanguage = val; }
+	const wxString &GetLanguage() const { return mLanguage; }
 	void			SetListColumnWidth(int id, int val) { mListColumnWidth[id] = val; }
 	int				GetListColumnWidth(int id) const { return mListColumnWidth[id]; }
 	void			SetListColumnPos(int id, int val) { mListColumnPos[id] = val; }

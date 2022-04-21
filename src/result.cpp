@@ -41,36 +41,36 @@ void ResultInfo::SetError(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-	SetError(error_number, ap);
+	SetErrorV(error_number, ap);
 	va_end(ap);
 }
 void ResultInfo::SetWarn(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-	SetWarn(error_number, ap);
+	SetWarnV(error_number, ap);
 	va_end(ap);
 }
 void ResultInfo::SetInfo(int error_number, ...)
 {
 	va_list ap;
 	va_start(ap, error_number);
-	SetInfo(error_number, ap);
+	SetInfoV(error_number, ap);
 	va_end(ap);
 }
-void ResultInfo::SetError(int error_number, va_list ap)
+void ResultInfo::SetErrorV(int error_number, va_list ap)
 {
-	SetMessage(error_number, ap);
+	SetMessageV(error_number, ap);
 	valid = -1;
 }
-void ResultInfo::SetWarn(int error_number, va_list ap)
+void ResultInfo::SetWarnV(int error_number, va_list ap)
 {
-	SetMessage(error_number, ap);
+	SetMessageV(error_number, ap);
 	if (valid == 0) valid = 1;
 }
-void ResultInfo::SetInfo(int error_number, va_list ap)
+void ResultInfo::SetInfoV(int error_number, va_list ap)
 {
-	SetMessage(error_number, ap);
+	SetMessageV(error_number, ap);
 	if (valid == 0) valid = 2;
 }
 /// メッセージ配列を返す

@@ -9,7 +9,7 @@ DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
 #ARCH=-m32
 #ARCH=-m64
 
-WXDIR=../../../../Devel/wxWidgets-3.0.2
+WXDIR=../../../../Devel/wxWidgets-3.1.3
 WXCONFIG_SH=wx-config
 WXCONFIG_ST=$(WXDIR)/build_release_static_unicode/wx-config
 WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode/wx-config
@@ -34,9 +34,13 @@ ST_BUILDDIR=$(BUILDDIR)/static
 DBG_BUILDDIR=$(BUILDDIR)/debug
 
 RELEASEDIR=./Release
+RELEASEDIRST=./ReleaseST
 DEBUGDIR=./Debug
 
 SRCDIR=src
+SRCBASICFMTDIR=$(SRCDIR)/basicfmt
+SRCDISKIMGDIR=$(SRCDIR)/diskimg
+SRCUIDIR=$(SRCDIR)/ui
 
 LANGDIR=lang
 SRCLANG=$(LANGDIR)/
@@ -44,118 +48,131 @@ SRCLANG=$(LANGDIR)/
 DATADIR=data
 SRCDATA=$(DATADIR)/
 
-OBJS=	utils.o \
-	common.o \
-	basiccommon.o \
-	basicparam.o \
-	basicerror.o \
-	basictype.o \
-	basictype_fat_base.o \
-	basictype_fat8.o \
-	basictype_fat12.o \
-	basictype_fat16.o \
-	basictype_fm.o \
-	basictype_l31s.o \
-	basictype_l32d.o \
-	basictype_msdos.o \
-	basictype_msx.o \
-	basictype_mz_base.o \
-	basictype_mz.o \
-	basictype_n88.o \
-	basictype_x1hu.o \
-	basictype_flex.o \
-	basictype_os9.o \
-	basictype_cpm.o \
-	basictype_tfdos.o \
-	basictype_cdos.o \
-	basictype_mz_fdos.o \
-	basictype_pa.o \
-	basictype_fp.o \
-	basictype_dos80.o \
-	basictype_frost.o \
-	basictype_magical.o \
-	basictype_sdos.o \
-	basictype_mdos.o \
-	basictype_smc.o \
-	basictype_xdos.o \
-	basictype_hu68k.o \
-	basictype_falcom.o \
-	basicfat.o \
-	basicdiritem_fat8.o \
-	basicdiritem_fm.o \
-	basicdiritem_l31s.o \
-	basicdiritem_l32d.o \
-	basicdiritem_msdos.o \
-	basicdiritem_msx.o \
-	basicdiritem_mz_base.o \
-	basicdiritem_mz.o \
-	basicdiritem_n88.o \
-	basicdiritem_x1hu.o \
-	basicdiritem_flex.o \
-	basicdiritem_os9.o \
-	basicdiritem_cpm.o \
-	basicdiritem_tfdos.o \
-	basicdiritem_cdos.o \
-	basicdiritem_mz_fdos.o \
-	basicdiritem_fp.o \
-	basicdiritem_dos80.o \
-	basicdiritem_frost.o \
-	basicdiritem_magical.o \
-	basicdiritem_sdos.o \
-	basicdiritem_mdos.o \
-	basicdiritem_xdos.o \
-	basicdiritem_hu68k.o \
-	basicdiritem_losa.o \
-	basicdiritem_falcom.o \
-	basicdiritem.o \
-	basicdir.o \
-	basicfmt.o \
-	basicselbox.o \
-	basicparambox.o \
-	charcodes.o \
-	config.o \
-	configbox.o \
-	diskd88.o \
-	diskd88creator.o \
-	diskplainparser.o \
-	diskd88parser.o \
-	diskdskparser.o \
-	diskfdiparser.o \
-	diskcqmparser.o \
-	disktd0parser.o \
-	diskdimparser.o \
-	diskvfdparser.o \
-	diskimdparser.o \
-	diskparser.o \
-	diskd88writer.o \
-	diskplainwriter.o \
-	diskwriter.o \
-	diskparam.o \
-	diskparambox.o \
-	diskresult.o \
-	diskreplacebox.o \
-	fileparam.o \
-	fileselbox.o \
-	fontminibox.o \
-	intnamebox.o \
-	logging.o \
-	rawparambox.o \
-	rawexpbox.o \
-	rawsectorbox.o \
-	rawtrackbox.o \
-	result.o \
-	uibindump.o \
-	uiclistctrl.o \
-	uicdlistctrl.o \
-	uictreectrl.o \
-	uicdtreectrl.o \
-	uidiskattr.o \
-	uidisklist.o \
-	uifilelist.o \
-	uirawdisk.o \
-	uifatarea.o \
-	uirpanel.o \
-	main.o
+OBJS=	$(SRCDIR)/utils.o \
+	$(SRCDIR)/common.o \
+	$(SRCDIR)/diskd88.o \
+	$(SRCDIR)/diskparam.o \
+	$(SRCDIR)/charcodes.o \
+	$(SRCDIR)/config.o \
+	$(SRCDIR)/logging.o \
+	$(SRCDIR)/result.o \
+	$(SRCBASICFMTDIR)/basiccommon.o \
+	$(SRCBASICFMTDIR)/basicparam.o \
+	$(SRCBASICFMTDIR)/basicerror.o \
+	$(SRCBASICFMTDIR)/basictype.o \
+	$(SRCBASICFMTDIR)/basictype_fat_base.o \
+	$(SRCBASICFMTDIR)/basictype_fat8.o \
+	$(SRCBASICFMTDIR)/basictype_fat12.o \
+	$(SRCBASICFMTDIR)/basictype_fat16.o \
+	$(SRCBASICFMTDIR)/basictype_fm.o \
+	$(SRCBASICFMTDIR)/basictype_l31s.o \
+	$(SRCBASICFMTDIR)/basictype_l32d.o \
+	$(SRCBASICFMTDIR)/basictype_msdos.o \
+	$(SRCBASICFMTDIR)/basictype_msx.o \
+	$(SRCBASICFMTDIR)/basictype_mz_base.o \
+	$(SRCBASICFMTDIR)/basictype_mz.o \
+	$(SRCBASICFMTDIR)/basictype_n88.o \
+	$(SRCBASICFMTDIR)/basictype_x1hu.o \
+	$(SRCBASICFMTDIR)/basictype_flex.o \
+	$(SRCBASICFMTDIR)/basictype_os9.o \
+	$(SRCBASICFMTDIR)/basictype_cpm.o \
+	$(SRCBASICFMTDIR)/basictype_tfdos.o \
+	$(SRCBASICFMTDIR)/basictype_cdos.o \
+	$(SRCBASICFMTDIR)/basictype_mz_fdos.o \
+	$(SRCBASICFMTDIR)/basictype_pa.o \
+	$(SRCBASICFMTDIR)/basictype_fp.o \
+	$(SRCBASICFMTDIR)/basictype_dos80.o \
+	$(SRCBASICFMTDIR)/basictype_frost.o \
+	$(SRCBASICFMTDIR)/basictype_magical.o \
+	$(SRCBASICFMTDIR)/basictype_sdos.o \
+	$(SRCBASICFMTDIR)/basictype_mdos.o \
+	$(SRCBASICFMTDIR)/basictype_smc.o \
+	$(SRCBASICFMTDIR)/basictype_xdos.o \
+	$(SRCBASICFMTDIR)/basictype_hu68k.o \
+	$(SRCBASICFMTDIR)/basictype_falcom.o \
+	$(SRCBASICFMTDIR)/basictype_apledos.o \
+	$(SRCBASICFMTDIR)/basictype_prodos.o \
+	$(SRCBASICFMTDIR)/basictype_c1541.o \
+	$(SRCBASICFMTDIR)/basictype_amiga.o \
+	$(SRCBASICFMTDIR)/basicfat.o \
+	$(SRCBASICFMTDIR)/basicdiritem_fat8.o \
+	$(SRCBASICFMTDIR)/basicdiritem_fm.o \
+	$(SRCBASICFMTDIR)/basicdiritem_l31s.o \
+	$(SRCBASICFMTDIR)/basicdiritem_l32d.o \
+	$(SRCBASICFMTDIR)/basicdiritem_msdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_msx.o \
+	$(SRCBASICFMTDIR)/basicdiritem_mz_base.o \
+	$(SRCBASICFMTDIR)/basicdiritem_mz.o \
+	$(SRCBASICFMTDIR)/basicdiritem_n88.o \
+	$(SRCBASICFMTDIR)/basicdiritem_x1hu.o \
+	$(SRCBASICFMTDIR)/basicdiritem_flex.o \
+	$(SRCBASICFMTDIR)/basicdiritem_os9.o \
+	$(SRCBASICFMTDIR)/basicdiritem_cpm.o \
+	$(SRCBASICFMTDIR)/basicdiritem_tfdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_cdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_mz_fdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_fp.o \
+	$(SRCBASICFMTDIR)/basicdiritem_dos80.o \
+	$(SRCBASICFMTDIR)/basicdiritem_frost.o \
+	$(SRCBASICFMTDIR)/basicdiritem_magical.o \
+	$(SRCBASICFMTDIR)/basicdiritem_sdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_mdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_xdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_hu68k.o \
+	$(SRCBASICFMTDIR)/basicdiritem_losa.o \
+	$(SRCBASICFMTDIR)/basicdiritem_falcom.o \
+	$(SRCBASICFMTDIR)/basicdiritem_apledos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_prodos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_c1541.o \
+	$(SRCBASICFMTDIR)/basicdiritem_amiga.o \
+	$(SRCBASICFMTDIR)/basicdiritem.o \
+	$(SRCBASICFMTDIR)/basicdir.o \
+	$(SRCBASICFMTDIR)/basicfmt.o \
+	$(SRCDISKIMGDIR)/diskd88creator.o \
+	$(SRCDISKIMGDIR)/diskplainparser.o \
+	$(SRCDISKIMGDIR)/diskd88parser.o \
+	$(SRCDISKIMGDIR)/diskdskparser.o \
+	$(SRCDISKIMGDIR)/diskfdiparser.o \
+	$(SRCDISKIMGDIR)/diskcqmparser.o \
+	$(SRCDISKIMGDIR)/disktd0parser.o \
+	$(SRCDISKIMGDIR)/diskdimparser.o \
+	$(SRCDISKIMGDIR)/diskvfdparser.o \
+	$(SRCDISKIMGDIR)/diskimdparser.o \
+	$(SRCDISKIMGDIR)/diskstrparser.o \
+	$(SRCDISKIMGDIR)/diskg64parser.o \
+	$(SRCDISKIMGDIR)/disk2mgparser.o \
+	$(SRCDISKIMGDIR)/diskadcparser.o \
+	$(SRCDISKIMGDIR)/diskparser.o \
+	$(SRCDISKIMGDIR)/diskd88writer.o \
+	$(SRCDISKIMGDIR)/diskplainwriter.o \
+	$(SRCDISKIMGDIR)/diskwriter.o \
+	$(SRCDISKIMGDIR)/diskresult.o \
+	$(SRCDISKIMGDIR)/fileparam.o \
+	$(SRCUIDIR)/basicselbox.o \
+	$(SRCUIDIR)/basicparambox.o \
+	$(SRCUIDIR)/configbox.o \
+	$(SRCUIDIR)/diskparambox.o \
+	$(SRCUIDIR)/diskreplacebox.o \
+	$(SRCUIDIR)/fileselbox.o \
+	$(SRCUIDIR)/fontminibox.o \
+	$(SRCUIDIR)/intnamebox.o \
+	$(SRCUIDIR)/intnamevalid.o \
+	$(SRCUIDIR)/rawparambox.o \
+	$(SRCUIDIR)/rawexpbox.o \
+	$(SRCUIDIR)/rawsectorbox.o \
+	$(SRCUIDIR)/rawtrackbox.o \
+	$(SRCUIDIR)/uibindump.o \
+	$(SRCUIDIR)/uiclistctrl.o \
+	$(SRCUIDIR)/uicdlistctrl.o \
+	$(SRCUIDIR)/uictreectrl.o \
+	$(SRCUIDIR)/uicdtreectrl.o \
+	$(SRCUIDIR)/uidiskattr.o \
+	$(SRCUIDIR)/uidisklist.o \
+	$(SRCUIDIR)/uifilelist.o \
+	$(SRCUIDIR)/uirawdisk.o \
+	$(SRCUIDIR)/uifatarea.o \
+	$(SRCUIDIR)/uirpanel.o \
+	$(SRCDIR)/main.o
 
 EXE =$(BUILDDIR)/$(EXEFILE)
 SH_EXE=$(SH_BUILDDIR)/$(EXEFILE)
@@ -196,13 +213,13 @@ $(ST_EXE): st_depend $(ST_OBJS)
 $(DBG_EXE): dbg_depend $(DBG_OBJS)
 	$(LD) -o $@ $(DBG_OBJS) $(DBG_LIBS) $(DBG_LDFLAGS)
 
-$(SH_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(SH_BUILDDIR)/%.o: %.cpp
 	$(CC) $(CDEFS) $(SH_CFLAGS) -c $< -o $@
 
-$(ST_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(ST_BUILDDIR)/%.o: %.cpp
 	$(CC) $(CDEFS) $(ST_CFLAGS) -c $< -o $@
 
-$(DBG_BUILDDIR)/%.o: $(SRCDIR)/%.cpp
+$(DBG_BUILDDIR)/%.o: %.cpp
 	$(CC) $(DBG_CDEFS) $(DBG_CFLAGS) -c $< -o $@
 
 install: sh_install
@@ -216,11 +233,11 @@ sh_install: sh_exe
 	fi; done
 
 st_install: st_exe
-	mkdir -p $(RELEASEDIR)
-	cp -p $(ST_EXE) $(RELEASEDIR)
-	(mkdir -p $(RELEASEDIR)/$(DATADIR)/; cp -p $(SRCDATA)/*.* $(RELEASEDIR)/$(DATADIR)/; exit 0)
+	mkdir -p $(RELEASEDIRST)
+	cp -p $(ST_EXE) $(RELEASEDIRST)
+	(mkdir -p $(RELEASEDIRST)/$(DATADIR)/; cp -p $(SRCDATA)/*.* $(RELEASEDIRST)/$(DATADIR)/; exit 0)
 	for i in $(SRCLANG)/* ;do if [ -d $$i ]; then \
-		mkdir -p $(RELEASEDIR)/$$i; cp -p $$i/*.mo $(RELEASEDIR)/$$i; \
+		mkdir -p $(RELEASEDIRST)/$$i; cp -p $$i/*.mo $(RELEASEDIRST)/$$i; \
 	fi; done
 
 dbg_install: dbg_exe
@@ -232,16 +249,28 @@ dbg_install: dbg_exe
 	fi; done
 
 mk_builddir:
-	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR)/$(SRCDIR)
+	mkdir -p $(BUILDDIR)/$(SRCBASICFMTDIR)
+	mkdir -p $(BUILDDIR)/$(SRCDISKIMGDIR)
+	mkdir -p $(BUILDDIR)/$(SRCUIDIR)
 
 mk_sh_builddir:
-	mkdir -p $(SH_BUILDDIR)
+	mkdir -p $(SH_BUILDDIR)/$(SRCDIR)
+	mkdir -p $(SH_BUILDDIR)/$(SRCBASICFMTDIR)
+	mkdir -p $(SH_BUILDDIR)/$(SRCDISKIMGDIR)
+	mkdir -p $(SH_BUILDDIR)/$(SRCUIDIR)
 
 mk_st_builddir:
-	mkdir -p $(ST_BUILDDIR)
+	mkdir -p $(ST_BUILDDIR)/$(SRCDIR)
+	mkdir -p $(ST_BUILDDIR)/$(SRCBASICFMTDIR)
+	mkdir -p $(ST_BUILDDIR)/$(SRCDISKIMGDIR)
+	mkdir -p $(ST_BUILDDIR)/$(SRCUIDIR)
 
 mk_dbg_builddir:
-	mkdir -p $(DBG_BUILDDIR)
+	mkdir -p $(DBG_BUILDDIR)/$(SRCDIR)
+	mkdir -p $(DBG_BUILDDIR)/$(SRCBASICFMTDIR)
+	mkdir -p $(DBG_BUILDDIR)/$(SRCDISKIMGDIR)
+	mkdir -p $(DBG_BUILDDIR)/$(SRCUIDIR)
 
 clean: sh_clean
 
@@ -280,13 +309,13 @@ $(DBG_BUILDDIR)/Makefile.dep: mk_dbg_builddir $(DBG_DEPS)
 	cat $(DBG_DEPS) > $(DBG_BUILDDIR)/Makefile.dep
 	cp -f $(DBG_BUILDDIR)/Makefile.dep $(BUILDDIR)/Makefile.dep
 
-$(SH_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+$(SH_BUILDDIR)/%.d: %.cpp
 	-$(CC) $(CDEFS) $(SH_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
 
-$(ST_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+$(ST_BUILDDIR)/%.d: %.cpp
 	-$(CC) $(CDEFS) $(ST_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
 
-$(DBG_BUILDDIR)/%.d: $(SRCDIR)/%.cpp
+$(DBG_BUILDDIR)/%.d: %.cpp
 	-$(CC) $(CDEFS) $(DBG_CFLAGS) -MM $< | sed 's#^.*\.o:#$@:#' | sed 's/\.d:/.o:/' > $@
 
 -include $(BUILDDIR)/Makefile.dep

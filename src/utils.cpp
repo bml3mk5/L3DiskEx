@@ -25,22 +25,31 @@ TempData::TempData()
 	size = 0;
 }
 
+/// @param[in] newsize バッファサイズ
+TempData::TempData(size_t newsize)
+{
+	alloc_size = newsize;
+	data = new wxUint8[alloc_size];
+	memset(data, 0, alloc_size);
+	size = 0;
+}
+
 TempData::~TempData()
 {
 	delete data;
 }
 
 /// バッファを(再)確保
-/// @param[in] val バッファサイズ
-void TempData::SetSize(size_t val)
+/// @param[in] newsize バッファサイズ
+void TempData::SetSize(size_t newsize)
 {
-	if (val > alloc_size) {
+	if (newsize > alloc_size) {
 		delete data;
-		alloc_size = val;
+		alloc_size = newsize;
 		data = new wxUint8[alloc_size];
 		memset(data, 0, alloc_size);
 	}
-	size = val;
+	size = newsize;
 }
 
 /// バッファにデータをセット
@@ -84,6 +93,111 @@ void TempData::InvertData(bool invert)
 		mem_invert(data, size);
 	}
 }
+
+//
+//
+//
+
+FIFOBuffer::FIFOBuffer(size_t val)
+{
+	m_data = new wxUint8[val];
+	m_size = val;
+	m_rpos = 0;
+	m_wpos = 0;
+	memset(m_data, 0, val);
+}
+
+FIFOBuffer::~FIFOBuffer()
+{
+	delete m_data;
+}
+
+/// バッファサイズを設定
+/// @param[in] val : サイズ
+void FIFOBuffer::SetBufSize(size_t val)
+{
+	if (m_size < val) {
+		wxUint8 *new_data = new wxUint8[val];
+		memcpy(new_data, m_data, m_size);
+		memset(&new_data[m_size], 0, val - m_size);
+		delete m_data;
+		m_data = new_data;
+		m_size = val;
+	}
+}
+
+/// バッファをクリア
+void FIFOBuffer::Clear()
+{
+	m_rpos = 0;
+	m_wpos = 0;
+	memset(m_data, 0, m_size);
+}
+
+/// データを追加
+/// @param[in] val データ1バイト
+void FIFOBuffer::AppendByte(wxUint8 val)
+{
+	if (m_size <= m_wpos) {
+		SetBufSize(m_size * 2);
+	}
+	m_data[m_wpos] = val;
+	m_wpos++;
+}
+
+/// データを追加
+/// @param[in] buf  データ
+/// @param[in] size データサイズ
+void FIFOBuffer::AppendData(const wxUint8 *buf, size_t size)
+{
+	if (m_size <= m_wpos + size) {
+		size_t new_size = m_size;
+		do {
+			new_size *= 2;
+		} while(new_size < m_wpos + size);
+		SetBufSize(new_size);
+	}
+	memcpy(&m_data[m_wpos], buf, size);
+	m_wpos += size;
+}
+
+/// データを返す
+/// @note 内部のリード位置は更新しない
+/// @return データ ないとき-1
+int FIFOBuffer::PeekByte() const
+{
+	if (m_rpos < m_wpos) {
+		return m_data[m_rpos];
+	} else {
+		return -1;
+	}
+}
+
+/// データを返す
+/// @note 内部のリード位置を更新する
+/// @return データ ないとき-1
+int FIFOBuffer::GetByte()
+{
+	if (m_rpos < m_wpos) {
+		return m_data[m_rpos++];
+	} else {
+		return -1;
+	}
+}
+
+/// データを得る
+/// @note 内部のリード位置を更新する
+/// @param[out] buf  データ格納先バッファ
+/// @param[in]  size バッファサイズ
+/// @return 格納データサイズ
+size_t FIFOBuffer::GetData(wxUint8 *buf, size_t size)
+{
+	if (m_rpos + size >= m_wpos) size = m_wpos - m_rpos;
+	memcpy(buf, &m_data[m_rpos], size);
+	m_rpos += size;
+	return size;
+}
+
 
 //
 //
@@ -199,6 +313,8 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code,
 			col=0;
 		}
 
+		codes.ConvCtrlCodes(c, 2);
+
 		if (c[0] == '\r' && c[1] == '\n') {
 			// 改行
 			str += wxT("\n");
@@ -248,36 +364,36 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code,
 /// @param[in]  tm   時間構造体
 /// @param[out] date 日付データ
 /// @param[out] time 時間データ
-void ConvTmToDateTime(const struct tm *tm, wxUint8 *date, wxUint8 *time)
+void ConvTmToDateTime(const TM &tm, wxUint8 *date, wxUint8 *time)
 {
-	date[0] = (tm->tm_year & 0xff);
-	date[1] = ((tm->tm_mon & 0x0f) << 4) | ((tm->tm_year & 0xf00) >> 8);
-	date[2] = (tm->tm_mday & 0xff);
+	date[0] = (tm.GetYear() & 0xff);
+	date[1] = ((tm.GetMonth() & 0x0f) << 4) | ((tm.GetYear() & 0xf00) >> 8);
+	date[2] = (tm.GetDay() & 0xff);
 
-	time[0] = (tm->tm_hour & 0xff);
-	time[1] = (tm->tm_min & 0xff);
-	time[2] = (tm->tm_sec & 0xff);
+	time[0] = (tm.GetHour() & 0xff);
+	time[1] = (tm.GetMinute() & 0xff);
+	time[2] = (tm.GetSecond() & 0xff);
 }
 /// 日時データを構造体に変換(MS-DOS)
 /// @param[in]  date 日付データ
 /// @param[in]  time 時間データ
 /// @param[out] tm   時間構造体
-void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, struct tm *tm)
+void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, TM &tm)
 {
-	tm->tm_year = (int)date[0] | ((int)date[1] & 0xf) << 8;
-	tm->tm_mon  = (date[1] & 0xf0) >> 4;
-	if (tm->tm_mon == 0xf) tm->tm_mon = -1;
-	tm->tm_mday = date[2];
+	tm.SetYear((int)date[0] | ((int)date[1] & 0xf) << 8);
+	tm.SetMonth((date[1] & 0xf0) >> 4);
+	if (tm.GetMonth() == 0xf) tm.SetMonth(-1);
+	tm.SetDay(date[2]);
 
-	tm->tm_hour = time[0];
-	tm->tm_min = time[1];
-	tm->tm_sec = time[2];
+	tm.SetHour(time[0]);
+	tm.SetMinute(time[1]);
+	tm.SetSecond(time[2]);
 }
 /// 日付文字列を構造体に変換
 /// @param[in]  date 日付文字列
 /// @param[out] tm   時間構造体
 /// @return 変換できた:true
-bool ConvDateStrToTm(const wxString &date, struct tm *tm)
+bool ConvDateStrToTm(const wxString &date, TM &tm)
 {
 	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
 	wxString sval;
@@ -288,22 +404,22 @@ bool ConvDateStrToTm(const wxString &date, struct tm *tm)
 		sval = re.GetMatch(date, 1);
 		sval.ToLong(&lval);
 		if (lval >= 1900) lval -= 1900;
-		tm->tm_year = (int)lval;
+		tm.SetYear((int)lval);
 
 		// month
 		sval = re.GetMatch(date, 2);
 		sval.ToLong(&lval);
-		tm->tm_mon = (int)lval - 1;
+		tm.SetMonth((int)lval - 1);
 
 		// day
 		sval = re.GetMatch(date, 3);
 		sval.ToLong(&lval);
-		tm->tm_mday = (int)lval;
+		tm.SetDay((int)lval);
 	} else {
 		// invalid
-		tm->tm_year = -1;
-		tm->tm_mon = -2;
-		tm->tm_mday = -1;
+		tm.SetYear(-1);
+		tm.SetMonth(-2);
+		tm.SetDay(-1);
 
 		valid = false;
 	}
@@ -313,7 +429,7 @@ bool ConvDateStrToTm(const wxString &date, struct tm *tm)
 /// @param[in]  time 時間文字列
 /// @param[out] tm   時間構造体
 /// @return 変換できた:true
-bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
+bool ConvTimeStrToTm(const wxString &time, TM &tm)
 {
 	wxRegEx re1("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
 	wxRegEx re2("^([0-9]+)[/:.-]([0-9]+)$");
@@ -324,33 +440,33 @@ bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
 		// hour
 		sval = re1.GetMatch(time, 1);
 		sval.ToLong(&lval);
-		tm->tm_hour = (int)lval;
+		tm.SetHour((int)lval);
 
 		// minute
 		sval = re1.GetMatch(time, 2);
 		sval.ToLong(&lval);
-		tm->tm_min = (int)lval;
+		tm.SetMinute((int)lval);
 
 		// day
 		sval = re1.GetMatch(time, 3);
 		sval.ToLong(&lval);
-		tm->tm_sec = (int)lval;
+		tm.SetSecond((int)lval);
 
 	} else if (re2.Matches(time)) {
 		// hour
 		sval = re2.GetMatch(time, 1);
 		sval.ToLong(&lval);
-		tm->tm_hour = (int)lval;
+		tm.SetHour((int)lval);
 
 		// minute
 		sval = re2.GetMatch(time, 2);
 		sval.ToLong(&lval);
-		tm->tm_min = (int)lval;
+		tm.SetMinute((int)lval);
 	} else {
 		// invalid
-		tm->tm_hour = -1;
-		tm->tm_min = -1;
-		tm->tm_sec = -1;
+		tm.SetHour(-1);
+		tm.SetMinute(-1);
+		tm.SetSecond(-1);
 
 		valid = false;
 	}
@@ -361,60 +477,60 @@ bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
 /// @param[in]  mm 月
 /// @param[in]  dd 日
 /// @param[out] tm 時間構造体
-void ConvYYMMDDToTm(wxUint8 yy, wxUint8 mm, wxUint8 dd, struct tm *tm)
+void ConvYYMMDDToTm(wxUint8 yy, wxUint8 mm, wxUint8 dd, TM &tm)
 {
-	tm->tm_year = (yy >> 4) * 10 + (yy & 0xf);
-	if (0 <= tm->tm_year && tm->tm_year < 80) tm->tm_year += 100;
-	tm->tm_mon = (mm >> 4) * 10 + (mm & 0xf);
-	tm->tm_mon--;
-	tm->tm_mday = (dd >> 4) * 10 + (dd & 0xf);
+	tm.SetYear((yy >> 4) * 10 + (yy & 0xf));
+	if (0 <= tm.GetYear() && tm.GetYear() < 80) tm.AddYear(100);
+	tm.SetMonth((mm >> 4) * 10 + (mm & 0xf));
+	tm.AddMonth(-1);
+	tm.SetDay((dd >> 4) * 10 + (dd & 0xf));
 }
 /// BCD形式の日付に変換
 /// @param[in]  tm 時間構造体
 /// @param[out] yy 年
 /// @param[out] mm 月
 /// @param[out] dd 日
-void ConvTmToYYMMDD(const struct tm *tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
+void ConvTmToYYMMDD(const TM &tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
 {
-	yy = (wxUint8)(((tm->tm_year / 10) % 10) << 4) + (tm->tm_year % 10);
-	mm = (wxUint8)(((tm->tm_mon + 1) / 10) << 4) + ((tm->tm_mon + 1) % 10);
-	dd = (wxUint8)((tm->tm_mday / 10) << 4) + (tm->tm_mday % 10);
+	yy = (wxUint8)(((tm.GetYear() / 10) % 10) << 4) + (tm.GetYear() % 10);
+	mm = (wxUint8)(((tm.GetMonth() + 1) / 10) << 4) + ((tm.GetMonth() + 1) % 10);
+	dd = (wxUint8)((tm.GetDay() / 10) << 4) + (tm.GetDay() % 10);
 }
 /// 日付を文字列で返す
 /// @param[in] tm 時間構造体
 /// @return "YYYY/MM/DD" or "----/--/--"
-wxString FormatYMDStr(const struct tm *tm)
+wxString FormatYMDStr(const TM &tm)
 {
 	wxString str;
-	str = (tm->tm_year >= 0 ? wxString::Format(wxT("%04d"), tm->tm_year + 1900) : wxT("----"));
+	str = (tm.GetYear() >= 0 ? wxString::Format(wxT("%04d"), tm.GetYear() + 1900) : wxT("----"));
 	str += wxT("/");
-	str += (tm->tm_mon >= -1 ? wxString::Format(wxT("%02d"), tm->tm_mon + 1) : wxT("--"));
+	str += (tm.GetMonth() >= -1 ? wxString::Format(wxT("%02d"), tm.GetMonth() + 1) : wxT("--"));
 	str += wxT("/");
-	str += (tm->tm_mday >= 0 ? wxString::Format(wxT("%02d"), tm->tm_mday) : wxT("--"));
+	str += (tm.GetDay() >= 0 ? wxString::Format(wxT("%02d"), tm.GetDay()) : wxT("--"));
 	return str;
 }
 /// 時分秒を文字列で返す
 /// @param[in] tm 時間構造体
 /// @return "HH:MI:SS" or "--:--:--"
-wxString FormatHMSStr(const struct tm *tm)
+wxString FormatHMSStr(const TM &tm)
 {
 	wxString str;
-	str = (tm->tm_hour >= 0 ? wxString::Format(wxT("%02d"), tm->tm_hour) : wxT("--"));
+	str = (tm.GetHour() >= 0 ? wxString::Format(wxT("%02d"), tm.GetHour()) : wxT("--"));
 	str += wxT(":");
-	str += (tm->tm_min >= 0 ? wxString::Format(wxT("%02d"), tm->tm_min) : wxT("--"));
+	str += (tm.GetMinute() >= 0 ? wxString::Format(wxT("%02d"), tm.GetMinute()) : wxT("--"));
 	str += wxT(":");
-	str += (tm->tm_sec >= 0 ? wxString::Format(wxT("%02d"), tm->tm_sec) : wxT("--"));
+	str += (tm.GetSecond() >= 0 ? wxString::Format(wxT("%02d"), tm.GetSecond()) : wxT("--"));
 	return str;
 }
 /// 時分を文字列で返す
 /// @param[in] tm 時間構造体
 /// @return "HH:MI" or "--:--"
-wxString FormatHMStr(const struct tm *tm)
+wxString FormatHMStr(const TM &tm)
 {
 	wxString str;
-	str = (tm->tm_hour >= 0 ? wxString::Format(wxT("%02d"), tm->tm_hour) : wxT("--"));
+	str = (tm.GetHour() >= 0 ? wxString::Format(wxT("%02d"), tm.GetHour()) : wxT("--"));
 	str += wxT(":");
-	str += (tm->tm_min >= 0 ? wxString::Format(wxT("%02d"), tm->tm_min) : wxT("--"));
+	str += (tm.GetMinute() >= 0 ? wxString::Format(wxT("%02d"), tm.GetMinute()) : wxT("--"));
 	return str;
 }
 
@@ -422,14 +538,14 @@ wxString FormatHMStr(const struct tm *tm)
 /// @param[in] val 文字列
 int ToInt(const wxString &val)
 {
-	long lval = 0;
+	unsigned long lval = 0;
 	wxString h = val.Left(2).Lower();
 	if (h == wxT("0x")) {
-		val.Mid(2).ToLong(&lval, 16);
+		val.Mid(2).ToULong(&lval, 16);
 	} else if (h == wxT("0b")) {
-		val.Mid(2).ToLong(&lval, 2);
+		val.Mid(2).ToULong(&lval, 2);
 	} else {
-		val.ToLong(&lval);
+		val.ToULong(&lval);
 	}
 	return (int)lval;
 }
@@ -444,6 +560,19 @@ bool ToBool(const wxString &val)
 		bval = true;
 	}
 	return bval;
+}
+
+/// 16進文字列を数値に変換
+/// @param[in] sval 文字列
+/// @return -1:エラー
+int ConvFromHexa(const wxString &sval)
+{
+	int val = -1;
+	long lval = 0;
+	if (sval.Left(0) != wxT("-") && sval.ToLong(&lval, 16)) {
+		val = (int)lval;
+	}
+	return val;
 }
 
 /// エスケープ文字を展開

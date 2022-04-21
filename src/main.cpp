@@ -13,23 +13,23 @@
 #include <wx/toolbar.h>
 #include <wx/dir.h>
 #include "charcodes.h"
-#include "diskparambox.h"
-#include "basicfmt.h"
-#include "basicdiritem.h"
-#include "uirpanel.h"
-#include "uidisklist.h"
-#include "uidiskattr.h"
-#include "uifilelist.h"
-#include "uirawdisk.h"
-#include "uibindump.h"
-#include "uifatarea.h"
-#include "fileparam.h"
-#include "fileselbox.h"
-#include "diskwriter.h"
-#include "diskresult.h"
-#include "diskreplacebox.h"
-#include "fontminibox.h"
-#include "configbox.h"
+#include "ui/diskparambox.h"
+#include "basicfmt/basicfmt.h"
+#include "basicfmt/basicdiritem.h"
+#include "ui/uirpanel.h"
+#include "ui/uidisklist.h"
+#include "ui/uidiskattr.h"
+#include "ui/uifilelist.h"
+#include "ui/uirawdisk.h"
+#include "ui/uibindump.h"
+#include "ui/uifatarea.h"
+#include "diskimg/fileparam.h"
+#include "ui/fileselbox.h"
+#include "diskimg/diskwriter.h"
+#include "diskimg/diskresult.h"
+#include "ui/diskreplacebox.h"
+#include "ui/fontminibox.h"
+#include "ui/configbox.h"
 #include "logging.h"
 // icon
 #include "res/l3diskex.xpm"
@@ -72,7 +72,7 @@ wxBEGIN_EVENT_TABLE(L3DiskApp, wxApp)
 #endif
 wxEND_EVENT_TABLE()
 
-L3DiskApp::L3DiskApp() : mLocale(wxLANGUAGE_DEFAULT)
+L3DiskApp::L3DiskApp()
 {
 	frame = NULL;
 #ifdef CAPTURE_MOD_KEY_ON_APP
@@ -87,6 +87,10 @@ bool L3DiskApp::OnInit()
 	SetAppPath();
 	SetAppName(_T("l3diskex"));
 
+	if (!wxApp::OnInit()) {
+		return false;
+	}
+
 	// log file
 	myLog.Open(ini_path, GetAppName(), _T(".log"));
 
@@ -94,15 +98,29 @@ bool L3DiskApp::OnInit()
 	gConfig.Load(ini_path + GetAppName() + _T(".ini"));
 
 	// set locale search path and catalog name
-	mLocale.AddCatalogLookupPathPrefix(res_path + _T("lang"));
-	mLocale.AddCatalogLookupPathPrefix(_T("lang"));
-	mLocale.AddCatalog(_T("l3diskex"));
 
-	if (!wxApp::OnInit()) {
-		return false;
+	wxString locale_name = gConfig.GetLanguage();
+	int lang_num = 0;
+	if (locale_name.IsEmpty()) {
+		lang_num = wxLocale::GetSystemLanguage();
+	} else {
+		const wxLanguageInfo * const lang = wxLocale::FindLanguageInfo(locale_name);
+		if (lang) {
+			lang_num = lang->Language;
+		} else {
+			lang_num = wxLANGUAGE_UNKNOWN;
+		}
 	}
-
-	wxString locale_name = mLocale.IsLoaded(_T("l3diskex")) ? mLocale.GetCanonicalName() : wxT("");
+	if (mLocale.Init(lang_num, wxLOCALE_LOAD_DEFAULT)) {
+		mLocale.AddCatalogLookupPathPrefix(res_path + _T("lang"));
+		mLocale.AddCatalogLookupPathPrefix(_T("lang"));
+		mLocale.AddCatalog(_T("l3diskex"));
+	}
+	if (mLocale.IsLoaded(_T("l3diskex"))) {
+		locale_name = mLocale.GetCanonicalName();
+	} else {
+		locale_name = wxT("");
+	}
 
 	// load xml
 	wxString errmsgs;
@@ -1578,6 +1596,11 @@ void L3DiskFrame::ShowOpenFileDialog()
 	}
 }
 /// 拡張子でファイル種別を判別する オープン時
+///
+/// 拡張子からファイル種別を判別し、必要なら選択ダイアログを表示する。
+/// 判別できた場合やダイアログでOKを選択したらファイルを実際に開く。
+/// 
+/// @param[in] path ファイルパス
 bool L3DiskFrame::PreOpenDataFile(const wxString &path)
 {
 	wxFileName file_path(path);
@@ -1587,7 +1610,6 @@ bool L3DiskFrame::PreOpenDataFile(const wxString &path)
 	int rc = CheckOpeningDataFile(path, file_path.GetExt(), file_format, param_hint);
 	if (rc < 0) {
 		// エラー終了
-		d88.ShowErrorMessage();
 		return false;
 	}
 	if (rc == 0) {
@@ -1598,12 +1620,16 @@ bool L3DiskFrame::PreOpenDataFile(const wxString &path)
 	}
 }
 /// 指定したディスクイメージをチェック
+///
+/// 拡張子からファイル種別を判別し、必要なら選択ダイアログを表示する。
+///
 /// @param [in]     path        ファイルパス
 /// @param [in]     ext         拡張子
 /// @param [in,out] file_format ファイルの形式名("d88","plain"など)
 /// @param [out]    param_hint  ディスクパラメータヒント(plain時のみ)
-/// @retval  0 候補あり正常
-/// @retval -1 エラー終了
+/// @retval  0     候補あり正常
+/// @retval -1     エラー終了
+/// @retval -32767 キャンセルで終了
 int L3DiskFrame::CheckOpeningDataFile(const wxString &path, const wxString &ext, wxString &file_format, DiskParam &param_hint)
 {
 	DiskParamPtrs	n_disk_params;	// パラメータ候補
@@ -1625,14 +1651,18 @@ int L3DiskFrame::CheckOpeningDataFile(const wxString &path, const wxString &ext,
 				// 選択した
 				rc = 0;
 			} else {
-				// エラー
-				rc = -1;
+				// キャンセル
+				rc = -32767;
 			}
 		} else if (count == 1) {
 			// 候補1つ
 			param_hint = *n_disk_params.Item(0);
 			rc = 0;
 		}
+	}
+	// エラーメッセージ表示
+	if (rc < 0 && rc != -32767) {
+		d88.ShowErrorMessage();
 	}
 	return rc;
 }
@@ -1688,6 +1718,11 @@ void L3DiskFrame::ShowAddFileDialog()
 	}
 }
 /// 拡張子でファイル種別を判別する 追加時
+///
+/// 拡張子からファイル種別を判別し、必要なら選択ダイアログを表示する。
+/// 判別できた場合やダイアログでOKを選択したらファイルを実際に開く。
+/// 
+/// @param[in] path ファイルパス
 bool L3DiskFrame::PreAddDiskFile(const wxString &path)
 {
 	wxFileName file_path(path);
@@ -1697,7 +1732,6 @@ bool L3DiskFrame::PreAddDiskFile(const wxString &path)
 	int rc = CheckOpeningDataFile(path, file_path.GetExt(), file_format, param_hint);
 	if (rc < 0) {
 		// エラー終了
-		d88.ShowErrorMessage();
 		return false;
 	}
 	if (rc == 0) {
@@ -1950,6 +1984,10 @@ void L3DiskFrame::ShowReplaceDiskDialog(int disk_number, int side_number, const 
 	}
 }
 /// 拡張子でファイル種別を判別する 置換時
+///
+/// 拡張子からファイル種別を判別し、必要なら選択ダイアログを表示する。
+/// 判別できた場合やダイアログでOKを選択したらファイルを実際に開く。
+/// 
 /// @param [in] disk_number 置き換え対象ディスク番号
 /// @param [in] side_number 置き換え対象ディスクのサイド番号(両面なら-1)
 /// @param [in] path        置き換え元イメージファイルパス
@@ -1962,7 +2000,6 @@ bool L3DiskFrame::PreReplaceDisk(int disk_number, int side_number, const wxStrin
 	int rc = CheckOpeningDataFile(path, file_path.GetExt(), file_format, param_hint);
 	if (rc < 0) {
 		// エラー終了
-		d88.ShowErrorMessage();
 		return false;
 	}
 
@@ -2837,14 +2874,6 @@ L3DiskPanel::~L3DiskPanel()
 {
 }
 
-#if 0
-/// ドロップされたファイルを処理
-/// @return : 処理を中断する時 false
-bool L3DiskPanel::ProcessDroppedFile(wxCoord x, wxCoord y, const wxString &filename)
-{
-}
-#endif
-
 /// 外部からのDnD
 bool L3DiskPanel::ProcessDroppedFiles(wxCoord x, wxCoord y, const wxArrayString &filenames)
 {
@@ -2855,10 +2884,6 @@ bool L3DiskPanel::ProcessDroppedFiles(wxCoord x, wxCoord y, const wxArrayString 
 	// 分割位置
 	int pos_x = GetSashPosition();
 	bool disk_is_empty = (frame->GetDiskD88().CountDisks() == 0);
-
-//	// is d88 file?
-//	wxFileName fname(filename);
-//	wxString ext = fname.GetExt().Lower();
 
 	if (disk_is_empty || x < pos_x) {
 		is_disk_file = true;
@@ -2899,14 +2924,6 @@ L3DiskPanelDropTarget::L3DiskPanelDropTarget(L3DiskFrame *parentframe, L3DiskPan
 	dataobj->Add(new wxFileDataObject());
 	SetDataObject(dataobj);
 }
-
-//bool L3DiskPanelDropTarget::OnDropFiles(wxCoord x, wxCoord y, const wxArrayString &filenames)
-//{
-//	if (filenames.Count() > 0) {
-//		parent->ProcessDroppedFiles(x, y, filenames);
-//	}
-//    return true;
-//}
 
 wxDragResult L3DiskPanelDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult def)
 {
