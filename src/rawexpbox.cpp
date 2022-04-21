@@ -8,6 +8,7 @@
 #include "rawexpbox.h"
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
+#include <wx/checkbox.h>
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
@@ -22,6 +23,7 @@ END_EVENT_TABLE()
 RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, const DiskParam *param, int sel_side_num
 	, int start_track_num, int start_side_num, int start_sector_num
 	, int end_track_num, int end_side_num, int end_sector_num
+	, bool invert_data, bool reverse_side
 )	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	this->param = param;
@@ -59,6 +61,12 @@ RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, c
 
 		szrAll->Add(hbox, flags);
 	}
+	chkInvData = new wxCheckBox(this, IDC_CHK_INV_DATA, _("Invert datas."));
+	chkInvData->SetValue(invert_data);
+	szrAll->Add(chkInvData, flags);
+	chkRevSide = new wxCheckBox(this, IDC_CHK_REV_SIDE, _("Descend side number order."));
+	chkRevSide->SetValue(reverse_side);
+	szrAll->Add(chkRevSide, flags);
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
@@ -109,8 +117,8 @@ bool RawExpBox::ValidateParam()
 			break;
 		}
 	}
-	int st = GetSideNumber(0) * 10000 + GetTrackNumber(0) * 100 + GetSectorNumber(0);
-	int ed = GetSideNumber(1) * 10000 + GetTrackNumber(1) * 100 + GetSectorNumber(1);
+	int st = GetTrackNumber(0) * 10000 + GetSideNumberWithRev(0) * 100 + GetSectorNumber(0);
+	int ed = GetTrackNumber(1) * 10000 + GetSideNumberWithRev(1) * 100 + GetSectorNumber(1);
 
 	if (valid && st > ed) {
 		msg = _("Need set end sector greater equal start sector.");
@@ -122,7 +130,7 @@ bool RawExpBox::ValidateParam()
 	return valid;
 }
 
-int RawExpBox::GetTrackNumber(int num)
+int RawExpBox::GetTrackNumber(int num) const
 {
 	long val = 0;
 	wxString str = txtTrack[num]->GetValue();
@@ -130,7 +138,7 @@ int RawExpBox::GetTrackNumber(int num)
 	return (int)val;
 }
 
-int RawExpBox::GetSideNumber(int num)
+int RawExpBox::GetSideNumber(int num) const
 {
 	long val = 0;
 	wxString str = txtSide[num]->GetValue();
@@ -138,10 +146,25 @@ int RawExpBox::GetSideNumber(int num)
 	return (int)val;
 }
 
-int RawExpBox::GetSectorNumber(int num)
+int RawExpBox::GetSectorNumber(int num) const
 {
 	long val = 0;
 	wxString str = txtSector[num]->GetValue();
 	str.ToLong(&val);
 	return (int)val;
+}
+
+bool RawExpBox::InvertData() const
+{
+	return chkInvData->GetValue();
+}
+
+bool RawExpBox::ReverseSide() const
+{
+	return chkRevSide->GetValue();
+}
+
+int RawExpBox::GetSideNumberWithRev(int num) const
+{
+	return ReverseSide() ? param->GetSidesPerDisk() - GetSideNumber(num) - 1 : GetSideNumber(num);
 }

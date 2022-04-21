@@ -16,6 +16,7 @@
 #include <wx/dataobj.h>
 #include <wx/imaglist.h>
 #include "main.h"
+#include "config.h"
 #include "basicfmt.h"
 #include "basicdir.h"
 #include "basicdiritem.h"
@@ -29,11 +30,17 @@
 extern const char *fileicon_normal_xpm[];
 extern const char *foldericon_close_xpm[];
 extern const char *labelicon_normal_xpm[];
+extern const char *fileicon_delete_xpm[];
+extern const char *fileicon_hidden_xpm[];
+
+//////////////////////////////////////////////////////////////////////
 
 const char **icons_for_flist[] = {
 	fileicon_normal_xpm,
 	foldericon_close_xpm,
 	labelicon_normal_xpm,
+	fileicon_delete_xpm,
+	fileicon_hidden_xpm,
 	NULL
 };
 enum en_icons_for_flist {
@@ -41,6 +48,8 @@ enum en_icons_for_flist {
 	ICON_FOR_LIST_FILE_NORMAL = 0,
 	ICON_FOR_LIST_FOLDER,
 	ICON_FOR_LIST_LABEL,
+	ICON_FOR_LIST_FILE_DELETE,
+	ICON_FOR_LIST_FILE_HIDDEN,
 };
 
 #ifdef DeleteFile
@@ -97,6 +106,8 @@ L3DiskFileListCtrl::L3DiskFileListCtrl(L3DiskFrame *parentframe, wxWindow *paren
 	: wxListCtrl(parent, id, pos, size, wxLC_REPORT | wxLC_EDIT_LABELS
 #endif
 ) {
+	this->frame = parentframe;
+
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
 
 	L3DiskFileListStoreModel *model = new L3DiskFileListStoreModel(parentframe);
@@ -112,6 +123,10 @@ L3DiskFileListCtrl::L3DiskFileListCtrl(L3DiskFrame *parentframe, wxWindow *paren
 	listColumns[LISTCOL_SIDE] = AppendTextColumn(_("Side"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
 	listColumns[LISTCOL_SECTOR] = AppendTextColumn(_("Sector"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
 	listColumns[LISTCOL_DATE] = AppendTextColumn(_("Date Time"), wxDATAVIEW_CELL_INERT, 150, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
+	listColumns[LISTCOL_STADDR] = AppendTextColumn(_("Load Address"), wxDATAVIEW_CELL_INERT, 60, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
+	listColumns[LISTCOL_EDADDR] = AppendTextColumn(_("End Address"), wxDATAVIEW_CELL_INERT, 60, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
+	listColumns[LISTCOL_EXADDR] = AppendTextColumn(_("Execute Address"), wxDATAVIEW_CELL_INERT, 60, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
+	listColumns[LISTCOL_NUM] = AppendTextColumn(_("Num"), wxDATAVIEW_CELL_INERT, 40, wxALIGN_RIGHT, wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE  );
 
 #else
 
@@ -124,6 +139,10 @@ L3DiskFileListCtrl::L3DiskFileListCtrl(L3DiskFrame *parentframe, wxWindow *paren
 	listColumns[LISTCOL_SIDE] = AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, 40);
 	listColumns[LISTCOL_SECTOR] = AppendColumn(_("Sector"), wxLIST_FORMAT_RIGHT, 40);
 	listColumns[LISTCOL_DATE] = AppendColumn(_("Date Time"), wxLIST_FORMAT_LEFT, 150);
+	listColumns[LISTCOL_STADDR] = AppendColumn(_("Load Address"), wxLIST_FORMAT_RIGHT, 60);
+	listColumns[LISTCOL_EDADDR] = AppendColumn(_("End Address"), wxLIST_FORMAT_RIGHT, 60);
+	listColumns[LISTCOL_EXADDR] = AppendColumn(_("Execute Address"), wxLIST_FORMAT_RIGHT, 60);
+	listColumns[LISTCOL_NUM] = AppendColumn(_("Num"), wxLIST_FORMAT_RIGHT, 40);
 
 	// icon
 	wxImageList *ilist = new wxImageList( 16, 16 );
@@ -148,9 +167,12 @@ L3DiskFileListCtrl::~L3DiskFileListCtrl()
 /// @param [in] sid     サイド番号
 /// @param [in] sec     セクタ番号
 /// @param [in] date    日付文字列
+/// @param [in] staddr  開始アドレス
+/// @param [in] exaddr  実行アドレス
+/// @param [in] num     ディレクトリアイテムの位置
 /// @param [in] data    ディレクトリアイテムの位置
 /// @return 行番号
-long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, wxUIntPtr data)
+long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, int staddr, int exaddr, int num, wxUIntPtr data)
 {
 	m_icon = icon;
 	m_values[LISTCOL_NAME] = filename;
@@ -162,6 +184,11 @@ long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &file
 	m_values[LISTCOL_SIDE] = (sid >= 0 ? wxString::Format(wxT("%d"), sid) : wxT("-"));
 	m_values[LISTCOL_SECTOR] = (sec >= 0 ? wxString::Format(wxT("%d"), sec) : wxT("-"));
 	m_values[LISTCOL_DATE] = date;
+	m_values[LISTCOL_STADDR] = (staddr >= 0 ? wxString::Format(wxT("%x"), staddr) : wxT("--"));
+	int edaddr = staddr + size - (size > 0 ? 1 : 0);
+	m_values[LISTCOL_EDADDR] = (staddr >= 0 && size >= 0 ? wxString::Format(wxT("%x"), edaddr) : wxT("--"));
+	m_values[LISTCOL_EXADDR] = (exaddr >= 0 ? wxString::Format(wxT("%x"), exaddr) : wxT("--"));
+	m_values[LISTCOL_NUM] = (wxString::Format(wxT("%d"), num));
 
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
 	wxVector<wxVariant> values;
@@ -174,6 +201,10 @@ long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &file
 	values.push_back( m_values[LISTCOL_SIDE] );
 	values.push_back( m_values[LISTCOL_SECTOR] );
 	values.push_back( m_values[LISTCOL_DATE] );
+	values.push_back( m_values[LISTCOL_STADDR] );
+	values.push_back( m_values[LISTCOL_EDADDR] );
+	values.push_back( m_values[LISTCOL_EXADDR] );
+	values.push_back( m_values[LISTCOL_NUM] );
 	AppendItem( values, data );
 #else
 	InsertItem(row, m_values[LISTCOL_NAME], m_icon);
@@ -185,6 +216,10 @@ long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &file
 	SetItem(row, (int)listColumns[LISTCOL_SIDE], m_values[LISTCOL_SIDE]);
 	SetItem(row, (int)listColumns[LISTCOL_SECTOR], m_values[LISTCOL_SECTOR]);
 	SetItem(row, (int)listColumns[LISTCOL_DATE], m_values[LISTCOL_DATE]);
+	SetItem(row, (int)listColumns[LISTCOL_STADDR], m_values[LISTCOL_STADDR]);
+	SetItem(row, (int)listColumns[LISTCOL_EDADDR], m_values[LISTCOL_EDADDR]);
+	SetItem(row, (int)listColumns[LISTCOL_EXADDR], m_values[LISTCOL_EXADDR]);
+	SetItem(row, (int)listColumns[LISTCOL_NUM], m_values[LISTCOL_NUM]);
 	SetItemPtrData(row, data);
 #endif
 	return row;
@@ -195,14 +230,19 @@ long L3DiskFileListCtrl::InsertListData(long row, int icon, const wxString &file
 void L3DiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItems *dir_items)
 {
 	long row = 0;
+	bool show_all = frame->GetConfig()->IsShownDeletedFile();
 
 	for(size_t idx = 0; idx < dir_items->Count(); idx++) {
 		DiskBasicDirItem *item = dir_items->Item(idx);
-		if (!item->IsUsedAndVisible()) continue;
+		if (!show_all && !item->IsUsedAndVisible()) continue;
 
 		DiskBasicFileType file_type = item->GetFileAttr();
 		int icon = -1;
-		if (file_type.IsDirectory()) {
+		if (!item->IsUsed()) {
+			icon = ICON_FOR_LIST_FILE_DELETE;
+		} else if (!item->IsVisible()) {
+			icon = ICON_FOR_LIST_FILE_HIDDEN;
+		} else if (file_type.IsDirectory()) {
 			icon = ICON_FOR_LIST_FOLDER;
 		} else if (file_type.IsVolume()) {
 			icon = ICON_FOR_LIST_LABEL;
@@ -229,6 +269,9 @@ void L3DiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItems *
 			side_num,					// サイド
 			sector_start,				// セクタ
 			item->GetFileDateTimeStr(),	// 日時
+			item->GetStartAddress(),	// 開始アドレス
+			item->GetExecuteAddress(),	// 実行アドレス
+			(int)idx,
 			(wxUIntPtr)idx
 		);
 
@@ -419,7 +462,7 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	wxFont font;
 	frame->GetDefaultListFont(font);
 
-	list = new L3DiskFileListCtrl(parentframe, this, IDC_VIEW_LIST, wxDefaultPosition, wxDefaultSize);
+	list = new L3DiskFileListCtrl(parentframe, this, IDC_VIEW_LIST);
 	list->SetFont(font);
 	vbox->Add(list, wxSizerFlags().Expand().Border(wxALL, 1));
 
@@ -580,9 +623,14 @@ void L3DiskFileList::OnFileNameEditedDone(L3FileListEvent& event)
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
 	wxDataViewItem listitem = event.GetItem();
 	wxVariant value = event.GetValue();
-	wxDataViewIconText newvalue;
-	newvalue << value;
-	RenameDataFile(listitem, newvalue.GetText());
+	wxString type_name = value.GetType();
+	if (type_name == wxT("string")) {
+		RenameDataFile(listitem, value.GetString());
+	} else if (type_name == wxT("wxDataViewIconText")) {
+		wxDataViewIconText newvalue;
+		newvalue << value;
+		RenameDataFile(listitem, newvalue.GetText());
+	}
 #else
 	long listitem = event.GetIndex();
 	wxString newname = event.GetLabel();
@@ -697,7 +745,7 @@ void L3DiskFileList::ShowPopupMenu()
 {
 	if (!menuPopup) return;
 
-	bool opened = (basic ? basic->IsFormatted() : false);
+	bool opened = IsAssignedBasicDisk();
 	menuPopup->Enable(IDM_IMPORT_FILE, opened /* && IsWritableBasicFile() */);
 
 	menuPopup->Enable(IDM_MAKE_DIRECTORY, opened && CanMakeDirectory());
@@ -1102,7 +1150,7 @@ bool L3DiskFileList::CreateCustomDataObject(wxCustomDataObject &data_object)
 		dnd_header.format_type = basic->GetFormatTypeNumber();
 		struct tm tm;
 		item->GetFileDateTime(&tm);
-		Utils::ConvTmToDateTime(&tm, dnd_header.date,	dnd_header.time);
+		Utils::ConvTmToDateTime(&tm, dnd_header.date, dnd_header.time);
 		wxFileOffset ostart = ostream.TellO();
 		ostream.Write(&dnd_header, sizeof(directory_for_dnd_t));
 
@@ -1301,6 +1349,36 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg, DiskBasicDir
 	return ans;
 }
 
+/// ファイル名ダイアログの内容を反映させる
+/// @param [in] item   ディレクトリアイテム
+/// @param [in] dlg    ファイル名ダイアログ
+/// @param [in] basic  BASIC
+/// @param [in] rename ファイル名を変更できるか
+bool L3DiskFileList::SetIntNameValuesToDirItem(DiskBasicDirItem *item, IntNameBox &dlg, DiskBasic *basic, bool rename)
+{
+	bool sts = true;
+
+//	// ダイアログで指定した値をアイテムに反映
+//	dlg.SetValuesToDirItem();
+	// 名前を更新
+	if (rename) {
+		DiskBasicFileName newname;
+		dlg.GetInternalName(newname);
+		sts = basic->RenameFile(item, newname);
+	}
+	// 機種依存の属性をアイテムに反映
+	if (sts) {
+		sts = item->SetAttrInAttrDialog(&dlg, basic->GetErrinfo());
+	}
+	// 残りの属性をアイテムに反映
+	if (sts) {
+		struct tm tm;
+		dlg.GetDateTime(&tm);
+		sts = basic->ChangeAttr(item, dlg.GetStartAddress(), dlg.GetEndAddress(), dlg.GetExecuteAddress(), dlg.DoesIgnoreDateTime() ? NULL : &tm);
+	}
+	return sts;
+}
+
 /// 指定したファイルをインポート 外部から
 bool L3DiskFileList::ImportDataFile(const wxString &path)
 {
@@ -1329,9 +1407,7 @@ bool L3DiskFileList::ImportDataFile(const wxString &path)
 	bool sts = false;
 	if (ans == wxYES) {
 		// ダイアログで指定した値をアイテムに反映
-		dlg.SetValuesToDirItem();
-		// 機種依存の属性をアイテムに反映
-		sts = temp_item->SetAttrInAttrDialog(&dlg, basic->GetErrinfo());
+		sts = SetIntNameValuesToDirItem(temp_item, dlg, basic, true);
 		// ディスク内にセーブする
 		DiskBasicDirItem *madeitem = NULL;
 		if (sts) {
@@ -1425,9 +1501,7 @@ bool L3DiskFileList::ImportDataFile(const wxUint8 *buffer, size_t buflen)
 	bool sts = false;
 	if (ans == wxYES) {
 		// ダイアログで指定した値をアイテムに反映
-		dlg.SetValuesToDirItem();
-		// 機種依存の属性をアイテムに反映
-		sts = temp_item->SetAttrInAttrDialog(&dlg, basic->GetErrinfo());
+		sts = SetIntNameValuesToDirItem(temp_item, dlg, basic, true);
 		// ディスク内にセーブ
 		DiskBasicDirItem *madeitem = NULL;
 		if (sts) {
@@ -1684,15 +1758,15 @@ bool L3DiskFileList::ShowFileAttr(DiskBasicDirItem *item)
 		wxEmptyString, 0, INTNAME_SHOW_ALL);
 
 	// 占有しているグループを一覧にする
-	DiskBasicGroups arr;
-	item->GetAllGroups(arr);
-	dlg->SetGroups(item->GetGroupSize(), arr);
+	DiskBasicGroups group_items;
+	item->GetAllGroups(group_items);
+	dlg->SetGroups(item->GetGroupSize(), group_items);
 
 	// モードレス
 	dlg->Show();
 
 	// FAT使用状況を更新
-	frame->SetFatAreaGroup(&arr, item->GetExtraGroup());
+	frame->SetFatAreaGroup(&group_items, item->GetExtraGroup());
 
 	return true;
 }
@@ -1721,8 +1795,8 @@ void L3DiskFileList::AcceptSubmittedFileAttr(IntNameBox *dlg)
 	// 書き込み禁止か
 	sts = basic->IsWritableIntoDisk();
 
-	struct tm tm;
-	dlg->GetDateTime(&tm);
+//	struct tm tm;
+//	dlg->GetDateTime(&tm);
 	DiskBasicFileName newname;
 	if (sts) {
 		dlg->GetInternalName(newname);
@@ -1742,20 +1816,8 @@ void L3DiskFileList::AcceptSubmittedFileAttr(IntNameBox *dlg)
 		}
 	}
 	if (sts) {
-		// 更新できるか
-		sts = dlg_basic->CanRenameFile(item, false);
-	}
-	if (sts) {
-		// 名前を更新
-		sts = dlg_basic->RenameFile(item, newname);
-	}
-	if (sts) {
-		// その他の属性更新
-		sts = item->SetAttrInAttrDialog(dlg, *err_info);
-	}
-	if (sts) {
-		// 残りの属性を更新
-		sts = dlg_basic->ChangeAttr(item, dlg->GetStartAddress(), dlg->GetExecuteAddress(), dlg->DoesIgnoreDateTime() ? NULL : &tm);
+		// ダイアログで指定した値をアイテムに反映
+		sts = SetIntNameValuesToDirItem(item, *dlg, dlg_basic, dlg_basic->CanRenameFile(item, false));
 	}
 	if (!sts) {
 		dlg_basic->ShowErrorMessage();
@@ -1869,6 +1931,11 @@ int L3DiskFileList::GetListSelectedItemCount() const
 bool L3DiskFileList::CanUseBasicDisk() const
 {
 	return basic ? basic->CanUse() : false;
+}
+/// BASICディスクを解析したか
+bool L3DiskFileList::IsAssignedBasicDisk() const
+{
+	return basic? basic->IsAssigned() : false;
 }
 /// BASICディスク＆フォーマットされているか
 bool L3DiskFileList::IsFormattedBasicDisk() const

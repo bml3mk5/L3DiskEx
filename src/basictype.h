@@ -13,27 +13,14 @@
 #include <wx/dynarray.h>
 #include "basiccommon.h"
 #include "basicfat.h"
+#include "utils.h"
 
 
 #define INVALID_GROUP_NUMBER	((wxUint32)-1)
 
-#define DISKBASIC_TEMP_DATA_SIZE 2048
-
 /// データの書き出しや読み込みで使用するテンポラリバッファ
-class DiskBasicTempData {
-private:
-	wxUint8 data[DISKBASIC_TEMP_DATA_SIZE];
-	size_t  size;
-public:
-	DiskBasicTempData();
-	~DiskBasicTempData() {}
-	void SetSize(size_t val) { size = val < DISKBASIC_TEMP_DATA_SIZE ? val : DISKBASIC_TEMP_DATA_SIZE; }
-	void SetData(const wxUint8 *data, size_t len, bool invert = false);
-	void Set(size_t pos, wxUint8 val);
-	void Replace(wxUint8 src, wxUint8 dst);
-	wxUint8 *GetData() { return data; }
-	size_t GetSize() const { return size; }
-	void InvertData(bool invert);
+class DiskBasicTempData : public Utils::TempData
+{
 };
 
 class DiskBasic;

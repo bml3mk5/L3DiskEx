@@ -26,8 +26,10 @@ bool DiskBasicTypeCPM::CheckFat()
 	bool valid = true;
 
 	// 最終グループ番号
-	wxUint32 max_group = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup() - 1;
-	basic->SetFatEndGroup(max_group);
+	if (basic->GetFatEndGroup() == 0) {
+		wxUint32 max_group = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup() - 1;
+		basic->SetFatEndGroup(max_group);
+	}
 
 	return valid;
 }

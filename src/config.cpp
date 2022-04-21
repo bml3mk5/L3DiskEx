@@ -22,6 +22,9 @@ Params::Params()
 	mDumpFontName.Empty();
 	mDumpFontSize = 0;
 	mTrimUnusedData = true;
+	mShowDeletedFile = false;
+	mWindowWidth = 1000;
+	mWindowHeight = 600;
 }
 
 void Params::SetFilePath(const wxString &val)
@@ -120,6 +123,12 @@ void Config::Load()
 	ini->Read(wxT("DumpFontSize"), &mDumpFontSize);
 	// 未使用データを切り落とすか
 	ini->Read(wxT("TrimUnusedData"), &mTrimUnusedData);
+	// 削除したファイルを表示するか
+	ini->Read(wxT("ShowDeletedFile"), &mShowDeletedFile);
+	// ウィンドウ幅
+	ini->Read(wxT("WindowWidth"), &mWindowWidth);
+	// ウィンドウ高さ
+	ini->Read(wxT("WindowHeight"), &mWindowHeight);
 
 	delete ini;
 }
@@ -160,6 +169,12 @@ void Config::Save()
 	ini->Write(wxT("DumpFontSize"), mDumpFontSize);
 	// 未使用データを切り落とすか
 	ini->Write(wxT("TrimUnusedData"), mTrimUnusedData);
+	// 削除したファイルを表示するか
+	ini->Write(wxT("ShowDeletedFile"), mShowDeletedFile);
+	// ウィンドウ幅
+	ini->Write(wxT("WindowWidth"), mWindowWidth);
+	// ウィンドウ高さ
+	ini->Write(wxT("WindowHeight"), mWindowHeight);
 
 	// write
 	delete ini;

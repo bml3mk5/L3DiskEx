@@ -28,6 +28,9 @@ protected:
 	wxString	mDumpFontName;		///< ダンプウィンドウのフォント名
 	int			mDumpFontSize;		///< ダンプウィンドウのフォントサイズ
 	bool		mTrimUnusedData;	///< 未使用データを切り落とすか
+	bool		mShowDeletedFile;	///< 削除したファイルを表示するか
+	int			mWindowWidth;		///< ウィンドウ幅
+	int			mWindowHeight;		///< ウィンドウ高さ
 
 public:
 	Params();
@@ -54,6 +57,12 @@ public:
 	int				GetDumpFontSize() const { return mDumpFontSize; }
 	void			TrimUnusedData(bool val) { mTrimUnusedData = val; }
 	bool			IsTrimUnusedData() const { return mTrimUnusedData; }
+	void			ShowDeletedFile(bool val) { mShowDeletedFile = val; }
+	bool			IsShownDeletedFile() const { return mShowDeletedFile; }
+	void			SetWindowWidth(int val) { mWindowWidth = val; }
+	int				GetWindowWidth() const { return mWindowWidth; }
+	void			SetWindowHeight(int val) { mWindowHeight = val; }
+	int				GetWindowHeight() const { return mWindowHeight; }
 	//@}
 };
 

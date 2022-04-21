@@ -48,13 +48,16 @@ bool DiskBasicTypeFAT12::CheckFat()
 	// FATエリアの先頭がメディアIDであること
 	int match = 0;
 	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
+	match = bufs->MatchData8(0, basic->GetMediaId());
+#if 0
 	for(size_t j=0; j<bufs->Count(); j++) {
 		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
 		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
-		if (fatbuf->buffer[0] == basic->GetMediaId()) {
+		if (fatbuf->Get(0) == basic->GetMediaId()) {
 			match++;
 		}
 	}
+#endif
 	if (match != basic->GetNumberOfFats()) {
 		valid = false;
 	}
@@ -187,6 +190,7 @@ void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
 /// @param [in] val 値
 void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
+#if 0
 	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
 	for(size_t j=0; j<bufs->Count(); j++) {
 		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
@@ -195,8 +199,8 @@ void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
 		int next = 0;
 		for(size_t i=0; i<fatbufs->Count(); i++) {
 			DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-			if (next == 0 && pos < (wxUint32)fatbuf->size) {
-				wxUint8 dat = fatbuf->buffer[pos];
+			if (next == 0 && pos < (wxUint32)fatbuf->GetSize()) {
+				wxUint8 dat = (wxUint8)fatbuf->Get(pos);
 				if (num & 1) {
 					// odd
 					dat = (dat & 0x0f) | ((val & 0x0f) << 4);
@@ -204,12 +208,12 @@ void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
 					// even
 					dat = val & 0xff;
 				}
-				fatbuf->buffer[pos] = dat;
+				fatbuf->Set(pos, dat);
 				pos++;
 				next = 1;
 			}
-			if (next == 1 && pos < (wxUint32)fatbuf->size) {
-				wxUint8 dat = fatbuf->buffer[pos];
+			if (next == 1 && pos < (wxUint32)fatbuf->GetSize()) {
+				wxUint8 dat = (wxUint8)fatbuf->Get(pos);
 				if (num & 1) {
 					// odd
 					dat = ((val >> 4) & 0xff);
@@ -217,18 +221,22 @@ void DiskBasicTypeFAT12::SetGroupNumber(wxUint32 num, wxUint32 val)
 					// even
 					dat = (dat & 0xf0) | ((val >> 8) & 0x0f);
 				}
-				fatbuf->buffer[pos] = dat;
+				fatbuf->Set(pos, dat);
 				break;
 			}
-			pos -= fatbuf->size;
+			pos -= (wxUint32)fatbuf->GetSize();
 		}
 	}
+#else
+	fat->GetDiskBasicFatArea()->SetData12LE(num, val);
+#endif
 }
 
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
 wxUint32 DiskBasicTypeFAT12::GetGroupNumber(wxUint32 num) const
 {
+#if 0
 	wxUint32 new_num = 0;
 	DiskBasicFatBuffers *fatbufs = fat->GetDiskBasicFatBuffers(0);
 	if (!fatbufs) {
@@ -239,29 +247,32 @@ wxUint32 DiskBasicTypeFAT12::GetGroupNumber(wxUint32 num) const
 	int next = 0;
 	for(size_t i=0; i<fatbufs->Count(); i++) {
 		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-		if (next == 0 && pos < (wxUint32)fatbuf->size) {
+		if (next == 0 && pos < (wxUint32)fatbuf->GetSize()) {
 			if (num & 1) {
 				// odd
-				new_num = ((fatbuf->buffer[pos] & 0xf0) >> 4);
+				new_num = ((fatbuf->Get(pos) & 0xf0) >> 4);
 			} else {
 				// even
-				new_num = fatbuf->buffer[pos];
+				new_num = fatbuf->Get(pos);
 			}
 			pos++;
 			next = 1;
 		}
-		if (next == 1 && pos < (wxUint32)fatbuf->size) {
+		if (next == 1 && pos < (wxUint32)fatbuf->GetSize()) {
 			if (num & 1) {
 				// odd
-				new_num |= ((wxUint32)fatbuf->buffer[pos] << 4);
+				new_num |= ((wxUint32)fatbuf->Get(pos) << 4);
 			} else {
 				// even
-				new_num |= ((fatbuf->buffer[pos] & 0x0f) << 8);
+				new_num |= ((fatbuf->Get(pos) & 0x0f) << 8);
 			}
 			break;
 		}
-		pos -= fatbuf->size;
+		pos -= (wxUint32)fatbuf->GetSize();
 	}
+#else
+	wxUint32 new_num = fat->GetDiskBasicFatArea()->GetData12LE(0, num);
+#endif
 	return new_num;
 }
 

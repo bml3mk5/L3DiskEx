@@ -68,6 +68,10 @@ enum en_disk_file_list_columns {
 	LISTCOL_SIDE,
 	LISTCOL_SECTOR,
 	LISTCOL_DATE,
+	LISTCOL_STADDR,
+	LISTCOL_EDADDR,
+	LISTCOL_EXADDR,
+	LISTCOL_NUM,
 	LISTCOL_END
 };
 
@@ -97,6 +101,7 @@ class L3DiskFileListCtrl : public wxListCtrl
 #endif
 {
 private:
+	L3DiskFrame			*frame;
 	L3FileListColumn	listColumns[LISTCOL_END];
 	wxString			m_values[LISTCOL_END];
 	int					m_icon;
@@ -106,7 +111,7 @@ public:
 	~L3DiskFileListCtrl();
 
 	/// リストにデータを挿入
-	long InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, wxUIntPtr data);
+	long InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, int staddr, int exaddr, int num, wxUIntPtr data);
 	/// リストにデータを設定する
 	void SetListData(DiskBasic *basic, const DiskBasicDirItems *dir_items);
 
@@ -163,6 +168,8 @@ private:
 	DiskBasicDirItem *GetFileName(const L3FileListItem &view_item, wxString &name, int *item_pos = NULL);
 	/// ファイル名ダイアログ表示と同じファイル名が存在する際のメッセージダイアログ表示
 	int ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg, DiskBasicDirItem *item, int file_size);
+	/// ファイル名ダイアログの内容を反映させる
+	bool SetIntNameValuesToDirItem(DiskBasicDirItem *item, IntNameBox &dlg, DiskBasic *basic, bool rename);
 
 	// カスタムデータリスト作成（DnD, クリップボード用）
 	bool CreateCustomDataObject(wxCustomDataObject &data_object);
@@ -320,6 +327,8 @@ public:
 
 	/// BASICディスクとして使用できるか
 	bool CanUseBasicDisk() const;
+	/// BASICディスクを解析したか
+	bool IsAssignedBasicDisk() const;
 	/// BASICディスク＆フォーマットされているか
 	bool IsFormattedBasicDisk() const;
 	/// ファイルの書き込み可能か

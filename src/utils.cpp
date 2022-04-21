@@ -14,6 +14,68 @@
 namespace Utils
 {
 
+//
+//
+//
+TempData::TempData()
+{
+	alloc_size = TEMP_DATA_SIZE;
+	data = new wxUint8[alloc_size];
+	memset(data, 0, alloc_size);
+	size = 0;
+}
+
+TempData::~TempData()
+{
+	delete data;
+}
+
+void TempData::SetSize(size_t val)
+{
+	if (val > alloc_size) {
+		delete data;
+		alloc_size = val;
+		data = new wxUint8[alloc_size];
+		memset(data, 0, alloc_size);
+	}
+	size = val; 
+}
+
+void TempData::SetData(const wxUint8 *data, size_t len, bool invert)
+{
+	SetSize(len);
+	memcpy(this->data, data, this->size);
+	if (invert) {
+		mem_invert(this->data, this->size);
+	}
+}
+
+void TempData::Set(size_t pos, wxUint8 val)
+{
+	if (pos < size) {
+		data[pos] = val;
+	}
+}
+
+/// 一致するバイトデータを置換
+void TempData::Replace(wxUint8 src, wxUint8 dst)
+{
+	for(size_t pos=0; pos<size; pos++) {
+		if (data[pos] == src) data[pos] = dst;
+	}
+}
+
+void TempData::InvertData(bool invert)
+{
+	if (invert) {
+		mem_invert(data, size);
+	}
+}
+
+//
+//
+//
+
 int Dump::Binary(const wxUint8 *buffer, size_t bufsize, wxString &str, bool invert)
 {
 	int rows = 0;
@@ -104,6 +166,7 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &s
 		break;
 	}
 
+	int col = 0;
 	int row = 1;
 	for(size_t pos = 0; pos < bufsize; ) {
 		wxString cstr;
@@ -112,16 +175,23 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &s
 		c[1] = pos + 1 == bufsize ? 0 : buffer[pos + 1] ^ inv;
 		c[2] = 0;
 
+		if (col >= 80) {
+			row++;
+			col=0;
+		}
+
 		if (c[0] == '\r' && c[1] == '\n') {
 			// 改行
 			str += wxT("\n");
 			row++;
+			col=0;
 			pos+=2;
 			continue;
 		} else if (c[0] == '\r' || c[0] == '\n') {
 			// 改行
 			str += wxT("\n");
 			row++;
+			col=0;
 			pos++;
 			continue;
 		} else if (c[0] == '\t') {
@@ -131,21 +201,25 @@ int Dump::Text(const wxUint8 *buffer, size_t bufsize, int char_code, wxString &s
 				for(int i=0; i<c[1]; i++) {
 					str += wxT(" ");
 				}
+				col+=(int)c[1];
 				pos+=2;
 			} else {
 				str += wxT("\t");
+				col+=8;
 				pos++;
 			}
 			continue;
 		} else if (c[0] < 0x20) {
 			// コントロールコードは"."に変換
 			str += wxT(".");
+			col++;
 			pos++;
 			continue;
 		}
 
 		size_t len = codes.FindString(c, 2, cstr, '.');
 		str += cstr;
+		col += (int)len;
 		pos += len;
 	}
 	return row;
@@ -172,11 +246,12 @@ void ConvDateTimeToTm(const wxUint8 *date, const wxUint8 *time, struct tm *tm)
 	tm->tm_min = time[1];
 	tm->tm_sec = time[2];
 }
-void ConvDateStrToTm(const wxString &date, struct tm *tm)
+bool ConvDateStrToTm(const wxString &date, struct tm *tm)
 {
 	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
 	wxString sval;
 	long lval;
+	bool valid = true;
 	if (re.Matches(date)) {
 		// year
 		sval = re.GetMatch(date, 1);
@@ -198,14 +273,18 @@ void ConvDateStrToTm(const wxString &date, struct tm *tm)
 		tm->tm_year = -1;
 		tm->tm_mon = -2;
 		tm->tm_mday = -1;
+
+		valid = false;
 	}
+	return valid;
 }
-void ConvTimeStrToTm(const wxString &time, struct tm *tm)
+bool ConvTimeStrToTm(const wxString &time, struct tm *tm)
 {
 	wxRegEx re1("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
 	wxRegEx re2("^([0-9]+)[/:.-]([0-9]+)$");
 	wxString sval;
 	long lval;
+	bool valid = true;
 	if (re1.Matches(time)) {
 		// hour
 		sval = re1.GetMatch(time, 1);
@@ -237,8 +316,28 @@ void ConvTimeStrToTm(const wxString &time, struct tm *tm)
 		tm->tm_hour = -1;
 		tm->tm_min = -1;
 		tm->tm_sec = -1;
+
+		valid = false;
 	}
+	return valid;
 }
+/// BCD形式の日付を変換
+void ConvYYMMDDToTm(wxUint8 yy, wxUint8 mm, wxUint8 dd, struct tm *tm)
+{
+	tm->tm_year = (yy >> 4) * 10 + (yy & 0xf);
+	if (0 <= tm->tm_year && tm->tm_year < 80) tm->tm_year += 100;
+	tm->tm_mon = (mm >> 4) * 10 + (mm & 0xf);
+	tm->tm_mon--;
+	tm->tm_mday = (dd >> 4) * 10 + (dd & 0xf);
+}
+/// BCD形式の日付に変換
+void ConvTmToYYMMDD(const struct tm *tm, wxUint8 &yy, wxUint8 &mm, wxUint8 &dd)
+{
+	yy = (wxUint8)(((tm->tm_year / 10) % 10) << 4) + (tm->tm_year % 10);
+	mm = (wxUint8)(((tm->tm_mon + 1) / 10) << 4) + ((tm->tm_mon + 1) % 10);
+	dd = (wxUint8)((tm->tm_mday / 10) << 4) + (tm->tm_mday % 10);
+}
+/// 日付を文字列で返す
 wxString FormatYMDStr(const struct tm *tm)
 {
 	if (tm->tm_year >= 0 && tm->tm_mon >= -1) {
@@ -247,6 +346,7 @@ wxString FormatYMDStr(const struct tm *tm)
 		return wxT("----/--/--");
 	}
 }
+/// 時分秒を文字列で返す
 wxString FormatHMSStr(const struct tm *tm)
 {
 	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
@@ -255,6 +355,7 @@ wxString FormatHMSStr(const struct tm *tm)
 		return wxT("--:--:--");
 	}
 }
+/// 時分を文字列で返す
 wxString FormatHMStr(const struct tm *tm)
 {
 	if (tm->tm_hour >= 0 && tm->tm_min >= 0) {
@@ -287,9 +388,9 @@ bool ToBool(const wxString &val)
 	return bval;
 }
 
-// エスケープ文字を展開
-// @note \\\\                \\ そのもの
-// @note \\x[0-9a-f][0-9a-f] 16進数で指定
+/// エスケープ文字を展開
+/// @note \\\\                \\ そのもの
+/// @note \\x[0-9a-f][0-9a-f] 16進数で指定
 wxString Escape(const wxString &src)
 {
 	wxString str = src;

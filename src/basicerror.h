@@ -47,6 +47,7 @@ public:
 		ERR_IN_DIRECTORY_AREA,
 		ERR_IN_PARAMETER_AREA,
 		ERR_FILENAME_EMPTY,
+		ERR_END_ADDR_TOO_SMALL,
 
 		ERRV_START,
 		// 引数あり（要フォーマット）のメッセージはこれ以降に設定

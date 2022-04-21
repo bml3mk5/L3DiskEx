@@ -35,6 +35,13 @@ class DiskBasicDirItems;
 /// ディレクトリ１アイテム (abstract)
 class DiskBasicDirItem
 {
+public:
+	enum en_flag_masks {
+		USED_ITEM	 = 0x0001,	///< bit0:使用しているか
+		VISIBLE_LIST = 0x0002,	///< bit1:リストに表示するか
+		VISIBLE_TREE = 0x0004,	///< bit2:ツリーに表示するか
+	};
+
 protected:
 	DiskBasic     *basic;
 	DiskBasicType *type;
@@ -45,8 +52,9 @@ protected:
 
 	int			num;				///< 通し番号
 	int			position;			///< セクタ内の位置（バイト）
-	bool		used;				///< 使用しているか
-	bool		visible;			///< リストに表示するか
+	int			m_flags;			///< フラグ bit0:使用しているか bit1:リストに表示するか bit2:ツリーに表示するか
+//	bool		used;				///< 使用しているか
+//	bool		visible;			///< リストに表示するか
 	int			file_size;			///< ファイルサイズ
 	int			groups;				///< 使用グループ数
 	directory_t	*data;				///< セクタ内のデータへのポインタ
@@ -61,13 +69,15 @@ protected:
 	/// @name 機種依存パラメータへのアクセス
 	//@{
 	/// @brief ファイル名を格納する位置を返す
-	virtual wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
+	virtual wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
+	/// @brief ファイル名を格納する位置を返す
+	virtual wxUint8 *GetFileNamePos(size_t &len) const;
 	/// @brief 拡張子を格納する位置を返す
 	virtual wxUint8 *GetFileExtPos(size_t &len) const;
-	/// @brief ファイル名を格納するバッファサイズを返す
-	virtual int		GetFileNameSize(bool *invert = NULL) const { return 0; }
-	/// @brief 拡張子を格納するバッファサイズを返す
-	virtual int		GetFileExtSize(bool *invert = NULL) const { return 0; }
+//	/// @brief ファイル名を格納するバッファサイズを返す
+//	virtual int		GetFileNameSize(bool *invert = NULL) const { return 0; }
+//	/// @brief 拡張子を格納するバッファサイズを返す
+//	virtual int		GetFileExtSize(bool *invert = NULL) const { return 0; }
 	/// @brief 属性１を返す
 	virtual int		GetFileType1() const { return 0; }
 	/// @brief 属性２を返す
@@ -85,9 +95,9 @@ protected:
 	/// @name ファイル名へのアクセス
 	//@{
 	/// @brief ファイル名を設定
-	virtual void	SetFileName(const wxUint8 *filename, int length);
+	virtual void	SetFileName(const wxUint8 *filename, size_t length);
 	/// @brief 拡張子を設定
-	virtual void	SetFileExt(const wxUint8 *fileext, int length);
+	virtual void	SetFileExt(const wxUint8 *fileext, size_t length);
 	/// @brief ファイル名と拡張子を得る
 	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 	/// @brief ファイル名(拡張子除く)を返す
@@ -196,9 +206,9 @@ public:
 	/// @see IsSameFileName()
 	virtual int		GetOptionalName() const { return 0; }
 	/// @brief 文字列をバッファにコピー あまりはfillでパディング
-	static bool		MemoryCopy(const char *src, size_t flen, char fill, wxUint8 *dst, size_t len);
+	static bool		MemoryCopy(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 term, wxUint8 fill, wxUint8 *dst, size_t dsize);
 	/// @brief 文字列をバッファにコピー "."で拡張子とを分ける
-	static bool		MemoryCopy(const char *src, size_t flen, size_t elen, char fill, wxUint8 *dst, size_t len);
+	static bool		MemoryCopyEx(const wxUint8 *src, size_t fsize, size_t esize, wxUint8 term, wxUint8 fill, wxUint8 *dst, size_t dsize);
 	//@}
 
 	/// @name 属性へのアクセス
@@ -294,11 +304,15 @@ public:
 	/// @brief アイテムがアドレスを持っているか
 	virtual bool	HasAddress() const { return false; }
 	/// @brief 開始アドレスを返す
-	virtual int		GetStartAddress() const { return 0; }
+	virtual int		GetStartAddress() const { return -1; }
+	/// @brief 終了アドレスを返す
+	virtual int		GetEndAddress() const { return -1; }
 	/// @brief 実行アドレスを返す
-	virtual int		GetExecuteAddress() const { return 0; }
+	virtual int		GetExecuteAddress() const { return -1; }
 	/// @brief 開始アドレスをセット
 	virtual void	SetStartAddress(int val) {}
+	/// @brief 終了アドレスをセット
+	virtual void	SetEndAddress(int val) {}
 	/// @brief 実行アドレスをセット
 	virtual void	SetExecuteAddress(int val) {}
 	//@}
@@ -308,15 +322,15 @@ public:
 	/// @brief 使用しているアイテムかどうかチェック
 	virtual bool	CheckUsed(bool unuse) { return false; }
 	/// @brief 使用中のアイテムか
-	bool			IsUsed() const { return used; }
+	bool			IsUsed() const;
 	/// @brief 使用中かをセット
-	void			Used(bool val) { used = val; }
-	/// @brief 表示するアイテムか
-	bool			IsVisible() const { return visible; }
-	/// @brief 表示するかをセット
-	void			Visible(bool val) { visible = val; }
-	/// @brief 使用中かつ表示するアイテムか
-	bool			IsUsedAndVisible() const { return used && visible; }
+	void			Used(bool val);
+	/// @brief リストに表示するアイテムか
+	bool			IsVisible() const;
+	/// @brief リストに表示するかをセット
+	void			Visible(bool val);
+	/// @brief 使用中かつリストに表示するアイテムか
+	bool			IsUsedAndVisible() const;
 	//@}
 
 	/// @name ディレクトリデータへのアクセス

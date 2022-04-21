@@ -17,6 +17,8 @@
 
 class DiskBasicGroupItem;
 
+//////////////////////////////////////////////////////////////////////
+
 /// グループ番号に対応するパラメータを保持
 class DiskBasicGroupItem
 {
@@ -37,6 +39,8 @@ public:
 
 WX_DECLARE_OBJARRAY(DiskBasicGroupItem, DiskBasicGroupItems);
 
+//////////////////////////////////////////////////////////////////////
+
 /// グループ番号のリストを保持
 class DiskBasicGroups
 {
@@ -50,6 +54,7 @@ public:
 
 	void Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end);
 	void Add(const DiskBasicGroupItem &item);
+	void Add(const DiskBasicGroups &n_items);
 	void Empty();
 	size_t Count() const;
 	DiskBasicGroupItem &Last() const;
@@ -63,28 +68,73 @@ public:
 	void SortItems();
 };
 
-/// FATエリアへのポインタを保持
+//////////////////////////////////////////////////////////////////////
+
+/// FATエリア（セクタ）へのポインタを保持
 class DiskBasicFatBuffer
 {
-public:
-	int      size;
+private:
+	size_t   size;
 	wxUint8 *buffer;
 
 public:
 	DiskBasicFatBuffer();
 	DiskBasicFatBuffer(wxUint8 *newbuf, int newsize);
 	~DiskBasicFatBuffer() {}
+	wxUint8 *GetBuffer() const { return buffer; }
+	size_t   GetSize() const { return size; }
 	void Fill(wxUint8 code);
 	void Copy(const wxUint8 *buf, size_t len);
+	wxUint32 Get(size_t pos) const;
+	void Set(size_t pos, wxUint32 val);
+	bool Bit(wxUint32 pos, wxUint8 mask, bool val, bool invert);
+	bool BitTest(wxUint32 pos, wxUint8 mask, bool invert);
 };
 
-/// FAT１つ分のバッファ
-WX_DECLARE_OBJARRAY(DiskBasicFatBuffer, DiskBasicFatBuffers);
-/// FATの個数分
-WX_DECLARE_OBJARRAY(DiskBasicFatBuffers, DiskBasicFatArea);
+WX_DECLARE_OBJARRAY(DiskBasicFatBuffer, ArrayDiskBasicFatBuffer);
+
+//////////////////////////////////////////////////////////////////////
+
+/// FAT１つ分のバッファ（複数セクタあり）
+class DiskBasicFatBuffers : public ArrayDiskBasicFatBuffer
+{
+public:
+	wxUint32 GetData8(wxUint32 pos) const;
+	void     SetData8(wxUint32 pos, wxUint32 val);
+	bool     MatchData8(wxUint32 pos, wxUint32 val) const;
+
+	bool     BitData8(wxUint32 pos, wxUint8 mask, bool val, bool invert);
+
+	wxUint32 GetData12LE(wxUint32 pos) const;
+	void     SetData12LE(wxUint32 pos, wxUint32 val);
+};
+
+/// FATの個数分（多重）
+WX_DECLARE_OBJARRAY(DiskBasicFatBuffers, ArrayArrayDiskBasicFatBuffer);
+
+//////////////////////////////////////////////////////////////////////
+
+/// FATバッファ
+class DiskBasicFatArea : public ArrayArrayDiskBasicFatBuffer
+{
+public:
+	wxUint32 GetData8(size_t idx, wxUint32 pos) const;
+	void     SetData8(wxUint32 pos, wxUint32 val);
+	void     SetData8(size_t idx, wxUint32 pos, wxUint32 val);
+	int      MatchData8(wxUint32 pos, wxUint32 val) const;
+	bool     MatchData8(size_t idx, wxUint32 pos, wxUint32 val) const;
+
+	void     BitData8(size_t idx, wxUint32 pos, wxUint8 mask, bool val, bool invert);
+
+	wxUint32 GetData12LE(size_t idx, wxUint32 pos) const;
+	void     SetData12LE(wxUint32 pos, wxUint32 val);
+	void     SetData12LE(size_t idx, wxUint32 pos, wxUint32 val);
+};
 
 class DiskBasic;
 class DiskBasicType;
+
+//////////////////////////////////////////////////////////////////////
 
 /// FATアクセス
 class DiskBasicFat

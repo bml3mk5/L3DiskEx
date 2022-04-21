@@ -84,7 +84,7 @@ DiskBasicFileType DiskBasicDirItemFAT8::GetFileAttr() const
 	int t2 = GetFileType2();
 	int t3 = GetFileType3();
 	val |= (t2 & 1 ? (t3 & 1 ? FILE_TYPE_RANDOM_MASK : FILE_TYPE_ASCII_MASK) : FILE_TYPE_BINARY_MASK);
-	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, t3 << 16 | t2 << 8 | t1);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
@@ -401,18 +401,20 @@ bool DiskBasicDirItemFAT8F::Check(bool &last)
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemFAT8F::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemFAT8F::GetFileNamePos(size_t &size, size_t &len) const
 {
 	// 8chars
-	len = sizeof(data->fat8f.name);
+	size = len = sizeof(data->fat8f.name);
 	return data->fat8f.name;
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemFAT8F::GetFileNameSize(bool *invert) const
 {
 	return (int)sizeof(data->fat8f.name);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemFAT8F::GetFileType1() const

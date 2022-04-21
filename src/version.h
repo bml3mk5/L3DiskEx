@@ -6,17 +6,17 @@
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define APPLICATION_VERSION	"0.3.7"
+#define APPLICATION_VERSION	"0.3.8"
 #define APP_VER_MAJOR	0
 #define APP_VER_MINOR	3
-#define APP_VER_REV	7
+#define APP_VER_REV	8
 #define APP_VER_BUILD	0
 #define APP_COPYRIGHT	"Copyright (C) 2015-2018 Sasaji"
 
 #if defined(__MINGW32__)
-#ifdef x86_64
+#if defined(x86_64) || defined(__x86_64)
 #define PLATFORM "Windows(MinGW) 64bit"
-#elif i386
+#elif defined(i386) || defined(__i386)
 #define PLATFORM "Windows(MinGW) 32bit"
 #else
 #define PLATFORM "Windows(MinGW)"

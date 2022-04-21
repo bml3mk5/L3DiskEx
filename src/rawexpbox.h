@@ -19,6 +19,7 @@ _("'%s' should only contain digits.")
 
 
 class wxTextCtrl;
+class wxCheckBox;
 class DiskParam;
 
 /// Rawエクスポート＆インポートボックス
@@ -28,14 +29,19 @@ private:
 	wxTextCtrl *txtTrack[2];
 	wxTextCtrl *txtSide[2];
 	wxTextCtrl *txtSector[2];
+	wxCheckBox *chkInvData;
+	wxCheckBox *chkRevSide;
 
 	const DiskParam *param;
 	int sel_side_num;
+
+	int GetSideNumberWithRev(int num) const;
 
 public:
 	RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, const DiskParam *param, int sel_side_num
 		, int start_track_num, int start_side_num, int start_sector_num
 		, int end_track_num = -1, int end_side_num = -1, int end_sector_num = -1
+		, bool invert_data = false, bool reverse_side = false
 	);
 
 	enum {
@@ -45,6 +51,8 @@ public:
 		IDC_TEXT_SIDE_ED,
 		IDC_TEXT_SECTOR_ST,
 		IDC_TEXT_SECTOR_ED,
+		IDC_CHK_INV_DATA,
+		IDC_CHK_REV_SIDE,
 	};
 
 	/// @name functions
@@ -57,9 +65,12 @@ public:
 	void OnOK(wxCommandEvent& event);
 
 	// properties
-	int GetTrackNumber(int num);
-	int GetSideNumber(int num);
-	int GetSectorNumber(int num);
+	int GetTrackNumber(int num) const;
+	int GetSideNumber(int num) const;
+	int GetSectorNumber(int num) const;
+
+	bool InvertData() const;
+	bool ReverseSide() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

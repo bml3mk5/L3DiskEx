@@ -63,10 +63,10 @@ DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int num, int trac
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemMSDOS::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemMSDOS::GetFileNamePos(size_t &size, size_t &len) const
 {
 	// MS-DOS
-	len = sizeof(data->msdos.name);
+	size = len = sizeof(data->msdos.name);
 	if (GetFileType1() & FILETYPE_MASK_MS_VOLUME) {
 		// ボリュームラベルは拡張子なしにする
 		len += sizeof(data->msdos.ext);
@@ -87,6 +87,7 @@ wxUint8 *DiskBasicDirItemMSDOS::GetFileExtPos(size_t &len) const
 	return p;
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemMSDOS::GetFileNameSize(bool *invert) const
 {
@@ -108,6 +109,7 @@ int DiskBasicDirItemMSDOS::GetFileExtSize(bool *invert) const
 	}
 	return (int)len;
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemMSDOS::GetFileType1() const
@@ -128,11 +130,12 @@ bool DiskBasicDirItemMSDOS::CheckUsed(bool unuse)
 }
 
 /// ファイル名を設定
-void DiskBasicDirItemMSDOS::SetFileName(const wxUint8 *filename, int length)
+void DiskBasicDirItemMSDOS::SetFileName(const wxUint8 *filename, size_t length)
 {
 	wxUint8 name[FILENAME_BUFSIZE];
 	memcpy(name, filename, length);
 	if (length > 0) {
+		// 0xe5は削除コードなので0x05に変換(Sjift JISなど2バイト系文字など)
 		if (name[0] == 0xe5) name[0] = 0x05;
 	}
 	DiskBasicDirItem::SetFileName(name, length);
@@ -143,6 +146,7 @@ void DiskBasicDirItemMSDOS::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ex
 {
 	DiskBasicDirItem::GetFileName(name, nlen, ext, elen);
 	if (nlen > 0) {
+		// 0x05を0xe5に変換(Sjift JISなど2バイト系文字など)
 		if (name[0] == 0x05) name[0] = 0xe5;
 	}
 }
@@ -207,7 +211,8 @@ void DiskBasicDirItemMSDOS::SetFileAttr(const DiskBasicFileType &file_type)
 
 DiskBasicFileType DiskBasicDirItemMSDOS::GetFileAttr() const
 {
-	return DiskBasicFileType(basic->GetFormatTypeNumber(), GetFileType1() << 8);
+	int t1 = GetFileType1();
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), t1 << 8, t1);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)

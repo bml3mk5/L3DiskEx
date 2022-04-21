@@ -34,8 +34,9 @@ DiskBasicDirItem::DiskBasicDirItem()
 
 	this->external_attr = 0;
 
-	this->used = false;
-	this->visible = true;
+//	this->used = false;
+//	this->visible = true;
+	this->m_flags = (VISIBLE_LIST | VISIBLE_TREE);
 }
 DiskBasicDirItem::DiskBasicDirItem(const DiskBasicDirItem &src)
 {
@@ -70,8 +71,9 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic)
 
 	this->external_attr = 0;
 
-	this->used = false;
-	this->visible = true;
+//	this->used = false;
+//	this->visible = true;
+	this->m_flags = (VISIBLE_LIST | VISIBLE_TREE);
 }
 /// ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
 /// @param [in] basic  DISK BASIC
@@ -97,8 +99,9 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *sector, wxUi
 
 	this->external_attr = 0;
 
-	this->used = false;
-	this->visible = true;
+//	this->used = false;
+//	this->visible = true;
+	this->m_flags = (VISIBLE_LIST | VISIBLE_TREE);
 }
 /// ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
 /// @param [in] basic  DISK BASIC
@@ -129,8 +132,9 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int num, int track, int sid
 
 	this->external_attr = 0;
 
-	this->used = false;
-	this->visible = true;
+//	this->used = false;
+//	this->visible = true;
+	this->m_flags = (VISIBLE_LIST | VISIBLE_TREE);
 }
 /// デストラクタ
 DiskBasicDirItem::~DiskBasicDirItem()
@@ -202,8 +206,9 @@ void DiskBasicDirItem::Dup(const DiskBasicDirItem &src)
 
 	this->external_attr = src.external_attr;
 
-	this->used = src.used;
-	this->visible = src.visible;
+//	this->used = src.used;
+//	this->visible = src.visible;
+	this->m_flags = src.m_flags;
 }
 
 /// 子ディレクトリを追加
@@ -258,15 +263,15 @@ bool DiskBasicDirItem::Check(bool &last)
 bool DiskBasicDirItem::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
-	data->name[0] = code;
-	used = false;
+	data->name[0] = basic->InvertUint8(code);
+	Used(false);
 	return true;
 }
 
 /// 内部変数などを再設定
 void DiskBasicDirItem::Refresh()
 {
-	used = CheckUsed(false);
+	Used(CheckUsed(false));
 }
 
 /// アイテムを削除できるか
@@ -298,13 +303,23 @@ bool DiskBasicDirItem::IsOverWritable() const
 //
 
 /// ファイル名を格納する位置を返す
-/// @param [out] len    バッファサイズ
-/// @param [out] invert データを反転する必要があるか
+/// @param [out] size   バッファサイズ
+/// @param [out] len    ファイル名として使えるサイズ
 /// @return 格納先バッファポインタ
-wxUint8 *DiskBasicDirItem::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItem::GetFileNamePos(size_t &size, size_t &len) const
 {
+	size = 0;
 	len = 0;
 	return NULL;
+}
+
+/// @brief ファイル名を格納する位置を返す
+/// @param [out] len    ファイル名として使えるサイズ
+/// @return 格納先バッファポインタ
+wxUint8 *DiskBasicDirItem::GetFileNamePos(size_t &len) const
+{
+	size_t size;
+	return GetFileNamePos(size, len);
 }
 
 /// 拡張子を格納する位置を返す
@@ -349,22 +364,26 @@ void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 {
 	wxUint8 sname[FILENAME_BUFSIZE], dname[FILENAME_BUFSIZE];
 	wxUint8 *sn, *dn;
-	size_t sl, dl;
-	bool sinvert = false;
-	bool dinvert = false;
+	size_t sl, sel, dl, del;
+	bool sinvert = src.basic->IsDataInverted();
+	bool dinvert = basic->IsDataInverted();
 	char space = basic->GetDirSpaceCode();	// 空白コード
+	char term  = basic->GetDirTerminateCode();	// 終端コード
 
 	sn = src.GetFileNamePos(sl);
-	sl += src.GetFileExtSize(&sinvert);
+	src.GetFileExtPos(sel);
+	sl += sel;
 	memcpy(sname, sn, sl);
 	if (sinvert) mem_invert(sname, sl);
 	sl = rtrim(sname, sl, space);
+	sl = rtrim(sname, sl, term);
 	sl = str_shrink(sname, sl);
 
 	dn = GetFileNamePos(dl);
-	dl += GetFileExtSize(&dinvert);
+	GetFileExtPos(del);
+	dl += del;
 
-	MemoryCopy((char *)sname, sl, space, dname, dl);
+	MemoryCopy(sname, sl, strlen((const char *)sname), term, space, dname, dl);
 
 	if (dinvert) mem_invert(dname, dl);
 
@@ -375,18 +394,18 @@ void DiskBasicDirItem::CopyFileName(const DiskBasicDirItem &src)
 /// @param [in]  filename ファイル名
 /// @param [in]  length   長さ
 /// @note filename はデータビットが反転している場合あり
-void DiskBasicDirItem::SetFileName(const wxUint8 *filename, int length)
+void DiskBasicDirItem::SetFileName(const wxUint8 *filename, size_t length)
 {
 	wxUint8 *n;
-	size_t l;
-	n = GetFileNamePos(l);
-	l += GetFileExtSize();
+	size_t s, l, el;
+	n = GetFileNamePos(s, l);
+	GetFileExtPos(el);
+	s += el;
 
-	if (l > (size_t)length) l = (size_t)length;
+	if (s > length) s = length;
 
-	if (l > 0) {
-		memset(n, 0, l);
-		memcpy(n, filename, l);
+	if (s > 0) {
+		memcpy(n, filename, s);
 	}
 }
 
@@ -394,16 +413,15 @@ void DiskBasicDirItem::SetFileName(const wxUint8 *filename, int length)
 /// @param [in]  fileext  拡張子
 /// @param [in]  length   長さ
 /// @note fileext はデータビットが反転している場合あり
-void DiskBasicDirItem::SetFileExt(const wxUint8 *fileext, int length)
+void DiskBasicDirItem::SetFileExt(const wxUint8 *fileext, size_t length)
 {
 	wxUint8 *e;
 	size_t el;
 	e = GetFileExtPos(el);
 
-	if (el > (size_t)length) el = (size_t)length;
+	if (el > length) el = length;
 
 	if (el > 0) {
-		memset(e, 0, el);
 		memcpy(e, fileext, el);
 	}
 }
@@ -501,10 +519,11 @@ void DiskBasicDirItem::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, si
 {
 	wxUint8 *n, *e;
 	size_t nl, el;
-	bool invert = false;
+	bool invert = basic->IsDataInverted();
 	char space = basic->GetDirSpaceCode();	// 空白コード
+	char term  = basic->GetDirTerminateCode();	// 終端コード
 
-	n = GetFileNamePos(nl, &invert);
+	n = GetFileNamePos(nl);
 	e = GetFileExtPos(el);
 	if (name && nlen > 0) {
 		memset(name, 0, nlen); 
@@ -513,7 +532,9 @@ void DiskBasicDirItem::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, si
 			mem_invert(name, nl);
 		}
 		nl = rtrim(name, nl, space);
-		nlen = str_shrink(name, nl);
+		nl = rtrim(name, nl, term);
+		if (IsUsed()) nlen = str_shrink(name, nl);
+		else nlen = nl;
 	}
 	if (ext && elen > 0) {
 		memset(ext,  0, elen); 
@@ -522,7 +543,9 @@ void DiskBasicDirItem::GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, si
 			mem_invert(ext,  el);
 		}
 		el = rtrim(ext,  el, space);
-		elen = str_shrink(ext,  el);
+		el = rtrim(ext,  el, term);
+		if (IsUsed()) elen = str_shrink(ext,  el);
+		else elen = el;
 	}
 }
 
@@ -548,6 +571,7 @@ bool DiskBasicDirItem::IsSameName(const wxString &name) const
 	// ファイル名を内部ファイル名に変換
 	ToNativeName(name, dname, dnlen);
 	dnlen = rtrim(dname, dnlen, basic->GetDirSpaceCode());
+	dnlen = rtrim(dname, dnlen, basic->GetDirTerminateCode());
 	dnlen = str_shrink(dname, dnlen);
 	// このアイテムのファイル名を取得
 	GetFileName(sname, snlen, NULL, selen);
@@ -590,23 +614,28 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem &src) const
 
 	wxUint8 sname[FILENAME_BUFSIZE], dname[FILENAME_BUFSIZE];
 	wxUint8 *sn, *dn;
-	size_t sl, dl, l;
-	bool sinvert = false;
-	bool dinvert = false;
+	size_t sl, dl, sel, del, l;
+	bool sinvert = src.basic->IsDataInverted();
+	bool dinvert = basic->IsDataInverted();
 	char space = basic->GetDirSpaceCode();	// 空白コード
+	char term  = basic->GetDirTerminateCode();	// 終端コード
 
 	sn = src.GetFileNamePos(sl);
-	sl += src.GetFileExtSize(&sinvert);
+	GetFileExtPos(sel);
+	sl += sel;
 	memcpy(sname, sn, sl);
 	if (sinvert) mem_invert(sname, sl);
 	sl = rtrim(sname, sl, space);
+	sl = rtrim(sname, sl, term);
 	sl = str_shrink(sname, sl);
 
 	dn = GetFileNamePos(dl);
-	dl += GetFileExtSize(&dinvert);
+	GetFileExtPos(del);
+	dl += del;
 	memcpy(dname, dn, dl);
 	if (dinvert) mem_invert(dname, dl);
 	dl = rtrim(dname, dl, space);
+	dl = rtrim(dname, dl, term);
 	dl = str_shrink(dname, dl);
 
 	l = (sl > dl ? sl : dl);
@@ -618,10 +647,11 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem &src) const
 /// @return サイズ
 int DiskBasicDirItem::GetFileNameStrSize() const
 {
-	int l = GetFileExtSize();
-	if (l > 0) l++;
-	l += GetFileNameSize();
-	return l;
+	size_t nl, el;
+	GetFileNamePos(nl);
+	GetFileExtPos(el);
+	if (el > 0) el++;
+	return (int)(nl + el);
 }
 
 /// ファイルパスから内部ファイル名を生成する
@@ -635,9 +665,10 @@ wxString DiskBasicDirItem::RemakeFileNameStr(const wxString &filepath) const
 {
 	wxString newname;
 	wxFileName fn(filepath);
+	size_t nl, el;
 
-	int nl = GetFileNameSize();
-	int el = GetFileExtSize();
+	GetFileNamePos(nl);
+	GetFileExtPos(el);
 
 	newname = fn.GetName().Left(nl);
 	if (el > 0) {
@@ -663,8 +694,9 @@ wxString DiskBasicDirItem::RemakeFileNameStr(const wxString &filepath) const
 wxString DiskBasicDirItem::RemakeFileName(const wxUint8 *src, size_t srclen) const
 {
 	wxString dst;
+	srclen = str_length(src, srclen, 0);
 	basic->ConvCharsToString(src, srclen, dst);
-	dst.Trim(true);
+//	dst.Trim(true);
 	return dst;
 }
 
@@ -677,8 +709,8 @@ wxString DiskBasicDirItem::RemakeFileName(const wxUint8 *src, size_t srclen) con
 /// @param [in]  length     バッファサイズ
 void DiskBasicDirItem::ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length) const
 {
-	char tmp[FILENAME_BUFSIZE];
-	bool invert = false;
+	wxUint8 tmp[FILENAME_BUFSIZE];
+	bool invert = basic->IsDataInverted();
 	size_t nl, el;
 
 	wxString namestr = filename;
@@ -686,11 +718,11 @@ void DiskBasicDirItem::ToNativeFileNameFromStr(const wxString &filename, wxUint8
 	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
 	ConvertFromFileNameStr(namestr);
 
-	if (!basic->ConvStringToChars(namestr, (wxUint8 *)tmp, sizeof(tmp))) return;
+	if (!basic->ConvStringToChars(namestr, tmp, sizeof(tmp))) return;
 
-	nl = GetFileNameSize(&invert);
-	el = GetFileExtSize();
-	MemoryCopy(tmp, nl, el, (char)basic->GetDirSpaceCode(), nativename, length);
+	GetFileNamePos(nl);
+	GetFileExtPos(el);
+	MemoryCopyEx(tmp, nl, el, basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), nativename, length);
 	if (invert) {
 		mem_invert(nativename, length);
 	}
@@ -706,28 +738,31 @@ void DiskBasicDirItem::ToNativeFileNameFromStr(const wxString &filename, wxUint8
 /// @return true OK / false 変換できない文字がある
 bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const
 {
-	char tmp[FILENAME_BUFSIZE];
-	bool invert = false;
+	wxUint8 tmp[FILENAME_BUFSIZE];
+	bool invert = basic->IsDataInverted();
 	bool valid = true;
 	size_t nl, el;
-	char space = basic->GetDirSpaceCode();	// 空白コード
+	wxUint8 space = basic->GetDirSpaceCode();	// 空白コード
+	wxUint8 term  = basic->GetDirTerminateCode();	// 終端コード
 
 	wxString namestr = filename;
 
 	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
 	ConvertFromFileNameStr(namestr);
 
-	if (!basic->ConvStringToChars(namestr, (wxUint8 *)tmp, sizeof(tmp))) return false;
+	if (!basic->ConvStringToChars(namestr, tmp, sizeof(tmp))) return false;
 
-	nl = GetFileNameSize(&invert);
-	el = GetFileExtSize();
-	valid = MemoryCopy((char *)tmp, nl, el, (char)basic->GetDirSpaceCode(), name, nlen);
+	GetFileNamePos(nl);
+	GetFileExtPos(el);
+	valid = MemoryCopyEx(tmp, nl, el, term, space, name, nlen);
 	memset(ext, 0, elen);
 	if (el > 0) {
 		memcpy(ext, &name[nl], el);
 	}
 	nl = rtrim(name, nl, space);
 	el = rtrim(ext,  el, space);
+	nl = rtrim(name, nl, term);
+	el = rtrim(ext,  el, term);
 	nlen = str_shrink(name, nl);
 	elen = str_shrink(ext,  el);
 	return valid;
@@ -742,19 +777,20 @@ bool DiskBasicDirItem::ToNativeName(const wxString &src, wxUint8 *dst, size_t le
 {
 	wxUint8 tmp[FILENAME_BUFSIZE];
 	bool valid = true;
-	bool invert = false;
-	size_t l;
+	bool invert = basic->IsDataInverted();
+	size_t nl, el;
 
 	wxString namestr = src;
 
 	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
 	ConvertFromFileNameStr(namestr);
 
-	if (!basic->ConvStringToChars(namestr, (wxUint8 *)tmp, sizeof(tmp))) return false;
+	if (!basic->ConvStringToChars(namestr, tmp, sizeof(tmp))) return false;
 
-	l = GetFileNameSize(&invert);
-	l += GetFileExtSize();
-	valid = MemoryCopy((char *)tmp, l, (char)basic->GetDirSpaceCode(), dst, len);
+	GetFileNamePos(nl);
+	GetFileExtPos(el);
+	nl += el;
+	valid = MemoryCopy(tmp, nl, strlen((const char *)tmp), basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), dst, len);
 	if (invert) {
 		mem_invert(dst, len);
 	}
@@ -770,7 +806,7 @@ bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len
 {
 	wxUint8 tmp[FILEEXT_BUFSIZE];
 	bool valid = true;
-	bool invert = false;
+	bool invert = basic->IsDataInverted();
 	size_t el;
 
 	wxString extstr = src;
@@ -778,10 +814,10 @@ bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len
 	// ダイアログ入力後のファイル名文字列を変換 大文字にする（機種依存）
 	ConvertFromFileNameStr(extstr);
 
-	if (!basic->ConvStringToChars(extstr, (wxUint8 *)tmp, sizeof(tmp))) return false;
+	if (!basic->ConvStringToChars(extstr, tmp, sizeof(tmp))) return false;
 
-	el = GetFileExtSize(&invert);
-	valid = MemoryCopy((char *)tmp, el, (char)basic->GetDirSpaceCode(), dst, len);
+	GetFileExtPos(el);
+	valid = MemoryCopy(tmp, el, strlen((const char *)tmp), basic->GetDirTerminateCode(), basic->GetDirSpaceCode(), dst, len);
 	if (invert) {
 		mem_invert(dst, len);
 	}
@@ -790,50 +826,47 @@ bool DiskBasicDirItem::ToNativeExt(const wxString &src, wxUint8 *dst, size_t len
 
 /// 文字列をバッファにコピー 余りはfillで埋める
 /// @param [in]   src     ファイル名
-/// @param [in]   flen    ファイル名長さ
+/// @param [in]   ssize   ファイル名サイズ
+/// @param [in]   slen    ファイル名長さ
+/// @param [in]   term    終端文字
 /// @param [in]   fill    余り部分を埋める文字
 /// @param [out]  dst     出力先バッファ
-/// @param [in]   len     上記バッファサイズ
+/// @param [in]   dsize   上記バッファサイズ
 /// @return true OK / false 出力先バッファが足りない
-bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, char fill, wxUint8 *dst, size_t len)
+bool DiskBasicDirItem::MemoryCopy(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 term, wxUint8 fill, wxUint8 *dst, size_t dsize)
 {
-	size_t l;
-	if (len < flen) return false;
-	l = strlen(src);
-	if (l > flen) l = flen;
-	memset(dst, fill, len);
-	memcpy(dst, src, l);
+	if (dsize < ssize) return false;
+	memset(dst, fill, dsize);
+	if (ssize < slen) slen = ssize;
+	if (0 < slen) memcpy(dst, src, slen);
+	if (slen < dsize) dst[slen] = term;
 	return true;
 }
 
 /// 文字列をバッファにコピー "."で拡張子とを分ける
 /// @param [in]   src     ファイル名
-/// @param [in]   flen    ファイル名長さ
-/// @param [in]   elen    拡張子長さ
+/// @param [in]   fsize   ファイル名サイズ
+/// @param [in]   esize   拡張子サイズ
+/// @param [in]   term    終端文字
 /// @param [in]   fill    余り部分をサプレスする文字
 /// @param [out]  dst     出力先バッファ
-/// @param [in]   len     上記バッファサイズ
+/// @param [in]   dsize   上記バッファサイズ
 /// @return true OK / false 出力先バッファが足りない
-bool DiskBasicDirItem::MemoryCopy(const char *src, size_t flen, size_t elen, char fill, wxUint8 *dst, size_t len)
+bool DiskBasicDirItem::MemoryCopyEx(const wxUint8 *src, size_t fsize, size_t esize, wxUint8 term, wxUint8 fill, wxUint8 *dst, size_t dsize)
 {
-	size_t l;
-	if (len <= flen + elen) return false;
-	memset(dst, fill, len);
+	if (dsize <= fsize + esize) return false;
+	bool valid = true;
+	size_t len = strlen((const char *)src);
 	// .で分割する
-	const char *p = strrchr(src, '.');
-	if (elen > 0 && p != NULL) {
-		l = (p - src);
-		if (l > flen) l = flen;
-		memcpy(dst, src, l);
-		l = strlen(p+1);
-		if (l > elen) l = elen;
-		memcpy(&dst[flen], p+1, l);
+	const wxUint8 *p = (const wxUint8 *)strrchr((const char *)src, '.');
+	if (0 < esize && p != NULL) {
+		size_t nlen = (p - src);
+		valid = MemoryCopy(src, fsize, nlen, term, fill, dst, dsize);
+		if (valid) valid = MemoryCopy(p+1, esize, len - nlen - 1, term, fill, &dst[fsize], dsize - fsize);
 	} else {
-		l = strlen(src);
-		if (l > flen) l = flen;
-		memcpy(dst, src, l);
+		valid = MemoryCopy(src, fsize, len, term, fill, dst, dsize);
 	}
-	return true;
+	return valid;
 }
 
 //
@@ -1101,4 +1134,39 @@ void DiskBasicDirItem::ClearData()
 void DiskBasicDirItem::InitialData()
 {
 	ClearData();
+}
+
+/// 使用中のアイテムか
+bool DiskBasicDirItem::IsUsed() const
+{
+	return ((m_flags & USED_ITEM) != 0);
+//	return used;
+}
+
+/// 使用中かをセット
+void DiskBasicDirItem::Used(bool val)
+{
+	m_flags = val ? (m_flags | USED_ITEM) : (m_flags & ~USED_ITEM);
+//	used = val;
+}
+
+/// リストに表示するアイテムか
+bool DiskBasicDirItem::IsVisible() const
+{
+	return ((m_flags & VISIBLE_LIST) != 0);
+//	return visible;
+}
+
+/// リストに表示するかをセット
+void DiskBasicDirItem::Visible(bool val)
+{
+	m_flags = val ? (m_flags | VISIBLE_LIST) : (m_flags & ~VISIBLE_LIST);
+//	visible = val;
+}
+
+/// 使用中かつリストに表示するアイテムか
+bool DiskBasicDirItem::IsUsedAndVisible() const
+{
+	return ((m_flags & (USED_ITEM | VISIBLE_LIST)) == (USED_ITEM | VISIBLE_LIST));
+//	return used && visible;
 }

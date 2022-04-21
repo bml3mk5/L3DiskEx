@@ -10,6 +10,10 @@
 
 
 /// 右側の指定文字をトリミング
+/// @param [in,out] buf 文字列
+/// @param [in]     len 文字列長さ
+/// @param [in]     ch  指定文字
+/// @return トリミング後の文字列長さ
 size_t rtrim(void *buf, size_t len, char ch)
 {
 	char *p = (char *)buf;
@@ -23,7 +27,26 @@ size_t rtrim(void *buf, size_t len, char ch)
 	return len;
 }
 
+/// 指定文字までの文字列の長さ
+/// @param [in]     buf 文字列
+/// @param [in]     len 文字列バッファサイズ
+/// @param [in]     ch  指定文字
+/// @return 文字列長さ
+size_t str_length(const void *buf, size_t len, char ch)
+{
+	const char *p = (const char *)buf;
+	for(size_t i=0; i<len; i++) {
+		if (p[i] == ch) {
+			len = i;
+			break;
+		}
+	}
+	return len;
+}
+
 /// メモリの内容を反転する
+/// @param [in,out] buf バッファ
+/// @param [in]     len バッファサイズ
 void mem_invert(void *buf, size_t len)
 {
 	char *p = (char *)buf;
@@ -35,6 +58,9 @@ void mem_invert(void *buf, size_t len)
 }
 
 /// 改行を終端文字にする
+/// @param [in,out] buf 文字列
+/// @param [in]     len 文字列長さ
+/// @return 文字列長さ
 size_t str_shrink(void *buf, size_t len)
 {
 	char *p = (char *)buf;

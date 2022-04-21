@@ -14,46 +14,6 @@
 
 
 //
-//
-//
-DiskBasicTempData::DiskBasicTempData()
-{
-	memset(data, 0, sizeof(data));
-	size = 0;
-}
-
-void DiskBasicTempData::SetData(const wxUint8 *data, size_t len, bool invert)
-{
-	this->SetSize(len);
-	memcpy(this->data, data, this->size);
-	if (invert) {
-		mem_invert(this->data, this->size);
-	}
-}
-
-void DiskBasicTempData::Set(size_t pos, wxUint8 val)
-{
-	if (pos < size) {
-		data[pos] = val;
-	}
-}
-
-/// 一致するバイトデータを置換
-void DiskBasicTempData::Replace(wxUint8 src, wxUint8 dst)
-{
-	for(size_t pos=0; pos<size; pos++) {
-		if (data[pos] == src) data[pos] = dst;
-	}
-}
-
-void DiskBasicTempData::InvertData(bool invert)
-{
-	if (invert) {
-		mem_invert(data, size);
-	}
-}
-
-//
 // DISK BASIC 個別の処理テンプレート
 //
 

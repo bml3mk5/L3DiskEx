@@ -158,7 +158,9 @@ wxString DiskBasicDirItemMZBase::RemakeFileNameStr(const wxString &filepath) con
 {
 	wxString newname;
 	wxFileName fn(filepath);
-	newname = fn.GetFullName().Left(GetFileNameSize());
+	size_t nl;
+	GetFileNamePos(nl);
+	newname = fn.GetFullName().Left(nl);
 	return newname;
 }
 
@@ -208,4 +210,78 @@ bool DiskBasicDirItemMZBase::IsFileNameEditable() const
 		}
 	}
 	return valid;
+}
+
+#include <wx/choice.h>
+
+/// 属性の文字列を返す(ファイル一覧画面表示用)
+wxString DiskBasicDirItemMZBase::GetFileAttrStrSub(DiskBasic *basic, int pos1, const char *list[], int unknown_pos)
+{
+	wxString attr;
+	if (pos1 >= 0) {
+		attr = wxGetTranslation(list[pos1]);
+	} else {
+		const SpecialAttribute *sa = NULL;
+		for(int i=0; i<2 && sa == NULL; i++) {
+			if (i == 0) sa = basic->FindSpecialAttr(-pos1);
+			else        sa = basic->GetFormatType()->FindSpecialAttr(-pos1);
+
+			if (sa != NULL) attr = sa->GetName();
+		}
+		if (sa == NULL) {
+			attr = wxGetTranslation(list[unknown_pos]);
+		}
+	}
+	return attr;
+}
+
+/// 属性の選択肢を作成する（プロパティダイアログ用）
+void DiskBasicDirItemMZBase::CreateChoiceForAttrDialog(DiskBasic *basic, const char *list[], int end_pos, wxArrayString &types1)
+{
+	for(size_t i=0; i<(size_t)end_pos; i++) {
+		types1.Add(wxGetTranslation(list[i]));
+	}
+	const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+	for(size_t i=0; i<attrs->Count(); i++) {
+		const SpecialAttribute *attr = &attrs->Item(i);
+		wxString str;
+		str += attr->GetName();
+		str += wxString::Format(wxT(" 0x%02x"), attr->GetValue());
+		if (!attr->GetDescription().IsEmpty()) {
+			str += wxT(" (");
+			str += attr->GetDescription();
+			str += wxT(")");
+		}
+		types1.Add(str);
+	}
+}
+
+/// 属性の選択肢を選ぶ（プロパティダイアログ用）
+int  DiskBasicDirItemMZBase::SelectChoiceForAttrDialog(DiskBasic *basic, wxChoice *choice, int file_type_1, int end_pos, int unknown_pos)
+{
+	if (file_type_1 < 0) {
+		const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+		int n_type = attrs->GetIndexByValue(-file_type_1);
+		if (n_type >= 0) {
+			file_type_1 = n_type + end_pos;
+		}
+	}
+	choice->SetSelection(file_type_1 >= 0 ? file_type_1 : unknown_pos);
+
+	return file_type_1;
+}
+
+/// リストの位置から属性を返す(プロパティダイアログ用)
+int DiskBasicDirItemMZBase::CalcSpecialFileTypeFromPos(DiskBasic *basic, int pos, int end_pos)
+{
+	int val = -1;
+	if (pos >= end_pos) {
+		pos -= end_pos;
+		const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+		int count = (int)attrs->Count();
+		if (pos < count) {
+			val = attrs->GetValueByIndex(pos);
+		}
+	}
+	return val;
 }

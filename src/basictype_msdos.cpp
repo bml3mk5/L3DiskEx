@@ -55,9 +55,13 @@ void DiskBasicTypeMSDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 /// IPLや管理エリアの属性をセット
 void DiskBasicTypeMSDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
+	const DiskBasicFormat *fmt = basic->GetFormatType();
+
 	// volume label
-	DiskBasicDirItem *ditem = dir->FindFileByAttrOnRoot(FILE_TYPE_VOLUME_MASK, FILE_TYPE_VOLUME_MASK | FILE_TYPE_DIRECTORY_MASK);
-	if (ditem) {
-		ditem->SetFileNamePlain(data.GetVolumeName());
+	if (fmt->HasVolumeName()) {
+		DiskBasicDirItem *ditem = dir->FindFileByAttrOnRoot(FILE_TYPE_VOLUME_MASK, FILE_TYPE_VOLUME_MASK | FILE_TYPE_DIRECTORY_MASK);
+		if (ditem) {
+			ditem->SetFileNamePlain(data.GetVolumeName());
+		}
 	}
 }

@@ -11,6 +11,7 @@
 #include "logging.h"
 
 
+#pragma pack(1)
 /// TF-DOS IPLセクタ
 struct st_ipl_tfdos {
 	wxUint8  ipl[0xf0];
@@ -31,6 +32,7 @@ struct st_fat_tfdos {
 	wxUint16 x1_sector_size;
 	wxUint8  reserved3[4];
 };
+#pragma pack()
 
 //
 //
@@ -59,7 +61,7 @@ bool DiskBasicTypeTFDOS::CheckFat()
 		return false;
 	}
 	// ファイル管理番号
-	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->buffer;
+	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->GetBuffer();
 	if (basic->InvertUint8(f->ident_number) != 1) {
 		return false;
 	}
@@ -71,8 +73,8 @@ bool DiskBasicTypeTFDOS::CheckFat()
 	}
 
 	// 0 か 0xff 以外は無効
-	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup() && gnum < (wxUint32)fatbuf->size; gnum++) {
-		wxUint8 buf = basic->InvertUint8(fatbuf->buffer[gnum]);	// invert
+	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup() && gnum < (wxUint32)fatbuf->GetSize(); gnum++) {
+		wxUint8 buf = basic->InvertUint8(fatbuf->Get(gnum));	// invert
 		if (buf != basic->GetGroupUnusedCode() && buf != basic->GetGroupSystemCode()) {
 			valid = false;
 			break;
@@ -109,9 +111,9 @@ void DiskBasicTypeTFDOS::SetGroupNumber(wxUint32 num, wxUint32 val)
 		return;
 	}
 	// FAT
-	if (num < (wxUint32)fatbuf->size) {
+	if (num < (wxUint32)fatbuf->GetSize()) {
 		wxUint8 byte = val ? basic->GetGroupSystemCode() : basic->GetGroupUnusedCode();
-		fatbuf->buffer[num] = basic->InvertUint8(byte);	// invert
+		fatbuf->Set(num, basic->InvertUint8(byte));	// invert
 	}
 }
 
@@ -135,8 +137,8 @@ bool DiskBasicTypeTFDOS::IsUsedGroupNumber(wxUint32 num)
 		return true;
 	}
 	// FATには未使用使用テーブルがある
-	if (num < (wxUint32)fatbuf->size) {
-		if (basic->InvertUint8(fatbuf->buffer[num]) != basic->GetGroupUnusedCode()) {	// invert
+	if (num < (wxUint32)fatbuf->GetSize()) {
+		if (basic->InvertUint8(fatbuf->Get(num)) != basic->GetGroupUnusedCode()) {	// invert
 			exist = true;
 		}
 	}
@@ -265,7 +267,7 @@ bool DiskBasicTypeTFDOS::ConvertDataForLoad(DiskBasicDirItem *item, wxInputStrea
 	}
 	if (is_base_compatible) {
 		// BASEコンパチの場合、TABコード($14 -> $09)変換
-		temp.SetSize(DISKBASIC_TEMP_DATA_SIZE);
+		temp.SetSize(TEMP_DATA_SIZE);
 		while(osize > 0) {
 			int len = (int)istream.Read(temp.GetData(), temp.GetSize()).LastRead();
 			// TABコード($14 -> $09)変換
@@ -290,7 +292,7 @@ bool DiskBasicTypeTFDOS::ConvertDataForVerify(DiskBasicDirItem *item, wxInputStr
 
 	if (is_base_compatible) {
 		// BASEコンパチの場合、TABコード($09 -> $14)変換
-		temp.SetSize(DISKBASIC_TEMP_DATA_SIZE);
+		temp.SetSize(TEMP_DATA_SIZE);
 		while(osize > 0) {
 			int len = (int)istream.Read(temp.GetData(), temp.GetSize()).LastRead();
 			// TABコード($09 -> $14)変換
@@ -369,7 +371,7 @@ bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	fatbuf->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));
 
-	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->buffer;
+	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->GetBuffer();
 
 	// システムエリアは使用済みにする
 	wxArrayInt grps = basic->GetReservedGroups();
@@ -459,11 +461,11 @@ int DiskBasicTypeTFDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 			temp.SetSize(remain);
 			istream.Read(temp.GetData(), temp.GetSize());
 
-			// BASEコンパチファイルならTAB($09->$14)変換
-			if (is_base_compatible) {
-				temp.Replace(0x09, 0x14);
-				temp.Set(remain - 1, 0);
-			}
+//			// BASEコンパチファイルならTAB($09->$14)変換
+//			if (is_base_compatible) {
+//				temp.Replace(0x09, 0x14);
+//				temp.Set(remain - 1, 0);
+//			}
 
 			memcpy(buffer, temp.GetData(), temp.GetSize());
 //			istream.Read((void *)buffer, remain);
@@ -478,10 +480,10 @@ int DiskBasicTypeTFDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 		temp.SetSize(size);
 		istream.Read(temp.GetData(), temp.GetSize());
 
-		// BASEコンパチファイルならTAB($09->$14)変換
-		if (is_base_compatible) {
-			temp.Replace(0x09, 0x14);
-		}
+//		// BASEコンパチファイルならTAB($09->$14)変換
+//		if (is_base_compatible) {
+//			temp.Replace(0x09, 0x14);
+//		}
 
 		memcpy(buffer, temp.GetData(), temp.GetSize());
 //		istream.Read((void *)buffer, size);
@@ -500,7 +502,8 @@ void DiskBasicTypeTFDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
-	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->buffer;
+	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->GetBuffer();
+	if (!f) return;
 
 	// volume label
 	wxUint8  vol_name[16];
@@ -515,12 +518,19 @@ void DiskBasicTypeTFDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
 	// FATエリア
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
-	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->buffer;
+	struct st_fat_tfdos *f = (struct st_fat_tfdos *)fatbuf->GetBuffer();
+	if (!f) return;
+
+	const DiskBasicFormat *fmt = basic->GetFormatType();
 
 	// volume label
-	wxCharBuffer vol_name = data.GetVolumeName().To8BitData();
-	mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
-	basic->InvertMem(f->volume_name, sizeof(f->volume_name));
+	if (fmt->HasVolumeName()) {
+		wxCharBuffer vol_name = data.GetVolumeName().To8BitData();
+		mem_copy(vol_name.data(), vol_name.length(), 0, f->volume_name, sizeof(f->volume_name));
+		basic->InvertMem(f->volume_name, sizeof(f->volume_name));
+	}
 	// volume number
-	f->volume_num = basic->InvertUint8(data.GetVolumeNumber() & 0xff);
+	if (fmt->HasVolumeNumber()) {
+		f->volume_num = basic->InvertUint8(data.GetVolumeNumber() & 0xff);
+	}
 }

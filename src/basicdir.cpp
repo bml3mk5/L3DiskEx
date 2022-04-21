@@ -18,6 +18,7 @@
 #include "basicdiritem_os9.h"
 #include "basicdiritem_cpm.h"
 #include "basicdiritem_tfdos.h"
+#include "basicdiritem_cdos.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
@@ -85,6 +86,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	case FORMAT_TYPE_TFDOS:
 		item = new DiskBasicDirItemTFDOS(basic);
 		break;
+	case FORMAT_TYPE_CDOS:
+		item = new DiskBasicDirItemCDOS(basic);
+		break;
 //	default:
 //		item = new DiskBasicDirItem(basic);
 //		break;
@@ -137,6 +141,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *newsec, wxUint8 *newdata)
 		break;
 	case FORMAT_TYPE_TFDOS:
 		item = new DiskBasicDirItemTFDOS(basic, newsec, newdata);
+		break;
+	case FORMAT_TYPE_CDOS:
+		item = new DiskBasicDirItemCDOS(basic, newsec, newdata);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newsec, newdata);
@@ -195,6 +202,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int newnum, int newtrack, int newside, D
 		break;
 	case FORMAT_TYPE_TFDOS:
 		item = new DiskBasicDirItemTFDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
+		break;
+	case FORMAT_TYPE_CDOS:
+		item = new DiskBasicDirItemCDOS(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);
 		break;
 //	default:
 //		item = new DiskBasicDirItem(basic, newnum, newtrack, newside, newsec, newpos, newdata, unuse);

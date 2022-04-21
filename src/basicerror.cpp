@@ -62,6 +62,8 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Invalid structure exists in parameter area."),
 	//	ERR_FILENAME_EMPTY
 	wxTRANSLATE("File name is required."),
+	//  ERR_END_ADDR_TOO_SMALL
+	wxTRANSLATE("End address is smaller than load address."),
 
 	//	ERRV_START v:1
 	wxTRANSLATE("Unknown error. code:%d"),

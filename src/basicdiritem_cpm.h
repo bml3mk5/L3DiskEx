@@ -34,13 +34,13 @@ private:
 	DiskBasicDirItemCPM(const DiskBasicDirItemCPM &src) : DiskBasicDirItem(src) {}
 
 	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
+	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
 	/// 拡張子を格納する位置を返す
 	wxUint8 *GetFileExtPos(size_t &len) const;
-	/// ファイル名を格納するバッファサイズを返す
-	int		GetFileNameSize(bool *invert = NULL) const;
-	/// 拡張子を格納するバッファサイズを返す
-	int		GetFileExtSize(bool *invert = NULL) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	int		GetFileNameSize(bool *invert = NULL) const;
+//	/// 拡張子を格納するバッファサイズを返す
+//	int		GetFileExtSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	int		GetFileType1() const;
 	/// 属性２を返す
@@ -64,9 +64,9 @@ private:
 	/// 拡張子を返す
 	wxString GetFileExtPlainStr() const;
 	/// ファイル名を設定
-	void	SetFileName(const wxUint8 *filename, int length);
+	void	SetFileName(const wxUint8 *filename, size_t length);
 	/// 拡張子を設定
-	void	SetFileExt(const wxUint8 *fileext, int length);
+	void	SetFileExt(const wxUint8 *fileext, size_t length);
 
 	int group_width;	///< グループ番号の幅(1 = 8ビット, 2 = 16ビット)
 	int group_entries;	///< グループ番号のエントリ数(8 or 16)

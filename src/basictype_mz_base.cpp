@@ -80,11 +80,7 @@ void DiskBasicTypeMZBase::SetGroupNumber(wxUint32 num, wxUint32 val)
 		return;
 	}
 	// FATには未使用使用テーブルがある
-	if (pos < fatbuf->size) {
-		wxUint8 bit = basic->InvertUint8(fatbuf->buffer[pos]);	// invert
-		bit = (val ? (bit | mask) : (bit & ~mask));
-		fatbuf->buffer[pos] = basic->InvertUint8(bit);	// invert
-	}
+	fatbuf->Bit((wxUint32)pos, (wxUint8)mask, val != 0, basic->IsDataInverted());
 }
 
 wxUint32 DiskBasicTypeMZBase::GetGroupNumber(wxUint32 num) const
@@ -120,11 +116,7 @@ bool DiskBasicTypeMZBase::IsUsedGroupNumber(wxUint32 num)
 		return true;
 	}
 	// FATには未使用使用テーブルがある
-	if (pos < fatbuf->size) {
-		if (basic->InvertUint8(fatbuf->buffer[pos]) & mask) {	// invert
-			exist = true;
-		}
-	}
+	exist = fatbuf->BitTest((wxUint32)pos, (wxUint8)mask, basic->IsDataInverted());
 	return exist;
 }
 
@@ -133,6 +125,26 @@ void DiskBasicTypeMZBase::CalcUsedGroupPos(wxUint32 num, int &pos, int &mask)
 {
 	mask = 1 << (pos & 7);
 	pos = (pos >> 3) + 6;
+}
+
+/// 空き位置を返す
+/// @return INVALID_GROUP_NUMBER: 空きなし
+wxUint32 DiskBasicTypeMZBase::GetEmptyGroupNumber()
+{
+	wxUint32 new_num = INVALID_GROUP_NUMBER;
+
+	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
+	if (!fatbuf) {
+		return new_num;
+	}
+	// 空き位置をさがす
+	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup(); gnum++) {
+		if (gnum >= data_start_group && !IsUsedGroupNumber(gnum)) {
+			new_num = gnum;
+			break;
+		}
+	}
+	return new_num;
 }
 
 /// 次の空き位置を返す 未使用

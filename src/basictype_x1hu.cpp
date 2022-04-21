@@ -27,14 +27,15 @@ bool DiskBasicTypeX1HU::CheckFat()
 
 	// FAT領域の先頭が0x01であるか
 	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
+#if 0
 	for(size_t j=0; j<bufs->Count(); j++) {
-		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
-		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(0);
-		if (fatbuf->buffer[0] != basic->InvertUint8(0x01)) {
+		if (bufs->GetData8(j, 0) != (wxUint32)basic->InvertUint8(0x01)) {
 			valid = false;
 			break;
 		}
 	}
+#endif
+	valid = (bufs->MatchData8(0, basic->InvertUint8(0x01)) == (int)bufs->Count());
 	if (!valid) {
 		return valid;
 	}
@@ -73,13 +74,13 @@ void DiskBasicTypeX1HU::SetGroupNumber(wxUint32 num, wxUint32 val)
 		// 8bit FAT + 8bit
 		for(size_t i=0; i<fatbufs->Count(); i++) {
 			DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-			wxUint32 half_size = (fatbuf->size >> 1);
+			wxUint32 half_size = (wxUint32)(fatbuf->GetSize() >> 1);
 			if (num < half_size) {
-				fatbuf->buffer[num] = basic->InvertUint8(val);
-				fatbuf->buffer[num + half_size] = basic->InvertUint8((val & 0xff00) >> 8);
+				fatbuf->Set(num, basic->InvertUint8(val));
+				fatbuf->Set(num + half_size, basic->InvertUint8((val & 0xff00) >> 8));
 				break;
 			}
-			num -= fatbuf->size;
+			num -= (wxUint32)fatbuf->GetSize();
 		}
 	}
 }
@@ -88,23 +89,23 @@ void DiskBasicTypeX1HU::SetGroupNumber(wxUint32 num, wxUint32 val)
 /// @param [in] num グループ番号(0...)
 wxUint32 DiskBasicTypeX1HU::GetGroupNumber(wxUint32 num) const
 {
-	wxUint32 new_num = 0;
+	wxUint32 new_num = INVALID_GROUP_NUMBER;
 	DiskBasicFatBuffers *fatbufs = fat->GetDiskBasicFatBuffers(0);
 	if (!fatbufs) {
-		return INVALID_GROUP_NUMBER;
+		return new_num;
 	}
 	// 8bit FAT + 8bit
 	for(size_t i=0; i<fatbufs->Count(); i++) {
 		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-		wxUint32 half_size = (fatbuf->size >> 1);
+		wxUint32 half_size = (wxUint32)(fatbuf->GetSize() >> 1);
 		if (num < half_size) {
-			new_num = basic->InvertUint8(fatbuf->buffer[num]);
+			new_num = basic->InvertUint8(fatbuf->Get(num));
 			if (basic->GetFatEndGroup() >= 0x80) {
-				new_num |= ((wxUint32)basic->InvertUint8(fatbuf->buffer[num + half_size]) << 8);
+				new_num |= ((wxUint32)basic->InvertUint8(fatbuf->Get(num + half_size)) << 8);
 			}
 			break;
 		}
-		num -= fatbuf->size;
+		num -= (wxUint32)fatbuf->GetSize();
 	}
 	return new_num;
 }

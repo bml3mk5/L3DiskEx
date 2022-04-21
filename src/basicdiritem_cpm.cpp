@@ -70,10 +70,9 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int num, int track, i
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemCPM::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemCPM::GetFileNamePos(size_t &size, size_t &len) const
 {
-	len = sizeof(data->cpm.name);
-	if (invert) *invert = basic->IsDataInverted();
+	size = len = sizeof(data->cpm.name);
 	return data->cpm.name; 
 }
 
@@ -84,6 +83,7 @@ wxUint8 *DiskBasicDirItemCPM::GetFileExtPos(size_t &len) const
 	return data->cpm.ext; 
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemCPM::GetFileNameSize(bool *invert) const
 {
@@ -97,6 +97,7 @@ int DiskBasicDirItemCPM::GetFileExtSize(bool *invert) const
 	if (invert) *invert = basic->IsDataInverted();
 	return (int)sizeof(data->cpm.ext);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemCPM::GetFileType1() const
@@ -180,7 +181,7 @@ wxString DiskBasicDirItemCPM::GetFileExtPlainStr() const
 /// @param [in]  filename ファイル名
 /// @param [in]  length   長さ
 /// @note filename はデータビットが反転している場合あり
-void DiskBasicDirItemCPM::SetFileName(const wxUint8 *filename, int length)
+void DiskBasicDirItemCPM::SetFileName(const wxUint8 *filename, size_t length)
 {
 	DiskBasicDirItem::SetFileName(filename, length);
 
@@ -194,11 +195,11 @@ void DiskBasicDirItemCPM::SetFileName(const wxUint8 *filename, int length)
 /// @param [in]  fileext  拡張子
 /// @param [in]  length   長さ
 /// @note fileext はデータビットが反転している場合あり
-void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, int length)
+void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, size_t length)
 {
 	wxUint8 *e;
-	size_t l, el;
-	GetFileNamePos(l);
+	size_t s, l, el;
+	GetFileNamePos(s, l);
 	e = GetFileExtPos(el);
 
 	if (el > (size_t)length) el = (size_t)length;

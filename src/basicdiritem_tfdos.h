@@ -46,11 +46,11 @@ private:
 	DiskBasicDirItemTFDOS(const DiskBasicDirItemTFDOS &src) : DiskBasicDirItemMZBase(src) {}
 
 	/// @brief ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
-	/// @brief ファイル名を格納するバッファサイズを返す
-	int		GetFileNameSize(bool *invert = NULL) const;
-	/// @brief 拡張子を格納するバッファサイズを返す
-	int		GetFileExtSize(bool *invert = NULL) const;
+	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
+//	/// @brief ファイル名を格納するバッファサイズを返す
+//	int		GetFileNameSize(bool *invert = NULL) const;
+//	/// @brief 拡張子を格納するバッファサイズを返す
+//	int		GetFileExtSize(bool *invert = NULL) const;
 	/// @brief 属性１を返す
 	int		GetFileType1() const;
 	/// @brief 属性１のセット
@@ -85,8 +85,8 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	bool	Check(bool &last);
 
-	/// @brief ファイルパスから内部ファイル名を生成する
-	wxString RemakeFileNameStr(const wxString &filepath) const;
+//	/// @brief ファイルパスから内部ファイル名を生成する
+//	wxString RemakeFileNameStr(const wxString &filepath) const;
 	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
 	void	ConvertToFileNameStr(wxString &filename) const;
 	/// @brief ファイル名に設定できない文字を文字列にして返す

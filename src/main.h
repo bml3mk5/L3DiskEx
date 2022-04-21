@@ -229,6 +229,8 @@ public:
 	void OnChangeCharCode(wxCommandEvent& event);
 	/// 未使用データを切り落とすか
 	void OnTrimData(wxCommandEvent& event);
+	/// 削除ファイルを表示するか
+	void OnShowDeletedFile(wxCommandEvent& event);
 
 	/// ダンプウィンドウ選択
 	void OnOpenBinDump(wxCommandEvent& event);
@@ -595,6 +597,7 @@ public:
 		IDM_CHAR_ASCII,
 		IDM_CHAR_SJIS,
 		IDM_TRIM_DATA,
+		IDM_SHOW_DELFILE,
 
 		IDM_WINDOW_BINDUMP,
 		IDM_WINDOW_FATAREA,

@@ -11,6 +11,8 @@
 #include "basicdiritem.h"
 
 
+class wxChoice;
+
 /// ディレクトリ１アイテム MZ Base
 class DiskBasicDirItemMZBase : public DiskBasicDirItem
 {
@@ -30,6 +32,15 @@ protected:
 	virtual void	CalcAllGroups(int calc_flags, wxUint32 &group_num, int &remain, int &sec_size, int &end_sec, void *user_data);
 	/// グループ取得計算後処理
 	virtual void	PostCalcAllGroups(void *user_data);
+
+	/// 属性の文字列を返す(ファイル一覧画面表示用)
+	static wxString	GetFileAttrStrSub(DiskBasic *basic, int pos1, const char *list[], int unknown_pos);
+	/// 属性の選択肢を作成する（プロパティダイアログ用）
+	static void		CreateChoiceForAttrDialog(DiskBasic *basic, const char *list[], int end_pos, wxArrayString &types1);
+	/// 属性の選択肢を選ぶ（プロパティダイアログ用）
+	static int		SelectChoiceForAttrDialog(DiskBasic *basic, wxChoice *choice, int file_type_1, int end_pos, int unknown_pos);
+	/// リストの位置から属性を返す(プロパティダイアログ用)
+	static int		CalcSpecialFileTypeFromPos(DiskBasic *basic, int pos, int end_pos);
 
 public:
 	DiskBasicDirItemMZBase(DiskBasic *basic);

@@ -10,6 +10,7 @@
 #include "basicdir.h"
 #include "basicdiritem.h"
 #include "basicdiritem_flex.h"
+#include "utils.h"
 #include "logging.h"
 
 
@@ -49,6 +50,7 @@ bool DiskBasicTypeFLEX::CheckFat()
 
 	if (!valid) return valid;
 
+	// 最終グループ番号
 	basic->SetFatEndGroup((flex->max_track + 1) * flex->max_sector - 1);
 
 	flex_sir = flex;
@@ -766,14 +768,27 @@ void DiskBasicTypeFLEX::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 	data.SetVolumeName(vol);
 	// volume number
 	data.SetVolumeNumber(wxUINT16_SWAP_ON_LE(flex_sir->volume_number));
+	// volume date
+	struct tm tm;
+	tm.tm_year = (flex_sir->cyear % 100);
+	if (tm.tm_year >= 0 && tm.tm_year < 80) tm.tm_year += 100;
+	tm.tm_mon = flex_sir->cmonth - 1; 
+	tm.tm_mday = flex_sir->cday;
+	data.SetVolumeDate(Utils::FormatYMDStr(&tm));
 }
 
 /// IPLや管理エリアの属性をセット
 void DiskBasicTypeFLEX::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
+	const DiskBasicFormat *fmt = basic->GetFormatType();
+
 	// volume label
-	wxCharBuffer vol = data.GetVolumeName().To8BitData();
-	mem_copy(vol.data(), vol.length(), 0, flex_sir->volume_label, sizeof(flex_sir->volume_label)); 
+	if (fmt->HasVolumeName()) {
+		wxCharBuffer vol = data.GetVolumeName().To8BitData();
+		mem_copy(vol.data(), vol.length(), 0, flex_sir->volume_label, sizeof(flex_sir->volume_label)); 
+	}
 	// volume number
-	flex_sir->volume_number = wxUINT16_SWAP_ON_LE(data.GetVolumeNumber());
+	if (fmt->HasVolumeNumber()) {
+		flex_sir->volume_number = wxUINT16_SWAP_ON_LE(data.GetVolumeNumber());
+	}
 }

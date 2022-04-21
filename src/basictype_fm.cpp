@@ -20,8 +20,15 @@ DiskBasicTypeFM::DiskBasicTypeFM(DiskBasic *basic, DiskBasicFat *fat, DiskBasicD
 /// FATエリアをチェック
 bool DiskBasicTypeFM::CheckFat()
 {
-	bool valid = DiskBasicType::CheckFat();
+	if (basic->GetFatEndGroup() == 0) {
+		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
+		// トラック０と管理トラック分を引く
+		end_group -= basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() * (basic->GetManagedTrackNumber() == 0 ? 1 : 2);
+		end_group /= basic->GetSectorsPerGroup();
+		basic->SetFatEndGroup(end_group - 1);
+	}
 
+	bool valid = DiskBasicType::CheckFat();
 	if (valid) {
 		// IDのチェック
 		wxUint8 id = basic->GetIDString()[0];

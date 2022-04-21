@@ -41,6 +41,7 @@
     <ClCompile Include="..\src\basiccommon.cpp" />
     <ClCompile Include="..\src\basicdir.cpp" />
     <ClCompile Include="..\src\basicdiritem.cpp" />
+    <ClCompile Include="..\src\basicdiritem_cdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_cpm.cpp" />
     <ClCompile Include="..\src\basicdiritem_fat8.cpp" />
     <ClCompile Include="..\src\basicdiritem_flex.cpp" />
@@ -61,6 +62,7 @@
     <ClCompile Include="..\src\basicparambox.cpp" />
     <ClCompile Include="..\src\basicselbox.cpp" />
     <ClCompile Include="..\src\basictype.cpp" />
+    <ClCompile Include="..\src\basictype_cdos.cpp" />
     <ClCompile Include="..\src\basictype_cpm.cpp" />
     <ClCompile Include="..\src\basictype_fat12.cpp" />
     <ClCompile Include="..\src\basictype_fat8.cpp" />
@@ -117,6 +119,7 @@
     <ClInclude Include="..\src\basiccommon.h" />
     <ClInclude Include="..\src\basicdir.h" />
     <ClInclude Include="..\src\basicdiritem.h" />
+    <ClInclude Include="..\src\basicdiritem_cdos.h" />
     <ClInclude Include="..\src\basicdiritem_cpm.h" />
     <ClInclude Include="..\src\basicdiritem_fat8.h" />
     <ClInclude Include="..\src\basicdiritem_flex.h" />
@@ -137,6 +140,7 @@
     <ClInclude Include="..\src\basicparambox.h" />
     <ClInclude Include="..\src\basicselbox.h" />
     <ClInclude Include="..\src\basictype.h" />
+    <ClInclude Include="..\src\basictype_cdos.h" />
     <ClInclude Include="..\src\basictype_cpm.h" />
     <ClInclude Include="..\src\basictype_fat12.h" />
     <ClInclude Include="..\src\basictype_fat8.h" />

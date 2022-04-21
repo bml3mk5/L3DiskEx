@@ -924,7 +924,8 @@ bool L3DiskList::FormatDisk()
 		// ディスクを初期化
 		DiskBasicIdentifiedData data(
 			dlg.GetVolumeName(),
-			dlg.GetVolumeNumber()
+			dlg.GetVolumeNumber(),
+			dlg.GetVolumeDate()
 		);
 
 		selected_disk->Initialize(current_basic->GetSelectedSide());

@@ -44,6 +44,7 @@
 #include "res/foldericon_close.xpm"
 #include "res/fileicon_normal.xpm"
 #include "res/fileicon_delete.xpm"
+#include "res/fileicon_hidden.xpm"
 #include "res/labelicon_normal.xpm"
 
 #define L3DISK_TRANS \
@@ -123,7 +124,9 @@ bool L3DiskApp::OnInit()
 		return false;
 	}
 
-	frame = new L3DiskFrame(GetAppName(), wxSize(1000, 600));
+	int w = mConfig.GetWindowWidth();
+	int h = mConfig.GetWindowHeight();
+	frame = new L3DiskFrame(GetAppName(), wxSize(w, h));
 	frame->Show(true);
 	SetTopWindow(frame);
 
@@ -368,6 +371,7 @@ wxBEGIN_EVENT_TABLE(L3DiskFrame, wxFrame)
 	EVT_MENU(IDM_RAWDISK_MODE, L3DiskFrame::OnRawDiskMode)
 	EVT_MENU_RANGE(IDM_CHAR_ASCII, IDM_CHAR_SJIS, L3DiskFrame::OnChangeCharCode)
 	EVT_MENU(IDM_TRIM_DATA, L3DiskFrame::OnTrimData)
+	EVT_MENU(IDM_SHOW_DELFILE, L3DiskFrame::OnShowDeletedFile)
 
 	EVT_MENU(IDM_WINDOW_BINDUMP, L3DiskFrame::OnOpenBinDump)
 	EVT_MENU(IDM_WINDOW_FATAREA, L3DiskFrame::OnOpenFatArea)
@@ -450,7 +454,10 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 		sm->AppendRadioItem( IDM_CHAR_SJIS, _("Shift JIS(&1)") );
 	menuMode->AppendSubMenu(sm, _("&Charactor Code") );
 	menuMode->AppendSeparator();
-	menuMode->AppendCheckItem( IDM_TRIM_DATA, _("&Trim Unused Data When Save") );
+		sm = new wxMenu();
+		sm->AppendCheckItem( IDM_TRIM_DATA, _("Trim unused data when save the disk image.") );
+		sm->AppendCheckItem( IDM_SHOW_DELFILE, _("Show deleted and hidden files on the file list.") );
+	menuMode->AppendSubMenu(sm, _("Quick &Settings") );
 	// window menu
 	menuWindow->AppendCheckItem( IDM_WINDOW_BINDUMP, _("&Dump Window") );
 	menuWindow->AppendCheckItem( IDM_WINDOW_FATAREA, _("&Availability Window") );
@@ -481,6 +488,10 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 
 L3DiskFrame::~L3DiskFrame()
 {
+	// フレーム
+	wxSize sz = GetSize();
+	ini->SetWindowWidth(sz.GetWidth());
+	ini->SetWindowHeight(sz.GetHeight());
 }
 
 /// フレーム部の初期処理
@@ -785,6 +796,14 @@ void L3DiskFrame::OnTrimData(wxCommandEvent& event)
 	ini->TrimUnusedData(event.IsChecked());
 }
 
+/// 削除ファイルを表示するか
+void L3DiskFrame::OnShowDeletedFile(wxCommandEvent& event)
+{
+	ini->ShowDeletedFile(event.IsChecked());
+	// ファイルリストを更新
+	SetFileListData();
+}
+
 /// ダンプウィンドウ選択
 void L3DiskFrame::OnOpenBinDump(wxCommandEvent& event)
 {
@@ -859,6 +878,7 @@ void L3DiskFrame::UpdateMenuMode()
 	wxMenuItem *mitem = menuMode->FindItem(IDM_CHAR_ASCII + ini->GetCharCode());
 	if (mitem) mitem->Check(true);
 	menuMode->Check(IDM_TRIM_DATA, ini->IsTrimUnusedData());
+	menuMode->Check(IDM_SHOW_DELFILE, ini->IsShownDeletedFile());
 }
 
 /// 最近使用したファイル一覧を更新
@@ -947,7 +967,7 @@ void L3DiskFrame::UpdateMenuFileList(L3DiskFileList *list)
 
 	menuDisk->Enable(IDM_MAKE_DIRECTORY_ON_DISK, opened && list->CanMakeDirectory());
 
-	opened = (opened && list->IsFormattedBasicDisk());
+	opened = (opened && list->IsAssignedBasicDisk());
 	menuDisk->Enable(IDM_IMPORT_DISK, opened /* && list->IsWritableBasicFile() */);
 
 	int	cnt = list->GetListSelectedItemCount();

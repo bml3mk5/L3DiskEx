@@ -96,9 +96,9 @@ protected:
 	bool 			Check(bool &last);
 
 	/// ファイル名を格納する位置を返す
-	virtual wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
-	/// ファイル名を格納するバッファサイズを返す
-	virtual int		GetFileNameSize(bool *invert = NULL) const;
+	virtual wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	virtual int		GetFileNameSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	virtual int		GetFileType1() const;
 	/// 属性２を返す

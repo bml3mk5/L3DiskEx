@@ -56,6 +56,12 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 /// @return false エラーあり
 bool DiskBasicTypeN88::CheckFat()
 {
+	if (basic->GetFatEndGroup() == 0) {
+		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
+		end_group /= basic->GetSectorsPerGroup();
+		basic->SetFatEndGroup(end_group - 1);
+	}
+
 	bool valid = DiskBasicTypeFAT8::CheckFat();
 	if (valid) {
 		// FAT,ディレクトリエリアはシステム予約となっているか

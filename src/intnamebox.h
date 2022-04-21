@@ -96,7 +96,7 @@ public:
 
 	int ShowModal();
 
-	void SetValuesToDirItem();
+//	void SetValuesToDirItem();
 	//@}
 
 	/// @name event procedures
@@ -121,6 +121,7 @@ public:
 	void GetInternalName(DiskBasicFileName &name) const;
 
 	int GetStartAddress() const;
+	int GetEndAddress() const;
 	int GetExecuteAddress() const;
 
 	void GetDateTime(struct tm *tm) const;
@@ -147,6 +148,10 @@ public:
 
 	wxDECLARE_EVENT_TABLE();
 };
+
+//
+//
+//
 
 /// 内部ファイル名バリデータ
 class IntNameValidator : public wxValidator

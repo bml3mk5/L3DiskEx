@@ -143,7 +143,7 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 //			szrH = new wxBoxSizer(wxHORIZONTAL);
 
 			szrG->Add(new wxStaticText(this, wxID_ANY, _("End Address") + _("(Hex)")), stflags);
-			txtEndAddr = new wxTextCtrl(this, IDC_TEXT_END_ADDR, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
+			txtEndAddr = new wxTextCtrl(this, IDC_TEXT_END_ADDR, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, validate);
 			txtEndAddr->SetMaxLength(4);
 			szrG->Add(txtEndAddr, flags);
 //			szrAll->Add(szrG,  wxSizerFlags().Expand());
@@ -293,10 +293,16 @@ void IntNameBox::ChangedType1()
 void IntNameBox::OnChangeStartAddr(wxCommandEvent& event)
 {
 	if (txtEndAddr && item) {
-		long start_addr = 0;
-		txtStartAddr->GetValue().ToLong(&start_addr, 16);
-		int end_addr = ((int)start_addr + file_size - 1) & 0xffff;
+		int end_addr = item->GetEndAddress();
+		bool enable = (end_addr >= 0);
+		if (!enable) {
+			// 終了アドレスは開始アドレスとサイズから計算する
+			long start_addr = 0;
+			txtStartAddr->GetValue().ToLong(&start_addr, 16);
+			end_addr = ((int)start_addr + file_size - (file_size > 0 ? 1 : 0));
+		}
 		txtEndAddr->SetValue(wxString::Format(wxT("%x"), end_addr));
+		txtEndAddr->SetEditable(enable);
 	}
 }
 
@@ -337,6 +343,7 @@ void IntNameBox::OnListItemSelected(wxListEvent& event)
 	}
 }
 
+#if 0
 /// ダイアログで指定した値をディレクトリアイテムに設定する
 void IntNameBox::SetValuesToDirItem()
 {
@@ -353,6 +360,7 @@ void IntNameBox::SetValuesToDirItem()
 		item->SetFileDateTime(&tm);
 	}
 }
+#endif
 
 /// ディレクトリアイテムを設定
 void IntNameBox::SetDiskBasicDirItem(DiskBasicDirItem *item)
@@ -400,6 +408,21 @@ int IntNameBox::GetStartAddress() const
 	int val = -1;
 	if (txtStartAddr) {
 		wxString sval = txtStartAddr->GetValue();
+		long lval = 0;
+		if (sval.ToLong(&lval, 16)) {
+			val = (int)lval;
+		}
+	}
+	return val;
+}
+
+/// 終了アドレスを返す
+/// @return -1 エラーあり
+int IntNameBox::GetEndAddress() const
+{
+	int val = -1;
+	if (txtEndAddr) {
+		wxString sval = txtEndAddr->GetValue();
 		long lval = 0;
 		if (sval.ToLong(&lval, 16)) {
 			val = (int)lval;
@@ -545,7 +568,7 @@ void IntNameBox::SetGroups(long val, DiskBasicGroups &vals)
 }
 
 //
-//
+// 内部ファイル名バリデータ
 //
 // Attach Events
 wxBEGIN_EVENT_TABLE(IntNameValidator, wxValidator)
@@ -724,15 +747,17 @@ bool DateTimeValidator::Validate(wxWindow *parent)
     if (!text) return false;
     wxString val(text->GetValue());
 	wxString errormsg;
-	wxRegEx re("^([0-9]+)[/:.-]([0-9]+)[/:.-]([0-9]+)$");
-	wxRegEx re2("^([0-9]+)[/:.]([0-9]+)$");
+	struct tm tm;
+	bool valid = true;
 	if (!val.IsEmpty()) {
-		if (!re.Matches(val)) {
-			if (is_time) {
-				if (!re2.Matches(val)) {
-					errormsg = _("Invalid format is contained in date or time.");
-				}
-			} else {
+		if (is_time) {
+			valid = Utils::ConvTimeStrToTm(val, &tm);
+			if (!valid) {
+				errormsg = _("Invalid format is contained in date or time.");
+			}
+		} else {
+			valid = Utils::ConvDateStrToTm(val, &tm);
+			if (!valid) {
 				errormsg = _("Invalid format is contained in date or time.");
 			}
 		}
@@ -741,7 +766,7 @@ bool DateTimeValidator::Validate(wxWindow *parent)
 		m_validatorWindow->SetFocus();
 		wxMessageBox(errormsg, _("Validation conflict"),
 						wxOK | wxICON_WARNING, parent);
-
+		// エラーにしない
 //		return false;
 	}
 	return true;

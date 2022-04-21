@@ -15,10 +15,11 @@
 extern const char *gTypeNameX1HU_1[];
 enum en_type_name_x1hu_1 {
 	TYPE_NAME_X1HU_BINARY = 0,
-	TYPE_NAME_X1HU_BASIC = 1,
-	TYPE_NAME_X1HU_ASCII = 2,
-	TYPE_NAME_X1HU_DIRECTORY = 3,
-	TYPE_NAME_X1HU_RANDOM = 4,
+	TYPE_NAME_X1HU_BASIC,
+	TYPE_NAME_X1HU_ASCII,
+	TYPE_NAME_X1HU_DIRECTORY,
+	TYPE_NAME_X1HU_RANDOM,
+	TYPE_NAME_X1HU_END
 };
 enum en_file_type_mask_x1hu {
 	FILETYPE_X1HU_BINARY = 0x01,
@@ -56,13 +57,13 @@ private:
 	DiskBasicDirItemX1HU(const DiskBasicDirItemX1HU &src) : DiskBasicDirItem(src) {}
 
 	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
+	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
 	/// 拡張子を格納する位置を返す
 	wxUint8 *GetFileExtPos(size_t &len) const;
-	/// ファイル名を格納するバッファサイズを返す
-	int		GetFileNameSize(bool *invert = NULL) const; 
-	/// 拡張子を格納するバッファサイズを返す
-	int		GetFileExtSize(bool *invert = NULL) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	int		GetFileNameSize(bool *invert = NULL) const; 
+//	/// 拡張子を格納するバッファサイズを返す
+//	int		GetFileExtSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	int		GetFileType1() const;
 	/// 属性２を返す
@@ -74,6 +75,10 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// 属性を変換
+	int		ConvToNativeType(int file_type, int val) const;
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int		ConvFileType1Pos(int native_type) const;
 	/// 属性からリストの位置を返す(プロパティダイアログ用)
 	int		GetFileType1Pos() const;
 	/// 属性からリストの位置を返す(プロパティダイアログ用)

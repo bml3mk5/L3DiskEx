@@ -24,39 +24,14 @@ DiskBasicTypeFAT8::DiskBasicTypeFAT8(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 void DiskBasicTypeFAT8::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
 	// 8bit FAT
-	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
-	for(size_t j=0; j<bufs->Count(); j++) {
-		DiskBasicFatBuffers *fatbufs = &bufs->Item(j);
-		for(size_t i=0; i<fatbufs->Count(); i++) {
-			DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-			if (num < (wxUint32)fatbuf->size) {
-				fatbuf->buffer[num] = val & 0xff;
-				break;
-			}
-			num -= fatbuf->size;
-		}
-	}
+	fat->GetDiskBasicFatArea()->SetData8(num, val);
 }
 /// FAT位置を返す
 /// @param [in] num グループ番号(0...)
 wxUint32 DiskBasicTypeFAT8::GetGroupNumber(wxUint32 num) const
 {
 	// 8bit FAT
-	wxUint32 new_num = 0;
-	DiskBasicFatBuffers *fatbufs = fat->GetDiskBasicFatBuffers(0);
-	if (!fatbufs) {
-		return INVALID_GROUP_NUMBER;
-	}
-	new_num = num;
-	for(size_t i=0; i<fatbufs->Count(); i++) {
-		DiskBasicFatBuffer *fatbuf = &fatbufs->Item(i);
-		if (num < (wxUint32)fatbuf->size) {
-			new_num = fatbuf->buffer[num];
-			break;
-		}
-		num -= fatbuf->size;
-	}
-	return new_num;
+	return fat->GetDiskBasicFatArea()->GetData8(0, num);
 }
 
 /// セクタデータを指定コードで埋める

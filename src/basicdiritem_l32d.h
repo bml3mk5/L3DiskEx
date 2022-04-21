@@ -19,13 +19,13 @@ private:
 	DiskBasicDirItemL32D(const DiskBasicDirItemL32D &src) : DiskBasicDirItemFAT8(src) {}
 
 	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
+	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
 	/// 拡張子を格納する位置を返す
 	wxUint8 *GetFileExtPos(size_t &len) const;
-	/// ファイル名を格納するバッファサイズを返す
-	int		GetFileNameSize(bool *invert = NULL) const;
-	/// 拡張子を格納するバッファサイズを返す
-	int		GetFileExtSize(bool *invert = NULL) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	int		GetFileNameSize(bool *invert = NULL) const;
+//	/// 拡張子を格納するバッファサイズを返す
+//	int		GetFileExtSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	int		GetFileType1() const;
 	/// 属性２を返す

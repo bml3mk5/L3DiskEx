@@ -344,7 +344,7 @@ void CharCodes::ConvToString(const wxUint8 *src, size_t len, wxString &dst)
 {
 //	cache = maps[0];
 	for(size_t i=0; i<len; ) {
-		if (*src == 0) break;
+//		if (*src == 0) break;
 		size_t l = cache->FindString(src, i + 1 == len ? 1 : 2, dst);
 		i += l;
 		src += l;

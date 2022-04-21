@@ -55,10 +55,10 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int num, int track, i
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemN88::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemN88::GetFileNamePos(size_t &size, size_t &len) const
 {
 	// N88
-	len = sizeof(data->n88.name);
+	size = len = sizeof(data->n88.name);
 	return data->n88.name;
 }
 
@@ -69,6 +69,7 @@ wxUint8 *DiskBasicDirItemN88::GetFileExtPos(size_t &len) const
 	return data->n88.ext;
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemN88::GetFileNameSize(bool *invert) const
 {
@@ -80,6 +81,7 @@ int DiskBasicDirItemN88::GetFileExtSize(bool *invert) const
 {
 	return (int)sizeof(data->n88.ext);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemN88::GetFileType1() const
@@ -147,29 +149,29 @@ void DiskBasicDirItemN88::SetFileAttr(const DiskBasicFileType &file_type)
 
 DiskBasicFileType DiskBasicDirItemN88::GetFileAttr() const
 {
-	int t = GetFileType1();
+	int t1 = GetFileType1();
 	int val = 0;
-	if ((t & FILETYPE_N88_MACHINE) != 0) {
+	if ((t1 & FILETYPE_N88_MACHINE) != 0) {
 		val = FILE_TYPE_MACHINE_MASK;		// machine
 		val |= FILE_TYPE_BINARY_MASK;		// binary
 	} else {
 		val = FILE_TYPE_BASIC_MASK;			// basic
-		if (t & FILETYPE_N88_BINARY) {
+		if (t1 & FILETYPE_N88_BINARY) {
 			val |= FILE_TYPE_BINARY_MASK;	// binary
 		} else {
 			val |= FILE_TYPE_ASCII_MASK;	// ascii
 		}
 	}
-	if (t & DATATYPE_MASK_N88_READ_ONLY) {
+	if (t1 & DATATYPE_MASK_N88_READ_ONLY) {
 		val |= FILE_TYPE_READONLY_MASK;
 	}
-	if (t & DATATYPE_MASK_N88_ENCRYPTED) {
+	if (t1 & DATATYPE_MASK_N88_ENCRYPTED) {
 		val |= FILE_TYPE_ENCRYPTED_MASK;
 	}
-	if (t & DATATYPE_MASK_N88_READ_WRITE) {
+	if (t1 & DATATYPE_MASK_N88_READ_WRITE) {
 		val |= FILE_TYPE_READWRITE_MASK;
 	}
-	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, t1);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)

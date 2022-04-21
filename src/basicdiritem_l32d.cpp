@@ -61,10 +61,10 @@ wxString DiskBasicDirItemL32D::GetDefaultInvalidateChars() const
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemL32D::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemL32D::GetFileNamePos(size_t &size, size_t &len) const
 {
 	// L3 2D
-	len = sizeof(data->l3_2d.name);
+	size = len = sizeof(data->l3_2d.name);
 	return data->l3_2d.name;
 }
 
@@ -75,6 +75,7 @@ wxUint8 *DiskBasicDirItemL32D::GetFileExtPos(size_t &len) const
 	return data->l3_2d.ext;
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemL32D::GetFileNameSize(bool *invert) const
 {
@@ -86,6 +87,7 @@ int DiskBasicDirItemL32D::GetFileExtSize(bool *invert) const
 {
 	return (int)sizeof(data->l3_2d.ext);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemL32D::GetFileType1() const
@@ -176,8 +178,9 @@ void DiskBasicDirItemL32D::ConvertToFileNameStr(wxString &filename) const
 wxString DiskBasicDirItemL32D::RemakeFileName(const wxUint8 *src, size_t srclen) const
 {
 	wxString dst;
+	srclen = str_length(src, srclen, 0);
 	basic->ConvCharsToString(src, srclen, dst);
-	dst.Trim(true);
+//	dst.Trim(true);
 
 	// 拡張子がないとき
 	if (dst.Find('.', true) == wxNOT_FOUND) {

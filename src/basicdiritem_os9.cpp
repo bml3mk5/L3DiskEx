@@ -203,17 +203,19 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int num, int track, i
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemOS9::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemOS9::GetFileNamePos(size_t &size, size_t &len) const
 {
-	len = sizeof(data->os9.DE_NAM);
+	size = len = sizeof(data->os9.DE_NAM);
 	return data->os9.DE_NAM; 
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemOS9::GetFileNameSize(bool *invert) const
 {
 	return (int)sizeof(data->os9.DE_NAM);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemOS9::GetFileType1() const
@@ -234,10 +236,10 @@ bool DiskBasicDirItemOS9::CheckUsed(bool unuse)
 }
 
 /// ファイル名を設定
-void DiskBasicDirItemOS9::SetFileName(const wxUint8 *filename, int length)
+void DiskBasicDirItemOS9::SetFileName(const wxUint8 *filename, size_t length)
 {
-	size_t l;
-	wxUint8 *n = GetFileNamePos(l);
+	size_t s, l;
+	wxUint8 *n = GetFileNamePos(s, l);
 	EncodeString(n, l, (const char *)filename, length);
 }
 

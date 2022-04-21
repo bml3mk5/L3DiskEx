@@ -40,13 +40,13 @@ protected:
 	DiskBasicDirItemMSDOS(const DiskBasicDirItemMSDOS &src) : DiskBasicDirItem(src) {}
 
 	/// ファイル名を格納する位置を返す
-	virtual wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
+	virtual wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
 	/// 拡張子を格納する位置を返す
 	virtual wxUint8 *GetFileExtPos(size_t &len) const;
-	/// ファイル名を格納するバッファサイズを返す
-	virtual int 	GetFileNameSize(bool *invert = NULL) const;
-	/// 拡張子を格納するバッファサイズを返す
-	virtual int 	GetFileExtSize(bool *invert = NULL) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	virtual int 	GetFileNameSize(bool *invert = NULL) const;
+//	/// 拡張子を格納するバッファサイズを返す
+//	virtual int 	GetFileExtSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	virtual int		GetFileType1() const;
 	/// 属性１のセット
@@ -54,7 +54,7 @@ protected:
 	/// 使用しているアイテムか
 	virtual bool	CheckUsed(bool unuse);
 	/// ファイル名を設定
-	virtual void	SetFileName(const wxUint8 *filename, int length);
+	virtual void	SetFileName(const wxUint8 *filename, size_t length);
 	/// ファイル名と拡張子を得る
 	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 

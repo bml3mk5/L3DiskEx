@@ -210,6 +210,11 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	txtVolNum = new wxTextCtrl(this, IDC_TEXT_VOLNUM, wxString::Format(wxT("%d"), idata.GetVolumeNumber()));
 	szrAll->Add(txtVolNum, flags);
 
+	lblVolDate = new wxStaticText(this, wxID_ANY, _("Volume Date"));
+	szrAll->Add(lblVolDate, flags);
+	txtVolDate = new wxTextCtrl(this, IDC_TEXT_VOLDATE, idata.GetVolumeDate());
+	szrAll->Add(txtVolDate, flags);
+
 	const DiskBasicFormat *fmt = basic->GetFormatType();
 	bool enable = fmt->HasVolumeName();
 	lblVolName->Enable(enable);
@@ -217,6 +222,9 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	enable = fmt->HasVolumeNumber();
 	lblVolNum->Enable(enable);
 	txtVolNum->Enable(enable);
+	enable = fmt->HasVolumeDate();
+	lblVolDate->Enable(enable);
+	txtVolDate->Enable(enable);
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
@@ -225,6 +233,7 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 
 	txtVolName->SetInsertionPoint(0);
 	txtVolNum->SetInsertionPoint(0);
+	txtVolDate->SetInsertionPoint(0);
 }
 
 int BasicParamBox::ShowModal()
@@ -254,7 +263,8 @@ void BasicParamBox::CommitData()
 
 	DiskBasicIdentifiedData data(
 		GetVolumeName(),
-		GetVolumeNumber()
+		GetVolumeNumber(),
+		GetVolumeDate()
 	);
 	type->SetIdentifiedData(data);
 }
@@ -288,4 +298,10 @@ wxString BasicParamBox::GetVolumeName() const
 int BasicParamBox::GetVolumeNumber() const
 {
 	return Utils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
+}
+
+/// ボリューム日付を返す
+wxString BasicParamBox::GetVolumeDate() const
+{
+	return txtVolDate ? txtVolDate->GetValue() : wxT("");
 }

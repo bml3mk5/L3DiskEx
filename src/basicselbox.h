@@ -31,6 +31,8 @@ private:
 	wxTextCtrl *txtVolName;
 	wxStaticText *lblVolNum;
 	wxTextCtrl *txtVolNum;
+	wxStaticText *lblVolDate;
+	wxTextCtrl *txtVolDate;
 
 	DiskBasicParamPtrs params;
 
@@ -43,6 +45,7 @@ public:
 		IDC_LIST_BASIC = 1,
 		IDC_TEXT_VOLNAME,
 		IDC_TEXT_VOLNUM,
+		IDC_TEXT_VOLDATE,
 	};
 
 	enum en_show_flags {
@@ -65,6 +68,7 @@ public:
 	const DiskBasicParam *GetBasicParam() const;
 	wxString GetVolumeName() const;
 	int GetVolumeNumber() const;
+	wxString GetVolumeDate() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

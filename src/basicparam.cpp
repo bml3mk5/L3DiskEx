@@ -16,12 +16,16 @@ DiskBasicTemplates gDiskBasicTemplates;
 //
 //
 //
-SpecialAttribute::SpecialAttribute(int n_idx, int n_type, int n_value, int n_mask)
+SpecialAttribute::SpecialAttribute(int n_idx, int n_type, int n_value, int n_mask, const wxString &n_name, const wxString &n_desc)
 {
 	idx = n_idx;
 	type = n_type;
 	value = n_value;
 	mask = n_mask;
+	name = n_name;
+	desc = n_desc;
+
+	if (name.IsEmpty()) name = wxT("???");
 }
 
 #include <wx/arrimpl.cpp>
@@ -94,18 +98,63 @@ int SpecialAttributes::GetValueByIndex(int idx) const
 //
 DiskBasicFormat::DiskBasicFormat()
 {
-	type_number = FORMAT_TYPE_NONE;
-	has_volume_name = false;
-	has_volume_number = false;
+	type_number			 = FORMAT_TYPE_NONE;
+	has_volume_name		 = false;
+	has_volume_number	 = false;
+	has_volume_date		 = false;
+	sectors_per_group	 = 0;
+	group_final_code	 = 0;
+	group_system_code	 = 0;
+	group_unused_code	 = 0;
+	dir_terminate_code	 = 0x20;
+	dir_space_code		 = 0x20;
+	dir_start_pos		 = 0;
+	dir_start_pos_on_root = 0;
+	dir_start_pos_on_sec = 0;
+	fillcode_on_format	 = 0;
+	fillcode_on_fat		 = 0;
+	fillcode_on_dir		 = 0;
+	delete_code			 = 0;
 }
+#if 0
 DiskBasicFormat::DiskBasicFormat(
 		int	 n_type_number,
 		bool n_has_volume_name,
-		bool n_has_volume_number
+		bool n_has_volume_number,
+		bool n_has_volume_date,
+		const SpecialAttributes &n_special_attrs
 ) {
 	type_number = (DiskBasicFormatType)n_type_number;
 	has_volume_name = n_has_volume_name;
 	has_volume_number = n_has_volume_number;
+	has_volume_date = n_has_volume_date;
+	special_attrs = n_special_attrs;
+}
+#endif
+/// 属性が一致するか
+const SpecialAttribute *DiskBasicFormat::FindSpecialAttr(int type, int value) const
+{
+	return special_attrs.Find(type, value);
+}
+/// 属性が一致するか
+const SpecialAttribute *DiskBasicFormat::FindSpecialAttr(int value) const
+{
+	return special_attrs.Find(value);
+}
+/// 特別な属性の位置
+int DiskBasicFormat::GetIndexByValueOfSpecialAttr(int value) const
+{
+	return special_attrs.GetIndexByValue(value);
+}
+/// 特別な属性の属性値を返す
+int DiskBasicFormat::GetTypeByValueOfSpecialAttr(int value) const
+{
+	return special_attrs.GetTypeByValue(value);
+}
+/// 特別な属性の属性値を返す
+int DiskBasicFormat::GetTypeByIndexOfSpecialAttr(int idx) const
+{
+	return special_attrs.GetTypeByIndex(idx);
 }
 
 #include <wx/arrimpl.cpp>
@@ -123,6 +172,7 @@ DiskBasicParam::DiskBasicParam(const DiskBasicParam &src)
 {
 	this->SetBasicParam(src);
 }
+#if 0
 DiskBasicParam::DiskBasicParam(
 	const wxString &	n_basic_type_name,
 	const wxString &	n_basic_category_name,
@@ -146,6 +196,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_dir_end_sector,
 	int					n_dir_entry_count,
 	int					n_subdir_group_size,
+	wxUint8				n_dir_terminate_code,
 	wxUint8				n_dir_space_code,
 	int					n_dir_start_pos,
 	int					n_dir_start_pos_on_root,
@@ -164,6 +215,7 @@ DiskBasicParam::DiskBasicParam(
 	const wxString &	n_invalidate_chars,
 	bool				n_data_inverted,
 	bool				n_side_reversed,
+	bool				n_big_endian,
 	bool				n_mount_each_sides,
 	const wxString &	n_basic_description
 ) {
@@ -189,6 +241,7 @@ DiskBasicParam::DiskBasicParam(
 	dir_end_sector = n_dir_end_sector;
 	dir_entry_count = n_dir_entry_count;
 	subdir_group_size = n_subdir_group_size;
+	dir_terminate_code = n_dir_terminate_code;
 	dir_space_code = n_dir_space_code;
 	dir_start_pos = n_dir_start_pos;
 	dir_start_pos_on_root = n_dir_start_pos_on_root;
@@ -207,9 +260,11 @@ DiskBasicParam::DiskBasicParam(
 	invalidate_chars = n_invalidate_chars;
 	data_inverted = n_data_inverted;
 	side_reversed = n_side_reversed;
+	big_endian = n_big_endian;
 	mount_each_sides = n_mount_each_sides;
 	basic_description = n_basic_description;
 }
+#endif
 void DiskBasicParam::ClearBasicParam()
 {
 	basic_type_name.Empty();
@@ -221,7 +276,7 @@ void DiskBasicParam::ClearBasicParam()
 	tracks_on_basic		 = -1;
 	managed_track_number = 0;
 	reserved_sectors	 = 0;
-	number_of_fats		 = 0;
+	number_of_fats		 = 1;
 	sectors_per_fat		 = 0;
 	fat_start_pos		 = 0;
 	fat_end_group		 = 0;
@@ -230,10 +285,11 @@ void DiskBasicParam::ClearBasicParam()
 	group_final_code	 = 0;
 	group_system_code	 = 0;
 	group_unused_code	 = 0;
-	dir_start_sector	 = 0;
-	dir_end_sector		 = 0;
-	dir_entry_count		 = 0;
-	subdir_group_size	 = 0;
+	dir_start_sector	 = -1;
+	dir_end_sector		 = -1;
+	dir_entry_count		 = -1;
+	subdir_group_size	 = 1;
+	dir_terminate_code	 = 0x20;
 	dir_space_code		 = 0x20;
 	dir_start_pos		 = 0;
 	dir_start_pos_on_root = 0;
@@ -244,14 +300,15 @@ void DiskBasicParam::ClearBasicParam()
 	ipl_string.Empty();
 	volume_string.Empty();
 	special_attrs.Empty();
-	fillcode_on_format	 = 0x40;
-	fillcode_on_fat		 = 0xff;
-	fillcode_on_dir		 = 0xff;
-	delete_code			 = 0x00;
+	fillcode_on_format	 = 0;
+	fillcode_on_fat		 = 0;
+	fillcode_on_dir		 = 0;
+	delete_code			 = 0;
 	media_id			 = 0x00;
 	invalidate_chars.Empty();
 	data_inverted		 = false;
 	side_reversed		 = false;
+	big_endian			 = false;
 	mount_each_sides	 = false;
 	basic_description.Empty();
 }
@@ -279,6 +336,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	dir_end_sector = src.dir_end_sector;
 	dir_entry_count = src.dir_entry_count;
 	subdir_group_size = src.subdir_group_size;
+	dir_terminate_code = src.dir_terminate_code;
 	dir_space_code = src.dir_space_code;
 	dir_start_pos = src.dir_start_pos;
 	dir_start_pos_on_root = src.dir_start_pos_on_root;
@@ -297,6 +355,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	invalidate_chars = src.invalidate_chars;
 	data_inverted = src.data_inverted;
 	side_reversed = src.side_reversed;
+	big_endian = src.big_endian;
 	mount_each_sides = src.mount_each_sides;
 	basic_description = src.basic_description;
 }
@@ -403,16 +462,21 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 	if (doc.GetRoot()->GetName() != "DiskBasics") return false;
 
 	bool valid = true;
-	wxXmlNode *item = doc.GetRoot()->GetChildren();
+	wxXmlNode *item;
+	item = doc.GetRoot()->GetChildren();
 	while (item && valid) {
-		if (item->GetName() == "DiskBasicTypes") {
-			valid = LoadTypes(item, locale_name, errmsgs);
-		}
-		else if (item->GetName() == "DiskBasicFormats") {
+		if (item->GetName() == "DiskBasicFormats") {
 			valid = LoadFormats(item, locale_name, errmsgs);
 		}
 		else if (item->GetName() == "DiskBasicCategories") {
 			valid = LoadCategories(item, locale_name, errmsgs);
+		}
+		item = item->GetNext();
+	}
+	item = doc.GetRoot()->GetChildren();
+	while (item && valid) {
+		if (item->GetName() == "DiskBasicTypes") {
+			valid = LoadTypes(item, locale_name, errmsgs);
 		}
 		item = item->GetNext();
 	}
@@ -426,18 +490,51 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 	wxXmlNode *item = node->GetChildren();
 	while(item && valid) {
 		if (item->GetName() == "DiskBasicType") {
-			wxString type_name = item->GetAttribute("name");
-			wxString type_category = item->GetAttribute("category");
+			DiskBasicParam p;
 
-			wxArrayInt reserved_groups;
+			wxString type_name = item->GetAttribute("name");
+			p.SetBasicTypeName(type_name);
+
+			wxString format_name = item->GetAttribute("type");
+			const DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)Utils::ToInt(format_name));
+			if (!format_name.IsEmpty() && format_type) {
+				p.SetFormatType(format_type);
+				p.SetSectorsPerGroup(format_type->GetSectorsPerGroup());
+				p.SetGroupFinalCode(format_type->GetGroupFinalCode());
+				p.SetGroupSystemCode(format_type->GetGroupSystemCode());
+				p.SetGroupUnusedCode(format_type->GetGroupUnusedCode());
+				p.SetDirTerminateCode(format_type->GetDirTerminateCode());
+				p.SetDirSpaceCode(format_type->GetDirSpaceCode());
+				p.SetDirStartPos(format_type->GetDirStartPos());
+				p.SetDirStartPosOnRoot(format_type->GetDirStartPosOnRoot());
+				p.SetDirStartPosOnSector(format_type->GetDirStartPosOnSector());
+				p.SetSpecialAttributes(format_type->GetSpecialAttributes());
+				p.SetFillCodeOnFormat(format_type->GetFillCodeOnFormat());
+				p.SetFillCodeOnFAT(format_type->GetFillCodeOnFAT());
+				p.SetFillCodeOnDir(format_type->GetFillCodeOnDir());
+				p.SetDeleteCode(format_type->GetDeleteCode());
+			} else {
+				// フォーマットタイプがない
+				errmsgs += wxT("\n");
+				errmsgs += _("Unknown format type in DiskBasicType : ");
+				errmsgs += type_name;
+				return false;
+			}
+
+			p.SetBasicCategoryName(item->GetAttribute("category"));
+
+			int reserved_sectors	 = -2;
+			int fat_start_sector	 = 0;
+
+			int sectors_per_fat		 = 0;
+			int fat_end_sector		 = 0;
+#if 0
 			int format_type_number	 = -1;
 			int sides_on_basic		 = 0;
 			int sectors_on_basic	 = -1;
 			int tracks_on_basic		 = -1;
 			int sectors_per_group	 = 0;
 			int managed_track_number = 0;
-			int fat_start_sector	 = 0;
-			int fat_end_sector		 = 0;
 			int fat_side_number		 = -1;
 			int fat_start_position	 = 0;
 			int fat_end_group		 = 0;
@@ -445,6 +542,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			int dir_end_sector		 = -1;
 			int dir_entry_count		 = -1;
 			int subdir_group_size	 = 1;
+			int dir_terminate_code	 = 0x20;
 			int dir_space_code		 = 0x20;
 			int dir_start_pos		 = 0;
 			int dir_start_pos_on_root = 0;
@@ -454,9 +552,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			int fill_code_on_fat	 = 0;
 			int fill_code_on_dir	 = 0;
 			int delete_code_on_dir	 = 0;
-			int reserved_sectors	 = -2;
 			int number_of_fats		 = 1;
-			int sectors_per_fat		 = 0;
 			int media_id			 = 0;
 			int group_final_code	 = 0;
 			int group_system_code	 = 0;
@@ -465,132 +561,108 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			wxString invalidate_chars;
 			bool data_inverted		 = false;
 			bool side_reversed		 = false;
+			bool big_endian			 = false;
 			bool mount_each_sides	 = false;
-			wxString desc, desc_locale;
 			wxString id_string;
 			wxString ipl_string;
 			wxString volume_string;
-			SpecialAttributes special_attrs;
+#endif
+			wxString desc, desc_locale;
 
 			wxXmlNode *itemnode = item->GetChildren();
 			while (itemnode) {
-				if (itemnode->GetName() == "FormatType") {
-					wxString str = itemnode->GetNodeContent();
-					format_type_number = Utils::ToInt(str);
-				} else if (itemnode->GetName() == "SectorsPerGroup") {
-					wxString str = itemnode->GetNodeContent();
-					sectors_per_group = Utils::ToInt(str);
+				wxString str = itemnode->GetNodeContent();
+//				if (itemnode->GetName() == "FormatType") {
+//					const DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)Utils::ToInt(str));
+//					p.SetFormatType(format_type);
+				if (itemnode->GetName() == "SectorsPerGroup") {
+					p.SetSectorsPerGroup(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SidesPerDisk") {
-					wxString str = itemnode->GetNodeContent();
-					sides_on_basic = Utils::ToInt(str);
+					p.SetSidesPerDiskOnBasic(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SectorsPerTrack") {
-					wxString str = itemnode->GetNodeContent();
-					sectors_on_basic = Utils::ToInt(str);
+					p.SetSectorsPerTrackOnBasic(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "TracksPerSide") {
-					wxString str = itemnode->GetNodeContent();
-					tracks_on_basic = Utils::ToInt(str);
+					p.SetTracksPerSideOnBasic(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "ManagedTrackNumber") {
-					wxString str = itemnode->GetNodeContent();
-					managed_track_number = Utils::ToInt(str);
+					p.SetManagedTrackNumber(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "ReservedSectors") {
-					wxString str = itemnode->GetNodeContent();
 					reserved_sectors = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "NumberOfFATs") {
-					wxString str = itemnode->GetNodeContent();
-					number_of_fats = Utils::ToInt(str);
+					p.SetNumberOfFats(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SectorsPerFAT") {
-					wxString str = itemnode->GetNodeContent();
 					sectors_per_fat = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATStartSector") {
-					wxString str = itemnode->GetNodeContent();
 					fat_start_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATEndSector") {
-					wxString str = itemnode->GetNodeContent();
 					fat_end_sector = Utils::ToInt(str);
 				} else if (itemnode->GetName() == "FATStartPosition") {
-					wxString str = itemnode->GetNodeContent();
-					fat_start_position = Utils::ToInt(str);
+					p.SetFatStartPos(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "FATEndGroup") {
-					wxString str = itemnode->GetNodeContent();
-					fat_end_group = Utils::ToInt(str);
+					p.SetFatEndGroup(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "FATSideNumber") {
-					wxString str = itemnode->GetNodeContent();
-					fat_side_number = Utils::ToInt(str);
+					p.SetFatSideNumber(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "ReservedGroups") {
+					wxArrayInt reserved_groups;
 					LoadReservedGroupsInTypes(itemnode, locale_name, errmsgs, reserved_groups);
+					p.SetReservedGroups(reserved_groups);
 				} else if (itemnode->GetName() == "GroupFinalCode") {
-					wxString str = itemnode->GetNodeContent();
-					group_final_code = Utils::ToInt(str);
+					p.SetGroupFinalCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "GroupSystemCode") {
-					wxString str = itemnode->GetNodeContent();
-					group_system_code = Utils::ToInt(str);
+					p.SetGroupSystemCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "GroupUnusedCode") {
-					wxString str = itemnode->GetNodeContent();
-					group_unused_code = Utils::ToInt(str);
+					p.SetGroupUnusedCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirStartSector") {
-					wxString str = itemnode->GetNodeContent();
-					dir_start_sector = Utils::ToInt(str);
+					p.SetDirStartSector(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirEndSector") {
-					wxString str = itemnode->GetNodeContent();
-					dir_end_sector = Utils::ToInt(str);
+					p.SetDirEndSector(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirEntryCount") {
-					wxString str = itemnode->GetNodeContent();
-					dir_entry_count = Utils::ToInt(str);
+					p.SetDirEntryCount(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirTerminateCode") {
+					p.SetDirTerminateCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirSpaceCode") {
-					wxString str = itemnode->GetNodeContent();
-					dir_space_code = Utils::ToInt(str);
+					p.SetDirSpaceCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirStartPosition") {
-					wxString str = itemnode->GetNodeContent();
-					dir_start_pos = Utils::ToInt(str);
+					p.SetDirStartPos(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirStartPositionOnRoot") {
-					wxString str = itemnode->GetNodeContent();
-					dir_start_pos_on_root = Utils::ToInt(str);
+					p.SetDirStartPosOnRoot(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
-					wxString str = itemnode->GetNodeContent();
-					dir_start_pos_on_sec = Utils::ToInt(str);
+					p.SetDirStartPosOnSector(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "GroupsPerDirEntry") {
-					wxString str = itemnode->GetNodeContent();
-					groups_per_dir_entry = Utils::ToInt(str);
+					p.SetGroupsPerDirEntry(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SubDirGroupSize") {
-					wxString str = itemnode->GetNodeContent();
-					subdir_group_size = Utils::ToInt(str);
+					p.SetSubDirGroupSize(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "FillCodeOnFormat") {
-					wxString str = itemnode->GetNodeContent();
-					fill_code_on_format = Utils::ToInt(str);
+					p.SetFillCodeOnFormat(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "FillCodeOnFAT") {
-					wxString str = itemnode->GetNodeContent();
-					fill_code_on_fat = Utils::ToInt(str);
+					p.SetFillCodeOnFAT(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "FillCodeOnDir") {
-					wxString str = itemnode->GetNodeContent();
-					fill_code_on_dir = Utils::ToInt(str);
+					p.SetFillCodeOnDir(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "DeleteCodeOnDir") {
-					wxString str = itemnode->GetNodeContent();
-					delete_code_on_dir = Utils::ToInt(str);
+					p.SetDeleteCode(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "MediaID") {
-					wxString str = itemnode->GetNodeContent();
-					media_id = Utils::ToInt(str);
+					p.SetMediaId(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "InvalidateChars") {
-					invalidate_chars = Utils::Escape(itemnode->GetNodeContent());
+					p.SetInvalidateChars(Utils::Escape(str));
 				} else if (itemnode->GetName() == "DataInverted") {
-					wxString str = itemnode->GetNodeContent();
-					data_inverted = Utils::ToBool(str);
+					p.DataInverted(Utils::ToBool(str));
 				} else if (itemnode->GetName() == "SideReversed") {
-					wxString str = itemnode->GetNodeContent();
-					side_reversed = Utils::ToBool(str);
+					p.SideReversed(Utils::ToBool(str));
+				} else if (itemnode->GetName() == "Endian") {
+					p.BigEndian(str.Upper() == "BIG");
 				} else if (itemnode->GetName() == "CanMountEachSides") {
-					wxString str = itemnode->GetNodeContent();
-					mount_each_sides = Utils::ToBool(str);
+					p.MountEachSides(Utils::ToBool(str));
 				} else if (itemnode->GetName() == "IDSectorPosition") {
-					wxString str = itemnode->GetNodeContent();
-					id_sector_pos = Utils::ToInt(str);
+					p.SetIDSectorPos(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "IDString") {
-					id_string = Utils::Escape(itemnode->GetNodeContent());
+					p.SetIDString(Utils::Escape(str));
 				} else if (itemnode->GetName() == "IPLString") {
-					ipl_string = Utils::Escape(itemnode->GetNodeContent());
+					p.SetIPLString(Utils::Escape(str));
 				} else if (itemnode->GetName() == "VolumeString") {
-					volume_string = Utils::Escape(itemnode->GetNodeContent());
+					p.SetVolumeString(Utils::Escape(str));
 				} else if (itemnode->GetName() == "SpecialAttributes") {
+					SpecialAttributes special_attrs;
 					LoadSpecialAttributesInTypes(itemnode, locale_name, errmsgs, special_attrs);
+					p.SetSpecialAttributes(special_attrs);
 				} else if (itemnode->GetName() == "Description") {
 					LoadDescription(itemnode, locale_name, desc, desc_locale);
 				}
@@ -599,13 +671,19 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 			if (fat_start_sector > 0 && reserved_sectors <= 0) {
 				reserved_sectors = fat_start_sector - 1;
 			}
+			p.SetReservedSectors(reserved_sectors);
+
 			if (fat_end_sector > 0 && sectors_per_fat <= 0) {
 				sectors_per_fat = fat_end_sector - fat_start_sector + 1;
 			}
+			p.SetSectorsPerFat(sectors_per_fat);
+
 			if (!desc_locale.IsEmpty()) {
 				desc = desc_locale;
 			}
-			const DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)format_type_number);
+			p.SetBasicDescription(desc);
+
+#if 0
 			DiskBasicParam p(
 				type_name,
 				type_category,
@@ -629,6 +707,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				dir_end_sector,
 				dir_entry_count,
 				subdir_group_size,
+				dir_terminate_code,
 				dir_space_code,
 				dir_start_pos,
 				dir_start_pos_on_root,
@@ -647,9 +726,11 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				invalidate_chars,
 				data_inverted,
 				side_reversed,
+				big_endian,
 				mount_each_sides,
 				desc
 			);
+#endif
 			if (FindType(wxEmptyString, type_name) == NULL) {
 				types.Add(p);
 			} else {
@@ -684,8 +765,10 @@ bool DiskBasicTemplates::LoadReservedGroupsInTypes(const wxXmlNode *node, const 
 	while(citemnode) {
 		if (citemnode->GetName() == "Group") {
 			wxString str = citemnode->GetNodeContent();
-			int reserved_group = Utils::ToInt(str);
-			reserved_groups.Add(reserved_group);
+			if (!str.IsEmpty()) {
+				int reserved_group = Utils::ToInt(str);
+				reserved_groups.Add(reserved_group);
+			}
 		}
 		citemnode = citemnode->GetNext();
 	}
@@ -702,6 +785,7 @@ static const struct st_special_attr_names {
 	{ "Binary",			FILE_TYPE_BINARY_MASK },
 	{ "Ascii",			FILE_TYPE_ASCII_MASK },
 	{ "Volume",			FILE_TYPE_VOLUME_MASK },
+	{ "System",			FILE_TYPE_SYSTEM_MASK },
 	{ NULL, 0 }
 };
 
@@ -723,11 +807,22 @@ bool DiskBasicTemplates::LoadSpecialAttributesInTypes(const wxXmlNode *node, con
 bool DiskBasicTemplates::LoadSpecialAttribute(const wxXmlNode *node, const wxString &locale_name, int type, SpecialAttributes &special_attrs)
 {
 	wxString desc, desc_locale;
+	wxString name = node->GetAttribute("name");
 	wxString sval = node->GetAttribute("value");
 	wxString smsk = node->GetAttribute("mask");
 	int val = Utils::ToInt(sval);
 	int msk = Utils::ToInt(smsk);
-	special_attrs.Add(SpecialAttribute((int)special_attrs.Count(), type, val, msk));
+	wxXmlNode *cnode = node->GetChildren();
+	while(cnode) {
+		if (cnode->GetName() == "Description") {
+			LoadDescription(cnode, locale_name, desc, desc_locale);
+		}
+		cnode = cnode->GetNext();
+	}
+	if (!desc_locale.IsEmpty()) {
+		desc = desc_locale;
+	}
+	special_attrs.Add(SpecialAttribute((int)special_attrs.Count(), type, val, msk, name, desc));
 	return true;
 }
 
@@ -738,29 +833,63 @@ bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &loca
 	wxXmlNode *item = node->GetChildren();
 	while(item && valid) {
 		if (item->GetName() == "DiskBasicFormat") {
+			DiskBasicFormat f;
+
 			wxString s_type_number = item->GetAttribute("type");
 			int type_number = Utils::ToInt(s_type_number);
-//			wxString name = item->GetAttribute("name");
-			wxString str;
-			bool has_volume_name = false;
-			bool has_volume_number = false;
+			f.SetTypeNumber((DiskBasicFormatType)type_number);
 
 			wxXmlNode *itemnode = item->GetChildren();
 			while (itemnode) {
+				wxString str = itemnode->GetNodeContent();
 				if (itemnode->GetName() == "HasVolumeName") {
-					str = itemnode->GetNodeContent();
-					has_volume_name = Utils::ToBool(str);
+					f.HasVolumeName(Utils::ToBool(str));
 				} else if (itemnode->GetName() == "HasVolumeNumber") {
-					str = itemnode->GetNodeContent();
-					has_volume_number = Utils::ToBool(str);
+					f.HasVolumeNumber(Utils::ToBool(str));
+				} else if (itemnode->GetName() == "HasVolumeDate") {
+					f.HasVolumeDate(Utils::ToBool(str));
+				} else if (itemnode->GetName() == "SectorsPerGroup") {
+					f.SetSectorsPerGroup(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "GroupFinalCode") {
+					f.SetGroupFinalCode(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "GroupSystemCode") {
+					f.SetGroupSystemCode(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "GroupUnusedCode") {
+					f.SetGroupUnusedCode(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirTerminateCode") {
+					f.SetDirTerminateCode(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirSpaceCode") {
+					f.SetDirSpaceCode(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirStartPosition") {
+					f.SetDirStartPos(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirStartPositionOnRoot") {
+					f.SetDirStartPosOnRoot(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DirStartPositionOnSector") {
+					f.SetDirStartPosOnSector(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "SpecialAttributes") {
+					SpecialAttributes special_attrs;
+					LoadSpecialAttributesInTypes(itemnode, locale_name, errmsgs, special_attrs);
+					f.SetSpecialAttributes(special_attrs);
+				} else if (itemnode->GetName() == "FillCodeOnFormat") {
+					f.SetFillCodeOnFormat(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "FillCodeOnFAT") {
+					f.SetFillCodeOnFAT(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "FillCodeOnDir") {
+					f.SetFillCodeOnDir(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "DeleteCodeOnDir") {
+					f.SetDeleteCode(Utils::ToInt(str));
 				}
 				itemnode = itemnode->GetNext();
 			}
+#if 0
 			DiskBasicFormat f(
 				type_number,
 				has_volume_name,
-				has_volume_number
+				has_volume_number,
+				has_volume_date,
+				special_attrs
 			);
+#endif
 			if (FindFormat((DiskBasicFormatType)type_number) == NULL) {
 				formats.Add(f);
 			} else {

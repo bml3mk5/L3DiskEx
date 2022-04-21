@@ -239,12 +239,29 @@ typedef struct st_directory_cpm {
 /// ディレクトリエントリ TF-DOS (16bytes)
 typedef struct st_directory_tfdos {
 	wxUint8  type;
-	wxUint8  name[8];	// file name uses $0D as space for padding it
+	wxUint8  name[8];	// file name ends with $0D and fills rest with $20
 	wxUint16 file_size;
 	wxUint16 load_addr;
 	wxUint16 exec_addr;
 	wxUint8  track;
 } directory_tfdos_t;
+
+/// ディレクトリエントリ C-DOS (32bytes)
+typedef struct st_directory_cdos {
+	wxUint8  type;
+	wxUint8  name[17];	// file name ends with $0D
+	wxUint8  type2;
+	wxUint8  byte_order;
+	wxUint16 file_size;
+	wxUint16 load_addr;
+	wxUint16 exec_addr;
+	wxUint8  yy;
+	wxUint8  mm;
+	wxUint8  dd;
+	wxUint8  reserved2;
+	wxUint8  track;
+	wxUint8  sector;
+} directory_cdos_t;
 
 /// ディレクトリエントリ サイズに注意！
 typedef union un_directory {
@@ -259,6 +276,7 @@ typedef union un_directory {
 	directory_os9_t		os9;
 	directory_cpm_t		cpm;
 	directory_tfdos_t	tfdos;
+	directory_cdos_t	cdos;
 } directory_t;
 #pragma pack()
 
@@ -277,6 +295,7 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_OS9		= 9,
 	FORMAT_TYPE_CPM		= 10,
 	FORMAT_TYPE_TFDOS	= 71,
+	FORMAT_TYPE_CDOS	= 72,
 };
 
 /// 属性保存クラス

@@ -54,13 +54,13 @@ DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, int num, int trac
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemTFDOS::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemTFDOS::GetFileNamePos(size_t &size, size_t &len) const
 {
-	len = sizeof(data->tfdos.name);
-	if (invert) *invert = basic->IsDataInverted();
+	size = len = sizeof(data->tfdos.name);
 	return data->tfdos.name; 
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemTFDOS::GetFileNameSize(bool *invert) const
 {
@@ -74,6 +74,7 @@ int DiskBasicDirItemTFDOS::GetFileExtSize(bool *invert) const
 	if (invert) *invert = basic->IsDataInverted();
 	return 0;
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemTFDOS::GetFileType1() const
@@ -204,37 +205,37 @@ wxString DiskBasicDirItemTFDOS::GetFileAttrStr() const
 /// データ内にファイルサイズをセット
 void DiskBasicDirItemTFDOS::SetFileSizeBase(int val)
 {
-	data->tfdos.file_size = basic->InvertUint16(val);	// invert
+	data->tfdos.file_size = basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// データ内のファイルサイズを返す
 int DiskBasicDirItemTFDOS::GetFileSizeBase() const
 {
-	return basic->InvertUint16(data->tfdos.file_size);	// invert
+	return basic->InvertAndOrderUint16(data->tfdos.file_size);	// invert
 }
 
 // 開始アドレスを返す
 int DiskBasicDirItemTFDOS::GetStartAddress() const
 {
-	return basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->tfdos.load_addr));	// invert
+	return basic->InvertAndOrderUint16(data->tfdos.load_addr);	// invert
 }
 
 // 実行アドレスを返す
 int DiskBasicDirItemTFDOS::GetExecuteAddress() const
 {
-	return basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->tfdos.exec_addr));	// invert
+	return basic->InvertAndOrderUint16(data->tfdos.exec_addr);	// invert
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemTFDOS::SetStartAddress(int val)
 {
-	data->tfdos.load_addr = (wxUint16)basic->InvertUint16(wxUINT16_SWAP_ON_BE(val));	// invert
+	data->tfdos.load_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemTFDOS::SetExecuteAddress(int val)
 {
-	data->tfdos.exec_addr = (wxUint16)basic->InvertUint16(wxUINT16_SWAP_ON_BE(val));	// invert
+	data->tfdos.exec_addr = (wxUint16)basic->InvertAndOrderUint16(val);	// invert
 }
 
 /// ディレクトリアイテムのサイズ
@@ -255,6 +256,7 @@ wxUint32 DiskBasicDirItemTFDOS::GetStartGroup() const
 	return basic->InvertUint8(data->tfdos.track);	// invert
 }
 
+#if 0
 /// ファイルパスから内部ファイル名を生成する
 wxString DiskBasicDirItemTFDOS::RemakeFileNameStr(const wxString &filepath) const
 {
@@ -264,6 +266,7 @@ wxString DiskBasicDirItemTFDOS::RemakeFileNameStr(const wxString &filepath) cons
 	ConvertToFileNameStr(newname);
 	return newname;
 }
+#endif
 
 /// ダイアログ入力前のファイル名を変換 大文字にするなど
 void DiskBasicDirItemTFDOS::ConvertToFileNameStr(wxString &filename) const

@@ -37,17 +37,20 @@ class DiskBasicIdentifiedData
 private:
 	wxString volume_name;	///< ボリューム名
 	int		 volume_number;	///< ボリューム番号
+	wxString volume_date;	///< ボリューム日付
 
 public:
 	DiskBasicIdentifiedData();
-	DiskBasicIdentifiedData(const wxString &n_volume_name, int n_volume_number);
+	DiskBasicIdentifiedData(const wxString &n_volume_name, int n_volume_number, const wxString &n_volume_date);
 	~DiskBasicIdentifiedData() {}
 
 	const wxString &GetVolumeName() const { return volume_name; }
 	int GetVolumeNumber() const { return volume_number; }
+	const wxString &GetVolumeDate() const { return volume_date; }
 
 	void SetVolumeName(const wxString &val) { volume_name = val; }
 	void SetVolumeNumber(int val) { volume_number = val; }
+	void SetVolumeDate(const wxString &val) { volume_date = val; }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -230,7 +233,7 @@ public:
 	/// ファイル名を更新
 	bool			RenameFile(DiskBasicDirItem *item, const DiskBasicFileName &newname);
 	/// 属性を更新
-	bool			ChangeAttr(DiskBasicDirItem *item, int start_addr, int exec_addr, const struct tm *tm);
+	bool			ChangeAttr(DiskBasicDirItem *item, int start_addr, int end_addr, int exec_addr, const struct tm *tm);
 	//@}
 	/// @name フォーマット
 	//@{
@@ -362,12 +365,20 @@ public:
 	wxUint8			InvertUint8(wxUint8 val) const;
 	/// 必要ならデータを反転する
 	wxUint16		InvertUint16(wxUint16 val) const;
+	/// 必要ならデータを反転する＆エンディアンを考慮
+	wxUint16		InvertAndOrderUint16(wxUint16 val) const;
 	/// 必要ならデータを反転する
 	wxUint32		InvertUint32(wxUint32 val) const;
+	/// 必要ならデータを反転する＆エンディアンを考慮
+	wxUint32		InvertAndOrderUint32(wxUint32 val) const;
 	/// 必要ならデータを反転する
 	void			InvertMem(void *val, size_t len) const;
 	/// 必要ならデータを反転する
 	void			InvertMem(const wxUint8 *src, size_t len, wxUint8 *dst) const;
+	/// エンディアンを考慮した値を返す
+	wxUint16		OrderUint16(wxUint16 val) const;
+	/// エンディアンを考慮した値を返す
+	wxUint32		OrderUint32(wxUint32 val) const;
 
 	/// DISK BASIC種類番号を返す
 	DiskBasicFormatType GetFormatTypeNumber() const;

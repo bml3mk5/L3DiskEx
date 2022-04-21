@@ -60,11 +60,10 @@ DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemX1HU::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemX1HU::GetFileNamePos(size_t &size, size_t &len) const
 {
 	// X1 Hu
-	len = sizeof(data->x1hu.name);
-	if (invert) *invert = basic->IsDataInverted();
+	size = len = sizeof(data->x1hu.name);
 	return data->x1hu.name; 
 }
 
@@ -75,6 +74,7 @@ wxUint8 *DiskBasicDirItemX1HU::GetFileExtPos(size_t &len) const
 	return data->x1hu.ext;
 }
 
+#if 0
 /// ファイル名を格納するバッファサイズを返す
 int DiskBasicDirItemX1HU::GetFileNameSize(bool *invert) const
 {
@@ -88,6 +88,7 @@ int DiskBasicDirItemX1HU::GetFileExtSize(bool *invert) const
 	if (invert) *invert = basic->IsDataInverted();
 	return (int)sizeof(data->x1hu.ext);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemX1HU::GetFileType1() const
@@ -141,22 +142,8 @@ void DiskBasicDirItemX1HU::SetFileAttr(const DiskBasicFileType &file_type)
 	int ftype = file_type.GetType();
 	if (ftype == -1) return;
 
-	// X1 Hu
-	int t = GetFileType1();
-	t &= ~FILETYPE_X1HU_MASK;
-	if (ftype & FILE_TYPE_BINARY_MASK) {
-		// bin
-		t |= FILETYPE_X1HU_BINARY;
-	} else if (ftype & FILE_TYPE_BASIC_MASK) {
-		// bas
-		t |= FILETYPE_X1HU_BASIC;
-	} else if (ftype & FILE_TYPE_ASCII_MASK) {
-		// asc
-		t |= FILETYPE_X1HU_ASCII;
-	} else if (ftype & FILE_TYPE_DIRECTORY_MASK) {
-		// sub directory
-		t |= FILETYPE_X1HU_DIRECTORY;
-	}
+	int t = ConvToNativeType(ftype, GetFileType1());
+
 	t &= ~DATATYPE_X1HU_MASK;
 	t |= (ftype & FILE_TYPE_HIDDEN_MASK ? DATATYPE_X1HU_HIDDEN : 0);
 	t |= (ftype & FILE_TYPE_READWRITE_MASK ? DATATYPE_X1HU_READ_WRITE : 0);
@@ -169,6 +156,27 @@ void DiskBasicDirItemX1HU::SetFileAttr(const DiskBasicFileType &file_type)
 		passwd = file_type.GetOrigin();
 	}
 	SetFileType2(passwd);
+}
+
+/// 属性を変換
+int DiskBasicDirItemX1HU::ConvToNativeType(int file_type, int val) const
+{
+	// X1 Hu
+	val &= ~FILETYPE_X1HU_MASK;
+	if (file_type & FILE_TYPE_BINARY_MASK) {
+		// bin
+		val |= FILETYPE_X1HU_BINARY;
+	} else if (file_type & FILE_TYPE_BASIC_MASK) {
+		// bas
+		val |= FILETYPE_X1HU_BASIC;
+	} else if (file_type & FILE_TYPE_ASCII_MASK) {
+		// asc
+		val |= FILETYPE_X1HU_ASCII;
+	} else if (file_type & FILE_TYPE_DIRECTORY_MASK) {
+		// sub directory
+		val |= FILETYPE_X1HU_DIRECTORY;
+	}
+	return val;
 }
 
 /// ディレクトリを初期化 未使用にする
@@ -240,7 +248,7 @@ void DiskBasicDirItemX1HU::SetFileSize(int val)
 		data->x1hu.file_size = 0;
 	} else {
 		file_size = val;
-		data->x1hu.file_size = wxUINT16_SWAP_ON_BE(basic->InvertUint16(val));
+		data->x1hu.file_size = basic->InvertAndOrderUint16(val);
 	}
 }
 
@@ -413,25 +421,25 @@ void DiskBasicDirItemX1HU::SetFileTime(const struct tm *tm)
 /// 開始アドレスを返す
 int DiskBasicDirItemX1HU::GetStartAddress() const
 {
-	return basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->x1hu.load_addr));
+	return basic->InvertAndOrderUint16(data->x1hu.load_addr);
 }
 
 /// 実行アドレスを返す
 int DiskBasicDirItemX1HU::GetExecuteAddress() const
 {
-	return basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->x1hu.exec_addr));
+	return basic->InvertAndOrderUint16(data->x1hu.exec_addr);
 }
 
 /// 開始アドレスをセット
 void DiskBasicDirItemX1HU::SetStartAddress(int val)
 {
-	data->x1hu.load_addr = (wxUint16)wxUINT16_SWAP_ON_BE(basic->InvertUint16(val));
+	data->x1hu.load_addr = basic->InvertAndOrderUint16(val);
 }
 
 /// 実行アドレスをセット
 void DiskBasicDirItemX1HU::SetExecuteAddress(int val)
 {
-	data->x1hu.exec_addr = (wxUint16)wxUINT16_SWAP_ON_BE(basic->InvertUint16(val));
+	data->x1hu.exec_addr = basic->InvertAndOrderUint16(val);
 }
 
 /// ディレクトリアイテムのサイズ
@@ -445,14 +453,14 @@ void DiskBasicDirItemX1HU::SetStartGroup(wxUint32 val)
 {
 	// X1 Hu-BASIC
 	data->x1hu.start_group_h = basic->InvertUint8((val & 0xff0000) >> 16);
-	data->x1hu.start_group_l = wxUINT16_SWAP_ON_BE(basic->InvertUint16(val & 0xffff));
+	data->x1hu.start_group_l = basic->InvertAndOrderUint16(val & 0xffff);
 }
 
 /// 最初のグループ番号を返す
 wxUint32 DiskBasicDirItemX1HU::GetStartGroup() const
 {
 	// X1 Hu-BASIC
-	return (wxUint32)basic->InvertUint8(data->x1hu.start_group_h) << 16 | basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->x1hu.start_group_l));
+	return (wxUint32)basic->InvertUint8(data->x1hu.start_group_h) << 16 | basic->InvertAndOrderUint16(data->x1hu.start_group_l);
 }
 
 /// ファイルの終端コードをチェックする必要があるか
@@ -503,38 +511,39 @@ bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) con
 
 #include <wx/textctrl.h>
 #include <wx/checkbox.h>
-#include <wx/radiobox.h>
+#include <wx/choice.h>
 #include <wx/statbox.h>
 #include <wx/radiobut.h>
 #include <wx/sizer.h>
 #include "intnamebox.h"
 
-#define IDC_RADIO_BINARY	51
-#define IDC_RADIO_BASIC		52
-#define IDC_RADIO_ASCII		53
-#define IDC_RADIO_DIR		54
-#define IDC_RADIO_RANDOM	55
+#define IDC_COMBO_TYPE1		51
 
 #define IDC_CHECK_HIDDEN	56
 #define IDC_CHECK_READWRITE 57
 #define IDC_CHECK_READONLY	58
 #define IDC_CHECK_ENCRYPT	59
 
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemX1HU::GetFileType1Pos() const
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemX1HU::ConvFileType1Pos(int native_type) const
 {
-	int t = GetFileType1();
 	int val = 0;
-	if (t & FILETYPE_X1HU_BINARY) {
+	if (native_type & FILETYPE_X1HU_BINARY) {
 		val = TYPE_NAME_X1HU_BINARY;	// bin
-	} else if (t & FILETYPE_X1HU_BASIC) {
+	} else if (native_type & FILETYPE_X1HU_BASIC) {
 		val = TYPE_NAME_X1HU_BASIC;		// bas
-	} else if (t & FILETYPE_X1HU_ASCII) {
+	} else if (native_type & FILETYPE_X1HU_ASCII) {
 		val = (external_attr == 0 ? TYPE_NAME_X1HU_ASCII : TYPE_NAME_X1HU_RANDOM);		// asc
-	} else if (t & FILETYPE_X1HU_DIRECTORY) {
+	} else if (native_type & FILETYPE_X1HU_DIRECTORY) {
 		val = TYPE_NAME_X1HU_DIRECTORY;	// sub directory
 	}
 	return val;
+}
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemX1HU::GetFileType1Pos() const
+{
+	return ConvFileType1Pos(GetFileType1());
 }
 
 // 属性からリストの位置を返す(プロパティダイアログ用)
@@ -584,7 +593,7 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	int file_type_1 = GetFileType1Pos();
 	int file_type_2 = GetFileType2Pos();
 
-	wxRadioButton *radType1[TYPE_NAME_X1HU_RANDOM + 1];
+	wxChoice   *comType1;
 	wxCheckBox *chkHidden;
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkReadWrite;
@@ -593,36 +602,55 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxStaticBoxSizer *staType1 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Type")), wxVERTICAL);
-	wxBoxSizer *hbox;
-	hbox = new wxBoxSizer(wxHORIZONTAL);
-	radType1[TYPE_NAME_X1HU_BINARY] = new wxRadioButton(parent, IDC_RADIO_BINARY, wxGetTranslation(gTypeNameX1HU_1[TYPE_NAME_X1HU_BINARY]));
-	hbox->Add(radType1[TYPE_NAME_X1HU_BINARY], flags);
-	radType1[TYPE_NAME_X1HU_BASIC] = new wxRadioButton(parent, IDC_RADIO_BASIC,   wxGetTranslation(gTypeNameX1HU_1[TYPE_NAME_X1HU_BASIC]));
-	hbox->Add(radType1[TYPE_NAME_X1HU_BASIC], flags);
-	radType1[TYPE_NAME_X1HU_ASCII] = new wxRadioButton(parent, IDC_RADIO_ASCII,   wxGetTranslation(gTypeNameX1HU_1[TYPE_NAME_X1HU_ASCII]));
-	hbox->Add(radType1[TYPE_NAME_X1HU_ASCII], flags);
-	radType1[TYPE_NAME_X1HU_DIRECTORY] = new wxRadioButton(parent, IDC_RADIO_DIR, wxGetTranslation(gTypeNameX1HU_1[TYPE_NAME_X1HU_DIRECTORY]));
-	hbox->Add(radType1[TYPE_NAME_X1HU_DIRECTORY], flags);
-	staType1->Add(hbox);
-	hbox = new wxBoxSizer(wxHORIZONTAL);
-	radType1[TYPE_NAME_X1HU_RANDOM] = new wxRadioButton(parent, IDC_RADIO_RANDOM, wxGetTranslation(gTypeNameX1HU_1[TYPE_NAME_X1HU_RANDOM]));
-	hbox->Add(radType1[TYPE_NAME_X1HU_RANDOM], flags);
-	staType1->Add(hbox);
-	if (file_type_1 <= TYPE_NAME_X1HU_RANDOM) {
-		radType1[file_type_1]->SetValue(true);
+
+	wxArrayString types1;
+	for(size_t i=TYPE_NAME_X1HU_BINARY; i<TYPE_NAME_X1HU_END; i++) {
+		types1.Add(wxGetTranslation(gTypeNameX1HU_1[i]));
 	}
+#if 0
+	const SpecialAttributes *attrs = &basic->GetSpecialAttributes();
+	for(size_t i=0; i<attrs->Count(); i++) {
+		const SpecialAttribute *attr = &attrs->Item(i);
+		int t1 = ConvToNativeType(attr->GetType(), GetFileType1());
+		t1 = ConvFileType1Pos(t1);
+		wxString str;
+		str += attr->GetName();
+		str += wxString::Format(wxT(" 0x%02x"), attr->GetValue());
+		if (!attr->GetDescription().IsEmpty()) {
+			str += wxT(" (");
+			str += attr->GetDescription();
+			str += wxT(")");
+		}
+		types1.Add(str);
+	}
+#endif
+
+	comType1 = new wxChoice(parent, IDC_COMBO_TYPE1, wxDefaultPosition, wxDefaultSize, types1);
+#if 0
+	if (file_type_1 < 0) {
+		file_type_1 = basic->GetIndexByValueOfSpecialAttr(-file_type_1);
+		if (file_type_1 >= 0) {
+			file_type_1 += TYPE_NAME_X1HU_END;
+		}
+	}
+#endif
+	if (file_type_1 >= 0) {
+		comType1->SetSelection(file_type_1);
+	}
+	staType1->Add(comType1, flags);
 	sizer->Add(staType1, flags);
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
+	wxGridSizer *szrG = new wxGridSizer(2, 2, 4);
 	chkHidden = new wxCheckBox(parent, IDC_CHECK_HIDDEN, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_HIDDEN]));
 	chkHidden->SetValue((file_type_2 & FILE_TYPE_HIDDEN_MASK) != 0);
-	staType4->Add(chkHidden, flags);
+	szrG->Add(chkHidden);
 	chkReadWrite = new wxCheckBox(parent, IDC_CHECK_READWRITE, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_READ_WRITE]));
 	chkReadWrite->SetValue((file_type_2 & FILE_TYPE_READWRITE_MASK) != 0);
-	staType4->Add(chkReadWrite, flags);
+	szrG->Add(chkReadWrite);
 	chkReadOnly = new wxCheckBox(parent, IDC_CHECK_READONLY, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_READ_ONLY]));
 	chkReadOnly->SetValue((file_type_2 & FILE_TYPE_READONLY_MASK) != 0);
-	staType4->Add(chkReadOnly, flags);
+	szrG->Add(chkReadOnly);
 	chkEncrypt = new wxCheckBox(parent, IDC_CHECK_ENCRYPT, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_PASSWORD]));
 	// ユーザ定義データ X1ではファイルパスワード
 	int passwd;
@@ -634,15 +662,12 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	parent->SetUserData(passwd);
 	chkEncrypt->SetValue(passwd != DATATYPE_X1HU_PASSWORD_NONE);
 	chkEncrypt->Enable(false);
-	staType4->Add(chkEncrypt, flags);
+	szrG->Add(chkEncrypt);
+	staType4->Add(szrG, flags);
 	sizer->Add(staType4, flags);
 
 	// event handler
-	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_BINARY);
-	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_BASIC);
-	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_ASCII);
-	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_DIR);
-	parent->Bind(wxEVT_RADIOBUTTON, &IntNameBox::OnChangeType1, parent, IDC_RADIO_RANDOM);
+	parent->Bind(wxEVT_CHOICE, &IntNameBox::OnChangeType1, parent, IDC_COMBO_TYPE1);
 }
 
 /// ダイアログ内の値を設定
@@ -662,13 +687,13 @@ void DiskBasicDirItemX1HU::InitializeForAttrDialog(IntNameBox *parent, int show_
 /// 属性を変更した際に呼ばれるコールバック
 void DiskBasicDirItemX1HU::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
-	wxRadioButton *radTypeBinary = (wxRadioButton *)parent->FindWindow(IDC_RADIO_BINARY);
+	wxChoice   *comType1 = (wxChoice *)parent->FindWindow(IDC_COMBO_TYPE1);
 	wxTextCtrl *txtStartAddr = (wxTextCtrl *)parent->FindWindow(IntNameBox::IDC_TEXT_START_ADDR);
 	wxTextCtrl *txtExecAddr = (wxTextCtrl *)parent->FindWindow(IntNameBox::IDC_TEXT_EXEC_ADDR);
 
-	if (!radTypeBinary) return;
+	if (!comType1) return;
 
-	bool enable = (radTypeBinary->GetValue());
+	bool enable = (comType1->GetSelection() == TYPE_NAME_X1HU_BINARY);
 	if (txtStartAddr) {
 		txtStartAddr->Enable(enable);
 	}
@@ -681,22 +706,8 @@ void DiskBasicDirItemX1HU::ChangeTypeInAttrDialog(IntNameBox *parent)
 /// @return CalcFileTypeFromPos()のpos1に渡す値
 int DiskBasicDirItemX1HU::GetFileType1InAttrDialog(const IntNameBox *parent) const
 {
-	wxRadioButton *radType1[TYPE_NAME_X1HU_RANDOM + 1];
-	radType1[TYPE_NAME_X1HU_BINARY] = (wxRadioButton *)parent->FindWindow(IDC_RADIO_BINARY);
-	radType1[TYPE_NAME_X1HU_BASIC] = (wxRadioButton *)parent->FindWindow(IDC_RADIO_BASIC);
-	radType1[TYPE_NAME_X1HU_ASCII] = (wxRadioButton *)parent->FindWindow(IDC_RADIO_ASCII);
-	radType1[TYPE_NAME_X1HU_DIRECTORY] = (wxRadioButton *)parent->FindWindow(IDC_RADIO_DIR);
-	radType1[TYPE_NAME_X1HU_RANDOM] = (wxRadioButton *)parent->FindWindow(IDC_RADIO_RANDOM);
-
-	int sel = 0;
-	for(int i=TYPE_NAME_X1HU_BINARY; i<=TYPE_NAME_X1HU_RANDOM; i++) {
-		if (radType1[i]->GetValue()) {
-			sel = i;
-			break;
-		}
-	}
-
-	return sel;
+	wxChoice *comType1 = (wxChoice *)parent->FindWindow(IDC_COMBO_TYPE1);
+	return comType1->GetSelection();
 }
 
 /// 属性2を得る

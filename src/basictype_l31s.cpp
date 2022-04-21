@@ -20,8 +20,15 @@ DiskBasicTypeL31S::DiskBasicTypeL31S(DiskBasic *basic, DiskBasicFat *fat, DiskBa
 /// FATエリアをチェック
 bool DiskBasicTypeL31S::CheckFat()
 {
-	bool valid = DiskBasicType::CheckFat();
+	if (basic->GetFatEndGroup() == 0) {
+		int end_group = basic->GetTracksPerSideOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
+		// 管理トラック分を引く
+		end_group -= basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic();
+		end_group /= basic->GetSectorsPerGroup();
+		basic->SetFatEndGroup(end_group - 1);
+	}
 
+	bool valid = DiskBasicType::CheckFat();
 	if (valid) {
 		// FAT先頭エリアのチェック
 		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);

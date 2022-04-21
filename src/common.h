@@ -19,6 +19,7 @@
 #define DEFAULT_TEXTWIDTH 160
 
 size_t rtrim(void *, size_t, char);
+size_t str_length(const void *, size_t, char);
 void mem_invert(void *, size_t);
 size_t str_shrink(void *, size_t);
 void mem_copy(const void *src, size_t slen, char fill, void *dst, size_t dlen);

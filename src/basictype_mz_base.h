@@ -36,6 +36,8 @@ public:
 	virtual bool		IsUsedGroupNumber(wxUint32 num);
 	/// @brief 使用しているグループの位置を得る
 	virtual void		CalcUsedGroupPos(wxUint32 num, int &pos, int &mask);
+	/// @brief 空き位置を返す
+	virtual wxUint32	GetEmptyGroupNumber();
 	/// @brief 次の空きFAT位置を返す 未使用
 	virtual wxUint32	GetNextEmptyGroupNumber(wxUint32 curr_group);
 	//@}

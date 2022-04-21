@@ -60,6 +60,8 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 	txtVolName = NULL;
 	lblVolNum = NULL;
 	txtVolNum = NULL;
+	lblVolDate = NULL;
+	txtVolDate = NULL;
 	if (show_flags & SHOW_ATTR_CONTROLS) {
 		lblVolName = new wxStaticText(this, wxID_ANY, _("Volume Name"));
 		szrAll->Add(lblVolName, flags);
@@ -70,6 +72,11 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 		szrAll->Add(lblVolNum, flags);
 		txtVolNum = new wxTextCtrl(this, IDC_TEXT_VOLNUM, wxEmptyString);
 		szrAll->Add(txtVolNum, flags);
+
+		lblVolDate = new wxStaticText(this, wxID_ANY, _("Volume Date"));
+		szrAll->Add(lblVolDate, flags);
+		txtVolDate = new wxTextCtrl(this, IDC_TEXT_VOLDATE, wxEmptyString);
+		szrAll->Add(txtVolDate, flags);
 	}
 	ChangeBasic(cur_num);
 
@@ -114,6 +121,8 @@ void BasicSelBox::ChangeBasic(int sel)
 	if (txtVolName) txtVolName->Enable(fmt->HasVolumeName());
 	if (lblVolNum) lblVolNum->Enable(fmt->HasVolumeNumber());
 	if (txtVolNum) txtVolNum->Enable(fmt->HasVolumeNumber());
+	if (lblVolDate) lblVolDate->Enable(fmt->HasVolumeDate());
+	if (txtVolDate) txtVolDate->Enable(fmt->HasVolumeDate());
 }
 
 const DiskBasicParam *BasicSelBox::GetBasicParam() const
@@ -136,4 +145,9 @@ wxString BasicSelBox::GetVolumeName() const
 int BasicSelBox::GetVolumeNumber() const
 {
 	return Utils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
+}
+
+wxString BasicSelBox::GetVolumeDate() const
+{
+	return txtVolDate ? txtVolDate->GetValue() : wxT("");
 }

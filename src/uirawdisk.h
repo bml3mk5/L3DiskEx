@@ -37,6 +37,9 @@ private:
 	L3DiskRawTrack *lpanel;
 	L3DiskRawSector *rpanel;
 
+	bool invert_data;	///< インポート・エクスポート時にデータを反転するか
+	bool reverse_side;	///< インポート・エクスポート時にサイド番号を降順で行うか
+
 public:
 	L3DiskRawPanel(L3DiskFrame *parentframe, wxWindow *parentwindow);
 
@@ -99,6 +102,15 @@ public:
 	/// フォントをセット
 	void SetListFont(const wxFont &font);
 
+	/// インポート・エクスポート時にデータを反転するか
+	bool InvertData() const { return invert_data; }
+	/// インポート・エクスポート時にデータを反転するか
+	void InvertData(bool val) { invert_data = val; }
+	/// インポート・エクスポート時にサイド番号を降順で行うか
+	bool ReverseSide() const { return reverse_side; }
+	/// インポート・エクスポート時にサイド番号を降順で行うか
+	void ReverseSide(bool val) { reverse_side = val; }
+
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskRawPanel);
 };
@@ -136,6 +148,10 @@ public:
 	void OnExportTrack(wxCommandEvent& event);
 	/// トラックにインポート選択
 	void OnImportTrack(wxCommandEvent& event);
+	/// データを反転するチェック選択
+	void OnChangeInvertData(wxCommandEvent& event);
+	/// サイドを逆転するチェック選択
+	void OnChangeReverseSide(wxCommandEvent& event);
 	/// トラックリストからドラッグ開始
 	void OnBeginDrag(wxListEvent& event);
 	/// ディスク上のID一括変更選択
@@ -182,13 +198,13 @@ public:
 	/// トラックをエクスポート ダイアログ表示
 	bool ShowExportTrackDialog();
 	/// 指定したファイルにトラックデータをエクスポート
-	bool ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec);
+	bool ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side);
 	/// トラックにインポート ダイアログ表示
 	bool ShowImportTrackDialog();
 	/// 指定したファイルのファイル名にある数値から指定したトラックにインポートする
 	bool ShowImportTrackRangeDialog(const wxString &path, int st_trk = -1, int st_sid = 0, int st_sec = 1);
 	/// 指定したファイルから指定した範囲にトラックデータをインポート
-	bool ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec);
+	bool ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side);
 	/// ディスク全体のIDを変更
 	void ModifyIDonDisk(int type_num);
 	/// ディスク上の密度を一括変更
@@ -213,7 +229,10 @@ public:
 	bool GetFirstAndLastSectorNumOnTrack(const DiskD88Track *track, int &start_sector, int &end_sector);
 
 	enum {
-		IDM_EXPORT_TRACK = 1,
+		IDM_MENU_CHECK = 1,
+		IDM_INVERT_DATA,
+		IDM_REVERSE_SIDE,
+		IDM_EXPORT_TRACK,
 		IDM_IMPORT_TRACK,
 		IDM_MODIFY_ID_C_DISK,
 		IDM_MODIFY_ID_H_DISK,
@@ -314,6 +333,8 @@ public:
 	void OnExportFile(wxCommandEvent& event);
 	/// セクタリスト インポート選択
 	void OnImportFile(wxCommandEvent& event);
+	/// データを反転するチェック選択
+	void OnChangeInvertData(wxCommandEvent& event);
 	/// トラック上のID一括変更選択
 	void OnModifyIDonTrack(wxCommandEvent& event);
 	/// トラック上の密度一括変更選択
@@ -393,7 +414,10 @@ public:
 	int  GetListSelections(L3SectorListItems &arr) const;
 
 	enum {
-		IDM_EXPORT_FILE = 1,
+		IDM_MENU_CHECK = 1,
+		IDM_INVERT_DATA,
+		IDM_REVERSE_SIDE,
+		IDM_EXPORT_FILE,
 		IDM_IMPORT_FILE,
 		IDM_MODIFY_ID_C_TRACK,
 		IDM_MODIFY_ID_H_TRACK,

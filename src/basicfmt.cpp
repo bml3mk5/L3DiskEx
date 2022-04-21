@@ -24,6 +24,7 @@
 #include "basictype_os9.h"
 #include "basictype_cpm.h"
 #include "basictype_tfdos.h"
+#include "basictype_cdos.h"
 #include "utils.h"
 
 
@@ -37,10 +38,11 @@ DiskBasicIdentifiedData::DiskBasicIdentifiedData()
 {
 	volume_number = 0;
 }
-DiskBasicIdentifiedData::DiskBasicIdentifiedData(const wxString &n_volume_name, int n_volume_number)
+DiskBasicIdentifiedData::DiskBasicIdentifiedData(const wxString &n_volume_name, int n_volume_number, const wxString &n_volume_date)
 {
 	volume_name = n_volume_name;
 	volume_number = n_volume_number;
+	volume_date = n_volume_date;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -216,6 +218,9 @@ void DiskBasic::CreateType()
 		break;
 	case FORMAT_TYPE_TFDOS:
 		type = new DiskBasicTypeTFDOS(this, fat, dir);
+		break;
+	case FORMAT_TYPE_CDOS:
+		type = new DiskBasicTypeCDOS(this, fat, dir);
 		break;
 	default:
 //		type = new DiskBasicType(this, fat, dir);
@@ -1186,13 +1191,18 @@ bool DiskBasic::RenameFile(DiskBasicDirItem *item, const DiskBasicFileName &newn
 /// 属性を更新
 /// @param [in] item        ディレクトリアイテム
 /// @param [in] start_addr  開始アドレス
+/// @param [in] end_addr    終了アドレス
 /// @param [in] exec_addr   実行アドレス
 /// @param [in] tm          日時
-bool DiskBasic::ChangeAttr(DiskBasicDirItem *item, int start_addr, int exec_addr, const struct tm *tm)
+bool DiskBasic::ChangeAttr(DiskBasicDirItem *item, int start_addr, int end_addr, int exec_addr, const struct tm *tm)
 {
 	// 開始アドレス更新
 	if (start_addr >= 0) {
 		item->SetStartAddress(start_addr);
+	}
+	// 終了アドレス更新
+	if (end_addr >= 0) {
+		item->SetEndAddress(end_addr);
 	}
 	// 実行アドレス更新
 	if (exec_addr >= 0) {
@@ -1921,10 +1931,24 @@ wxUint16 DiskBasic::InvertUint16(wxUint16 val) const
 	return IsDataInverted() ? val ^ 0xffff : val;
 }
 
+/// 必要ならデータを反転する＆エンディアンを考慮
+wxUint16 DiskBasic::InvertAndOrderUint16(wxUint16 val) const
+{
+	val = IsDataInverted() ? val ^ 0xffff : val;
+	return OrderUint16(val);
+}
+
 /// 必要ならデータを反転する
 wxUint32 DiskBasic::InvertUint32(wxUint32 val) const
 {
 	return IsDataInverted() ? ~val : val;
+}
+
+/// 必要ならデータを反転する＆エンディアンを考慮
+wxUint32 DiskBasic::InvertAndOrderUint32(wxUint32 val) const
+{
+	val = IsDataInverted() ? ~val : val;
+	return OrderUint32(val);
 }
 
 /// 必要ならデータを反転する
@@ -1938,6 +1962,18 @@ void DiskBasic::InvertMem(const wxUint8 *src, size_t len, wxUint8 *dst) const
 {
 	memcpy(dst, src, len);
 	if (IsDataInverted()) mem_invert(dst, len);
+}
+
+/// エンディアンを考慮した値を返す
+wxUint16 DiskBasic::OrderUint16(wxUint16 val) const
+{
+	return IsBigEndian() ? wxUINT16_SWAP_ON_LE(val) : wxUINT16_SWAP_ON_BE(val); 
+}
+
+/// エンディアンを考慮した値を返す
+wxUint32 DiskBasic::OrderUint32(wxUint32 val) const
+{
+	return IsBigEndian() ? wxUINT32_SWAP_ON_LE(val) : wxUINT32_SWAP_ON_BE(val); 
 }
 
 /// DISK BASIC種類番号を返す

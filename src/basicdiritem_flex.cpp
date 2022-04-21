@@ -46,16 +46,10 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名を格納する位置を返す
-wxUint8 *DiskBasicDirItemFLEX::GetFileNamePos(size_t &len, bool *invert) const
+wxUint8 *DiskBasicDirItemFLEX::GetFileNamePos(size_t &size, size_t &len) const
 {
-	len = sizeof(data->flex.name);
+	size = len = sizeof(data->flex.name);
 	return data->flex.name; 
-}
-
-/// ファイル名を格納するバッファサイズを返す
-int DiskBasicDirItemFLEX::GetFileNameSize(bool *invert) const
-{
-	return (int)sizeof(data->flex.name);
 }
 
 /// 拡張子を格納する位置を返す
@@ -65,11 +59,19 @@ wxUint8 *DiskBasicDirItemFLEX::GetFileExtPos(size_t &len) const
 	return data->flex.ext;
 }
 
+#if 0
+/// ファイル名を格納するバッファサイズを返す
+int DiskBasicDirItemFLEX::GetFileNameSize(bool *invert) const
+{
+	return (int)sizeof(data->flex.name);
+}
+
 /// 拡張子を格納するバッファサイズを返す
 int DiskBasicDirItemFLEX::GetFileExtSize(bool *invert) const
 {
 	return (int)sizeof(data->flex.ext);
 }
+#endif
 
 /// 属性１を返す
 int	DiskBasicDirItemFLEX::GetFileType1() const

@@ -40,7 +40,7 @@ bool DiskBasicTypeMZ::CheckFat()
 	if (!fatbuf) {
 		return false;
 	}
-	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
+	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
 	wxUint8 offset = basic->InvertUint8(b->offset);
 	wxUint8 mag = basic->InvertUint8(b->mag);
 	// オフセット(1バイト目)が16未満ならエラー
@@ -59,7 +59,18 @@ bool DiskBasicTypeMZ::CheckFat()
 		// セクタ数/クラスタ
 		basic->SetSectorsPerGroup(mag + 1);
 		// クラスタ数
-		basic->SetFatEndGroup(basic->InvertUint16(b->all) - 1);
+		basic->SetFatEndGroup(basic->InvertAndOrderUint16(b->all) - 1);
+	} else {
+		// クラスタ数はトラック数から計算する
+		int trks = basic->GetTracksPerSideOnBasic();
+		int secs = 1;
+		if (trks > 44) {
+			// 2DDのとき
+			secs = 2;
+			trks /= 2;
+		}
+		basic->SetSectorsPerGroup(secs);
+		basic->SetFatEndGroup(trks * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() - 1);
 	}
 
 	return valid;
@@ -97,8 +108,8 @@ void DiskBasicTypeMZ::CalcDiskFreeSize(bool wrote)
 	if (!fatbuf) {
 		return;
 	}
-	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	int used_groups = basic->InvertUint16(b->used);	// invert
+	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
+	int used_groups = basic->InvertAndOrderUint16(b->used);	// invert
 //	int all_groups = (b->all ^ 0xffff);
 //	grps = all_groups - used_groups;
 //	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
@@ -122,7 +133,7 @@ void DiskBasicTypeMZ::CalcDiskFreeSize(bool wrote)
 	fsize = grps * basic->GetSectorsPerGroup() * basic->GetSectorSize();
 	// 使用済みクラスタ数を更新
 	if (wrote && used_groups != used) {
-		b->used = basic->InvertUint16(used);	// invert
+		b->used = basic->InvertAndOrderUint16(used);	// invert
 	}
 
 	free_disk_size = (int)fsize;
@@ -151,15 +162,11 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 		return;
 	}
 	// FATには未使用使用テーブルがある
-	if (pos < fatbuf->size) {
-		wxUint8 bit = basic->InvertUint8(fatbuf->buffer[pos]);	// invert
-		bit = (val ? (bit | mask) : (bit & ~mask));
-		fatbuf->buffer[pos] = basic->InvertUint8(bit);	// invert
-	}
+	fatbuf->Bit((wxUint32)pos, (wxUint8)mask, val != 0, basic->IsDataInverted());
 
 	// FATの使用済み最終クラスタ数を更新
-	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
-	wxUint32 used_group = basic->InvertUint16(b->used);	// invert
+	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
+	wxUint32 used_group = basic->InvertAndOrderUint16(b->used);	// invert
 	if (val) {
 		// セットした時は最終クラスタ数を増やす
 		used_group++;
@@ -167,7 +174,7 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 		// クリアした時は最終クラスタ数を減らす
 		used_group--;
 	}
-	b->used = basic->InvertUint16(used_group);	// invert
+	b->used = basic->InvertAndOrderUint16(used_group);	// invert
 
 //	myLog.SetDebug("DiskBasicTypeMZ::SetGroupNumber: g:%d v:%d pos:%d msk:%d used:%d"
 //		, num, val, pos, mask, used_group);
@@ -180,7 +187,7 @@ wxUint32 DiskBasicTypeMZ::GetGroupNumber(wxUint32 num) const
 		return INVALID_GROUP_NUMBER;
 	}
 	// FATのオフセットを得る
-	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
+	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
 	wxUint32 offset = basic->InvertUint8(b->offset);	// invert
 	if (offset > num) num = offset;
 	return num;
@@ -202,7 +209,7 @@ wxUint32 DiskBasicTypeMZ::GetNextGroupNumber(wxUint32 num, int sector_pos)
 	DiskD88Sector *sector = basic->GetDisk()->GetSector(trk_num, sid_num, sec_num);
 	if (!sector) return 0;
 	wxUint16 next_sec = *(wxUint16 *)(&sector->GetSectorBuffer()[sector->GetSectorSize()-2]);
-	next_sec = basic->InvertUint16(next_sec);	// invert
+	next_sec = basic->InvertAndOrderUint16(next_sec);	// invert
 	return next_sec / basic->GetSectorsPerGroup();	
 }
 
@@ -217,10 +224,10 @@ wxUint32 DiskBasicTypeMZ::GetEmptyGroupNumber()
 		return new_num;
 	}
 	// FATの使用済み最終クラスタを得る
-	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->buffer;
+	struct st_fat_mz *b = (struct st_fat_mz *)fatbuf->GetBuffer();
 	wxUint32 offset = basic->InvertUint8(b->offset);	// invert
-	wxUint32 used_group = basic->InvertUint16(b->used);	// invert
-	wxUint32 all_group = basic->InvertUint16(b->all);	// invert
+	wxUint32 used_group = basic->InvertAndOrderUint16(b->used);	// invert
+	wxUint32 all_group = basic->InvertAndOrderUint16(b->all);	// invert
 
 	if (used_group < all_group) {
 		new_num = used_group;
@@ -300,7 +307,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, Alloc
 
 			// 開始セクタ
 			wxUint32 sec_pos = group_start * basic->GetSectorsPerGroup();
-			sec_pos = basic->InvertUint16(sec_pos);	// invert
+			sec_pos = basic->InvertAndOrderUint16(sec_pos);	// invert
 			brd_maps[brd_pos] = wxUINT16_SWAP_ON_BE(sec_pos);
 
 			// 領域を確保する
@@ -490,8 +497,8 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 	DiskBasicFatArea *fats = fat->GetDiskBasicFatArea();
 	for(size_t n = 0; n < fats->Count(); n++) {
 		DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(n, 0);
-		wxUint8 *buf = fatbuf->buffer;
-		int size = fatbuf->size;
+		wxUint8 *buf = fatbuf->GetBuffer();
+		int size = (int)fatbuf->GetSize();
 
 		memset(buf, basic->GetFillCodeOnFAT(), size);
 
@@ -503,7 +510,8 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 		// 使用クラスタ数
 		fdat->used = fdat->offset;
 		// 最大クラスタ数
-		fdat->all = basic->GetFatEndGroup() + 1;
+//		fdat->all = basic->GetFatEndGroup() + 1;
+		fdat->all = basic->GetTracksPerSide() * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup();
 		// セクタ数/グループ
 		fdat->mag = basic->GetSectorsPerGroup() - 1;
 
@@ -594,7 +602,7 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 		} else {
 			next_sector = (remain > size ? next_group * basic->GetSectorsPerGroup() : 0);
 		}
-		*((wxUint16 *)&buffer[size]) = basic->InvertUint16(wxUINT16_SWAP_ON_BE(next_sector));
+		*((wxUint16 *)&buffer[size]) = basic->InvertAndOrderUint16(next_sector);
 	}
 
 	// 反転

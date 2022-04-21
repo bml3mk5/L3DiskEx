@@ -10,6 +10,7 @@
 #include "basictype.h"
 
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -44,6 +45,7 @@ int DiskBasicGroupItem::Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem *
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicGroupItems);
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -60,6 +62,13 @@ void DiskBasicGroups::Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_
 void DiskBasicGroups::Add(const DiskBasicGroupItem &item)
 {
 	items.Add(item);
+}
+/// 追加
+void DiskBasicGroups::Add(const DiskBasicGroups &n_items)
+{
+	for(size_t i=0; i<n_items.Count(); i++) {
+		items.Add(n_items.Item(i));
+	}
 }
 /// クリア
 void DiskBasicGroups::Empty()
@@ -93,6 +102,7 @@ void DiskBasicGroups::SortItems()
 	items.Sort(&DiskBasicGroupItem::Compare);
 }
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -106,23 +116,245 @@ DiskBasicFatBuffer::DiskBasicFatBuffer(wxUint8 *newbuf, int newsize)
 	size = newsize;
 	buffer = newbuf;
 }
+/// バッファを指定コードで埋める
 void DiskBasicFatBuffer::Fill(wxUint8 code)
 {
 	if (buffer) {
 		memset(buffer, code, size);
 	}
 }
+/// バッファにコピー
 void DiskBasicFatBuffer::Copy(const wxUint8 *buf, size_t len)
 {
 	if (buffer) {
-		memcpy(buffer, buf, (int)len < size ? len : size);
+		memcpy(buffer, buf, len < size ? len : size);
 	}
+}
+/// 指定位置のデータを返す
+wxUint32 DiskBasicFatBuffer::Get(size_t pos) const
+{
+	return buffer ? buffer[pos] : INVALID_GROUP_NUMBER;
+}
+/// 指定位置にデータをセット
+void DiskBasicFatBuffer::Set(size_t pos, wxUint32 val)
+{
+	if (buffer) {
+		buffer[pos] = (wxUint8)val;
+	}
+}
+/// 指定位置のビットをセット/リセット
+bool DiskBasicFatBuffer::Bit(wxUint32 pos, wxUint8 mask, bool val, bool invert)
+{
+	if (pos >= (wxUint32)GetSize()) return false;
+
+	wxUint8 bit = (wxUint8)Get(pos);
+	if (invert) bit ^= 0xff;
+	bit = (val ? (bit | mask) : (bit & ~mask));
+	if (invert) bit ^= 0xff;
+	Set(pos, bit);
+	return true;
+}
+/// 指定位置のビットがONか
+bool DiskBasicFatBuffer::BitTest(wxUint32 pos, wxUint8 mask, bool invert)
+{
+	if (pos >= (wxUint32)GetSize()) return false;
+
+	wxUint8 bit = (wxUint8)Get(pos);
+	if (invert) bit ^= 0xff;
+	return (bit & mask) != 0;
 }
 
 #include <wx/arrimpl.cpp>
-WX_DEFINE_OBJARRAY(DiskBasicFatBuffers);
-WX_DEFINE_OBJARRAY(DiskBasicFatArea);
+WX_DEFINE_OBJARRAY(ArrayDiskBasicFatBuffer);
 
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+/// 8ビットデータを返す
+wxUint32 DiskBasicFatBuffers::GetData8(wxUint32 pos) const
+{
+	wxUint32 val = INVALID_GROUP_NUMBER;
+	for(size_t i = 0; i < Count(); i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		if (pos < (wxUint32)buf->GetSize()) {
+			val = buf->Get(pos);
+			break;
+		}
+		pos -= (wxUint32)buf->GetSize();
+	}
+	return val;
+}
+/// 8ビットデータをセット
+void DiskBasicFatBuffers::SetData8(wxUint32 pos, wxUint32 val)
+{
+	for(size_t i = 0; i < Count(); i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		if (pos < (wxUint32)buf->GetSize()) {
+			buf->Set(pos, val);
+			break;
+		}
+		pos -= (wxUint32)buf->GetSize();
+	}
+}
+/// 8ビットデータが一致するか
+bool DiskBasicFatBuffers::MatchData8(wxUint32 pos, wxUint32 val) const
+{
+	bool match = false;
+	for(size_t i = 0; i < Count(); i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		if (pos < (wxUint32)buf->GetSize()) {
+			match = (buf->Get(pos) == val);
+			break;
+		}
+		pos -= (wxUint32)buf->GetSize();
+	}
+	return match;
+}
+/// 8ビットデータのビットをセット/リセット
+/// @return 処理したか
+bool DiskBasicFatBuffers::BitData8(wxUint32 pos, wxUint8 mask, bool val, bool invert)
+{
+	bool processed = false;
+	for(size_t i = 0; i < Count(); i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		processed = buf->Bit(pos, mask, val, invert);
+		if (processed) break;
+		pos -= (wxUint32)buf->GetSize();
+	}
+	return processed;
+}
+/// 12ビットデータ(リトルエンディアン)を返す
+wxUint32 DiskBasicFatBuffers::GetData12LE(wxUint32 pos) const
+{
+	wxUint32 val = INVALID_GROUP_NUMBER;
+	bool odd = ((pos & 1) != 0);
+	pos = pos * 3 / 2;
+	int cnt = 0;
+	for(size_t i = 0; i < Count() && cnt < 2; i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		while (pos < (wxUint32)buf->GetSize() && cnt < 2) {
+			wxUint32 tmp = buf->Get(pos);
+			if (cnt == 0) {
+				val = odd ? tmp >> 4 : tmp;
+			} else {
+				val |= odd ? tmp << 4 : (tmp & 0x0f) << 8;
+			}
+			pos++;
+			cnt++;
+		}
+		pos -= (wxUint32)buf->GetSize();
+	}
+	if (cnt != 2) val = INVALID_GROUP_NUMBER;
+	return val;
+}
+/// 12ビットデータ(リトルエンディアン)をセット
+void DiskBasicFatBuffers::SetData12LE(wxUint32 pos, wxUint32 val)
+{
+	bool odd = ((pos & 1) != 0);
+	pos = pos * 3 / 2;
+	int cnt = 0;
+	for(size_t i = 0; i < Count() && cnt < 2; i++) {
+		DiskBasicFatBuffer *buf = &Item(i);
+		while (pos < (wxUint32)buf->GetSize() && cnt < 2) {
+			wxUint32 tmp = buf->Get(pos);
+			if (cnt == 0) {
+				tmp = odd ? ((val & 0x0f) << 4) | (tmp & 0x0f) : (val & 0xff);
+			} else {
+				tmp = odd ? (val >> 4) & 0xff : ((val >> 8) & 0x0f) | (tmp & 0xf0);
+			}
+			buf->Set(pos, tmp);
+			pos++;
+			cnt++;
+		}
+		pos -= (wxUint32)buf->GetSize();
+	}
+}
+
+WX_DEFINE_OBJARRAY(ArrayArrayDiskBasicFatBuffer);
+
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+/// 8ビットデータを返す
+wxUint32 DiskBasicFatArea::GetData8(size_t idx, wxUint32 pos) const
+{
+	wxUint32 val = INVALID_GROUP_NUMBER;
+	if (idx >= Count()) return val;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	val = bufs->GetData8(pos);
+	return val;
+}
+/// 8ビットデータをセット
+void DiskBasicFatArea::SetData8(wxUint32 pos, wxUint32 val)
+{
+	for(size_t n = 0; n < Count(); n++) {
+		SetData8(n, pos, val);
+	}
+}
+/// 8ビットデータをセット
+void DiskBasicFatArea::SetData8(size_t idx, wxUint32 pos, wxUint32 val)
+{
+	if (idx >= Count()) return;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	bufs->SetData8(pos, val);
+}
+/// 8ビットデータが一致するか
+/// @return 一致した数（多重分）
+int DiskBasicFatArea::MatchData8(wxUint32 pos, wxUint32 val) const
+{
+	int match_count = 0;
+	for(size_t n = 0; n < Count(); n++) {
+		if (MatchData8(n, pos, val)) match_count++;
+	}
+	return match_count;
+}
+/// 8ビットデータが一致するか
+bool DiskBasicFatArea::MatchData8(size_t idx, wxUint32 pos, wxUint32 val) const
+{
+	if (idx >= Count()) return false;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	return bufs->MatchData8(pos, val);
+}
+/// 8ビットデータのビットをセット/リセット
+void DiskBasicFatArea::BitData8(size_t idx, wxUint32 pos, wxUint8 mask, bool val, bool invert)
+{
+	if (idx >= Count()) return;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	bufs->BitData8(pos, mask, val, invert);
+}
+/// 12ビットデータ(リトルエンディアン)を返す
+wxUint32 DiskBasicFatArea::GetData12LE(size_t idx, wxUint32 pos) const
+{
+	wxUint32 val = INVALID_GROUP_NUMBER;
+	if (idx >= Count()) return val;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	val = bufs->GetData12LE(pos);
+	return val;
+}
+/// 12ビットデータ(リトルエンディアン)をセット
+void DiskBasicFatArea::SetData12LE(wxUint32 pos, wxUint32 val)
+{
+	for(size_t n = 0; n < Count(); n++) {
+		SetData12LE(n, pos, val);
+	}
+}
+/// 12ビットデータ(リトルエンディアン)をセット
+void DiskBasicFatArea::SetData12LE(size_t idx, wxUint32 pos, wxUint32 val)
+{
+	if (idx >= Count()) return;
+
+	DiskBasicFatBuffers *bufs = &Item(idx);
+	bufs->SetData12LE(pos, val);
+}
+
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -135,6 +367,7 @@ DiskBasicFat::DiskBasicFat(DiskBasic *basic)
 DiskBasicFat::~DiskBasicFat()
 {
 }
+/// FATエリアをアサイン
 bool DiskBasicFat::Assign()
 {
 	bool valid = true;
@@ -215,6 +448,7 @@ bool DiskBasicFat::Assign()
 
 	return valid;
 }
+/// FATエリアのアサインを解除
 void DiskBasicFat::Clear()
 {
 //	format_type = FORMAT_TYPE_NONE;
@@ -230,6 +464,7 @@ void DiskBasicFat::Clear()
 
 	bufs.Clear();
 }
+/// FATエリアのアサインを解除
 void DiskBasicFat::Empty()
 {
 	Clear();

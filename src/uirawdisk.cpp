@@ -36,6 +36,9 @@ L3DiskRawPanel::L3DiskRawPanel(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	parent = parentwindow;
     frame = parentframe;
 
+	invert_data = false;
+	reverse_side = false;
+
 	// fit size on parent window
 	wxSize sz = parentwindow->GetClientSize();
 	SetSize(sz);
@@ -231,6 +234,9 @@ wxBEGIN_EVENT_TABLE(L3DiskRawTrack, wxListView)
 	EVT_MENU(IDM_EXPORT_TRACK, L3DiskRawTrack::OnExportTrack)
 	EVT_MENU(IDM_IMPORT_TRACK, L3DiskRawTrack::OnImportTrack)
 
+	EVT_MENU(IDM_INVERT_DATA, L3DiskRawTrack::OnChangeInvertData)
+	EVT_MENU(IDM_REVERSE_SIDE, L3DiskRawTrack::OnChangeReverseSide)
+
 	EVT_MENU(IDM_MODIFY_ID_H_DISK, L3DiskRawTrack::OnModifyIDonDisk)
 	EVT_MENU(IDM_MODIFY_ID_N_DISK, L3DiskRawTrack::OnModifyIDonDisk)
 	EVT_MENU(IDM_MODIFY_DENSITY_DISK, L3DiskRawTrack::OnModifyDensityOnDisk)
@@ -267,6 +273,11 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 
 	// popup menu
 	menuPopup = new wxMenu;
+	wxMenu *sm = new wxMenu;
+		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
+		sm->AppendCheckItem(IDM_REVERSE_SIDE, _("Descend side number order."));
+	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
+	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_EXPORT_TRACK, _("&Export Track..."));
 	menuPopup->Append(IDM_IMPORT_TRACK, _("&Import..."));
 	menuPopup->AppendSeparator();
@@ -322,6 +333,18 @@ void L3DiskRawTrack::OnExportTrack(wxCommandEvent& event)
 void L3DiskRawTrack::OnImportTrack(wxCommandEvent& event)
 {
 	ShowImportTrackDialog();
+}
+
+/// データを反転するチェック選択
+void L3DiskRawTrack::OnChangeInvertData(wxCommandEvent& event)
+{
+	parent->InvertData(event.IsChecked());
+}
+
+/// サイドを逆転するチェック選択
+void L3DiskRawTrack::OnChangeReverseSide(wxCommandEvent& event)
+{
+	parent->ReverseSide(event.IsChecked());
 }
 
 /// セクタリストからドラッグ開始
@@ -485,6 +508,9 @@ void L3DiskRawTrack::ShowPopupMenu()
 	int num = 0;
 	wxUint32 offset = 0;
 
+	menuPopup->Check(IDM_INVERT_DATA, parent->InvertData());
+	menuPopup->Check(IDM_REVERSE_SIDE, parent->ReverseSide());
+
 	bool opened = (disk != NULL);
 	menuPopup->Enable(IDM_EXPORT_TRACK, opened);
 	menuPopup->Enable(IDM_IMPORT_TRACK, opened);
@@ -587,7 +613,8 @@ bool L3DiskRawTrack::CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &
 
 		bool sts = ExportTrackDataFile(file_path.GetFullPath(),
 			track->GetTrackNumber(), track->GetSideNumber(), st_sec,
-			track->GetTrackNumber(), track->GetSideNumber(), ed_sec
+			track->GetTrackNumber(), track->GetSideNumber(), ed_sec,
+			parent->InvertData(), parent->ReverseSide()
 		);
 		if (sts) {
 			// ファイルリストに追加
@@ -645,7 +672,11 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 
 	wxString caption = _("Export data from track");
 
-	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number, track->GetTrackNumber(), track->GetSideNumber(), sector->GetSectorNumber());
+	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number
+		, track->GetTrackNumber(), track->GetSideNumber(), sector->GetSectorNumber()
+		, -1, -1, -1
+		, parent->InvertData(), parent->ReverseSide()
+	);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) return false;
 
@@ -666,14 +697,26 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 	if (sts == wxID_OK) {
 		return ExportTrackDataFile(path
 		, dlg.GetTrackNumber(0), dlg.GetSideNumber(0), dlg.GetSectorNumber(0)
-		, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1));
+		, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1)
+		, dlg.InvertData(), dlg.ReverseSide()
+		);
 	} else {
 		return false;
 	}
 }
 
 /// 指定したファイルにトラックデータをエクスポート
-bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
+/// @param [in] path ファイルパス
+/// @param [in] st_trk 開始トラック番号
+/// @param [in] st_sid 開始サイド番号
+/// @param [in] st_sec 開始セクタ番号
+/// @param [in] ed_trk 終了トラック番号
+/// @param [in] ed_sid 終了サイド番号
+/// @param [in] ed_sec 終了セクタ番号
+/// @param [in] inv_data データを反転する
+/// @param [in] rev_side サイドを逆転する（降順）
+/// @return true:成功 / false:エラー
+bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side)
 {
 	frame->SetIniExportFilePath(path);
 
@@ -682,40 +725,57 @@ bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int s
 	int trk = st_trk;
 	int sid = st_sid;
 	int sec = st_sec;
+	int ssid = side_number >= 0 ? side_number : 0;
 	int esid = side_number >= 0 ? side_number : (disk->GetSidesPerDisk() - 1);
 	int esec = disk->GetSectorsPerTrack();
 
 	wxFile outfile(path, wxFile::write);
 	if (!outfile.IsOpened()) return false;
 
-	for(;trk <= ed_trk; trk++) {
+	int sid_dir = 1;
+	if (rev_side) {
+		// 開始サイドと終了サイドを入れ替え
+		int swp = esid;
+		esid = ssid;
+		ssid = swp;
+		sid_dir = -1;
+	}
+	esid += sid_dir;
+
+	Utils::TempData tbuf;
+	bool eof = false;
+	for(;trk <= ed_trk && !eof; trk++) {
 		if (trk == ed_trk) {
 			// 最終トラックなら終了サイドまで
 			esid = ed_sid;
+			esid += sid_dir;
 		}
-		for(;sid <= esid; sid++) {
+		for(; sid != esid && !eof; sid += sid_dir) {
 			DiskD88Track *track = disk->GetTrack(trk, sid);
 			if (track) {
 				if (trk == ed_trk && sid == ed_sid) {
 					// 最終トラック＆最終サイドなら終了セクタまで
 					esec = ed_sec;
 				}
-				for(;sec <= esec; sec++) {
+				for(; sec <= esec && !eof; sec++) {
 					DiskD88Sector *sector = track->GetSector(sec);
 					if (sector) {
 						size_t bufsize = sector->GetSectorSize();
 						wxUint8 *buf = sector->GetSectorBuffer();
 
-						outfile.Write((const void *)buf, bufsize);
+						tbuf.SetData(buf, bufsize, inv_data);
+						if (outfile.Write(tbuf.GetData(), tbuf.GetSize()) == 0) {
+							eof = true;
+						}
 					}
 				}
 				sec = 1;
 			}
 		}
-		sid = side_number >= 0 ? side_number : 0;
+		sid = ssid;
 	}
 
-	return true;
+	return !eof;
 }
 
 /// トラックにインポート ダイアログ表示
@@ -782,7 +842,11 @@ bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk
 		ed_sid = st_sid;
 	}
 
-	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number, st_trk, st_sid, st_sec, ed_trk, ed_sid, ed_sec);
+	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number
+		, st_trk, st_sid, st_sec
+		, ed_trk, ed_sid, ed_sec
+		, parent->InvertData(), parent->ReverseSide()
+	);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) {
 		return false;
@@ -790,7 +854,9 @@ bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk
 
 	return ImportTrackDataFile(path
 	, dlg.GetTrackNumber(0), dlg.GetSideNumber(0), dlg.GetSectorNumber(0)
-	, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1));
+	, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1)
+	, dlg.InvertData(), dlg.ReverseSide()
+	);
 }
 
 /// 指定したファイルから指定した範囲にトラックデータをインポート
@@ -801,8 +867,10 @@ bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk
 /// @param [in] ed_trk 終了トラック番号
 /// @param [in] ed_sid 終了サイド番号
 /// @param [in] ed_sec 終了セクタ番号
+/// @param [in] inv_data データを反転する
+/// @param [in] rev_side サイドを逆転する（降順）
 /// @return true:成功 / false:エラー
-bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
+bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side)
 {
 	frame->SetIniExportFilePath(path);
 
@@ -811,44 +879,58 @@ bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int s
 	int trk = st_trk;
 	int sid = st_sid;
 	int sec = st_sec;
+	int ssid = side_number >= 0 ? side_number : 0;
 	int esid = side_number >= 0 ? side_number : (disk->GetSidesPerDisk() - 1);
 	int esec = disk->GetSectorsPerTrack();
 
 	wxFile infile(path, wxFile::read);
 	if (!infile.IsOpened()) return false;
 
-	for(;trk <= ed_trk; trk++) {
+	int sid_dir = 1;
+	if (rev_side) {
+		// 開始サイドと終了サイドを入れ替え
+		int swp = esid;
+		esid = ssid;
+		ssid = swp;
+		sid_dir = -1;
+	}
+	esid += sid_dir;
+
+	bool eof = false;
+	for(;trk <= ed_trk && !eof; trk++) {
 		if (trk == ed_trk) {
 			// 最終トラックなら終了サイドまで
 			esid = ed_sid;
+			esid += sid_dir;
 		}
-		for(;sid <= esid; sid++) {
+		for(; sid != esid && !eof; sid += sid_dir) {
 			DiskD88Track *track = disk->GetTrack(trk, sid);
 			if (track) {
 				if (trk == ed_trk && sid == ed_sid) {
 					// 最終トラック＆最終サイドなら終了セクタまで
 					esec = ed_sec;
 				}
-				for(;sec <= esec; sec++) {
+				for(; sec <= esec && !eof; sec++) {
 					DiskD88Sector *sector = track->GetSector(sec);
 					if (sector) {
 						size_t bufsize = sector->GetSectorSize();
 						wxUint8 *buf = sector->GetSectorBuffer();
 
 						infile.Read((void *)buf, bufsize);
+						if (inv_data) {
+							mem_invert(buf, bufsize);
+						}
 
 						if (infile.Eof()) {
 							// ファイル終わり
-							esec = 0;
-							esid = 0;
-							ed_trk = 0;
+							eof = true;
 						}
 					}
 				}
 				sec = 1;
 			}
 		}
-		sid = side_number >= 0 ? side_number : 0;
+		sid = ssid;
 	}
 
 	return true;
@@ -1094,6 +1176,8 @@ wxBEGIN_EVENT_TABLE(L3DiskRawSector, wxListCtrl)
 	EVT_MENU(IDM_EXPORT_FILE, L3DiskRawSector::OnExportFile)
 	EVT_MENU(IDM_IMPORT_FILE, L3DiskRawSector::OnImportFile)
 
+	EVT_MENU(IDM_INVERT_DATA, L3DiskRawSector::OnChangeInvertData)
+
 	EVT_MENU(IDM_MODIFY_ID_C_TRACK, L3DiskRawSector::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_ID_H_TRACK, L3DiskRawSector::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_ID_N_TRACK, L3DiskRawSector::OnModifyIDonTrack)
@@ -1154,6 +1238,10 @@ L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *paren
 
 	// popup menu
 	menuPopup = new wxMenu;
+	wxMenu *sm = new wxMenu;
+		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
+	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
+	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_EXPORT_FILE, _("&Export Sector..."));
 	menuPopup->Append(IDM_IMPORT_FILE, _("&Import..."));
 	menuPopup->AppendSeparator();
@@ -1245,6 +1333,12 @@ void L3DiskRawSector::OnImportFile(wxCommandEvent& event)
 	ShowImportDataFileDialog();
 }
 
+/// データを反転するチェック選択
+void L3DiskRawSector::OnChangeInvertData(wxCommandEvent& event)
+{
+	parent->InvertData(event.IsChecked());
+}
+
 /// トラック上のID一括変更選択
 void L3DiskRawSector::OnModifyIDonTrack(wxCommandEvent& event)
 {
@@ -1319,6 +1413,8 @@ void L3DiskRawSector::OnChar(wxKeyEvent& event)
 void L3DiskRawSector::ShowPopupMenu()
 {
 	if (!menuPopup) return;
+
+	menuPopup->Check(IDM_INVERT_DATA, parent->InvertData());
 
 	bool opened = (track != NULL);
 	menuPopup->Enable(IDM_IMPORT_FILE, opened);
@@ -1629,7 +1725,9 @@ bool L3DiskRawSector::ExportDataFile(const wxString &path, DiskD88Sector *sector
 	wxFile outfile(path, wxFile::write);
 	if (!outfile.IsOpened()) return false;
 
-	outfile.Write((const void *)buf, bufsize);
+	Utils::TempData tbuf;
+	tbuf.SetData(buf, bufsize, parent->InvertData());
+	outfile.Write(tbuf.GetData(), tbuf.GetSize());
 
 	return true;
 }

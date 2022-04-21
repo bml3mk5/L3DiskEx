@@ -3,7 +3,7 @@
 #
 CC=g++
 
-APPLICATION_VERSION=0.3.7
+APPLICATION_VERSION=0.3.8
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
@@ -75,6 +75,7 @@ OBJS=	utils.o \
 	basictype_os9.o \
 	basictype_cpm.o \
 	basictype_tfdos.o \
+	basictype_cdos.o \
 	basicfat.o \
 	basicdiritem_fat8.o \
 	basicdiritem_fm.o \
@@ -90,6 +91,7 @@ OBJS=	utils.o \
 	basicdiritem_os9.o \
 	basicdiritem_cpm.o \
 	basicdiritem_tfdos.o \
+	basicdiritem_cdos.o \
 	basicdiritem.o \
 	basicdir.o \
 	basicfmt.o \

@@ -106,9 +106,9 @@ private:
 	DiskBasicDirItemOS9FD fd;
 
 	/// ファイル名を格納する位置を返す
-	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
-	/// ファイル名を格納するバッファサイズを返す
-	int		GetFileNameSize(bool *invert = NULL) const;
+	wxUint8 *GetFileNamePos(size_t &size, size_t &len) const;
+//	/// ファイル名を格納するバッファサイズを返す
+//	int		GetFileNameSize(bool *invert = NULL) const;
 	/// 属性１を返す
 	int		GetFileType1() const;
 	/// 属性１のセット
@@ -124,7 +124,7 @@ private:
 	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 	/// ファイル名を設定
-	void	SetFileName(const wxUint8 *filename, int length);
+	void	SetFileName(const wxUint8 *filename, size_t length);
 	/// ファイル名を得る
 	void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 

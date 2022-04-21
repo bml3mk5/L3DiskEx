@@ -29,13 +29,20 @@ bool DiskBasicTypeOS9::CheckFat()
 	DiskD88Sector *sector = basic->GetManagedSector(0);
 	os9_ident = (os9_ident_t *)sector->GetSectorBuffer();
 
-	if (GET_OS9_LSN(os9_ident->DD_TOT) == 0) {
+	int ival = GET_OS9_LSN(os9_ident->DD_TOT);
+	if (ival == 0) {
 		valid = false;
 	}
 	if (os9_ident->DD_SPT == 0) {
 		valid = false;
 	}
-
+	if (valid) {
+		// 最終グループ番号
+		basic->SetFatEndGroup(ival - 1);
+		// tracks per side
+		ival = basic->GetSectorsPerGroup() * (basic->GetFatEndGroup() + 1) / basic->GetSectorsPerTrackOnBasic() / basic->GetSidesPerDiskOnBasic();
+		basic->SetTracksPerSideOnBasic(ival);
+	}
 	return valid;
 }
 
@@ -84,6 +91,7 @@ int DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 		return -1;
 	}
 	ival--;
+	// 最終グループ番号
 	basic->SetFatEndGroup(ival);
 //	end_group = (wxUint32)ival;
 
@@ -659,7 +667,8 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 	os9_ident = (os9_ident_t *)sector->GetSectorBuffer();
 	if (!os9_ident) return false;
 
-	int total_lsn = basic->GetFatEndGroup() + 1;
+//	int total_lsn = basic->GetFatEndGroup() + 1;
+	int total_lsn = (basic->GetTracksPerSide() - basic->GetManagedTrackNumber()) * basic->GetSidesPerDiskOnBasic() * basic->GetSectorsPerTrackOnBasic() / basic->GetSectorsPerGroup();
 
 	int map_lsn = 1;
 	int root_start_lsn = (basic->GetDirStartSector() - 1) / basic->GetSectorsPerGroup();
@@ -838,7 +847,11 @@ void DiskBasicTypeOS9::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 /// IPLや管理エリアの属性をセット
 void DiskBasicTypeOS9::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
+	const DiskBasicFormat *fmt = basic->GetFormatType();
+
 	// volume label
-	wxCharBuffer vol = data.GetVolumeName().To8BitData();
-	DiskBasicDirItemOS9::EncodeString(os9_ident->DD_NAM, sizeof(os9_ident->DD_NAM), vol, vol.length());
+	if (fmt->HasVolumeName()) {
+		wxCharBuffer vol = data.GetVolumeName().To8BitData();
+		DiskBasicDirItemOS9::EncodeString(os9_ident->DD_NAM, sizeof(os9_ident->DD_NAM), vol, vol.length());
+	}
 }
