@@ -1,9 +1,13 @@
 ﻿/// @file basictype_l32d.cpp
 ///
-/// @brief disk basic fat type for L3 BASIC 2D
+/// @brief disk basic type for L3 BASIC 2D
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_l32d.h"
 #include "basicfmt.h"
+
 
 //
 //
@@ -70,9 +74,9 @@ wxUint32 DiskBasicTypeL32D::CalcManagedStartGroup()
 {
 	int trk = basic->GetManagedTrackNumber();
 	int sid = basic->GetFatSideNumber();
-	int sides = basic->GetSidesOnBasic();
+	int sides = basic->GetSidesPerDiskOnBasic();
 	int secs_per_grp = basic->GetSectorsPerGroup();
-	int secs_per_trk = basic->GetSectorsOnBasic();
+	int secs_per_trk = basic->GetSectorsPerTrackOnBasic();
 	// トラック1から開始するので-1する
 	trk--;
 	managed_start_group = (trk * sides + sid) * secs_per_trk / secs_per_grp;
@@ -83,7 +87,7 @@ wxUint32 DiskBasicTypeL32D::CalcManagedStartGroup()
 int DiskBasicTypeL32D::CalcDataStartSectorPos()
 {
 	// トラック0を除く
-	return basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
+	return basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 }
 
 /// スキップするトラック番号

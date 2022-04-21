@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクID一覧
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _UIRAWDISK_H_
 #define _UIRAWDISK_H_
 
@@ -282,7 +285,7 @@ private:
 
 	DiskD88Track *track;
 
-	L3SectorListItem selected_item;
+//	L3SectorListItem selected_item;
 
 	bool initialized;
 

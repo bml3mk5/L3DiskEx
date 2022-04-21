@@ -2,11 +2,15 @@
 ///
 /// @brief D88ディスクパーサー
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskd88parser.h"
 #include "diskd88.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
+
 
 //
 static int compare_int(int *a, int *b)

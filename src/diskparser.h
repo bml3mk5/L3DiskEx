@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクイメージパーサ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISK_PARSER_H_
 #define _DISK_PARSER_H_
 
@@ -9,6 +12,7 @@
 #include <wx/string.h>
 #include <wx/arrstr.h>
 #include <wx/filename.h>
+
 
 class wxInputStream;
 class wxArrayString;

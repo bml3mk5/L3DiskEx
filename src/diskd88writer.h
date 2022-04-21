@@ -2,10 +2,14 @@
 ///
 /// @brief D88ディスクライター
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKD88_WRITER_H_
 #define _DISKD88_WRITER_H_
 
 #include "common.h"
+
 
 class wxOutputStream;
 class DiskWriter;
@@ -21,8 +25,6 @@ private:
 	DiskResult *result;
 
 	/// ディスク1つを保存
-	int SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream);
-	/// ディスクの1つサイドだけを保存(1S用)
 	int SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream);
 
 public:

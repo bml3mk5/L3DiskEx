@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic type for OS-9
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_os9.h"
 #include "basicfmt.h"
 #include "basicdir.h"
@@ -34,6 +37,28 @@ bool DiskBasicTypeOS9::CheckFat()
 	}
 
 	return valid;
+}
+
+/// ルートディレクトリをアサイン
+/// @param [in]     start_sector 開始セクタ番号
+/// @param [in]     end_sector   終了セクタ番号
+/// @param [out]    group_items  セクタリスト
+/// @param [in,out] dir_item     ルートディレクトリアイテム
+bool DiskBasicTypeOS9::AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item)
+{
+	bool sts = DiskBasicType::AssignRootDirectory(start_sector, end_sector, group_items, dir_item);
+
+	// FDセクタへのポインタをルートアイテムに設定
+	DiskBasicDirItemOS9 *ditem = (DiskBasicDirItemOS9 *)dir_item;
+
+	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
+	ditem->SetStartGroup(dir_fd_lsn);
+	DiskBasicDirItemOS9FD *fd = &ditem->GetFD();
+	DiskD88Sector *sector = basic->GetManagedSector(dir_fd_lsn);
+	if (!sector) return false;
+	fd->Set(sector, (directory_os9_fd_t *)sector->GetSectorBuffer());
+
+	return sts;
 }
 
 /// ディスクから各パラメータを取得
@@ -81,6 +106,10 @@ int DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 	basic->SetSectorsPerGroup(ival);
 //	secs_per_group = ival;
 
+	// tracks per side
+	ival = basic->GetSectorsPerGroup() * (basic->GetFatEndGroup() + 1) / basic->GetSectorsPerTrackOnBasic() / basic->GetSidesPerDiskOnBasic();
+	basic->SetTracksPerSideOnBasic(ival);
+
 	// root directory
 	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
 	if (dir_fd_lsn > basic->GetFatEndGroup()) {
@@ -109,14 +138,13 @@ int DiskBasicTypeOS9::ParseParamOnDisk(DiskD88Disk *disk)
 
 //
 
-/// ルートディレクトリのチェック
-bool DiskBasicTypeOS9::CheckRootDirectory(int start_sector, int end_sector, bool is_formatting)
+/// ルートディレクトリのセクタリストを計算
+/// @param [in] start_sector  ディレクトリ開始セクタ番号
+/// @param [in] end_sector    ディレクトリ終了セクタ番号
+/// @param [out] group_items  セクタリスト
+bool DiskBasicTypeOS9::CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items)
 {
-	// フォーマット中はチェックしない
-	if (is_formatting) return true;
-
 	bool valid = true;
-	bool last = false;
 
 	// root directory
 	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
@@ -129,60 +157,10 @@ bool DiskBasicTypeOS9::CheckRootDirectory(int start_sector, int end_sector, bool
 		return false;
 	}
 
-	for(int i = 0; i < 48 && valid && !last; i++) {
-		wxUint32 start_lsn = GET_OS9_LSN(fdd->FD_SEG[i].LSN);
-		wxUint32 end_lsn = wxUINT16_SWAP_ON_LE(fdd->FD_SEG[i].SIZ);
-		if (start_lsn == 0 && end_lsn == 0) {
-			break;
-		}
-		end_lsn = end_lsn * basic->GetSectorsPerGroup() + start_lsn;
+	group_items.Empty();
 
-		for(wxUint32 lsn = start_lsn; lsn < end_lsn; lsn++) {
-			sector = basic->GetSectorFromGroup(lsn);
-			if (!sector) {
-				valid = false;
-				break;
-			}
-
-			wxUint8 *buffer = sector->GetSectorBuffer();
-			if (!buffer) {
-				valid = false;
-				break;
-			}
-	
-			int remain = sector->GetSectorSize();
-
-			// ディレクトリのチェック
-			while(valid && !last && remain > 0) {
-				DiskBasicDirItem *nitem = dir->NewItem(sector, buffer);
-				valid = nitem->Check(last);
-				remain -= nitem->GetDataSize();
-				buffer += nitem->GetDataSize();
-				delete nitem;
-			}
-		}
-	}
-	return valid;
-}
-
-/// ルートディレクトリをアサイン
-bool DiskBasicTypeOS9::AssignRootDirectory(int start_sector, int end_sector)
-{
-	int index_number = 0;
-	bool unuse = false;
-
-	// root directory
-	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
-	DiskD88Sector *sector = basic->GetManagedSector(dir_fd_lsn);
-	if (!sector) {
-		return false;
-	}
-	directory_os9_fd_t *fdd = (directory_os9_fd_t *)sector->GetSectorBuffer();
-	if (!fdd) {
-		return false;
-	}
-
-	for(int i = 0; i < 48; i++) {
+	size_t dir_size = 0;
+	for(int i = 0; i < 48 && valid; i++) {
 		wxUint32 start_lsn = GET_OS9_LSN(fdd->FD_SEG[i].LSN);
 		wxUint32 end_lsn = wxUINT16_SWAP_ON_LE(fdd->FD_SEG[i].SIZ);
 		if (start_lsn == 0 && end_lsn == 0) {
@@ -195,30 +173,81 @@ bool DiskBasicTypeOS9::AssignRootDirectory(int start_sector, int end_sector)
 			int sid_num = 0;
 			sector = basic->GetSectorFromGroup(lsn, trk_num, sid_num);
 			if (!sector) {
+				valid = false;
 				break;
 			}
+			group_items.Add(lsn, 0, trk_num, sid_num, sector->GetSectorNumber(), sector->GetSectorNumber());
+			dir_size += sector->GetSectorSize();
+		}
+	}
+	group_items.SetSize(dir_size);
 
+	return valid;
+}
+
+/// ディレクトリが空か
+bool DiskBasicTypeOS9::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items)
+{
+	bool valid = true;
+	bool last = false;
+
+	int index_number = 0;
+	DiskBasicDirItem *nitem = dir->NewItem(NULL, NULL);
+	for(size_t idx = 0; idx < group_items.Count(); idx++) {
+		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
+		int trk_num = gitem->track;
+		int sid_num = gitem->side;
+		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		if (!track) {
+			valid = false;
+			break;
+		}
+		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && valid && !last; sec_num++) {
+			DiskD88Sector *sector = track->GetSector(sec_num);
+//			nitem->SetSector(sector);
+			if (!sector) {
+				valid = false;
+				break;
+			}
 			wxUint8 *buffer = sector->GetSectorBuffer();
 			if (!buffer) {
+				valid = false;
 				break;
 			}
 
 			int pos = 0;
 			int size = sector->GetSectorSize();
 
-			buffer += basic->GetDirStartPosOnSector();
-			size -= basic->GetDirStartPosOnSector();
-
-			while(pos < size) {
-				DiskBasicDirItem *item = dir->AssignItem(index_number, trk_num, sid_num, sector, pos, buffer, unuse);
-				pos += item->GetDataSize();
-				buffer += item->GetDataSize();
+			// ディレクトリにファイルがないかのチェック
+			while(valid && !last && pos < size) {
+				nitem->SetDataPtr(index_number, track->GetTrackNumber(), track->GetSideNumber(), sector, pos, buffer);
+				// FDセクタを調べる
+				DiskD88Sector *fd_sector = basic->GetSectorFromGroup(nitem->GetStartGroup());
+				if (fd_sector) {
+					directory_os9_fd_t *fd_buf = (directory_os9_fd_t *)fd_sector->GetSectorBuffer();
+					if (fd_buf) {
+						DiskBasicDirItemOS9FD *fd = &((DiskBasicDirItemOS9 *)nitem)->GetFD();
+						fd->Set(fd_sector, fd_buf);
+						if (nitem->IsNormalFile()) {
+							valid = !nitem->CheckUsed(last);
+						}
+					}
+				}
+				pos    += nitem->GetDataSize();
+				buffer += nitem->GetDataSize();
 				index_number++;
 			}
 		}
 	}
+	delete nitem;
+	return valid;
+}
 
-	return true;
+/// ディレクトリエリアのサイズに達したらアサイン終了するか
+bool DiskBasicTypeOS9::FinishAssigningDirectory(int size) const
+{
+	// サイズに達したら以降は未使用とする
+	return (size <= 0);
 }
 
 /// 使用可能なディスクサイズを得る
@@ -411,6 +440,20 @@ int DiskBasicTypeOS9::AllocateGroups(DiskBasicDirItem *item, int data_size, Allo
 	DiskBasicDirItemOS9FD *fd = &ditem->GetFD();
 
 	int seg_idx = -1;
+	if (flags == ALLOCATE_GROUPS_APPEND) {
+		// 追加の場合、既にあるセグメントを計算
+		seg_idx = 48;
+		for(int idx = 0; idx < 48; idx++) {
+			if (fd->GetLSN(idx) == 0 && fd->GetSIZ(idx) == 0) {
+				seg_idx = idx - 1; 
+				break;
+			}
+		}
+		if (seg_idx >= 48) {
+			// セグメントに空きなし
+			return -1;
+		}
+	}
 	int start_seg_idx = seg_idx + 1;
 
 	int file_size = (int)fd->GetSIZ();
@@ -502,7 +545,7 @@ int DiskBasicTypeOS9::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_gr
 /// データ領域の開始セクタを計算
 int DiskBasicTypeOS9::CalcDataStartSectorPos()
 {
-	return basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
+	return basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 }
 
 /// ルートディレクトリか
@@ -582,7 +625,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 
 	// カレント
 	buf += newitem->GetDataSize();
-	newitem->SetDataPtr((directory_t *)buf);
+	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
 
 	newitem->ClearData();
 	newitem->SetStartGroup(item->GetStartGroup());
@@ -590,9 +633,10 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 //	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
 
 	// ディレクトリサイズを更新
-	DiskBasicDirItem *dir_item = dir->FindFile(wxT("."), NULL, NULL);
+	int dir_size = dir->CalcSize();
+//	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
+	DiskBasicDirItem *dir_item = item->GetParent();
 	if (dir_item) {
-		int dir_size = dir_item->GetFileSize() + (int)dir_item->GetDataSize();
 		dir_item->SetFileSize(dir_size);
 	}
 
@@ -647,7 +691,7 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 	os9_ident->DD_DSK = wxUINT16_SWAP_ON_LE(0);
 
 	// format, density, number of sides
-	ival = ((basic->GetSidesOnBasic() - 1) & 0x01);
+	ival = ((basic->GetSidesPerDiskOnBasic() - 1) & 0x01);
 	ival |= (basic->HasSingleDensity() == 1 ? 0 : 0x02);
 	os9_ident->DD_FMT = (wxUint8)ival;
 
@@ -737,11 +781,14 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 void DiskBasicTypeOS9::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
 	// ディレクトリサイズを更新
-	DiskBasicDirItem *dir_item = dir->FindFile(wxT("."), NULL, NULL);
-	if (dir_item) {
-		int dir_size = dir_item->GetFileSize() + (int)dir_item->GetDataSize();
-		dir_item->SetFileSize(dir_size);
+	int dir_size = dir->CalcSize();
+//	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
+	DiskBasicDirItem *dir_item = item->GetParent();
+	if (!dir_item) {
+		// Why?
+		return;
 	}
+	dir_item->SetFileSize(dir_size);
 }
 
 #if 0
@@ -765,11 +812,14 @@ bool DiskBasicTypeOS9::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 	SetGroupNumber(item->GetStartGroup(), 0);
 
 	// ディレクトリサイズを更新
-	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
-	if (dir_item) {
-		int dir_size = dir_item->GetFileSize() - (int)dir_item->GetDataSize();
-		dir_item->SetFileSize(dir_size);
+	int dir_size = dir->CalcSize();
+//	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
+	DiskBasicDirItem *dir_item = item->GetParent();
+	if (!dir_item) {
+		// Why?
+		return true;
 	}
+	dir_item->SetFileSize(dir_size);
 
 	return true;
 }

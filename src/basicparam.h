@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic parameter
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICPARAM_H_
 #define _BASICPARAM_H_
 
@@ -11,6 +14,8 @@
 #include "basiccommon.h"
 #include "diskd88.h"
 
+
+//////////////////////////////////////////////////////////////////////
 
 /// DISK BASICのフォーマットタイプ
 class DiskBasicFormat
@@ -36,6 +41,28 @@ public:
 
 WX_DECLARE_OBJARRAY(DiskBasicFormat, DiskBasicFormats);
 
+//////////////////////////////////////////////////////////////////////
+
+/// 特別な属性
+class SpecialAttribute
+{
+private:
+	int type;
+	int value;
+	int mask;
+
+public:
+	SpecialAttribute(int n_type, int n_value, int n_mask);
+
+	int GetType() const { return type; }
+	int GetValue() const { return value; }
+	int GetMask() const { return mask; }
+};
+
+WX_DECLARE_OBJARRAY(SpecialAttribute, SpecialAttributes);
+
+//////////////////////////////////////////////////////////////////////
+
 /// DISK BASICのパラメータを保持するクラス
 class DiskBasicParam
 {
@@ -47,6 +74,7 @@ private:
 	int sectors_per_group;		///< グループ(クラスタ)サイズ
 	int sides_on_basic;			///< BASICが使用するサイド数
 	int sectors_on_basic;		///< BASICで使用するセクタ数/トラック
+	int tracks_on_basic;		///< BASICで使用するトラック数/サイド
 	int managed_track_number;	///< ファイル管理エリア
 	int reserved_sectors;		///< 予約済みセクタ数
 	int number_of_fats;			///< ファイル管理エリアの数
@@ -71,6 +99,7 @@ private:
 	wxString id_string;			///< ID領域の先頭コード
 	wxString ipl_string;		///< IPL領域の先頭コード
 	wxString volume_string;		///< ボリューム名
+	SpecialAttributes special_attrs;	///< 特別な属性
 	wxUint8 fillcode_on_format;	///< フォーマット時に埋めるコード
 	wxUint8 fillcode_on_fat;	///< フォーマット時にFAT領域を埋めるコード
 	wxUint8 fillcode_on_dir;	///< フォーマット時にディレクトリ領域を埋めるコード
@@ -91,6 +120,7 @@ public:
 		int					n_sectors_per_group,
 		int					n_sides_on_basic,
 		int					n_sectors_on_basic,
+		int					n_tracks_on_basic,
 		int					n_managed_track_number,
 		int					n_reserved_sectors,
 		int					n_number_of_fats,
@@ -115,6 +145,7 @@ public:
 		const wxString &	n_id_string,
 		const wxString &	n_ipl_string,
 		const wxString &	n_volume_string,
+		const SpecialAttributes & n_special_attrs,
 		wxUint8				n_fillcode_on_format,
 		wxUint8				n_fillcode_on_fat,
 		wxUint8				n_fillcode_on_dir,
@@ -137,8 +168,9 @@ public:
 	const wxString&		GetBasicCategoryName() const	{ return basic_category_name; }
 	const DiskBasicFormat *GetFormatType() const		{ return format_type; }
 	int					GetSectorsPerGroup() const	{ return sectors_per_group; }
-	int					GetSidesOnBasic() const		{ return sides_on_basic; }
-	int					GetSectorsOnBasic() const	{ return sectors_on_basic; }
+	int					GetSidesPerDiskOnBasic() const		{ return sides_on_basic; }
+	int					GetSectorsPerTrackOnBasic() const	{ return sectors_on_basic; }
+	int					GetTracksPerSideOnBasic() const	{ return tracks_on_basic; }
 	int					GetManagedTrackNumber() const	{ return managed_track_number; }
 	int					GetReservedSectors() const	{ return reserved_sectors; }
 	int					GetNumberOfFats() const		{ return number_of_fats; }
@@ -164,6 +196,7 @@ public:
 	const wxString&		GetIDString() const			{ return id_string; }
 	const wxString&		GetIPLString() const		{ return ipl_string; }
 	const wxString&		GetVolumeString() const		{ return volume_string; }
+	const SpecialAttributes& GetSpecialAttributes() const { return special_attrs; }
 	wxUint8				GetFillCodeOnFormat() const	{ return fillcode_on_format; }
 	wxUint8				GetFillCodeOnFAT() const	{ return fillcode_on_fat; }
 	wxUint8				GetFillCodeOnDir() const	{ return fillcode_on_dir; }
@@ -173,11 +206,15 @@ public:
 	bool				IsSideReversed() const		{ return side_reversed; }
 	int					GetReversedSideNumber(int side_num) const;
 	bool				CanMountEachSides() const;
+	bool				MatchSpecialAttr(int type, int value) const;
+	bool				MatchVolumeAttr(int value) const;
 
 	const wxString& GetBasicDescription() const		{ return basic_description; }
 
 	void			SetSectorsPerGroup(int val)		{ sectors_per_group = val; }
-	void			SetSidesOnBasic(int val)		{ sides_on_basic = val; }
+	void			SetSidesPerDiskOnBasic(int val)		{ sides_on_basic = val; }
+	void			SetSectorsPerTrackOnBasic(int val)		{ sectors_on_basic = val; }
+	void			SetTracksPerSideOnBasic(int val)		{ tracks_on_basic = val; }
 	void			SetManagedTrackNumber(int val)	{ managed_track_number = val; }
 	void			SetReservedSectors(int val)		{ reserved_sectors = val; }
 	void			SetNumberOfFats(int val)		{ number_of_fats = val; }
@@ -185,7 +222,7 @@ public:
 	void			SetReservedSector(int val)		{ reserved_sectors = val; }
 	void			SetFatStartPos(int val)			{ fat_start_pos = val; }
 	void			SetFatEndGroup(wxUint32 val)	{ fat_end_group = val; }
-	void			SetReservedGroups(const wxArrayInt &val)	{ reserved_groups = val; }
+	void			SetReservedGroups(const wxArrayInt &arr)	{ reserved_groups = arr; }
 	void			SetGroupFinalCode(wxUint32 val)	{ group_final_code = val; }
 	void			SetGroupSystemCode(wxUint32 val) { group_system_code = val; }
 	void			SetGroupUnusedCode(wxUint32 val) { group_unused_code = val; }
@@ -195,6 +232,7 @@ public:
 	void			SetIDString(const wxString &str)		{ id_string = str; }
 	void			SetIPLString(const wxString &str)		{ ipl_string = str; }
 	void			SetVolumeString(const wxString &str)	{ volume_string = str; }
+	void			GetSpecialAttributes(const SpecialAttributes &arr) { special_attrs = arr; }
 	void			SetDirEndSector(int val)		{ dir_end_sector = val; }
 	void			SetDirEntryCount(int val)		{ dir_entry_count = val; }
 	void			SetSubDirGroupSize(int val)		{ subdir_group_size = val; }
@@ -220,6 +258,8 @@ WX_DECLARE_OBJARRAY(DiskBasicParam, DiskBasicParams);
 
 WX_DEFINE_ARRAY(const DiskBasicParam *, DiskBasicParamPtrs);
 
+//////////////////////////////////////////////////////////////////////
+
 /// DISK BASICのカテゴリ(メーカ毎、OS毎にまとめる)クラス
 class DiskBasicCategory
 {
@@ -242,6 +282,10 @@ public:
 
 WX_DECLARE_OBJARRAY(DiskBasicCategory, DiskBasicCategories);
 
+//////////////////////////////////////////////////////////////////////
+
+class wxXmlNode;
+
 /// DISK BASICパラメータのテンプレートを提供する
 class DiskBasicTemplates
 {
@@ -249,6 +293,10 @@ private:
 	DiskBasicFormats	formats;
 	DiskBasicParams		types;
 	DiskBasicCategories	categories;
+
+	bool LoadTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool LoadFormats(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
 
 public:
 	DiskBasicTemplates();
@@ -258,25 +306,25 @@ public:
 	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
 
 	/// カテゴリとタイプに一致するパラメータを検索
-	DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type);
+	const DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type) const;
 	/// カテゴリが一致し、タイプリストに含まれるパラメータを検索
-	DiskBasicParam *FindType(const wxString &n_category, const wxArrayString &n_basic_types);
+	const DiskBasicParam *FindType(const wxString &n_category, const wxArrayString &n_basic_types) const;
 	/// カテゴリ、タイプ、サイド数とセクタ数が一致するパラメータを検索
-	DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors);
+	const DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors) const;
 	/// DISK BASICフォーマット種類に一致するタイプを検索
-	size_t FindTypes(const wxArrayInt &n_format_types, DiskBasicParams &n_types);
+	size_t FindTypes(const wxArrayInt &n_format_types, DiskBasicParams &n_types) const;
 	/// カテゴリ番号に一致するタイプ名リストを検索
-	size_t FindTypeNames(size_t n_category_index, wxArrayString &n_type_names);
+	size_t FindTypeNames(size_t n_category_index, wxArrayString &n_type_names) const;
 	/// カテゴリ名に一致するタイプ名リストを検索
-	size_t FindTypeNames(const wxString &n_category_name, wxArrayString &n_type_names);
+	size_t FindTypeNames(const wxString &n_category_name, wxArrayString &n_type_names) const;
 	/// フォーマット種類を検索
-	DiskBasicFormat *FindFormat(DiskBasicFormatType format_type);
+	const DiskBasicFormat *FindFormat(DiskBasicFormatType format_type) const;
 	/// タイプリストと一致するパラメータを得る
-	size_t FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params);
+	size_t FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params) const;
 	/// カテゴリを検索
-	DiskBasicCategory *FindCategory(const wxString &n_category);
+	const DiskBasicCategory *FindCategory(const wxString &n_category) const;
 
-	const DiskBasicCategories &GetCategories() { return categories; }
+	const DiskBasicCategories &GetCategories() const { return categories; }
 };
 
 extern DiskBasicTemplates gDiskBasicTemplates;

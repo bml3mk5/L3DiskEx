@@ -2,6 +2,8 @@
 ///
 /// @brief フォントミニダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "fontminibox.h"
 #include <wx/combobox.h>
@@ -9,6 +11,7 @@
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/fontenum.h>
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(FontMiniBox, wxDialog)
@@ -30,7 +33,8 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
 	size.x = DEFAULT_TEXTWIDTH * 2; size.y = -1;
 	comFontName = new wxComboBox(this, IDC_COMBO_FONTNAME, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
-	comFontSize = new wxComboBox(this, IDC_COMBO_FONTSIZE, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0, NULL, wxCB_DROPDOWN, tVali);
+	size.x = 80; size.y = -1;
+	comFontSize = new wxComboBox(this, IDC_COMBO_FONTSIZE, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN, tVali);
 	hbox->Add(comFontName, flags);
 	hbox->Add(comFontSize, flags);
 	szrAll->Add(hbox, flags);
@@ -39,7 +43,7 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_
 	btnDefault = new wxButton(this, IDC_BUTTON_DEFAULT, _("Default"));
 	gszr->Add(btnDefault);
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
-	gszr->Add(szrButtons);
+	gszr->Add(szrButtons, wxSizerFlags().Align(wxALIGN_RIGHT));
 	szrAll->Add(gszr, flags);
 
 	init_dialog();

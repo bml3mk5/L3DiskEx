@@ -2,12 +2,16 @@
 ///
 /// @brief disk basic type for OS-9
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_OS9_H_
 #define _BASICTYPE_OS9_H_
 
 #include "common.h"
 #include "basiccommon.h"
 #include "basictype.h"
+
 
 #pragma pack(1)
 /// OS-9 Ident LSN = 0(track1, sector1)
@@ -36,8 +40,14 @@ typedef struct st_os9_ident {
 } os9_ident_t;
 #pragma pack()
 
+/** @class DiskBasicTypeOS9
 
-/// OS-9の処理
+@brief OS-9の処理
+
+DiskBasicParam
+@li SubDirGroupSize : サブディレクトリの初期グループ(LSN)数
+
+*/
 class DiskBasicTypeOS9 : public DiskBasicType
 {
 private:
@@ -76,10 +86,12 @@ public:
 
 	/// @name check / assign directory area
 	//@{
-	/// ルートディレクトリのチェック
-	bool		CheckRootDirectory(int start_sector, int end_sector, bool is_formatting);
-	/// ルートディレクトリをアサイン
-	bool		AssignRootDirectory(int start_sector, int end_sector);
+	/// ルートディレクトリのセクタリストを計算
+	bool		CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items);
+	/// ディレクトリが空か
+	bool		IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items);
+	/// ディレクトリエリアのサイズに達したらアサイン終了するか
+	bool		FinishAssigningDirectory(int size) const;
 	//@}
 
 	/// @name disk size

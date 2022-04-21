@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクパーサー
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskparser.h"
 #include "diskplainparser.h"
 #include "diskd88parser.h"
@@ -9,6 +12,7 @@
 #include "diskd88.h"
 #include "fileparam.h"
 #include "diskresult.h"
+
 
 /// コンストラクタ
 /// @param [in]     filepath    解析するファイルのパス 

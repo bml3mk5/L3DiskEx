@@ -2,11 +2,14 @@
 ///
 /// @brief ファイル種類選択ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "fileselbox.h"
 #include <wx/listbox.h>
 #include <wx/sizer.h>
 #include "fileparam.h"
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(FileSelBox, wxDialog)

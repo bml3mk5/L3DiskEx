@@ -2,6 +2,8 @@
 ///
 /// @brief ディスクID一覧
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "uirawdisk.h"
 #include <wx/menu.h>
@@ -653,7 +655,7 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 
 	L3DiskFileDialog fdlg(
 		caption,
-		frame->GetExportFilePath(),
+		frame->GetIniExportFilePath(),
 		filename,
 		_("All files (*.*)|*.*"),
 		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -673,7 +675,7 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 /// 指定したファイルにトラックデータをエクスポート
 bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
 {
-	frame->SetExportFilePath(path);
+	frame->SetIniExportFilePath(path);
 
 	if (!disk) return false;
 
@@ -725,7 +727,7 @@ bool L3DiskRawTrack::ShowImportTrackDialog()
 
 	L3DiskFileDialog fdlg(
 		caption,
-		frame->GetExportFilePath(),
+		frame->GetIniExportFilePath(),
 		wxEmptyString,
 		_("All files (*.*)|*.*"),
 		wxFD_OPEN);
@@ -802,7 +804,7 @@ bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk
 /// @return true:成功 / false:エラー
 bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
 {
-	frame->SetExportFilePath(path);
+	frame->SetIniExportFilePath(path);
 
 	if (!disk) return false;
 
@@ -1575,7 +1577,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 
 		L3DiskFileDialog dlg(
 			_("Export data from sector"),
-			frame->GetExportFilePath(),
+			frame->GetIniExportFilePath(),
 			filename,
 			_("All files (*.*)|*.*"),
 			wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -1591,7 +1593,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 		// 複数行 指定
 		L3DiskDirDialog dlg(
 			_("Export each datas from selected sector"),
-			frame->GetExportFilePath());
+			frame->GetIniExportFilePath());
 
 		int rc = dlg.ShowModal();
 		if (rc != wxID_OK) {
@@ -1616,7 +1618,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 /// 指定したファイルにセクタのデータをエクスポート
 bool L3DiskRawSector::ExportDataFile(const wxString &path, DiskD88Sector *sector)
 {
-	frame->SetExportFilePath(path);
+	frame->SetIniExportFilePath(path);
 
 	if (!sector) return false;
 
@@ -1637,7 +1639,7 @@ bool L3DiskRawSector::ShowImportDataFileDialog()
 {
 	L3DiskFileDialog dlg(
 		_("Import data to sector"),
-		frame->GetExportFilePath(),
+		frame->GetIniExportFilePath(),
 		wxEmptyString,
 		_("All files (*.*)|*.*"),
 		wxFD_OPEN);

@@ -2,12 +2,15 @@
 ///
 /// @brief Rawトラックダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _RAWTRACKBOX_H_
 #define _RAWTRACKBOX_H_
 
 #include "common.h"
 #include <wx/dialog.h>
+
 
 class wxTextCtrl;
 class DiskD88Disk;

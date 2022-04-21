@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic type
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_H_
 #define _BASICTYPE_H_
 
@@ -10,6 +13,7 @@
 #include <wx/dynarray.h>
 #include "basiccommon.h"
 #include "basicfat.h"
+
 
 #define INVALID_GROUP_NUMBER	((wxUint32)-1)
 
@@ -103,16 +107,20 @@ public:
 
 	/// @name check / assign directory area
 	//@{
+	/// @brief ルートディレクトリのセクタリストを計算
+	virtual bool	CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items);
 	/// @brief ルートディレクトリのチェック
-	virtual bool	CheckRootDirectory(int start_sector, int end_sector, bool is_formatting);
+	bool			CheckRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, bool is_formatting);
 	/// @brief ルートディレクトリをアサイン
-	virtual bool	AssignRootDirectory(int start_sector, int end_sector);
+	virtual bool	AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	/// @brief ディレクトリのチェック
-	virtual bool	CheckDirectory(const DiskBasicGroups &group_items);
+	bool			CheckDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリが空か
-	virtual bool	IsEmptyDirectory(const DiskBasicGroups &group_items);
+	virtual bool	IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリをアサイン
-	virtual bool	AssignDirectory(const DiskBasicGroups &group_items);
+	bool			AssignDirectory(bool is_root, const DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
+	/// @brief ディレクトリエリアのサイズに達したらアサイン終了するか
+	virtual bool	FinishAssigningDirectory(int size) const { return false; }
 	/// @brief ルートディレクトリの開始位置を得る
 	void			GetStartNumOnRootDirectory(int &track_num, int &side_num, int &sector_num);
 	/// @brief ルートディレクトリの終了位置を得る
@@ -220,6 +228,8 @@ public:
 	virtual void	GetIdentifiedData(DiskBasicIdentifiedData &data) const {}
 	/// @brief IPLや管理エリアの属性をセット
 	virtual void	SetIdentifiedData(const DiskBasicIdentifiedData &data) {}
+	/// @brief 管理エリアの開始グループをセット
+	void			SetManagedStartGroup(wxUint32 val) { managed_start_group = val; }
 	//@}
 };
 

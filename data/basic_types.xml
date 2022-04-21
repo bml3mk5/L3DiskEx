@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<DiskBasicTypes version="2.0">
+<DiskBasics version="3.0">
+<DiskBasicFormats version="1.0">
 	<DiskBasicFormat type="0" name="L3-1S">
 	</DiskBasicFormat>
 	<DiskBasicFormat type="1" name="L3S1-2D">
@@ -7,6 +8,7 @@
 	<DiskBasicFormat type="2" name="FM">
 	</DiskBasicFormat>
 	<DiskBasicFormat type="3" name="MSDOS">
+		<HasVolumeName>true</HasVolumeName>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="4" name="MSX">
 	</DiskBasicFormat>
@@ -25,7 +27,13 @@
 	</DiskBasicFormat>
 	<DiskBasicFormat type="10" name="CPM">
 	</DiskBasicFormat>
+	<DiskBasicFormat type="71" name="TFDOS">
+		<HasVolumeName>true</HasVolumeName>
+		<HasVolumeNumber>true</HasVolumeNumber>
+	</DiskBasicFormat>
+</DiskBasicFormats>
 
+<DiskBasicCategories version="1.0">
 	<DiskBasicCategory name="L3S1">
 		<Description>HITACHI LEVEL-3/S1 DISK BASIC</Description>
 		<Description lang="ja">日立 LEVEL-3/S1 DISK BASIC</Description>
@@ -71,7 +79,9 @@
 		<Description>MS-DOS</Description>
 		<Description lang="ja">MS-DOS</Description>
 	</DiskBasicCategory>
+</DiskBasicCategories>
 
+<DiskBasicTypes version="1.0">
 	<DiskBasicType name="L3-1S" category="L3S1">
 		<FormatType>0</FormatType>
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -114,13 +124,14 @@
 		<FillCodeOnFAT>0xff</FillCodeOnFAT>
 		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
 		<Description>L3/S1 DISK BASIC (5inch 2D)</Description>
-		<Description lang="ja">L3 DISK BASIC (5インチ2D)</Description>
+		<Description lang="ja">L3/S1 DISK BASIC (5インチ2D)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="L3S1-2HD" category="L3S1">
 		<FormatType>1</FormatType>
 		<SectorsPerGroup>26</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>26</SectorsPerTrack>
+		<TracksPerSide>75</TracksPerSide>
 		<ManagedTrackNumber>37</ManagedTrackNumber>
 		<FATSideNumber>0</FATSideNumber>
 		<FATStartSector>2</FATStartSector>
@@ -136,7 +147,7 @@
 		<FillCodeOnFAT>0xff</FillCodeOnFAT>
 		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
 		<Description>L3/S1 DISK BASIC (8inch 2D/5inch 2HD)</Description>
-		<Description lang="ja">L3 DISK BASIC (8インチ2D/5インチ2HD)</Description>
+		<Description lang="ja">L3/S1 DISK BASIC (8インチ2D/5インチ2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="FM-2D" category="FM">
 		<FormatType>2</FormatType>
@@ -588,7 +599,7 @@
 		<FATStartSector>15</FATStartSector>
 		<FATEndSector>15</FATEndSector>
 		<FATStartPosition>0</FATStartPosition>
-		<FATEndGroup>79</FATEndGroup>
+		<FATEndGroup>377</FATEndGroup>
 		<GroupFinalCode>0x80</GroupFinalCode>
 		<GroupSystemCode>0xff</GroupSystemCode>
 		<GroupUnusedCode>0x00</GroupUnusedCode>
@@ -774,6 +785,9 @@
 		<SideReversed>true</SideReversed>
 		<IPLString>\x01</IPLString>
 		<VolumeString>\x01</VolumeString>
+		<SpecialAttributes>
+			<Volume value="0x54" mask="0xff" />
+		</SpecialAttributes>
 		<Description>MZ DISK BASIC (5inch 2D, 35tracks)</Description>
 		<Description lang="ja">MZ DISK BASIC (5インチ2D, 35トラック)</Description>
 	</DiskBasicType>
@@ -800,6 +814,9 @@
 		<SideReversed>true</SideReversed>
 		<IPLString>\x01</IPLString>
 		<VolumeString>\x01</VolumeString>
+		<SpecialAttributes>
+			<Volume value="0x54" mask="0xff" />
+		</SpecialAttributes>
 		<SubDirGroupSize>4</SubDirGroupSize>
 		<Description>MZ DISK BASIC (5inch 2D, 40tracks)</Description>
 		<Description lang="ja">MZ DISK BASIC (5インチ2D, 40トラック)</Description>
@@ -1154,4 +1171,63 @@
 		<DeleteCodeOnDir>0xe5</DeleteCodeOnDir>
 		<Description>CP/M for PC-9801 (2HD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="TFDOS-2D-MZ" category="TFDOS">
+		<FormatType>71</FormatType>
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>79</FATEndGroup>
+		<ReservedGroups>
+			<Group>0</Group>
+			<Group>1</Group>
+		</ReservedGroups>
+		<GroupFinalCode>0xff</GroupFinalCode>
+		<GroupSystemCode>0xff</GroupSystemCode>
+		<GroupUnusedCode>0x00</GroupUnusedCode>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirSpaceCode>0x0d</DirSpaceCode>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DataInverted>false</DataInverted>
+		<SideReversed>false</SideReversed>
+		<IDString>\x01TF-DOS </IDString><!-- IPL for TF-DOS -->
+		<IPLString>\x01</IPLString><!-- IPL for MZ -->
+		<Description>TF-DOS for MZ (2D)</Description>
+		<Description lang="ja">TF-DOS for MZ (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TFDOS-2D" category="TFDOS">
+		<FormatType>71</FormatType>
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<FATStartSector>2</FATStartSector>
+		<FATEndSector>2</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>79</FATEndGroup>
+		<ReservedGroups>
+			<Group>0</Group>
+		</ReservedGroups>
+		<GroupFinalCode>0xff</GroupFinalCode>
+		<GroupSystemCode>0xff</GroupSystemCode>
+		<GroupUnusedCode>0x00</GroupUnusedCode>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<DirSpaceCode>0x0d</DirSpaceCode>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<DataInverted>false</DataInverted>
+		<SideReversed>false</SideReversed>
+		<IDString>\x01TF-DOS </IDString>
+		<Description>TF-DOS (2D)</Description>
+		<Description lang="ja">TF-DOS (2D)</Description>
+	</DiskBasicType>
 </DiskBasicTypes>
+</DiskBasics>

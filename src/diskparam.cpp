@@ -2,11 +2,15 @@
 ///
 /// @brief ディスクパラメータ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskparam.h"
 #include <wx/xml/xml.h>
 #include <wx/translation.h>
 #include "logging.h"
 #include "utils.h"
+
 
 /// (0:128bytes 1:256bytes 2:512bytes 3:1024bytes)
 const int gSectorSizes[5] = { 128,256,512,1024,0 };
@@ -379,7 +383,7 @@ int DiskParam::HasSingleDensity(int *sectors_per_track, int *sector_size) const
 		}
 	}
 	int max_tracks = GetTracksPerSide() * GetSidesPerDisk();
-	if (max_tracks > 0 && max_tracks == singles.Count()) {
+	if (max_tracks > 0 && max_tracks == (int)singles.Count()) {
 		sd = &singles[0];
 		val = 1;
 	}
@@ -602,7 +606,7 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 }
 
 /// タイプ名に一致するテンプレートの番号を返す
-int DiskTemplates::IndexOf(const wxString &n_type_name)
+int DiskTemplates::IndexOf(const wxString &n_type_name) const
 {
 	int match = -1;
 	for(size_t i=0; i<params.Count(); i++) {
@@ -616,7 +620,7 @@ int DiskTemplates::IndexOf(const wxString &n_type_name)
 }
 
 /// タイプ名に一致するテンプレートを返す
-DiskParam *DiskTemplates::Find(const wxString &n_type_name)
+const DiskParam *DiskTemplates::Find(const wxString &n_type_name) const
 {
 	DiskParam *match = NULL;
 	for(size_t i=0; i<params.Count(); i++) {
@@ -630,7 +634,7 @@ DiskParam *DiskTemplates::Find(const wxString &n_type_name)
 }
 
 /// パラメータに一致するあるいは近い物のテンプレートを返す
-DiskParam *DiskTemplates::Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const SingleDensities &n_singles)
+const DiskParam *DiskTemplates::Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const SingleDensities &n_singles) const
 {
 	DiskParam *match_item = NULL;
 	bool m = false;

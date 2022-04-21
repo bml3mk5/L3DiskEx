@@ -1,9 +1,13 @@
 ﻿/// @file basictype_l31s.cpp
 ///
-/// @brief disk basic fat type for L3 BASIC 1S
+/// @brief disk basic type for L3 BASIC 1S
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_l31s.h"
 #include "basicfmt.h"
+
 
 //
 //

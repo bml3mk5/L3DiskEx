@@ -2,10 +2,14 @@
 ///
 /// @brief CPC DSKディスクイメージパーサ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKDSK_PARSER_H_
 #define _DISKDSK_PARSER_H_
 
 #include "common.h"
+
 
 class wxInputStream;
 class DiskD88Track;

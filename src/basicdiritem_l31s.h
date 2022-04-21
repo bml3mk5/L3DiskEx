@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for L3 BASIC 1S
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_L31S_H_
 #define _BASICDIRITEM_L31S_H_
 
 #include "basicdiritem_fat8.h"
+
 
 /// ディレクトリ１アイテム L3 BASIC 単密度 1S
 class DiskBasicDirItemL31S : public DiskBasicDirItemFAT8F
@@ -20,10 +24,10 @@ public:
 	DiskBasicDirItemL31S(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString	InvalidateChars();
+	wxString	InvalidateChars() const;
 
 	/// ダイアログ入力前のファイル名を変換 大文字にする
-	void	ConvertToFileNameStr(wxString &filename);
+	void	ConvertToFileNameStr(wxString &filename) const;
 };
 
 #endif /* _BASICDIRITEM_L31S_H_ */

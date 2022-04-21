@@ -1,7 +1,10 @@
 ﻿/// @file basicdiritem.h
 ///
-/// @brief disk basic directory
+/// @brief disk basic directory item
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_H_
 #define _BASICDIRITEM_H_
 
@@ -11,6 +14,7 @@
 #include <wx/dynarray.h>
 #include "diskd88.h"
 
+
 class wxWindow;
 class wxControl;
 class wxBoxSizer;
@@ -18,11 +22,15 @@ class wxSizerFlags;
 class DiskBasic;
 class DiskBasicType;
 class DiskBasicGroups;
+class DiskBasicFileName;
 class DiskBasicError;
 class IntNameBox;
 
 #define FILENAME_BUFSIZE	(32)
 #define FILEEXT_BUFSIZE		(4)
+
+class DiskBasicDirItem;
+class DiskBasicDirItems;
 
 /// ディレクトリ１アイテム (abstract)
 class DiskBasicDirItem
@@ -30,6 +38,10 @@ class DiskBasicDirItem
 protected:
 	DiskBasic     *basic;
 	DiskBasicType *type;
+
+	DiskBasicDirItem  *parent;		///< 親ディレクトリ
+	DiskBasicDirItems *children;	///< 子ディレクトリ
+	bool		valid_dir;			///< 上記ディレクトリツリーが確定しているか
 
 	int			num;				///< 通し番号
 	int			position;			///< セクタ内の位置（バイト）
@@ -68,11 +80,6 @@ protected:
 	virtual void	SetFileType2(int val) {}
 	/// @brief 属性３のセット
 	virtual void	SetFileType3(int val) {}
-
-	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-	virtual int     GetFileType1Pos() { return 0; }
-	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
-	virtual int     GetFileType2Pos() { return 0; }
 	//@}
 
 	/// @name ファイル名へのアクセス
@@ -88,18 +95,15 @@ protected:
 	/// @brief 拡張子を返す
 	virtual wxString GetFileExtPlainStr() const;
 	/// @brief ファイル名を変換して内部ファイル名にする "."で拡張子と分別
-	virtual void	ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length);
+	void			ToNativeFileNameFromStr(const wxString &filename, wxUint8 *nativename, size_t length) const;
 	/// @brief ファイル名を変換して内部ファイル名にする 検索用
-	virtual bool	ToNativeFileName(const wxString &filename, wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen);
+	bool			ToNativeFileName(const wxString &filename, wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 	/// @brief 文字列をコード変換して内部ファイル名にする
-	bool			ToNativeName(const wxString &src, wxUint8 *dst, size_t len);
+	bool			ToNativeName(const wxString &src, wxUint8 *dst, size_t len) const;
 	/// @brief 文字列をコード変換して内部ファイル名にする
-	bool			ToNativeExt(const wxString &src, wxUint8 *dst, size_t len);
-	/// @brief 文字列をバッファにコピー あまりはfillでパディング
-	static bool		MemoryCopy(const char *src, size_t flen, char fill, wxUint8 *dst, size_t len);
-	/// @brief 文字列をバッファにコピー "."で拡張子とを分ける
-	static bool		MemoryCopy(const char *src, size_t flen, size_t elen, char fill, wxUint8 *dst, size_t len);
+	bool			ToNativeExt(const wxString &src, wxUint8 *dst, size_t len) const;
 	//@}
+
 public:
 	/// @brief ディレクトリアイテムを作成 DATAは内部で確保
 	DiskBasicDirItem(DiskBasic *basic);
@@ -109,6 +113,27 @@ public:
 	DiskBasicDirItem(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 	virtual ~DiskBasicDirItem();
 
+	/// @name ディレクトリツリー
+	//@{
+	/// @brief 子ディレクトリを追加
+	void			AddChild(DiskBasicDirItem *newitem);
+	/// @brief 親ディレクトリを返す
+	DiskBasicDirItem *GetParent() { return parent; }
+	/// @brief 親ディレクトリを設定
+	void			SetParent(DiskBasicDirItem *newitem) { parent = newitem; }
+	/// @brief 子ディレクトリ一覧を返す
+	DiskBasicDirItems *GetChildren() { return children; }
+	/// @brief 子ディレクトリ一覧を返す
+	const DiskBasicDirItems *GetChildren() const { return children; }
+	/// @brief 子ディレクトリ一覧をクリア
+	void			EmptyChildren();
+	/// @brief ディレクトリツリーが確定しているか
+	bool			IsValidDirectory() const { return valid_dir; }
+	/// @brief ディレクトリツリーが確定しているか設定
+	void			ValidDirectory(bool val) { valid_dir = val; }
+
+	//@}
+
 	/// @name 操作
 	//@{
 	/// @brief 複製
@@ -116,7 +141,7 @@ public:
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
 	/// @brief アイテムを削除できるか
-	virtual bool	IsDeletable();
+	virtual bool	IsDeletable() const;
 	/// @brief 削除
 	virtual bool	Delete(wxUint8 code);
 	/// @brief ENDマークがあるか(一度も使用していないか)
@@ -126,15 +151,15 @@ public:
 	/// @brief 内部変数などを再設定
 	virtual void	Refresh();
 	/// @brief アイテムをコピーできるか
-	virtual bool	IsCopyable();
+	virtual bool	IsCopyable() const;
 	/// @brief アイテムを上書きできるか
-	virtual bool	IsOverWritable();
+	virtual bool	IsOverWritable() const;
 	//@}
 
 	/// @name ファイル名へのアクセス
 	//@{
 	/// @brief ファイル名を編集できるか
-	virtual bool	IsFileNameEditable() { return true; }
+	virtual bool	IsFileNameEditable() const { return true; }
 	/// @brief ファイル名を設定 "."で拡張子と分離
 	void			SetFileNameStr(const wxString &filename);
 	/// @brief ファイル名をそのまま設定
@@ -144,49 +169,56 @@ public:
 	/// @brief ファイル名をコピー
 	void			CopyFileName(const DiskBasicDirItem &src);
 	/// @brief ファイル名を返す 名前 + "." + 拡張子
-	wxString		GetFileNameStr();
+	wxString		GetFileNameStr() const;
 	/// @brief ファイル名を得る 名前 + "." + 拡張子
 	void			GetFileName(wxUint8 *filename, size_t length) const;
 	/// @brief ファイル名(拡張子除く)が一致するか
-	virtual bool	IsSameName(const wxString &name);
+	bool			IsSameName(const wxString &name) const;
 	/// @brief ファイル名が一致するか
-	virtual bool	IsSameFileName(const wxString &filename);
+	virtual bool	IsSameFileName(const DiskBasicFileName &filename) const;
 	/// @brief 同じファイル名か
-	virtual bool	IsSameFileName(const DiskBasicDirItem &src);
+	virtual bool	IsSameFileName(const DiskBasicDirItem &src) const;
 	/// @brief ファイル名＋拡張子のサイズ
-	int				GetFileNameStrSize();
+	int				GetFileNameStrSize() const;
 	/// @brief ファイルパスから内部ファイル名を生成する インポート時などのダイアログを出す前
-	virtual wxString RemakeFileNameStr(const wxString &filepath);
+	virtual wxString RemakeFileNameStr(const wxString &filepath) const;
 	/// @brief 内部ファイル名からコード変換して文字列を返す コピー、このアプリからインポート時のダイアログを出す前
-	virtual wxString RemakeFileName(const wxUint8 *src, size_t srclen);
+	virtual wxString RemakeFileName(const wxUint8 *src, size_t srclen) const;
 	/// @brief ダイアログ入力前のファイル名を変換 大文字にするなど
-	virtual void	ConvertToFileNameStr(wxString &filename) {}
+	virtual void	ConvertToFileNameStr(wxString &filename) const {}
 	/// @brief ダイアログ入力後のファイル名文字列を変換 大文字にするなど
-	virtual void	ConvertFromFileNameStr(wxString &filename) {}
+	virtual void	ConvertFromFileNameStr(wxString &filename) const {}
 	/// @brief ファイル名に設定できない文字を文字列にして返す
-	virtual wxString InvalidateChars();
+	virtual wxString InvalidateChars() const;
 	/// @brief ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() { return false; }
+	virtual bool	IsFileNameRequired() const { return false; }
+	/// @brief ファイル名に付随する拡張属性を返す
+	/// @see IsSameFileName()
+	virtual int		GetOptionalName() const { return 0; }
+	/// @brief 文字列をバッファにコピー あまりはfillでパディング
+	static bool		MemoryCopy(const char *src, size_t flen, char fill, wxUint8 *dst, size_t len);
+	/// @brief 文字列をバッファにコピー "."で拡張子とを分ける
+	static bool		MemoryCopy(const char *src, size_t flen, size_t elen, char fill, wxUint8 *dst, size_t len);
 	//@}
 
 	/// @name 属性へのアクセス
 	//@{
 	/// @brief 属性を設定
-	virtual void	SetFileAttr(int file_type);
+	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
+	/// @brief 属性を設定
+	void			SetFileAttr(int file_type, int original_type = 0);
 	/// @brief 属性を返す
-	virtual int		GetFileAttr();
-	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
-	virtual int     CalcFileTypeFromPos(int pos1, int pos2) { return 0; }
+	virtual DiskBasicFileType GetFileAttr() const;
 	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
-	virtual wxString GetFileAttrStr();
+	virtual wxString GetFileAttrStr() const;
 	/// @brief 外部属性を設定
 	virtual void	SetExternalAttr(int val) { external_attr = val; }
 	/// @brief 外部属性を返す
 	virtual int		GetExternalAttr() const { return external_attr; }
 	/// @brief 通常のファイルか
-	virtual bool	IsNormalFile();
+	bool			IsNormalFile() const;
 	/// @brief ディレクトリか
-	virtual bool	IsDirectory();
+	bool			IsDirectory() const;
 	//@}
 
 	/// @name ファイルサイズ
@@ -194,13 +226,9 @@ public:
 	/// @brief ファイルサイズをセット
 	virtual void	SetFileSize(int val);
 	/// @brief ファイルサイズを返す
-	virtual int		GetFileSize();
+	virtual int		GetFileSize() const;
 	/// @brief ファイルサイズとグループ数を計算する
 	virtual void	CalcFileSize() {}
-	/// @brief 最終セクタの占有サイズをセット
-	virtual void	SetDataSizeOnLastSecotr(int val) {}
-	/// @brief 最終セクタの占有サイズを返す
-	virtual int		GetDataSizeOnLastSector() { return 0; }
 	/// @brief ファイルの終端コードをチェックして必要なサイズを返す
 	virtual int		CheckEofCode(wxInputStream *istream, int file_size);
 	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合など
@@ -214,7 +242,7 @@ public:
 	/// @brief グループ数をセット
 	void			SetGroupSize(int val);
 	/// @brief グループ数を返す
-	int				GetGroupSize();
+	int				GetGroupSize() const;
 	/// @brief 最初のグループ番号をセット
 	virtual void	SetStartGroup(wxUint32 val);
 	/// @brief 最初のグループ番号を返す
@@ -238,17 +266,17 @@ public:
 	/// @brief アイテムが時間を持っているか
 	virtual bool	HasTime() const { return false; }
 	/// @brief 日付を得る
-	virtual void	GetFileDate(struct tm *tm);
+	virtual void	GetFileDate(struct tm *tm) const;
 	/// @brief 時間を得る
-	virtual void	GetFileTime(struct tm *tm);
+	virtual void	GetFileTime(struct tm *tm) const;
 	/// @brief 日時を得る
-	virtual void	GetFileDateTime(struct tm *tm);
+	virtual void	GetFileDateTime(struct tm *tm) const;
 	/// @brief 日付を返す
-	virtual wxString GetFileDateStr();
+	virtual wxString GetFileDateStr() const;
 	/// @brief 時間を返す
-	virtual wxString GetFileTimeStr();
+	virtual wxString GetFileTimeStr() const;
 	/// @brief 日時を返す
-	virtual wxString GetFileDateTimeStr();
+	virtual wxString GetFileDateTimeStr() const;
 	/// @brief 日付をセット
 	virtual void	SetFileDate(const struct tm *tm) {}
 	/// @brief 時間をセット
@@ -256,7 +284,7 @@ public:
 	/// @brief 日時をセット
 	virtual void	SetFileDateTime(const struct tm *tm);
 	/// @brief 日付のタイトル名（ダイアログ用）
-	virtual wxString GetFileDateTimeTitle();
+	virtual wxString GetFileDateTimeTitle() const;
 	//@}
 
 	/// @name 開始アドレス、実行アドレス
@@ -294,11 +322,11 @@ public:
 	/// @brief ファイル名、属性をコピー
 	virtual void	CopyItem(const DiskBasicDirItem &src);
 	/// @brief ディレクトリアイテムのサイズ
-	virtual size_t	GetDataSize();
+	virtual size_t	GetDataSize() const;
 	/// @brief アイテムを返す
 	directory_t		*GetData() const { return data; }
 	/// @brief アイテムへのポインタを設定
-	void			SetDataPtr(directory_t *val);
+	virtual void	SetDataPtr(int n_num, int n_track, int n_side, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
 	/// @brief アイテムをコピー
 	virtual bool	CopyData(const directory_t *val);
 	/// @brief 内部メモリを確保してアイテムをコピー
@@ -318,7 +346,13 @@ public:
 	/// @brief データをエクスポートする前に必要な処理
 	/// @param [in,out] filename ファイル名
 	/// @return false このファイルは対象外とする
+	/// @see PreDropDataFile()
 	virtual bool	PreExportDataFile(wxString &filename) { return true; }
+	/// @brief データをDnDで外部へエクスポートする前に必要な処理
+	/// @param [in,out] filename ファイル名
+	/// @return false このファイルは対象外とする
+	/// @see PreExportDataFile()
+	virtual bool	PreDropDataFile(wxString &filename) { return true; }
 	//@}
 
 	/// @name その他
@@ -333,8 +367,6 @@ public:
 
 	/// @name プロパティダイアログ用　機種依存部分を設定する
 	//@{
-	/// @brief ダイアログ表示前にファイルの属性を設定
-	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2) {}
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags) {}
 	/// @brief ダイアログ内の値を設定
@@ -343,18 +375,15 @@ public:
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent) {}
 	/// @brief ファイル名に拡張子を付ける
 	virtual wxString AddExtensionForAttrDialog(int file_type_1, const wxString &name) { return name; }
-	/// @brief 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const { return 0; }
-	/// @brief 属性2を得る
-	virtual int		GetFileType2InAttrDialog(const IntNameBox *parent) const { return 0; }
 	/// @brief 機種依存の属性を設定する
-	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo) { return true; }
 	/// @brief ファイルサイズが適正か
-	virtual bool	IsFileValidSize(int file_type1, int size, int *limit);
-	/// @brief ファイルサイズが適正か
-	virtual bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit);
+	virtual bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit) { return true; }
 	/// @brief ダイアログ入力後のファイル名チェック
 	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg) { return true; }
+	/// @brief ファイル名に付随する拡張属性をセットする
+	/// @see GetOptionalName()
+	virtual int		GetOptionalNameInAttrDialog(const IntNameBox *parent) { return 0; }
 	//@}
 };
 

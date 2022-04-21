@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicfmt.h"
 #include <wx/wfstream.h>
 #include <wx/numformatter.h>
@@ -20,8 +23,13 @@
 #include "basictype_flex.h"
 #include "basictype_os9.h"
 #include "basictype_cpm.h"
+#include "basictype_tfdos.h"
+#include "utils.h"
 
 
+//#define DEBUG_DISK_FULL_TEST 1
+
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -35,6 +43,106 @@ DiskBasicIdentifiedData::DiskBasicIdentifiedData(const wxString &n_volume_name, 
 	volume_number = n_volume_number;
 }
 
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+DiskBasicFileName::DiskBasicFileName()
+{
+	optional = 0;
+}
+DiskBasicFileName::DiskBasicFileName(const wxString &n_name, int n_optional)
+{
+	name = n_name;
+	optional = n_optional;
+}
+DiskBasicFileName::~DiskBasicFileName()
+{
+}
+
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+DiskBasics::DiskBasics()
+{
+	basics = NULL;
+}
+DiskBasics::~DiskBasics()
+{
+	if (basics) {
+		for(size_t idx = 0; idx < basics->Count(); idx++) {
+			DiskBasic *p = basics->Item(idx);
+			delete p;
+		}
+	}
+	delete basics;
+}
+void DiskBasics::Add(DiskBasic *newitem)
+{
+	if (!basics) {
+		basics = new ArrayOfDiskBasic;
+	}
+	if (!newitem) newitem = new DiskBasic;
+	basics->Add(newitem);
+}
+void DiskBasics::Clear()
+{
+	if (basics) {
+		for(size_t idx = 0; idx < basics->Count(); idx++) {
+			DiskBasic *p = basics->Item(idx);
+			delete p;
+		}
+		basics->Clear();
+	}
+}
+void DiskBasics::Empty()
+{
+	if (basics) {
+		for(size_t idx = 0; idx < basics->Count(); idx++) {
+			DiskBasic *p = basics->Item(idx);
+			delete p;
+		}
+		basics->Empty();
+	}
+}
+DiskBasic *DiskBasics::Item(size_t idx)
+{
+	DiskBasic *item = NULL;
+	if (basics && idx < basics->Count()) {
+		item = basics->Item(idx);
+	}
+	return item;
+}
+size_t DiskBasics::Count()
+{
+	size_t count = 0;
+	if (basics) {
+		count = basics->Count();
+	}
+	return count;
+}
+void DiskBasics::RemoveAt(size_t idx)
+{
+	if (basics && idx < basics->Count()) {
+		DiskBasic *p = basics->Item(idx);
+		delete p;
+		basics->RemoveAt(idx);
+	}
+}
+void DiskBasics::ClearParseAndAssign(int idx)
+{
+	if (!basics) return;
+
+	for(size_t i = 0; i < basics->Count(); i++) {
+		DiskBasic *basic = basics->Item(i);
+		if (idx < 0 || (int)i == idx) {
+			basic->ClearParseAndAssign();
+		}
+	}
+}
+
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -42,6 +150,8 @@ DiskBasic::DiskBasic() : DiskParam(), DiskBasicParam()
 {
 	disk = NULL;
 	formatted = false;
+	parsed = false;
+	assigned = false;
 	selected_side = -1;
 	data_start_sector = 0;
 	skipped_track = 0x7fff;
@@ -104,8 +214,11 @@ void DiskBasic::CreateType()
 	case FORMAT_TYPE_CPM:
 		type = new DiskBasicTypeCPM(this, fat, dir);
 		break;
+	case FORMAT_TYPE_TFDOS:
+		type = new DiskBasicTypeTFDOS(this, fat, dir);
+		break;
 	default:
-		type = new DiskBasicType(this, fat, dir);
+//		type = new DiskBasicType(this, fat, dir);
 		break;
 	}
 }
@@ -113,13 +226,16 @@ void DiskBasic::CreateType()
 /// 指定したディスクがDISK BASICかを解析する
 /// @param [in] newdisk       : 新しいディスク
 /// @param [in] newside       : サイド番号 片面の場合のみ 両面なら -1
+/// @param [in] match         : パラメータ 既に分かっている場合にセット 
 /// @param [in] is_formatting : フォーマット実行時 true
 /// @retval >0:ワーニング
 /// @retval  0:正常
 /// @retval <0:エラーあり
-int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
+int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, const DiskBasicParam *match, bool is_formatting)
 {
 	errinfo.Clear();
+
+	if (assigned) return 0;
 
 	disk = newdisk;
 	selected_side = newside;
@@ -127,9 +243,9 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 
 	wxString hint = newdisk->GetFile()->GetBasicTypeHint();
 	wxArrayString types = newdisk->GetBasicTypes();
-	const DiskBasicParam *match = newdisk->GetDiskBasicParam();
+//	const DiskBasicParam *match = newdisk->GetDiskBasicParam();
 //	newdisk->SetFATArea(false);
-	DiskBasicParamPtrs params;
+	DiskBasicParamPtrs warning_params;
 
 	int sts = 0;
 	if (!match) {
@@ -156,13 +272,13 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 					break;
 				} else if (sts >= 0) {
 					// 警告あり 候補にする
-					params.Add(match);
+					warning_params.Add(match);
 				}
 			}
 		}
-		if (sts != 0 && params.Count() > 0) {
+		if (sts != 0 && warning_params.Count() > 0) {
 			// 一致するものがないが警告がある
-			sts = ParseFormattedDisk(newdisk, params.Item(0), is_formatting);
+			sts = ParseFormattedDisk(newdisk, warning_params.Item(0), is_formatting);
 		}
 	} else {
 		// すでにフォーマット済み
@@ -170,6 +286,7 @@ int DiskBasic::ParseDisk(DiskD88Disk *newdisk, int newside, bool is_formatting)
 	}
 	if (sts == 0) {
 		errinfo.Clear();
+		parsed = true;
 	}
 	if (!formatted) {
 		errinfo.SetInfo(DiskBasicError::ERR_FORMATTED);
@@ -191,13 +308,18 @@ int DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam *ma
 	SetBasicParam(*match);
 	SetDiskParam(*newdisk);
 
+	dir->SetFormatType(GetFormatType());
+
 	// セクタ数はBASICで指定している側を優先
-	sectors_on_basic = GetSectorsOnBasic() >= 0 ? GetSectorsOnBasic() : GetSectorsPerTrack();
+	if (GetSectorsPerTrackOnBasic() < 0) SetSectorsPerTrackOnBasic(GetSectorsPerTrack());
+//	sectors_on_basic = GetSectorsOnBasic() >= 0 ? GetSectorsOnBasic() : GetSectorsPerTrack();
+	// トラック数はBASICで指定している側を優先
+	if (GetTracksPerSideOnBasic() < 0) SetTracksPerSideOnBasic(GetTracksPerSide());
 
 	CalcDirStartEndSector(GetSectorSize());
 	CreateType();
 
-	// FAT12/16の場合ディスク上のパラメータを解析
+	// 必要ならディスク上のパラメータを解析
 	if (!is_formatting) {
 		sts = type->ParseParamOnDisk(disk);
 		if (sts != 0) {
@@ -224,7 +346,7 @@ int DiskBasic::ParseFormattedDisk(DiskD88Disk *newdisk, const DiskBasicParam *ma
 	if (sts >= 0 || is_formatting) {
 		// フォーマット完了
 		formatted = true;
-		newdisk->SetDiskBasicParam(match);
+//		newdisk->SetDiskBasicParam(match);
 	}
 
 	return sts;
@@ -235,14 +357,28 @@ void DiskBasic::Clear()
 {
 	disk = NULL;
 	formatted = false;
+	parsed = false;
+	assigned = false;
 	selected_side = -1;
 
 	DiskParam::ClearDiskParam();
 	DiskBasicParam::ClearBasicParam();
 
-	dir->Clear();
+//	dir->Clear();
 
 	if (type) type->ClearDiskFreeSize();
+}
+
+/// DISKイメージの番号を返す
+int DiskBasic::GetDiskNumber() const
+{
+	return disk ? disk->GetNumber() : -1;
+}
+
+/// 選択中のサイド文字列を返す
+wxString DiskBasic::GetSelectedSideStr() const
+{
+	return L3DiskUtils::GetSideStr(selected_side, CanMountEachSides());
 }
 
 /// DISK BASICの説明を取得
@@ -251,6 +387,9 @@ const wxString &DiskBasic::GetDescriptionDetail()
 	wxString desc = DiskBasicParam::GetBasicDescription();
 	int free_size = type ? (int)type->GetFreeDiskSize() : -1;
 	int free_groups = type ? (int)type->GetFreeGroupSize() : -1;
+	if (!parsed) {
+		desc += wxT(" ?");
+	}
 	desc += wxString::Format(_(" [Free:%sbytes(%sgroups)]")
 		, free_size >= 0 ? wxNumberFormatter::ToString((long)free_size) : wxT("---")
 		, free_groups >= 0 ? wxNumberFormatter::ToString((long)free_groups) : wxT("---")
@@ -281,7 +420,7 @@ DiskBasicDirItem *DiskBasic::GetDirItem(size_t pos)
 DiskD88Track *DiskBasic::GetManagedTrack(int sector_pos, int *side_num, int *sector_num)
 {
 	int track_num = GetManagedTrackNumber();
-//	int side_nums = GetSidesOnBasic();
+//	int side_nums = GetSidesPerDiskOnBasic();
 	int track0_num, side0_num, sec_num;
 
 	GetNumFromSectorPos(sector_pos, track0_num, side0_num, sec_num);
@@ -337,13 +476,14 @@ int DiskBasic::GetFreeDiskSize() const
 bool DiskBasic::AssignFat(bool is_formatting)
 {
 	if (!disk) return false;
+	if (assigned) return true;
 
 	fat->Empty();
 
 	// 固有のパラメータ
 	data_start_sector = type->CalcDataStartSectorPos();
 	skipped_track = type->CalcSkippedTrack();
-//	reverse_side = type->IsSideReversed(GetSidesOnBasic());
+//	reverse_side = type->IsSideReversed(GetSidesPerDiskOnBasic());
 //	inverted_data = type->IsDataInverted();
 
 	bool valid = true;
@@ -358,8 +498,9 @@ bool DiskBasic::AssignFat(bool is_formatting)
 bool DiskBasic::CheckRootDirectory(bool is_formatting)
 {
 	if (!disk) return false;
+	if (assigned) return true;
 
-	dir->SetFormatType(GetFormatType());
+//	dir->SetFormatType(GetFormatType());
 
 	return dir->CheckRoot(type, GetDirStartSector(), GetDirEndSector(), is_formatting);
 }
@@ -368,18 +509,27 @@ bool DiskBasic::CheckRootDirectory(bool is_formatting)
 /// @return true / false ディレクトリにエラーあり
 bool DiskBasic::AssignRootDirectory()
 {
-	dir->Empty();
+//	dir->Empty();
 	if (!disk) return false;
 
-	dir->SetFormatType(GetFormatType());
-
-	bool valid = dir->AssignRoot(type, GetDirStartSector(), GetDirEndSector());
+	bool valid = true;
+	if (!assigned) {
+//		dir->SetFormatType(GetFormatType());
+		// ルートをアサインする
+		valid = dir->AssignRoot(type, GetDirStartSector(), GetDirEndSector());
+	} else {
+		// 既にアサイン済み、ルートをカレントにする
+		dir->SetCurrentAsRoot();
+	}
 	if (valid) {
 		// 残りサイズ計算
 		type->CalcDiskFreeSize(false);
 	} else {
 		type->ClearDiskFreeSize();
 	}
+
+	assigned = valid;
+
 	return valid;
 }
 
@@ -396,6 +546,13 @@ bool DiskBasic::AssignFatAndDirectory()
 	valid = valid && AssignRootDirectory();
 
 	return valid;
+}
+
+/// 解析済みをクリア
+void DiskBasic::ClearParseAndAssign()
+{
+	parsed = false;
+	assigned = false;
 }
 
 /// 指定したディレクトリ位置のファイルをロード
@@ -510,6 +667,7 @@ bool DiskBasic::AccessData(DiskBasicDirItem *item, wxInputStream *istream, wxOut
 	return rc;
 }
 
+#if 0
 /// 同じファイル名のアイテムをさがす
 /// @param [in]  filename     ファイル名
 /// @param [in]  exclude_item 検索対象から除くアイテム
@@ -528,6 +686,33 @@ DiskBasicDirItem *DiskBasic::FindFile(const wxString &filename, DiskBasicDirItem
 /// @retval  1  あり 通常ファイル
 /// @retval  -1 あり 上書き不可（ディレクトリ or ボリュームラベル）
 int	DiskBasic::IsFileNameDuplicated(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+{
+	DiskBasicDirItem *item = FindFile(filename, exclude_item, next_item);
+	if (item == NULL) {
+		return 0;
+	}
+	return (item->IsOverWritable() ? 1 : -1);
+}
+#endif
+
+/// 同じファイル名のアイテムをさがす
+/// @param [in]  filename     ファイル名
+/// @param [in]  exclude_item 検索対象から除くアイテム
+/// @param [out] next_item    一致したアイテムの次位置にあるアイテム
+/// @return NULL: ない
+DiskBasicDirItem *DiskBasic::FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+{
+	return dir->FindFile(filename, exclude_item, next_item);
+}
+
+/// 同じファイル名が既に存在して上書き可能か
+/// @param [in]  filename     ファイル名
+/// @param [in]  exclude_item 検索対象から除くアイテム
+/// @param [out] next_item    一致したアイテムの次位置にあるアイテム
+/// @retval  0  なし
+/// @retval  1  あり 通常ファイル
+/// @retval  -1 あり 上書き不可（ディレクトリ or ボリュームラベル）
+int DiskBasic::IsFileNameDuplicated(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	DiskBasicDirItem *item = FindFile(filename, exclude_item, next_item);
 	if (item == NULL) {
@@ -581,12 +766,13 @@ bool DiskBasic::CheckFile(const wxString &srcpath, int *file_size)
 		}
 		int size = (int)infile.GetLength();
 		if (file_size) *file_size = size;
-
+#ifndef DEBUG_DISK_FULL_TEST
 		// 空きがあるか
 		if (!HasFreeDiskSize(size)) {
 			sts = false;
 			break;
 		}
+#endif
 	} while(0);
 
 	if (!sts) {
@@ -616,11 +802,13 @@ bool DiskBasic::CheckFile(const wxUint8 *buffer, size_t buflen)
 			sts = false;
 			break;
 		}
+#ifndef DEBUG_DISK_FULL_TEST
 		// 空きがあるか
 		if (!HasFreeDiskSize((int)buflen)) {
 			sts = false;
 			break;
 		}
+#endif
 	} while(0);
 
 	if (!sts) {
@@ -681,16 +869,21 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	DiskBasicDirItem *item = dir->FindFile(*pitem, NULL, &next_item);
 
 	if (item == NULL) {
-		// 追加の場合新しいディレクトリを確保
-		item = dir->GetEmptyItemPtr(&next_item);
-		if (item == NULL) {
-			errinfo.SetError(DiskBasicError::ERR_DIRECTORY_FULL);
-			return false;
+		// 追加の場合
+		// 新しいディレクトリアイテムを確保
+		while((item = dir->GetEmptyItemPtr(&next_item)) == NULL) {
+			// 確保できない時
+			bool valid = false;
+			if (!valid) {
+				// 拡張できない
+				errinfo.SetError(DiskBasicError::ERR_DIRECTORY_FULL);
+				return false;
+			}
 		}
 		item->SetEndMark(next_item);
 	} else {
 		// すでにあるアイテムを削除する
-		if (!this->DeleteItem(item, false)) {
+		if (!this->DeleteFile(item, false)) {
 			return false;
 		}
 	}
@@ -704,7 +897,7 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	// ファイルをセーブする前の準備を行う
 	if (!type->PrepareToSaveFile(istream, pitem, item, errinfo)) {
 		// 削除する
-		if (!this->DeleteItem(item, false)) {
+		if (!this->DeleteFile(item, false)) {
 			return false;
 		}
 	}
@@ -715,12 +908,14 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 	// ファイルサイズを再計算する(終端コードが必要な場合など)
 	sizeremain = item->RecalcFileSizeOnSave(&istream, sizeremain);
 	
+#ifndef DEBUG_DISK_FULL_TEST
 	// ディスクに空きがあるか
 	if (!HasFreeDiskSize(sizeremain)) {
 		// ディレクトリエントリを削除
 		item->Delete(GetDeleteCode());
 		return false;
 	}
+#endif
 
 	int file_size = 0;
 
@@ -741,7 +936,7 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 			item->Delete(GetDeleteCode());
 		} else {
 			// 確保したFAT領域を削除
-			this->DeleteItem(item, group_items);
+			this->DeleteFile(item, group_items);
 		}
 		return false;
 	}
@@ -775,18 +970,18 @@ bool DiskBasic::SaveFile(wxInputStream &istream, const DiskBasicDirItem *pitem, 
 			sizeremain -= last_size;
 			file_size += last_size;
 
-			sector->SetModify();
+//			sector->SetModify();
 		}
 	}
 
 	// ファイルサイズ
 	item->SetFileSize(file_size);
-	// ディレクトリに最終使用サイズを追記
-	item->SetDataSizeOnLastSecotr(last_size);
+//	// ディレクトリに最終使用サイズを追記
+//	item->SetDataSizeOnLastSecotr(last_size);
 
 	if (rc < 0) {
 		// エラーの場合は消す
-		this->DeleteItem(item, group_items);
+		this->DeleteFile(item, group_items);
 		return false;
 	}
 	// 変更された
@@ -844,7 +1039,7 @@ bool DiskBasic::IsDeletableFile(DiskBasicDirItem *item, DiskBasicGroups &group_i
 
 		if (item->IsDirectory()) {
 			// ディレクトリの場合は空かどうかをチェック
-			if (!type->IsEmptyDirectory(group_items)) {
+			if (!type->IsEmptyDirectory(false, group_items)) {
 				errinfo.SetError(DiskBasicError::ERRV_CANNOT_DELETE_DIRECTORY, item->GetFileNameStr().wc_str());
 				return false;
 			}
@@ -857,18 +1052,18 @@ bool DiskBasic::IsDeletableFile(DiskBasicDirItem *item, DiskBasicGroups &group_i
 /// @param [in] item         ディレクトリアイテム
 /// @param [in]  clearmsg    エラーメッセージのバッファをクリアするか
 /// @return true 成功 / false 失敗
-bool DiskBasic::DeleteItem(DiskBasicDirItem *item, bool clearmsg)
+bool DiskBasic::DeleteFile(DiskBasicDirItem *item, bool clearmsg)
 {
 	if (clearmsg) errinfo.Clear();
 	DiskBasicGroups group_items;
-	return DeleteItem(item, group_items);
+	return DeleteFile(item, group_items);
 }
 
 /// ファイルを削除
 /// @param [in] item        ディレクトリアイテム
 /// @param [in] group_items グループ番号一覧
 /// @return true 成功 / false 失敗
-bool DiskBasic::DeleteItem(DiskBasicDirItem *item, const DiskBasicGroups &group_items)
+bool DiskBasic::DeleteFile(DiskBasicDirItem *item, const DiskBasicGroups &group_items)
 {
 	if (!disk) return false;
 
@@ -931,11 +1126,11 @@ bool DiskBasic::CanRenameFile(DiskBasicDirItem *item, bool showmsg)
 /// @param [in] item        ディレクトリアイテム
 /// @param [in] newname     ファイル名
 /// @return true
-bool DiskBasic::RenameFile(DiskBasicDirItem *item, const wxString &newname)
+bool DiskBasic::RenameFile(DiskBasicDirItem *item, const DiskBasicFileName &newname)
 {
 	// ファイル名更新
 	if (item->IsFileNameEditable()) {
-		item->SetFileNameStr(newname);
+		item->SetFileNameStr(newname.GetName());
 	}
 
 	// 変更されたか
@@ -1020,7 +1215,9 @@ int DiskBasic::FormatDisk(const DiskBasicIdentifiedData &data)
 		return errinfo.GetValid();
 	}
 
-	dir->SetFormatType(GetFormatType());
+//	ClearParseAndAssign();
+	parsed = true;
+	assigned = false;
 
 	bool rc = true;
 	// セクタを埋める
@@ -1064,43 +1261,51 @@ int DiskBasic::FormatDisk(const DiskBasicIdentifiedData &data)
 		AssignFatAndDirectory();
 
 //		// 空きサイズの再計算
-//		type->CalcDiskFreeSize();
+//		type->CalcDiskFreeSize(false);
 
 		formatted = true;
 	}
 	return errinfo.GetValid();
 }
 
+/// ルートディレクトリを返す
+DiskBasicDirItem *DiskBasic::GetRootDirectory()
+{
+	return dir->GetRootItem();
+}
+/// ルートディレクトリ内の一覧を返す
+DiskBasicDirItems *DiskBasic::GetRootDirectoryItems(DiskBasicDirItem **dir_item)
+{
+	return dir->GetRootItems(dir_item);
+}
+
+/// カレントディレクトリを返す
+DiskBasicDirItem *DiskBasic::GetCurrentDirectory()
+{
+	return dir->GetCurrentItem();
+}
 /// カレントディレクトリ内の一覧を返す
 DiskBasicDirItems *DiskBasic::GetCurrentDirectoryItems(DiskBasicDirItem **dir_item)
 {
-	return &dir->GetItems();
+	return dir->GetCurrentItems(dir_item);
 }
 
-/// ディレクトリを変更
-/// @param [in] item ディレクトリのアイテム
-bool DiskBasic::ChangeDirectory(DiskBasicDirItem *item)
+/// ディレクトリをアサイン
+/// @param [in] dir_item ディレクトリのアイテム
+bool DiskBasic::AssignDirectory(DiskBasicDirItem *dir_item)
 {
 	if (!disk) return false;
 
-	if (type->IsRootDirectory(item->GetStartGroup())) {
-		dir->SetParentItem(NULL);
-		dir->Empty();
-		dir->AssignRoot(type);
-	} else {
-		// サブディレクトリ
-		DiskBasicGroups groups;
-		item->GetAllGroups(groups);
+	return dir->Assign(dir_item);
+}
 
-		if (!dir->Check(type, groups)) {
-			return false;
-		}
+/// ディレクトリを変更
+/// @param [in,out] dst_item 移動先ディレクトリのアイテム
+bool DiskBasic::ChangeDirectory(DiskBasicDirItem * &dst_item)
+{
+	if (!disk) return false;
 
-		dir->SetParentItem(item);
-		dir->Empty();
-		dir->Assign(type, groups);
-	}
-	return true;
+	return dir->Change(dst_item);
 }
 
 /// サブディレクトリの作成できるか
@@ -1120,9 +1325,10 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 		return false;
 	}
 
-	wxString dir_name = filename;
+	DiskBasicFileName dir_name;
+	dir_name.SetName(filename);
 	// サブディレクトリを作成する前にディレクトリ名を編集する
-	if (!type->RenameOnMakingDirectory(dir_name)) {
+	if (!type->RenameOnMakingDirectory(dir_name.GetName())) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_MAKE_DIRECTORY);
 		return false;
 	}
@@ -1136,11 +1342,14 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	}
 
 	// 新しいディレクトリアイテムを確保
-	item = dir->GetEmptyItemPtr(&next_item);
-	if (item == NULL) {
-		// TODO: 新規ディスクエリアを確保
-		errinfo.SetError(DiskBasicError::ERR_DIRECTORY_FULL);
-		return false;
+	while((item = dir->GetEmptyItemPtr(&next_item)) == NULL) {
+		// 確保できない時
+		bool valid = false;
+		if (!valid) {
+			// 拡張できない
+			errinfo.SetError(DiskBasicError::ERR_DIRECTORY_FULL);
+			return false;
+		}
 	}
 	item->SetEndMark(next_item);
 
@@ -1149,14 +1358,14 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	// ファイル名属性をクリア
 	item->ClearData();
 	// ファイル名属性を設定
-	item->SetFileNameStr(dir_name);
+	item->SetFileNameStr(dir_name.GetName());
 	item->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
 	item->SetFileDateTime(wxDateTime::GetTmNow());
 
 	// ディレクトリを作成する前の準備を行う
 	if (!type->PrepareToMakeDirectory(item)) {
 		// 削除する
-		if (!this->DeleteItem(item, false)) {
+		if (!this->DeleteFile(item, false)) {
 			return false;
 		}
 	}
@@ -1167,9 +1376,6 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 	int rc;
 
 	// 必要なディスク領域を確保する
-	DiskBasicDirItem *newitem = CreateDirItem(NULL, NULL);
-	int dir_size = (int)newitem->GetDataSize();	// 1アイテムのサイズ
-
 	DiskBasicGroups group_items;
 	rc = type->AllocateGroups(item, sizeremain, ALLOCATE_GROUPS_NEW, group_items);
 	if (rc < 0) {
@@ -1180,12 +1386,51 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 			item->Delete(GetDeleteCode());
 		} else {
 			// 確保したFAT領域を削除
-			this->DeleteItem(item, false);
+			this->DeleteFile(item, false);
 		}
 		return false;
 	}
 
 	// セクタに書き込む
+	rc = InitializeSectorsAsDirectory(group_items, file_size, sizeremain);
+
+	// ファイルサイズ
+	item->SetFileSize(file_size);
+
+	if (rc < 0) {
+		// エラーの場合は消す
+		this->DeleteFile(item, false);
+		return false;
+	}
+
+	// 変更された
+	item->Refresh();
+	item->SetModify();
+
+	// ディレクトリ作成後の個別処理
+	type->AdditionalProcessOnMadeDirectory(item, group_items, dir->GetCurrentItem());
+
+	// グループ数を計算
+	item->CalcFileSize();
+	// 空きサイズを計算
+	type->CalcDiskFreeSize(true);
+
+	return true;
+}
+
+/// セクタをディレクトリとして初期化
+/// @param [in]     group_items 確保したセクタリスト
+/// @param [in,out] file_size   サイズ ディレクトリを拡張した時は既存サイズに加算
+/// @param [in,out] sizeremain  残りサイズ
+/// @return 0:正常 <0:エラー 
+int DiskBasic::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, int &file_size, int &sizeremain)
+{
+	int rc = 0;
+
+	DiskBasicDirItem *newitem = CreateDirItem(NULL, NULL);
+	int dir_size = (int)newitem->GetDataSize();	// 1アイテムのサイズ
+
+	int index_num = 0;
 	int track_num, side_num, sector_start, sector_end;
 	for(int gidx = 0; gidx < (int)group_items.Count() && rc >= 0; gidx++) {
 		DiskBasicGroupItem *gitem = &group_items.Item(gidx);
@@ -1203,49 +1448,37 @@ bool DiskBasic::MakeDirectory(const wxString &filename, DiskBasicDirItem **nitem
 				rc = -2;
 				break;
 			}
-			int bufsize = sector->GetSectorSize();
-			wxUint8 *buf = sector->GetSectorBuffer();
+			wxUint8 *buffer = sector->GetSectorBuffer();
+			if (!buffer) {
+				// セクタがない！
+				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, gitem->group, track_num, side_num, sector_num);
+				rc = -2;
+				break;
+			}
+
+			int pos = 0;
+			int size = sector->GetSectorSize();
 				
-			int size = 0;
-			while(size < bufsize && sizeremain > 0) {
+			while(pos < size && sizeremain > 0) {
 				// ディスク内に書き込む
-				newitem->SetDataPtr((directory_t *)buf);
+				newitem->SetDataPtr(index_num, track_num, side_num, sector, pos, buffer);
 				// 初期値を入れる
 				newitem->InitialData();
 
-				size += dir_size;
-				buf += dir_size;
-				file_size += dir_size;
+				pos    += dir_size;
+				buffer += dir_size;
+				file_size  += dir_size;
 				sizeremain -= dir_size;
+				index_num++;
 			}
 
-			sector->SetModify();
+//			sector->SetModify();
 		}
 	}
 
 	delete newitem;
 
-	// ファイルサイズ
-	item->SetFileSize(file_size);
-
-	if (rc < 0) {
-		// エラーの場合は消す
-		this->DeleteItem(item, false);
-		return false;
-	}
-
-	// ディレクトリ作成後の個別処理
-	type->AdditionalProcessOnMadeDirectory(item, group_items, dir->GetParentItem());
-
-	// 変更された
-	item->Refresh();
-	item->SetModify();
-	// グループ数を計算
-	item->CalcFileSize();
-	// 空きサイズを計算
-	type->CalcDiskFreeSize(true);
-
-	return true;
+	return rc;
 }
 
 /// ディレクトリアイテムの作成
@@ -1291,10 +1524,10 @@ DiskD88Sector *DiskBasic::GetSector(int track_num, int side_num, int sector_num)
 /// @return セクタデータ
 DiskD88Sector *DiskBasic::GetSector(int track_num, int sector_num, int *side_num)
 {
-	int sid_num = (sector_num - 1) / sectors_on_basic;
-	sector_num = ((sector_num - 1) % sectors_on_basic) + 1;
+	int sid_num = (sector_num - 1) / GetSectorsPerTrackOnBasic();
+	sector_num = ((sector_num - 1) % GetSectorsPerTrackOnBasic()) + 1;
 	if (side_num) *side_num = sid_num;
-	if (numbering_sector == 1) sector_num += (sectors_on_basic * sid_num);
+	if (numbering_sector == 1) sector_num += (GetSectorsPerTrackOnBasic() * sid_num);
 	return disk->GetSector(track_num, sid_num, sector_num);
 }
 
@@ -1340,18 +1573,18 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &side_nu
 {
 	if (selected_side >= 0) {
 		// 1S
-		track_num = sector_pos / sectors_on_basic;
+		track_num = sector_pos / GetSectorsPerTrackOnBasic();
 		side_num = selected_side;
 	} else {
 		// 2D, 2HD
-		track_num = sector_pos / sectors_on_basic / GetSidesOnBasic();
-		side_num = (sector_pos / sectors_on_basic) % GetSidesOnBasic();
+		track_num = sector_pos / GetSectorsPerTrackOnBasic() / GetSidesPerDiskOnBasic();
+		side_num = (sector_pos / GetSectorsPerTrackOnBasic()) % GetSidesPerDiskOnBasic();
 	}
-	sector_num = (sector_pos % sectors_on_basic) + 1;
+	sector_num = (sector_pos % GetSectorsPerTrackOnBasic()) + 1;
 
 	if (numbering_sector == 1) {
 		// トラックごとに連番の場合
-		sector_num += (side_num * sectors_on_basic);
+		sector_num += (side_num * GetSectorsPerTrackOnBasic());
 	}
 
 	// サイド番号を逆転するか
@@ -1367,12 +1600,12 @@ void DiskBasic::GetNumFromSectorPos(int sector_pos, int &track_num, int &sector_
 {
 	if (selected_side >= 0) {
 		// 1S
-		track_num = sector_pos / sectors_on_basic;
-		sector_num = (sector_pos % sectors_on_basic) + 1;
+		track_num = sector_pos / GetSectorsPerTrackOnBasic();
+		sector_num = (sector_pos % GetSectorsPerTrackOnBasic()) + 1;
 	} else {
 		// 2D, 2HD
-		track_num = sector_pos / (sectors_on_basic * GetSidesOnBasic());
-		sector_num = (sector_pos % (sectors_on_basic * GetSidesOnBasic())) + 1;
+		track_num = sector_pos / (GetSectorsPerTrackOnBasic() * GetSidesPerDiskOnBasic());
+		sector_num = (sector_pos % (GetSectorsPerTrackOnBasic() * GetSidesPerDiskOnBasic())) + 1;
 	}
 }
 
@@ -1391,13 +1624,13 @@ int  DiskBasic::GetSectorPosFromNum(int track_num, int side_num, int sector_num)
 
 	if (selected_side >= 0) {
 		// 1S
-		sector_pos = track_num * sectors_on_basic + sector_num - 1;
+		sector_pos = track_num * GetSectorsPerTrackOnBasic() + sector_num - 1;
 	} else {
 		// 2D, 2HD
-		sector_pos = track_num * sectors_on_basic * GetSidesOnBasic();
-		sector_pos += (side_num % GetSidesOnBasic()) * sectors_on_basic;
+		sector_pos = track_num * GetSectorsPerTrackOnBasic() * GetSidesPerDiskOnBasic();
+		sector_pos += (side_num % GetSidesPerDiskOnBasic()) * GetSectorsPerTrackOnBasic();
 		if (numbering_sector == 1) {
-			sector_pos += ((sector_num - 1) % sectors_on_basic);
+			sector_pos += ((sector_num - 1) % GetSectorsPerTrackOnBasic());
 		} else {
 			sector_pos += (sector_num - 1);
 		}
@@ -1415,10 +1648,10 @@ int  DiskBasic::GetSectorPosFromNum(int track_num, int sector_num)
 	int sector_pos;
 	if (selected_side >= 0) {
 		// 1S
-		sector_pos = track_num * sectors_on_basic + sector_num - 1;
+		sector_pos = track_num * GetSectorsPerTrackOnBasic() + sector_num - 1;
 	} else {
 		// 2D, 2HD
-		sector_pos = track_num * sectors_on_basic * GetSidesOnBasic() + sector_num - 1;
+		sector_pos = track_num * GetSectorsPerTrackOnBasic() * GetSidesPerDiskOnBasic() + sector_num - 1;
 	}
 	return sector_pos;
 }
@@ -1570,6 +1803,7 @@ DiskD88Sector *DiskBasic::GetSectorFromPosition(size_t position, wxUint32 *start
 	return GetSectorFromGroup(gnum);
 }
 
+#if 0
 /// ディレクトリアイテムの位置から属している全グループを返す
 bool DiskBasic::GetGroupsFromPosition(size_t position, DiskBasicGroups &group_items)
 {
@@ -1579,6 +1813,7 @@ bool DiskBasic::GetGroupsFromPosition(size_t position, DiskBasicGroups &group_it
 	item->GetAllGroups(group_items);
 	return true;
 }
+#endif
 
 /// キャラクターコードの文字体系を設定
 void DiskBasic::SetCharCode(int val)
@@ -1663,4 +1898,10 @@ void DiskBasic::InvertMem(const wxUint8 *src, size_t len, wxUint8 *dst) const
 {
 	memcpy(dst, src, len);
 	if (IsDataInverted()) mem_invert(dst, len);
+}
+
+/// DISK BASIC種類番号を返す
+DiskBasicFormatType DiskBasic::GetFormatTypeNumber() const
+{
+	return GetFormatType()->GetTypeNumber();
 }

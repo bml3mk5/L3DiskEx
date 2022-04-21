@@ -1,12 +1,15 @@
 ﻿/// @file uifatarea.cpp
 ///
-/// @brief FATの使用状況を表示
+/// @brief 使用状況を表示
+///
+/// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
 #include "uifatarea.h"
 #include <wx/dcclient.h>
 #include "main.h"
 #include "basiccommon.h"
+
 
 //
 // Frame
@@ -101,11 +104,13 @@ wxBEGIN_EVENT_TABLE(L3DiskFatAreaPanel, wxScrolled<wxPanel>)
 wxEND_EVENT_TABLE()
 
 L3DiskFatAreaPanel::L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent)
-	: wxScrolled<wxPanel>(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL)
+	: wxScrolled<wxPanel>(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 //	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
     frame = parent;
 	offset = 0;
+
+	SetFont(wxFont(8, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL));
 
 	sq.x = 10;
 	sq.y = 10;
@@ -122,7 +127,7 @@ L3DiskFatAreaPanel::L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent)
 	SetVirtualSize(x, y * 100);
 	SetScrollRate(10, 10);
 
-	ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_ALWAYS);
+	ShowScrollbars(wxSHOW_SB_NEVER, wxSHOW_SB_DEFAULT);
 }
 
 L3DiskFatAreaPanel::~L3DiskFatAreaPanel()
@@ -140,18 +145,28 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 	int y = lpadding;
 
 	dc.SetPen(*wxBLACK_PEN);
-	
 
 	int step = (sq.x + margin) * 4;
 	size_t pos = 1;
 	for(int px = (lpadding + ll + margin); px < (size.x - rpadding); px += step) {
-		dc.DrawLine(px, y - (pos & 1) * ll, px, y + ll);
+		int py0 = y - (pos & 1) * ll;
+		int py1 = y + ll;
+		dc.DrawLine(px, py0, px, py1);
+		if ((pos & 3) == 1) {
+			wxString str = wxString::Format(wxT("%x"), (int)(pos >> 2));
+			wxSize tsz = dc.GetTextExtent(str);
+			py0 = y - (tsz.y / 2);
+			dc.DrawText(str, px + 2, py0);
+		}
 		pos++;
 	}
 
 	y += (ll + margin);
 	int row = 0;
 	for(pos = 0; pos < datas.Count(); pos++) {
+		int sts = datas.Item(pos);
+
+		dc.SetPen(*wxBLACK_PEN);
 		if ((x + sq.x + rpadding) > size.x) {
 			y += (sq.y + margin);
 			row++;
@@ -159,11 +174,27 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 		}
 		if (x == lpadding) {
 			if ((row % 4) == 0) {
-				dc.DrawLine(x - (1 - ((row / 4) & 1)) * ll, y, x + ll, y);
+				int px0 = x - (1 - ((row / 4) & 1)) * ll;
+				int px1 = x + ll;
+				dc.DrawLine(px0, y, px1, y);
+				if ((row & 0xf) == 0) {
+					wxString str = wxString::Format(wxT("%x"), (row >> 4));
+					wxSize tsz = dc.GetTextExtent(str);
+					px1 = px1 + margin - tsz.x;
+					dc.DrawText(str, px1, y + 2);
+				}
 			}
 			x += (ll + margin);
 		}
-		int sts = datas.Item(pos);
+
+		switch(sts & 0xffff) {
+		case FAT_AVAIL_MISSING:
+			dc.SetPen(*wxGREY_PEN);
+			break;
+		default:
+			dc.SetPen(*wxBLACK_PEN);
+			break;
+		}
 		switch(sts & 0xffff0000) {
 		case 0x10000:
 			dc.SetBrush(*wxRED_BRUSH);
@@ -186,9 +217,18 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 			case FAT_AVAIL_FREE:
 				dc.SetBrush(*wxWHITE_BRUSH);
 				break;
+			case FAT_AVAIL_MISSING:
+				dc.SetBrush(*wxLIGHT_GREY_BRUSH);
+				break;
 			}
 		}
 		dc.DrawRectangle(x, y, sq.x, sq.y);
+#if 0
+		if (sts == FAT_AVAIL_USED_LAST) {
+			dc.SetPen(*wxBLUE_PEN);
+			dc.DrawLine(x + sq.x - 2, y, x + sq.x - 2, y + sq.y);
+		}
+#endif
 		x += (sq.x + margin);
 	}
 	y += (sq.y + margin);

@@ -2,11 +2,15 @@
 ///
 /// @brief D88ディスクイメージパーサ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKD88_PARSER_H_
 #define _DISKD88_PARSER_H_
 
 #include "common.h"
 #include <wx/dynarray.h>
+
 
 class wxInputStream;
 class DiskD88Track;

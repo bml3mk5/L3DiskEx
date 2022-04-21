@@ -2,6 +2,9 @@
 ///
 /// @brief ディスク属性
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _UIDISKATTR_H_
 #define _UIDISKATTR_H_
 
@@ -9,10 +12,12 @@
 #include <wx/string.h>
 #include <wx/panel.h>
 
+
 class wxTextCtrl;
 class wxButton;
 class wxComboBox;
 class wxCheckBox;
+class wxBoxSizer;
 
 class L3DiskFrame;
 class DiskD88Disk;
@@ -28,6 +33,7 @@ private:
 	wxButton   *btnChange;
 	wxComboBox *comDensity;
 	wxCheckBox *chkWprotect;
+	wxBoxSizer *szrButtons;
 
 	DiskD88Disk *disk;
 
@@ -35,6 +41,7 @@ public:
 	L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parent);
 	~L3DiskDiskAttr();
 
+	void OnSize(wxSizeEvent& event);
 	void OnButtonChange(wxCommandEvent& event);
 	void OnComboDensity(wxCommandEvent& event);
 	void OnCheckWriteProtect(wxCommandEvent& event);

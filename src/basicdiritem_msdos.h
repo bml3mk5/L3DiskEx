@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for MS-DOS
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_MSDOS_H_
 #define _BASICDIRITEM_MSDOS_H_
 
 #include "basicdiritem.h"
+
 
 /// MS-DOS 属性名
 extern const char *gTypeNameMS[];
@@ -55,13 +59,16 @@ protected:
 	virtual void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 
 	/// 日付を変換
-	void			ConvDateToTm(wxUint16 date, struct tm *tm);
+	void			ConvDateToTm(wxUint16 date, struct tm *tm) const;
 	/// 時間を変換
-	void			ConvTimeToTm(wxUint16 time, struct tm *tm);
+	void			ConvTimeToTm(wxUint16 time, struct tm *tm) const;
 	/// 日付に変換
-	wxUint16		ConvTmToDate(const struct tm *tm);
+	wxUint16		ConvTmToDate(const struct tm *tm) const;
 	/// 時間に変換
-	wxUint16		ConvTmToTime(const struct tm *tm);
+	wxUint16		ConvTmToTime(const struct tm *tm) const;
+
+	/// ダイアログ表示前にファイルの属性を設定
+	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 public:
 	DiskBasicDirItemMSDOS(DiskBasic *basic);
@@ -71,25 +78,23 @@ public:
 	/// ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
 	/// アイテムを削除できるか
-	virtual bool	IsDeletable();
+	virtual bool	IsDeletable() const;
 	/// ファイル名を編集できるか
-	virtual bool	IsFileNameEditable();
+	virtual bool	IsFileNameEditable() const;
 	/// ファイル名に設定できない文字を文字列にして返す
-	virtual wxString InvalidateChars();
+	virtual wxString InvalidateChars() const;
 	/// ファイル名は必須（空文字不可）か
-	virtual bool	IsFileNameRequired() { return true; }
+	virtual bool	IsFileNameRequired() const { return true; }
 	/// 属性を設定
-	virtual void	SetFileAttr(int file_type);
+	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
 
 	/// 属性を返す
-	virtual int		GetFileAttr();
+	virtual DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	virtual int		GetFileType1Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	virtual int		CalcFileTypeFromPos(int pos1, int pos2);
+//	/// リストの位置から属性を返す(プロパティダイアログ用)
+//	virtual int		CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	virtual wxString GetFileAttrStr();
+	virtual wxString GetFileAttrStr() const;
 	/// ファイルサイズをセット
 	virtual void	SetFileSize(int val);
 	/// ファイルサイズとグループ数を計算する
@@ -108,25 +113,25 @@ public:
 	virtual bool 	HasDate() const { return true; }
 	virtual bool 	HasTime() const { return true; }
 	/// 日付を返す
-	virtual void	GetFileDate(struct tm *tm);
+	virtual void	GetFileDate(struct tm *tm) const;
 	/// 時間を返す
-	virtual void	GetFileTime(struct tm *tm);
+	virtual void	GetFileTime(struct tm *tm) const;
 	/// 日付を返す
-	virtual wxString GetFileDateStr();
+	virtual wxString GetFileDateStr() const;
 	/// 時間を返す
-	virtual wxString GetFileTimeStr();
+	virtual wxString GetFileTimeStr() const;
 	/// 日付をセット
 	virtual void	SetFileDate(const struct tm *tm);
 	/// 時間をセット
 	virtual void	SetFileTime(const struct tm *tm);
 	/// 日付のタイトル名（ダイアログ用）
-	virtual wxString GetFileDateTimeTitle();
+	virtual wxString GetFileDateTimeTitle() const;
 	/// 日付を返す
-	wxString		GetCDateStr();
+	wxString		GetCDateStr() const;
 	/// 時間を返す
-	wxString		GetCTimeStr();
+	wxString		GetCTimeStr() const;
 	/// 日付を返す
-	wxString		GetADateStr();
+	wxString		GetADateStr() const;
 	/// 日付をセット
 	void			SetCDate(const struct tm *tm);
 	/// 時間をセット
@@ -135,22 +140,18 @@ public:
 	void			SetADate(const struct tm *tm);
 
 	/// ディレクトリアイテムのサイズ
-	virtual size_t	GetDataSize();
+	virtual size_t	GetDataSize() const;
 
 	/// ダイアログ入力前のファイル名を変換 大文字にする
-	virtual void	ConvertToFileNameStr(wxString &filename);
+	virtual void	ConvertToFileNameStr(wxString &filename) const;
 	/// ダイアログ入力後のファイル名文字列を変換 大文字にする
-	virtual void	ConvertFromFileNameStr(wxString &filename);
+	virtual void	ConvertFromFileNameStr(wxString &filename) const;
 
 
 	/// @name プロパティダイアログ用
 	//@{
-	/// ダイアログ表示前にファイルの属性を設定
-	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}

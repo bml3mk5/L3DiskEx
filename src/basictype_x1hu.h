@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic fat type for X1 Hu-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_X1HU_H_
 #define _BASICTYPE_X1HU_H_
 
@@ -9,7 +12,15 @@
 #include "basiccommon.h"
 #include "basictype.h"
 
-/// X1 Hu-BASICの処理
+
+/** @class DiskBasicTypeX1HU
+
+@brief X1 Hu-BASICの処理
+
+DiskBasicParam
+@li IPLString : セクタ1のIPL
+
+*/
 class DiskBasicTypeX1HU : public DiskBasicType
 {
 private:

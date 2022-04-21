@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic directory item for X1 Hu-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_x1hu.h"
 #include "basicfmt.h"
 #include "basictype.h"
@@ -9,6 +12,7 @@
 #include <wx/datetime.h>
 #include <wx/msgdlg.h>
 #include "utils.h"
+
 
 //
 //
@@ -46,7 +50,7 @@ DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, int num, int track,
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
 	// x1 hu
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 
 	// ファイルサイズをセット
 	file_size = wxUINT16_SWAP_ON_BE(this->data->x1hu.file_size);
@@ -132,35 +136,39 @@ bool DiskBasicDirItemX1HU::Check(bool &last)
 	return valid;
 }
 
-void DiskBasicDirItemX1HU::SetFileAttr(int file_type)
+void DiskBasicDirItemX1HU::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	if (file_type == -1) return;
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
 
 	// X1 Hu
 	int t = GetFileType1();
 	t &= ~FILETYPE_X1HU_MASK;
-	if (file_type & FILE_TYPE_BINARY_MASK) {
+	if (ftype & FILE_TYPE_BINARY_MASK) {
 		// bin
 		t |= FILETYPE_X1HU_BINARY;
-	} else if (file_type & FILE_TYPE_BASIC_MASK) {
+	} else if (ftype & FILE_TYPE_BASIC_MASK) {
 		// bas
 		t |= FILETYPE_X1HU_BASIC;
-	} else if (file_type & FILE_TYPE_ASCII_MASK) {
+	} else if (ftype & FILE_TYPE_ASCII_MASK) {
 		// asc
 		t |= FILETYPE_X1HU_ASCII;
-	} else if (file_type & FILE_TYPE_DIRECTORY_MASK) {
+	} else if (ftype & FILE_TYPE_DIRECTORY_MASK) {
 		// sub directory
 		t |= FILETYPE_X1HU_DIRECTORY;
 	}
 	t &= ~DATATYPE_X1HU_MASK;
-	t |= (file_type & FILE_TYPE_HIDDEN_MASK ? DATATYPE_X1HU_HIDDEN : 0);
-	t |= (file_type & FILE_TYPE_READWRITE_MASK ? DATATYPE_X1HU_READ_WRITE : 0);
-	t |= (file_type & FILE_TYPE_READONLY_MASK ? DATATYPE_X1HU_READ_ONLY : 0);
+	t |= (ftype & FILE_TYPE_HIDDEN_MASK ? DATATYPE_X1HU_HIDDEN : 0);
+	t |= (ftype & FILE_TYPE_READWRITE_MASK ? DATATYPE_X1HU_READ_WRITE : 0);
+	t |= (ftype & FILE_TYPE_READONLY_MASK ? DATATYPE_X1HU_READ_ONLY : 0);
 	SetFileType1(t);
 
 	// password
-	t = (file_type & FILE_TYPE_ENCRYPTED_MASK ? (file_type & DATATYPE_X1HU_PASSWORD_MASK) : DATATYPE_X1HU_PASSWORD_NONE);
-	SetFileType2(t >> DATATYPE_X1HU_PASSWORD_POS);
+	int passwd = DATATYPE_X1HU_PASSWORD_NONE;
+	if (ftype & FILE_TYPE_ENCRYPTED_MASK) {
+		passwd = file_type.GetOrigin();
+	}
+	SetFileType2(passwd);
 }
 
 /// ディレクトリを初期化 未使用にする
@@ -174,7 +182,7 @@ void DiskBasicDirItemX1HU::InitialData()
 	if (basic->IsDataInverted()) mem_invert(data, l);
 }
 
-int DiskBasicDirItemX1HU::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemX1HU::GetFileAttr() const
 {
 	int t = GetFileType1();
 	int val = 0;
@@ -189,77 +197,15 @@ int DiskBasicDirItemX1HU::GetFileAttr()
 		val = FILE_TYPE_DIRECTORY_MASK;	// sub directory
 	}
 
-	int t2 = GetFileType2();
-	t2 <<= DATATYPE_X1HU_PASSWORD_POS;
-	if (t2 != DATATYPE_X1HU_PASSWORD_NONE) {
+	int passwd = GetFileType2();
+	if (passwd != DATATYPE_X1HU_PASSWORD_NONE) {
 		val |= FILE_TYPE_ENCRYPTED_MASK;
-		val |= t2;
 	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemX1HU::GetFileType1Pos()
-{
-	int t = GetFileType1();
-	int val = 0;
-	if (t & FILETYPE_X1HU_BINARY) {
-		val = TYPE_NAME_X1HU_BINARY;	// bin
-	} else if (t & FILETYPE_X1HU_BASIC) {
-		val = TYPE_NAME_X1HU_BASIC;		// bas
-	} else if (t & FILETYPE_X1HU_ASCII) {
-		val = (external_attr == 0 ? TYPE_NAME_X1HU_ASCII : TYPE_NAME_X1HU_RANDOM);		// asc
-	} else if (t & FILETYPE_X1HU_DIRECTORY) {
-		val = TYPE_NAME_X1HU_DIRECTORY;	// sub directory
-	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemX1HU::GetFileType2Pos()
-{
-	int t = GetFileType1();
-	int val = 0;
-	val |= (t & DATATYPE_X1HU_HIDDEN ? FILE_TYPE_HIDDEN_MASK : 0);
-	val |= (t & DATATYPE_X1HU_READ_WRITE ? FILE_TYPE_READWRITE_MASK : 0);
-	val |= (t & DATATYPE_X1HU_READ_ONLY ? FILE_TYPE_READONLY_MASK : 0);
-	int t2 = GetFileType2();
-	t2 <<= DATATYPE_X1HU_PASSWORD_POS;
-	if (t2 != DATATYPE_X1HU_PASSWORD_NONE) {
-		val |= FILE_TYPE_ENCRYPTED_MASK;
-		val |= t2;
-	}
-	return val;
-}
-
-int	DiskBasicDirItemX1HU::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	int val = 0;
-	switch(pos1) {
-	case TYPE_NAME_X1HU_BINARY:
-		val = FILE_TYPE_BINARY_MASK;
-		break;
-	case TYPE_NAME_X1HU_BASIC:
-		val = FILE_TYPE_BASIC_MASK;
-		break;
-	case TYPE_NAME_X1HU_ASCII:
-		external_attr = 0;
-		val = FILE_TYPE_ASCII_MASK;
-		break;
-	case TYPE_NAME_X1HU_DIRECTORY:
-		val = FILE_TYPE_DIRECTORY_MASK;
-		break;
-	case TYPE_NAME_X1HU_RANDOM:
-		external_attr = 1;
-		val = FILE_TYPE_ASCII_MASK;
-		break;
-	}
-	val |= pos2;
-	return val;
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, passwd);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemX1HU::GetFileAttrStr()
+wxString DiskBasicDirItemX1HU::GetFileAttrStr() const
 {
 	wxString attr = wxGetTranslation(gTypeNameX1HU_1[GetFileType1Pos()]);
 
@@ -276,7 +222,7 @@ wxString DiskBasicDirItemX1HU::GetFileAttrStr()
 		attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_READ_ONLY]);	// read only
 	}
-	if (GetFileType2() != (DATATYPE_X1HU_PASSWORD_NONE >> DATATYPE_X1HU_PASSWORD_POS)) {
+	if (GetFileType2() != DATATYPE_X1HU_PASSWORD_NONE) {
 		attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_PASSWORD]);	// password
 	}
@@ -301,7 +247,7 @@ void DiskBasicDirItemX1HU::SetFileSize(int val)
 /// ファイルサイズとグループ数を計算する
 void DiskBasicDirItemX1HU::CalcFileSize()
 {
-	if (!used) return;
+	if (!IsUsed()) return;
 
 	bool rc = true;
 	int calc_file_size = 0;
@@ -352,19 +298,6 @@ void DiskBasicDirItemX1HU::CalcFileSize()
 	}
 }
 
-/// ファイルサイズが適正か
-bool DiskBasicDirItemX1HU::IsFileValidSize(int file_type1, int size, int *limit)
-{
-	int limit_size = 0xffff;
-	if (limit) *limit = limit_size;
-
-	if (file_type1 == TYPE_NAME_X1HU_BINARY || file_type1 == TYPE_NAME_X1HU_BASIC) {
-		return (size <= limit_size);
-	} else {
-		return true;
-	}
-}
-
 /// 指定ディレクトリのすべてのグループを取得
 void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
 {
@@ -409,7 +342,7 @@ void DiskBasicDirItemX1HU::GetAllGroups(DiskBasicGroups &group_items)
 	}
 }
 
-void DiskBasicDirItemX1HU::GetFileDate(struct tm *tm)
+void DiskBasicDirItemX1HU::GetFileDate(struct tm *tm) const
 {
 	wxUint8 date[sizeof(data->x1hu.date) + 1];
 	basic->InvertMem(data->x1hu.date, sizeof(data->x1hu.date), date);
@@ -419,7 +352,7 @@ void DiskBasicDirItemX1HU::GetFileDate(struct tm *tm)
 	if (tm->tm_year < 80) tm->tm_year += 100;	// 2000 - 2079
 }
 
-void DiskBasicDirItemX1HU::GetFileTime(struct tm *tm)
+void DiskBasicDirItemX1HU::GetFileTime(struct tm *tm) const
 {
 	wxUint8 time[sizeof(data->x1hu.time) + 1];
 	basic->InvertMem(data->x1hu.time, sizeof(data->x1hu.time), time);
@@ -428,14 +361,14 @@ void DiskBasicDirItemX1HU::GetFileTime(struct tm *tm)
 	tm->tm_sec = 0;
 }
 
-wxString DiskBasicDirItemX1HU::GetFileDateStr()
+wxString DiskBasicDirItemX1HU::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
 	return L3DiskUtils::FormatYMDStr(&tm);
 }
 
-wxString DiskBasicDirItemX1HU::GetFileTimeStr()
+wxString DiskBasicDirItemX1HU::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
@@ -502,7 +435,7 @@ void DiskBasicDirItemX1HU::SetExecuteAddress(int val)
 }
 
 /// ディレクトリアイテムのサイズ
-size_t DiskBasicDirItemX1HU::GetDataSize()
+size_t DiskBasicDirItemX1HU::GetDataSize() const
 {
 	return sizeof(directory_x1_hu_t);
 }
@@ -530,7 +463,9 @@ bool DiskBasicDirItemX1HU::NeedCheckEofCode()
 }
 
 /// データをエクスポートする前に必要な処理
-/// @return false エクスポート中断
+/// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
 bool DiskBasicDirItemX1HU::PreExportDataFile(wxString &filename)
 {
 	if ((GetFileType1() & FILETYPE_X1HU_ASCII) != 0 && (external_attr == 0)) {
@@ -552,7 +487,7 @@ int DiskBasicDirItemX1HU::RecalcFileSizeOnSave(wxInputStream *istream, int file_
 }
 
 /// 同じファイル名か
-bool DiskBasicDirItemX1HU::IsSameFileName(const wxString &filename)
+bool DiskBasicDirItemX1HU::IsSameFileName(const DiskBasicFileName &filename) const
 {
 	// 属性が0以外
 	if (GetFileType1() == 0) return false;
@@ -582,6 +517,34 @@ bool DiskBasicDirItemX1HU::IsSameFileName(const wxString &filename)
 #define IDC_CHECK_READWRITE 57
 #define IDC_CHECK_READONLY	58
 #define IDC_CHECK_ENCRYPT	59
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemX1HU::GetFileType1Pos() const
+{
+	int t = GetFileType1();
+	int val = 0;
+	if (t & FILETYPE_X1HU_BINARY) {
+		val = TYPE_NAME_X1HU_BINARY;	// bin
+	} else if (t & FILETYPE_X1HU_BASIC) {
+		val = TYPE_NAME_X1HU_BASIC;		// bas
+	} else if (t & FILETYPE_X1HU_ASCII) {
+		val = (external_attr == 0 ? TYPE_NAME_X1HU_ASCII : TYPE_NAME_X1HU_RANDOM);		// asc
+	} else if (t & FILETYPE_X1HU_DIRECTORY) {
+		val = TYPE_NAME_X1HU_DIRECTORY;	// sub directory
+	}
+	return val;
+}
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemX1HU::GetFileType2Pos() const
+{
+	int t = GetFileType1();
+	int val = 0;
+	val |= (t & DATATYPE_X1HU_HIDDEN ? FILE_TYPE_HIDDEN_MASK : 0);
+	val |= (t & DATATYPE_X1HU_READ_WRITE ? FILE_TYPE_READWRITE_MASK : 0);
+	val |= (t & DATATYPE_X1HU_READ_ONLY ? FILE_TYPE_READONLY_MASK : 0);
+	return val;
+}
 
 /// ダイアログ用に属性を設定する
 /// インポート時ダイアログ表示前にファイルの属性を設定
@@ -659,8 +622,9 @@ void DiskBasicDirItemX1HU::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	staType4->Add(chkReadOnly, flags);
 	chkEncrypt = new wxCheckBox(parent, IDC_CHECK_ENCRYPT, wxGetTranslation(gTypeNameX1HU_2[TYPE_NAME_X1HU_PASSWORD]));
 	// ユーザ定義データ X1ではファイルパスワード
-	parent->SetUserData(file_type_2 & DATATYPE_X1HU_PASSWORD_MASK);
-	chkEncrypt->SetValue((file_type_2 & FILE_TYPE_ENCRYPTED_MASK) != 0);
+	int passwd = (GetFileType2() & DATATYPE_X1HU_PASSWORD_MASK);
+	parent->SetUserData(passwd);
+	chkEncrypt->SetValue(passwd != DATATYPE_X1HU_PASSWORD_NONE);
 	chkEncrypt->Enable(false);
 	staType4->Add(chkEncrypt, flags);
 	sizer->Add(staType4, flags);
@@ -714,20 +678,76 @@ int DiskBasicDirItemX1HU::GetFileType1InAttrDialog(const IntNameBox *parent) con
 }
 
 /// 属性2を得る
-/// @return CalcFileTypeFromPos()のpos2に渡す値
 int DiskBasicDirItemX1HU::GetFileType2InAttrDialog(const IntNameBox *parent) const
 {
 	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkReadWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READWRITE);
-	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
 
 	int val = chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
 	val |= chkReadWrite->GetValue() ? FILE_TYPE_READWRITE_MASK : 0;
 	val |= chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
-	val |= chkEncrypt->GetValue() ? FILE_TYPE_ENCRYPTED_MASK : 0;
-	// ユーザ定義データ X1ではファイルパスワード
-	val |= parent->GetUserData();
-
 	return val;
+}
+
+/// リストの位置から属性を返す(プロパティダイアログ用)
+int	DiskBasicDirItemX1HU::CalcFileTypeFromPos(int pos)
+{
+	int val = 0;
+	switch(pos) {
+	case TYPE_NAME_X1HU_BINARY:
+		val = FILE_TYPE_BINARY_MASK;
+		break;
+	case TYPE_NAME_X1HU_BASIC:
+		val = FILE_TYPE_BASIC_MASK;
+		break;
+	case TYPE_NAME_X1HU_ASCII:
+		external_attr = 0;
+		val = FILE_TYPE_ASCII_MASK;
+		break;
+	case TYPE_NAME_X1HU_DIRECTORY:
+		val = FILE_TYPE_DIRECTORY_MASK;
+		break;
+	case TYPE_NAME_X1HU_RANDOM:
+		external_attr = 1;
+		val = FILE_TYPE_ASCII_MASK;
+		break;
+	}
+	return val;
+}
+
+/// 機種依存の属性を設定する
+/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemX1HU::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
+{
+	int val = CalcFileTypeFromPos(GetFileType1InAttrDialog(parent));
+	val |= GetFileType2InAttrDialog(parent);
+
+	// ユーザ定義データ X1ではファイルパスワード
+	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
+	int passwd = DATATYPE_X1HU_PASSWORD_NONE;
+	if (chkEncrypt->GetValue()) {
+		val |= FILE_TYPE_ENCRYPTED_MASK;
+		passwd = parent->GetUserData();
+	}
+
+	DiskBasicDirItem::SetFileAttr(val, passwd);
+
+	return true;
+}
+
+/// ファイルサイズが適正か
+bool DiskBasicDirItemX1HU::IsFileValidSize(const IntNameBox *parent, int size, int *limit)
+{
+	int limit_size = 0xffff;
+	if (limit) *limit = limit_size;
+
+	int file_type1 = GetFileType1InAttrDialog(parent);
+
+	if (file_type1 == TYPE_NAME_X1HU_BINARY || file_type1 == TYPE_NAME_X1HU_BASIC) {
+		return (size <= limit_size);
+	} else {
+		return true;
+	}
 }

@@ -2,6 +2,8 @@
 ///
 /// @brief 内部ファイル名ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "intnamebox.h"
 #include "main.h"
@@ -14,8 +16,10 @@
 #include "uifilelist.h"
 #include "basicfmt.h"
 #include "basicdir.h"
+#include "basicdiritem.h"
 #include "charcodes.h"
 #include "utils.h"
+
 
 #define TEXT_VALIDATOR_TRANS \
 _("'%s' should only contain ASCII characters."), \
@@ -31,13 +35,37 @@ BEGIN_EVENT_TABLE(IntNameBox, wxDialog)
 	EVT_BUTTON(wxID_OK, IntNameBox::OnOK)
 END_EVENT_TABLE()
 
-IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption
-	, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags)
-		: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX, wxT(INTNAMEBOX_CLASSNAME))
+/// @brief コンストラクタ
+/// @param [in] frame      親フレーム
+/// @param [in] parent     親ウィンドウ
+/// @param [in] id         ウィンドウID
+/// @param [in] caption    ウィンドウキャプション
+/// @param [in] basic      DISK BASIC
+/// @param [in] item       ディレクトリアイテム
+/// @param [in] file_path  ファイル名(show_flagsが #INTNAME_IMPORT_INTERNAL or #INTNAME_SPECIFY_FILE_NAME のとき指定)
+/// @param [in] show_flags 表示フラグ
+IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
+	DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags)
+	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX, wxT(INTNAMEBOX_CLASSNAME))
+{
+	CreateBox(frame, parent, id, caption, basic, item, file_path, show_flags);
+}
+
+/// @brief ダイアログ内の作成
+/// @param [in] frame      親フレーム
+/// @param [in] parent     親ウィンドウ
+/// @param [in] id         ウィンドウID
+/// @param [in] caption    ウィンドウキャプション
+/// @param [in] basic      DISK BASIC
+/// @param [in] item       ディレクトリアイテム
+/// @param [in] file_path  ファイル名(show_flagsが #INTNAME_IMPORT_INTERNAL or #INTNAME_SPECIFY_FILE_NAME のとき指定)
+/// @param [in] show_flags 表示フラグ
+void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
+	DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags)
 {
 	this->frame = frame;
 	this->item = item;
-	this->unique_number = basic->GetDir()->GetUniqueNumber();
+	this->unique_number = frame->GetUniqueNumber();
 	this->basic = basic;
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -189,11 +217,13 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 	ChangedType1();
 }
 
+/// ダイアログ表示
 int IntNameBox::ShowModal()
 {
 	return wxDialog::ShowModal();
 }
 
+/// OKボタン押下
 void IntNameBox::OnOK(wxCommandEvent& event)
 {
 	if (Validate() && TransferDataFromWindow()) {
@@ -217,6 +247,7 @@ void IntNameBox::OnChangeType1(wxCommandEvent& WXUNUSED(event))
 	ChangedType1();
 }
 
+/// 属性を変更(機種依存)
 void IntNameBox::ChangedType1()
 {
 	if (item) {
@@ -249,7 +280,9 @@ void IntNameBox::SetValuesToDirItem()
 {
 	if (!item) return;
 
-	item->SetFileNameStr(GetInternalName());
+	DiskBasicFileName filename;
+	GetInternalName(filename);
+	item->SetFileNameStr(filename.GetName());
 	item->SetStartAddress(GetStartAddress());
 	item->SetExecuteAddress(GetExecuteAddress());
 	struct tm tm;
@@ -274,9 +307,9 @@ void IntNameBox::SetInternalName(const wxString &name)
 
 /// 内部ファイル名を返す
 /// DiskBasicDirItem::ConvertFromFileNameStr()で変換したファイル名
-wxString IntNameBox::GetInternalName() const
+void IntNameBox::GetInternalName(DiskBasicFileName &name) const
 {
-	if (!txtIntName) return wxT("");
+	if (!txtIntName) return;
 
 	wxString val = txtIntName->GetValue();
 	size_t len = val.Length();
@@ -287,7 +320,13 @@ wxString IntNameBox::GetInternalName() const
 		// ダイアログ入力後のファイル名文字列を変換 機種依存の処理 大文字にするなど
 		item->ConvertFromFileNameStr(val);
 	}
-	return val;
+
+	name.SetName(val);
+
+	// ファイル名に付随する拡張属性をセットする
+	if (item) {
+		name.SetOptional(item->GetOptionalNameInAttrDialog(this));
+	}
 }
 
 /// 開始アドレスを返す
@@ -402,6 +441,14 @@ wxEND_EVENT_TABLE()
 
 IntNameValidator::IntNameValidator(DiskBasic *basic, DiskBasicDirItem *item) : wxValidator()
 {
+	CreateValidator(basic, item);
+}
+IntNameValidator::IntNameValidator(const IntNameValidator& val) : wxValidator()
+{
+    Copy(val);
+}
+void IntNameValidator::CreateValidator(DiskBasic *basic, DiskBasicDirItem *item)
+{
 	this->basic = basic;
 	this->item = item;
 	wxString invalidate_chars = item->InvalidateChars();
@@ -410,11 +457,6 @@ IntNameValidator::IntNameValidator(DiskBasic *basic, DiskBasicDirItem *item) : w
 	}
 	maxlen = item->GetFileNameStrSize();
 }
-IntNameValidator::IntNameValidator(const IntNameValidator& val) : wxValidator()
-{
-    Copy(val);
-}
-
 bool IntNameValidator::Copy(const IntNameValidator& val)
 {
     wxValidator::Copy(val);

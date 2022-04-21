@@ -2,6 +2,8 @@
 ///
 /// @brief BASIC種類選択ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "basicselbox.h"
 #include <wx/string.h>

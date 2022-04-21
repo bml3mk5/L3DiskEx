@@ -1,7 +1,10 @@
 ﻿/// @file basictype_msx.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type for MSX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_MSX_H_
 #define _BASICTYPE_MSX_H_
 
@@ -9,7 +12,15 @@
 #include "basiccommon.h"
 #include "basictype_fat12.h"
 
-/// MSX BASIC / MSX-DOSの処理
+
+/** @class DiskBasicTypeMSX
+
+@brief MSX BASIC / MSX-DOSの処理
+
+DiskBasicParam
+@li MediaID : メディアID
+
+*/
 class DiskBasicTypeMSX : public DiskBasicTypeFAT12
 {
 private:

@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic directory item for MS-DOS
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_msdos.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
 #include "utils.h"
+
 
 //
 //
@@ -48,7 +52,7 @@ DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int num, int trac
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
 	// MS-DOS
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 	unuse = (unuse || (this->data->msdos.name[0] == 0));
 
 	// ファイルサイズをセット
@@ -159,11 +163,10 @@ bool DiskBasicDirItemMSDOS::Check(bool &last)
 }
 
 /// 削除できるか
-bool DiskBasicDirItemMSDOS::IsDeletable()
+bool DiskBasicDirItemMSDOS::IsDeletable() const
 {
 	bool valid = true;
-	int attr = GetFileAttr();
-	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+	if (GetFileAttr().IsDirectory()) {
 		wxString name =	GetFileNamePlainStr();
 		if (name == wxT(".") || name == wxT("..")) {
 			// ディレクトリ ".", ".."は削除不可
@@ -174,11 +177,10 @@ bool DiskBasicDirItemMSDOS::IsDeletable()
 }
 
 /// ファイル名を編集できるか
-bool DiskBasicDirItemMSDOS::IsFileNameEditable()
+bool DiskBasicDirItemMSDOS::IsFileNameEditable() const
 {
 	bool valid = true;
-	int attr = GetFileAttr();
-	if (attr & FILE_TYPE_DIRECTORY_MASK) {
+	if (GetFileAttr().IsDirectory()) {
 		wxString name =	GetFileNamePlainStr();
 		if (name == wxT(".") || name == wxT("..")) {
 			// ディレクトリ ".", ".."は削除不可
@@ -189,61 +191,52 @@ bool DiskBasicDirItemMSDOS::IsFileNameEditable()
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMSDOS::InvalidateChars()
+wxString DiskBasicDirItemMSDOS::InvalidateChars() const
 {
 	return wxT(" \"\\/:*?<>|");
 }
 
-void DiskBasicDirItemMSDOS::SetFileAttr(int file_type)
+void DiskBasicDirItemMSDOS::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	if (file_type == -1) return;
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
 
 	// MS-DOS
-	SetFileType1((file_type & 0xff00) >> 8);
+	SetFileType1((ftype & 0xff00) >> 8);
 }
 
-int DiskBasicDirItemMSDOS::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemMSDOS::GetFileAttr() const
 {
-	return GetFileType1() << 8;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemMSDOS::GetFileType1Pos()
-{
-	return GetFileAttr();
-}
-
-int	DiskBasicDirItemMSDOS::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	return pos1;
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), GetFileType1() << 8);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemMSDOS::GetFileAttrStr()
+wxString DiskBasicDirItemMSDOS::GetFileAttrStr() const
 {
 	wxString attr;
+	int ftype = GetFileAttr().GetType();
 	// MS-DOS
-	if (GetFileAttr() & FILE_TYPE_READONLY_MASK) {
+	if (ftype & FILE_TYPE_READONLY_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_READ_ONLY]);	// read only
 	}
-	if (GetFileAttr() & FILE_TYPE_HIDDEN_MASK) {
+	if (ftype & FILE_TYPE_HIDDEN_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_HIDDEN]);	// hidden
 	}
-	if (GetFileAttr() & FILE_TYPE_SYSTEM_MASK) {
+	if (ftype & FILE_TYPE_SYSTEM_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_SYSTEM]);	// system
 	}
-	if (GetFileAttr() & FILE_TYPE_VOLUME_MASK) {
+	if (ftype & FILE_TYPE_VOLUME_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_VOLUME]);	// volume
 	}
-	if (GetFileAttr() & FILE_TYPE_DIRECTORY_MASK) {
+	if (ftype & FILE_TYPE_DIRECTORY_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_DIRECTORY]);	// directory
 	}
-	if (GetFileAttr() & FILE_TYPE_ARCHIVE_MASK) {
+	if (ftype & FILE_TYPE_ARCHIVE_MASK) {
 		if (!attr.IsEmpty()) attr += wxT(", ");
 		attr += wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_ARCHIVE]);	// archive
 	}
@@ -263,7 +256,7 @@ void DiskBasicDirItemMSDOS::SetFileSize(int val)
 /// ファイルサイズとグループ数を計算する
 void DiskBasicDirItemMSDOS::CalcFileSize()
 {
-	if (!used) return;
+	if (!IsUsed()) return;
 
 	int calc_file_size = 0;
 	int calc_groups = 0; 
@@ -352,28 +345,28 @@ void DiskBasicDirItemMSDOS::GetAllGroups(DiskBasicGroups &group_items)
 	}
 }
 
-void DiskBasicDirItemMSDOS::GetFileDate(struct tm *tm)
+void DiskBasicDirItemMSDOS::GetFileDate(struct tm *tm) const
 {
 	// MS-DOS
 	wxUint16 wdate = wxUINT16_SWAP_ON_BE(data->msdos.wdate);
 	ConvDateToTm(wdate, tm);
 }
 
-void DiskBasicDirItemMSDOS::GetFileTime(struct tm *tm)
+void DiskBasicDirItemMSDOS::GetFileTime(struct tm *tm) const
 {
 	// MS-DOS
 	wxUint16 wtime = wxUINT16_SWAP_ON_BE(data->msdos.wtime);
 	ConvTimeToTm(wtime, tm);
 }
 
-wxString DiskBasicDirItemMSDOS::GetFileDateStr()
+wxString DiskBasicDirItemMSDOS::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
 	return L3DiskUtils::FormatYMDStr(&tm);
 }
 
-wxString DiskBasicDirItemMSDOS::GetFileTimeStr()
+wxString DiskBasicDirItemMSDOS::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
@@ -397,12 +390,12 @@ void DiskBasicDirItemMSDOS::SetFileTime(const struct tm *tm)
 }
 
 /// 日付のタイトル名（ダイアログ用）
-wxString DiskBasicDirItemMSDOS::GetFileDateTimeTitle()
+wxString DiskBasicDirItemMSDOS::GetFileDateTimeTitle() const
 {
 	return _("Updated Date:");
 }
 
-wxString DiskBasicDirItemMSDOS::GetCDateStr()
+wxString DiskBasicDirItemMSDOS::GetCDateStr() const
 {
 	struct tm tm;
 	wxUint16 date = wxUINT16_SWAP_ON_BE(data->msdos.cdate);
@@ -410,7 +403,7 @@ wxString DiskBasicDirItemMSDOS::GetCDateStr()
 	return L3DiskUtils::FormatYMDStr(&tm);
 }
 
-wxString DiskBasicDirItemMSDOS::GetCTimeStr()
+wxString DiskBasicDirItemMSDOS::GetCTimeStr() const
 {
 	struct tm tm;
 	wxUint16 time = wxUINT16_SWAP_ON_BE(data->msdos.ctime);
@@ -418,7 +411,7 @@ wxString DiskBasicDirItemMSDOS::GetCTimeStr()
 	return L3DiskUtils::FormatHMSStr(&tm);
 }
 
-wxString DiskBasicDirItemMSDOS::GetADateStr()
+wxString DiskBasicDirItemMSDOS::GetADateStr() const
 {
 	struct tm tm;
 	wxUint16 date = wxUINT16_SWAP_ON_BE(data->msdos.adate);
@@ -452,21 +445,21 @@ void DiskBasicDirItemMSDOS::SetADate(const struct tm *tm)
 }
 
 /// 日付を変換
-void DiskBasicDirItemMSDOS::ConvDateToTm(wxUint16 date, struct tm *tm)
+void DiskBasicDirItemMSDOS::ConvDateToTm(wxUint16 date, struct tm *tm) const
 {
 	tm->tm_year = ((date & 0xfe00) >> 9) + 80;
 	tm->tm_mon = ((date & 0x01e0) >> 5) - 1;
 	tm->tm_mday = (date & 0x001f);
 }
 /// 時間を変換
-void DiskBasicDirItemMSDOS::ConvTimeToTm(wxUint16 time, struct tm *tm)
+void DiskBasicDirItemMSDOS::ConvTimeToTm(wxUint16 time, struct tm *tm) const
 {
 	tm->tm_hour = (time & 0xf800) >> 11;
 	tm->tm_min = (time & 0x07e0) >> 5;
 	tm->tm_sec = (time & 0x001f) << 1;
 }
 /// 日付に変換
-wxUint16 DiskBasicDirItemMSDOS::ConvTmToDate(const struct tm *tm)
+wxUint16 DiskBasicDirItemMSDOS::ConvTmToDate(const struct tm *tm) const
 {
 	return (wxUint16)
 		(((tm->tm_year - 80) & 0x7f) << 9)
@@ -474,7 +467,7 @@ wxUint16 DiskBasicDirItemMSDOS::ConvTmToDate(const struct tm *tm)
 		| (tm->tm_mday & 0x1f);
 }
 /// 時間に変換
-wxUint16 DiskBasicDirItemMSDOS::ConvTmToTime(const struct tm *tm)
+wxUint16 DiskBasicDirItemMSDOS::ConvTmToTime(const struct tm *tm) const
 {
 	return (wxUint16)
 		((tm->tm_hour & 0x1f) << 11)
@@ -482,7 +475,7 @@ wxUint16 DiskBasicDirItemMSDOS::ConvTmToTime(const struct tm *tm)
 		| ((tm->tm_sec & 0x3f) >> 1);
 }
 
-size_t DiskBasicDirItemMSDOS::GetDataSize()
+size_t DiskBasicDirItemMSDOS::GetDataSize() const
 {
 	return sizeof(directory_msdos_t);
 }
@@ -502,7 +495,7 @@ wxUint32 DiskBasicDirItemMSDOS::GetStartGroup() const
 }
 
 /// ダイアログ入力前のファイル名文字列を変換
-void DiskBasicDirItemMSDOS::ConvertToFileNameStr(wxString &filename)
+void DiskBasicDirItemMSDOS::ConvertToFileNameStr(wxString &filename) const
 {
 	// 大文字にする
 	filename = filename.Upper();
@@ -510,7 +503,7 @@ void DiskBasicDirItemMSDOS::ConvertToFileNameStr(wxString &filename)
 
 /// ダイアログ入力後のファイル名文字列を変換
 /// ダイアログで指定したファイル名はすべて大文字にする
-void DiskBasicDirItemMSDOS::ConvertFromFileNameStr(wxString &filename)
+void DiskBasicDirItemMSDOS::ConvertFromFileNameStr(wxString &filename) const
 {
 	// 大文字にする
 	filename = filename.Upper();
@@ -562,8 +555,8 @@ void DiskBasicDirItemMSDOS::SetFileTypeForAttrDialog(int show_flags, const wxStr
 /// @param [in] flags
 void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+	int file_type_1 = GetFileAttr().GetType();
+	int file_type_2 = 0;
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkHidden;
 	wxCheckBox *chkSystem;
@@ -626,9 +619,8 @@ void DiskBasicDirItemMSDOS::CreateControlsForAttrDialog(IntNameBox *parent, int 
 	sizer->Add(hbox, flags);
 }
 
-/// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemMSDOS::GetFileType1InAttrDialog(const IntNameBox *parent) const
+/// 機種依存の属性を設定する
+bool DiskBasicDirItemMSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
@@ -644,13 +636,7 @@ int DiskBasicDirItemMSDOS::GetFileType1InAttrDialog(const IntNameBox *parent) co
 	val |= chkDirectory->GetValue() ? FILE_TYPE_DIRECTORY_MASK : 0;
 	val |= chkArchive->GetValue() ? FILE_TYPE_ARCHIVE_MASK : 0;
 
-	return val;
-}
-
-/// 機種依存の属性を設定する
-bool DiskBasicDirItemMSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
-{
-	DiskBasicDirItem::SetAttrInAttrDialog(parent, errinfo);
+	DiskBasicDirItem::SetFileAttr(val);
 
 	wxTextCtrl *txtCDate = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CDATE);
 	wxTextCtrl *txtCTime = (wxTextCtrl *)parent->FindWindow(IDC_TEXT_CTIME);

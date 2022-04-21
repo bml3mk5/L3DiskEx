@@ -2,6 +2,8 @@
 ///
 /// @brief BASIC種類選択ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _BASICSELBOX_H_
 #define _BASICSELBOX_H_
@@ -10,6 +12,7 @@
 #include <wx/dialog.h>
 #include <wx/dynarray.h>
 #include "basicparam.h"
+
 
 class wxListBox;
 class wxTextCtrl;

@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for L3/S1 BASIC 2D/2HD
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_L32D_H_
 #define _BASICDIRITEM_L32D_H_
 
 #include "basicdiritem_fat8.h"
+
 
 /// ディレクトリ１アイテム L3/S1 BASIC 倍密度 2D/2HD
 class DiskBasicDirItemL32D : public DiskBasicDirItemFAT8
@@ -31,6 +35,14 @@ private:
 	/// 属性２のセット
 	void	SetFileType2(int val);
 
+	/// 最終セクタの占有サイズをセット
+	void	SetDataSizeOnLastSecotr(int val);
+	/// 最終セクタの占有サイズを返す
+	int		GetDataSizeOnLastSector() const;
+
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 public:
 	DiskBasicDirItemL32D(DiskBasic *basic);
 	DiskBasicDirItemL32D(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
@@ -40,8 +52,10 @@ public:
 	bool	Check(bool &last);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString	InvalidateChars();
+	wxString	InvalidateChars() const;
 
+	/// ファイルサイズをセット
+	void	SetFileSize(int val);
 	/// ファイルサイズとグループ数を計算する
 	void	CalcFileSize();
 	/// 最初のグループ番号をセット
@@ -50,23 +64,16 @@ public:
 	wxUint32 GetStartGroup() const;
 
 	/// ディレクトリアイテムのサイズ
-	size_t	GetDataSize();
-
-	/// 最終セクタの占有サイズをセット
-	void	SetDataSizeOnLastSecotr(int val);
-	/// 最終セクタの占有サイズを返す
-	int		GetDataSizeOnLastSector();
+	size_t	GetDataSize() const;
 
 	/// 内部ファイル名からコード変換して文字列を返す コピー、このアプリからインポート時のダイアログを出す前
-	wxString RemakeFileName(const wxUint8 *src, size_t srclen);
+	wxString RemakeFileName(const wxUint8 *src, size_t srclen) const;
 
 	/// ダイアログ入力前のファイル名を変換 大文字にする
-	void	ConvertToFileNameStr(wxString &filename);
+	void	ConvertToFileNameStr(wxString &filename) const;
 
 	/// ダイアログ内の属性部分のレイアウトを作成
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 
 	/// ファイル名に拡張子を付ける
 	wxString AddExtensionForAttrDialog(int file_type_1, const wxString &name);

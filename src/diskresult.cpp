@@ -2,6 +2,9 @@
 ///
 /// @brief ディスク解析結果
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskresult.h"
 #include <wx/intl.h>
 

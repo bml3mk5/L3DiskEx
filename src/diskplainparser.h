@@ -2,10 +2,14 @@
 ///
 /// @brief べたディスクイメージパーサ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKPLAIN_PARSER_H_
 #define _DISKPLAIN_PARSER_H_
 
 #include "common.h"
+
 
 class wxInputStream;
 class wxArrayString;

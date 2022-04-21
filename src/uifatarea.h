@@ -1,6 +1,8 @@
 ﻿/// @file uifatarea.h
 ///
-/// @brief FATの使用状況を表示
+/// @brief 使用状況を表示
+///
+/// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
 #ifndef _UI_FATAREA_H_
@@ -11,6 +13,7 @@
 #include <wx/scrolwin.h>
 #include <wx/dynarray.h>
 #include "basicfat.h"
+
 
 class L3DiskFrame;
 class L3DiskFatAreaFrame;
@@ -71,7 +74,6 @@ public:
 	~L3DiskFatAreaPanel();
 
 	void OnPaint(wxPaintEvent& event);
-//	void OnDraw(wxDC &dc);
 	void OnSize(wxSizeEvent& event);
 
 	void SetData(wxUint32 offset, const wxArrayInt *arr);

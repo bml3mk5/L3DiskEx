@@ -2,10 +2,14 @@
 ///
 /// @brief いろいろ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "utils.h"
+#include <wx/translation.h>
 #include <wx/string.h>
 #include <wx/regex.h>
+
 
 namespace L3DiskUtils
 {
@@ -299,6 +303,32 @@ wxString Escape(const wxString &src)
 		}
 	}
 	return rstr;
+}
+
+wxString GetSideNumStr(int side_number, bool each_sides)
+{
+	wxString str;
+	if (side_number >= 0) {
+		if (each_sides) {
+			str = wxString::Format(wxT("%d"), side_number);
+		} else {
+			str = wxString::Format(wxT("%c"), side_number + 0x41);
+		}
+	}
+	return str;
+}
+
+wxString GetSideStr(int side_number, bool each_sides)
+{
+	wxString str;
+	if (side_number >= 0) {
+		if (each_sides) {
+			str = wxString::Format(_("side %d"), side_number);
+		} else {
+			str = wxString::Format(_("side %c"), side_number + 0x41);
+		}
+	}
+	return str;
 }
 
 }; /* namespace L3DiskUtils */

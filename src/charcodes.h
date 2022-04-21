@@ -2,6 +2,9 @@
 ///
 /// @brief キャラクタコード
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _CHARCODES_H_
 #define _CHARCODES_H_
 

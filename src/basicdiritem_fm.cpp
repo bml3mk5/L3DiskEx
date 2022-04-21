@@ -2,9 +2,13 @@
 ///
 /// @brief disk basic directory item for F-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_fm.h"
 #include "basicfmt.h"
 #include "charcodes.h"
+
 
 ///
 ///
@@ -23,7 +27,7 @@ DiskBasicDirItemFM::DiskBasicDirItemFM(DiskBasic *basic, int num, int track, int
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemFM::InvalidateChars()
+wxString DiskBasicDirItemFM::InvalidateChars() const
 {
 	return wxT("\":()");
 }

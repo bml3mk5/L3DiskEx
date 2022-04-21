@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for N88-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_N88_H_
 #define _BASICDIRITEM_N88_H_
 
 #include "basicdiritem_fat8.h"
+
 
 /// N88-BASIC
 
@@ -56,6 +60,15 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int	    GetFileType1Pos() const;
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int	    GetFileType2Pos() const;
+	/// リストの位置から属性を返す(プロパティダイアログ用)
+	int		CalcFileTypeFromPos(int pos);
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 public:
 	DiskBasicDirItemN88(DiskBasic *basic);
 	DiskBasicDirItemN88(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
@@ -70,19 +83,13 @@ public:
 	void			SetEndMark(DiskBasicDirItem *next_item);
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void			SetFileAttr(const DiskBasicFileType &file_type);
 
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr();
+	wxString		GetFileAttrStr() const;
 
 	/// ファイルサイズをセット
 	void			SetFileSize(int val);
@@ -94,7 +101,7 @@ public:
 
 
 	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize();
+	size_t			GetDataSize() const;
 
 	/// ファイルの終端コードをチェックする必要があるか
 	bool			NeedCheckEofCode();
@@ -113,12 +120,8 @@ public:
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}
 };
 

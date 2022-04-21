@@ -2,6 +2,8 @@
 ///
 /// @brief Rawパラメータダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _RAWPARAMBOX_H_
 #define _RAWPARAMBOX_H_
@@ -14,6 +16,7 @@ _("'%s' should only contain digits.")
 
 #include "common.h"
 #include <wx/dialog.h>
+
 
 class wxTextCtrl;
 class wxChoice;

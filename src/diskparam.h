@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクパラメータ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISK_PARAMETER_H_
 #define _DISK_PARAMETER_H_
 
@@ -9,6 +12,7 @@
 #include <wx/string.h>
 #include <wx/arrstr.h>
 #include <wx/dynarray.h>
+
 
 /// (0:128bytes 1:256bytes 2:512bytes 3:1024bytes)
 extern const int gSectorSizes[5];
@@ -160,14 +164,16 @@ public:
 	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
 
 	/// タイプ名に一致するテンプレートの番号を返す
-	int IndexOf(const wxString &n_type_name);
+	int IndexOf(const wxString &n_type_name) const;
 	/// タイプ名に一致するテンプレートを返す
-	DiskParam *Find(const wxString &n_type_name);
+	const DiskParam *Find(const wxString &n_type_name) const;
 	/// パラメータに一致するあるいは近い物のテンプレートを返す
-	DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const SingleDensities &n_singles);
-
-	DiskParam *ItemPtr(size_t index) const { return &params[index]; }
-	DiskParam &Item(size_t index) const { return params[index]; }
+	const DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const SingleDensities &n_singles) const;
+	/// テンプレートを返す
+	const DiskParam *ItemPtr(size_t index) const { return &params[index]; }
+	/// テンプレートを返す
+	const DiskParam &Item(size_t index) const { return params[index]; }
+	/// テンプレートの数を返す
 	size_t Count() const { return params.Count(); }
 };
 

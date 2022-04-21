@@ -2,6 +2,8 @@
 ///
 /// @brief セクタダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "rawsectorbox.h"
 #include <wx/textctrl.h>
@@ -12,6 +14,7 @@
 #include <wx/numformatter.h>
 #include "basicfmt.h"
 #include "charcodes.h"
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(RawSectorBox, wxDialog)

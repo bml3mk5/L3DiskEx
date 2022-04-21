@@ -2,6 +2,8 @@
 ///
 /// @brief フォントミニダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _FONTMINIBOX_H_
 #define _FONTMINIBOX_H_
@@ -9,6 +11,7 @@
 #include "common.h"
 #include <wx/dialog.h>
 #include <wx/arrstr.h>
+
 
 class wxComboBox;
 class wxButton;

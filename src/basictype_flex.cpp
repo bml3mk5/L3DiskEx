@@ -2,10 +2,16 @@
 ///
 /// @brief disk basic type for FLEX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_flex.h"
 #include "basicfmt.h"
+#include "basicdir.h"
 #include "basicdiritem.h"
+#include "basicdiritem_flex.h"
 #include "logging.h"
+
 
 //
 //
@@ -50,7 +56,7 @@ bool DiskBasicTypeFLEX::CheckFat()
 	// DIRエリアのチェインをチェック
 	int dir_cnt = 0;
 	int dir_sta_sec = basic->GetDirStartSector() - 1;
-	int dir_end_sec = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic() - 1;
+	int dir_end_sec = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() - 1;
 	sector = basic->GetSectorFromSectorPos(dir_sta_sec);
 	for(int sec_pos = dir_sta_sec; sec_pos <= dir_end_sec; sec_pos++) {
 		if (!sector) {
@@ -83,13 +89,94 @@ int DiskBasicTypeFLEX::ParseParamOnDisk(DiskD88Disk *disk)
 		flex_sir = flex;
 	}
 
+	if (flex_sir->max_track > 0) {
+		basic->SetTracksPerSideOnBasic(flex_sir->max_track + 1);
+	}
 	if (flex_sir->max_sector > 0) {
-		basic->SetSectorsPerTrackOnBasic(flex_sir->max_sector / basic->GetSidesOnBasic());
+		basic->SetSectorsPerTrackOnBasic(flex_sir->max_sector / basic->GetSidesPerDiskOnBasic());
 	}
 
 	return 0;
 }
 
+/// ルートディレクトリのセクタリストを計算
+/// @param [in] start_sector  ディレクトリ開始セクタ番号
+/// @param [in] end_sector    ディレクトリ終了セクタ番号
+/// @param [out] group_items  セクタリスト
+bool DiskBasicTypeFLEX::CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items)
+{
+	bool valid = true;
+
+	group_items.Empty();
+
+	// ディレクトリのチェインをたどる
+	size_t dir_size = 0;
+	int limit = basic->GetFatEndGroup() + 1;
+	int prev_trk_num = -1;
+	int prev_sid_num = -1;
+	int sta_sec_num = 0;
+	int end_sec_num = 0;
+	int trk_num = 0;
+	int sid_num = 0;
+	int sec_num = 1;
+	// 開始セクタ
+	DiskD88Sector *sector = basic->GetManagedSector(start_sector - 1, &trk_num, &sid_num);
+	while(limit >= 0) {
+		if (!sector) {
+			valid = false;
+			break;
+		}
+		sec_num = sector->GetSectorNumber();
+
+		wxUint8 *buffer = sector->GetSectorBuffer(); 
+		if (!buffer) {
+			valid = false;
+			break;
+		}
+
+		// トラック番号 or サイド番号が変わったらリストに登録
+		if (trk_num != prev_trk_num || sid_num != prev_sid_num) {
+			if (sta_sec_num > 0) {
+				group_items.Add(0, 0, prev_trk_num, prev_sid_num, sta_sec_num, end_sec_num);
+			}
+			sta_sec_num = sec_num;
+		}
+		prev_trk_num = trk_num;
+		prev_sid_num = sid_num;
+		end_sec_num = sec_num;
+
+		dir_size += sector->GetSectorSize();
+
+		flex_ptr_t *p = (flex_ptr_t *)buffer;
+
+		// 次のセクタなし
+		if (p->next_track == 0 && p->next_sector == 0) {
+			break;
+		}
+
+		limit--;
+
+		// 次のセクタを得る
+		trk_num = p->next_track;
+		sec_num = p->next_sector;
+		sector = basic->GetSector(trk_num, sec_num, &sid_num);
+	}
+	group_items.SetSize(dir_size);
+
+	if (sta_sec_num > 0) {
+		group_items.Add(0, 0, trk_num, sid_num, sta_sec_num, end_sec_num);
+
+		// 最終セクタ番号を更新
+		int sec_pos = basic->GetSectorPosFromNum(trk_num, sid_num, end_sec_num);
+		sec_pos -= (basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic());
+		basic->SetDirEndSector(sec_pos + 1);
+	}
+
+	if (limit < 0) {
+		valid = false;
+	}
+	return valid;
+}
 
 /// 使用可能なディスクサイズを得る
 void DiskBasicTypeFLEX::GetUsableDiskSize(int &disk_size, int &group_size) const
@@ -267,8 +354,8 @@ int DiskBasicTypeFLEX::AllocateGroups(DiskBasicDirItem *item, int data_size, All
 
 	// FAT
 	int  rc = 0;
-	bool first_group = true;
-	wxUint32 group_num = INVALID_GROUP_NUMBER;
+	bool first_group = (flags == ALLOCATE_GROUPS_NEW);
+	wxUint32 group_num = (flags == ALLOCATE_GROUPS_NEW ? INVALID_GROUP_NUMBER : item->GetLastGroup());
 	int sizeremain = data_size;
 	// 1セクタ当たり4バイトはチェイン用のリンクポインタになるので減算
 	int bytes_per_group = basic->GetSectorsPerGroup() * (basic->GetSectorSize() - 4);
@@ -413,13 +500,13 @@ void DiskBasicTypeFLEX::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 
-	if (track->GetTrackNumber() > 0 && track->GetSideNumber() < basic->GetSidesOnBasic()) {
+	if (track->GetTrackNumber() > 0 && track->GetSideNumber() < basic->GetSidesPerDiskOnBasic()) {
 		// セクタの先頭にリンクを作成
 		flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer();
 		if (p) {
 			int next_track = track->GetTrackNumber();
 			int next_sector = sector->GetSectorNumber() + 1;
-			if (next_sector >= (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic() + 1)) {
+			if (next_sector >= (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + 1)) {
 				next_track++;
 				next_sector = 1;
 			}
@@ -453,14 +540,14 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	flex_sir->free_start_track = 1;
 	flex_sir->free_start_sector = 1;
 	flex_sir->free_last_track = (basic->GetTracksPerSide() - 1);
-	flex_sir->free_last_sector = (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic());
+	flex_sir->free_last_sector = (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic());
 
-	int sector_nums = (basic->GetTracksPerSide() - 1) * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
+	int sector_nums = (basic->GetTracksPerSide() - 1) * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 
 	flex_sir->free_sector_nums = wxUINT16_SWAP_ON_LE(sector_nums);
 
 	flex_sir->max_track = (basic->GetTracksPerSide() - 1);
-	flex_sir->max_sector = (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic());
+	flex_sir->max_sector = (basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic());
 
 	struct tm tm;
 	wxDateTime::GetTmNow(&tm);
@@ -473,7 +560,7 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 
 	// DIRエリア
 
-	int sec_end_pos = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic() - 1;
+	int sec_end_pos = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() - 1;
 	DiskD88Sector *prev_sector = NULL;
 	int next_track = 0;
 	int next_sector = 0;
@@ -686,7 +773,7 @@ void DiskBasicTypeFLEX::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
 	// volume label
 	wxCharBuffer vol = data.GetVolumeName().To8BitData();
-	strncpy((char *)flex_sir->volume_label, vol, sizeof(flex_sir->volume_label)); 
+	mem_copy(vol.data(), vol.length(), 0, flex_sir->volume_label, sizeof(flex_sir->volume_label)); 
 	// volume number
 	flex_sir->volume_number = wxUINT16_SWAP_ON_LE(data.GetVolumeNumber());
 }

@@ -2,6 +2,8 @@
 ///
 /// @brief Raw セクタダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _RAWSECTORBOX_H_
 #define _RAWSECTORBOX_H_
@@ -14,6 +16,7 @@ _("'%s' should only contain digits.")
 
 #include "common.h"
 #include <wx/dialog.h>
+
 
 #define SECTORBOX_HIDE_SECTOR_NUMS	0x0040
 

@@ -1,7 +1,10 @@
 ﻿/// @file basictype_n88.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type for N88-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_N88_H_
 #define _BASICTYPE_N88_H_
 
@@ -9,7 +12,15 @@
 #include "basiccommon.h"
 #include "basictype_fat8.h"
 
-/// N88-BASICの処理
+
+/** @class DiskBasicTypeN88
+
+@brief N88-BASICの処理
+
+DiskBasicParam
+@li ReservedGroups : Group 予約済みにするグループ（クラスタ）番号
+
+*/
 class DiskBasicTypeN88 : public DiskBasicTypeFAT8
 {
 private:
@@ -22,6 +33,12 @@ public:
 	//@{
 	/// 空きFAT位置を返す
 	wxUint32	GetEmptyGroupNumber();
+	//@}
+
+	/// @name check / assign FAT area
+	//@{
+	/// FATエリアをチェック
+	bool	CheckFat();
 	//@}
 
 	/// @name format

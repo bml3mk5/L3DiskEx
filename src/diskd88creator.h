@@ -2,11 +2,15 @@
 ///
 /// @brief D88ディスクイメージ作成
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKD88_CREATOR_H_
 #define _DISKD88_CREATOR_H_
 
 #include "common.h"
 #include <wx/string.h>
+
 
 class DiskParam;
 class DiskD88Track;

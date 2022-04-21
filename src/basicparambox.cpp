@@ -2,6 +2,8 @@
 ///
 /// @brief BASIC情報ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "basicparambox.h"
 #include <wx/choice.h>
@@ -53,12 +55,14 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 
 		int cur_num = 0;
 		int pos = 0;
+		bool decided = false;
 		for(size_t n = 0; n < params.Count(); n++) {
 			const DiskBasicParam *param = params.Item(n);
 //			if (param == disk->GetDiskBasicParam()) {
 			if (param->GetBasicTypeName() == basic->GetBasicTypeName()) {
 				cur_num = pos;
-			} else if (param->GetBasicCategoryName() == category) {
+				decided = true;
+			} else if (!decided && param->GetBasicCategoryName() == category) {
 				cur_num = pos;
 			}
 			comBasic->Append(param->GetBasicDescription());
@@ -77,13 +81,25 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Used Side(s) :"));
 	grid->Add(lbl);
-	str = wxString::Format(wxT("%d"), basic->GetSidesOnBasic());
+	str = wxString::Format(wxT("%d"), basic->GetSidesPerDiskOnBasic());
+	lbl = new wxStaticText(this, wxID_ANY, str);
+	grid->Add(lbl, flagsr);
+
+	lbl = new wxStaticText(this, wxID_ANY, _("Used Tracks / Side :"));
+	grid->Add(lbl);
+	str = wxString::Format(wxT("%d"), basic->GetTracksPerSideOnBasic());
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Used Sectors / Track :"));
 	grid->Add(lbl);
 	str = wxString::Format(wxT("%d"), basic->GetSectorsPerTrackOnBasic());
+	lbl = new wxStaticText(this, wxID_ANY, str);
+	grid->Add(lbl, flagsr);
+
+	lbl = new wxStaticText(this, wxID_ANY, _("Last Group Number :"));
+	grid->Add(lbl);
+	str = wxString::Format(wxT("%d (0x%x)"), basic->GetFatEndGroup(), basic->GetFatEndGroup());
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
@@ -229,6 +245,11 @@ void BasicParamBox::OnOK(wxCommandEvent& event)
 /// ボリューム名などをディスクに反映させる
 void BasicParamBox::CommitData()
 {
+	if (!basic->IsWritableIntoDisk()) {
+		basic->ShowErrorMessage();
+		return;
+	}
+
 	DiskBasicType *type = basic->GetType();
 
 	DiskBasicIdentifiedData data(

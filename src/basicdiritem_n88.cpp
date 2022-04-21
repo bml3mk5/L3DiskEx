@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic directory item for N88-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_n88.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
 #include <wx/msgdlg.h>
+
 
 //
 //
@@ -43,7 +47,7 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int num, int track, i
 	: DiskBasicDirItemFAT8(basic, num, track, side, sector, secpos, data, unuse)
 {
 	// n88
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 	unuse = (unuse || (this->data->n88.name[0] == 0xff));
 
 	// ファイルサイズとグループ数を計算
@@ -115,32 +119,33 @@ bool DiskBasicDirItemN88::Check(bool &last)
 }
 
 /// @param [in] file_type
-void DiskBasicDirItemN88::SetFileAttr(int file_type)
+void DiskBasicDirItemN88::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	if (file_type == -1) return;
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
 
 	// n88
 	int t = 0;
-	if (file_type & FILE_TYPE_MACHINE_MASK) {
+	if (ftype & FILE_TYPE_MACHINE_MASK) {
 		t = FILETYPE_N88_MACHINE;
-	} else if (file_type & FILE_TYPE_BINARY_MASK) {
+	} else if (ftype & FILE_TYPE_BINARY_MASK) {
 		t = FILETYPE_N88_BINARY;
 	} else {
 		t = FILETYPE_N88_ASCII;
 	}
-	if (file_type & FILE_TYPE_READONLY_MASK) {
+	if (ftype & FILE_TYPE_READONLY_MASK) {
 		t |= DATATYPE_MASK_N88_READ_ONLY;
 	}
-	if (file_type & FILE_TYPE_ENCRYPTED_MASK) {
+	if (ftype & FILE_TYPE_ENCRYPTED_MASK) {
 		t |= DATATYPE_MASK_N88_ENCRYPTED;
 	}
-	if (file_type & FILE_TYPE_READWRITE_MASK) {
+	if (ftype & FILE_TYPE_READWRITE_MASK) {
 		t |= DATATYPE_MASK_N88_READ_WRITE;
 	}
 	SetFileType1(t);
 }
 
-int DiskBasicDirItemN88::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemN88::GetFileAttr() const
 {
 	int t = GetFileType1();
 	int val = 0;
@@ -164,50 +169,11 @@ int DiskBasicDirItemN88::GetFileAttr()
 	if (t & DATATYPE_MASK_N88_READ_WRITE) {
 		val |= FILE_TYPE_READWRITE_MASK;
 	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemN88::GetFileType1Pos()
-{
-	int t = GetFileType1();
-	int val = 0;
-	if ((t & FILETYPE_N88_MACHINE) != 0) {
-		val = TYPE_NAME_N88_MACHINE;
-	} else {
-		if (t & FILETYPE_N88_BINARY) {
-			val = TYPE_NAME_N88_BINARY;
-		} else if (external_attr) {
-			val = TYPE_NAME_N88_RANDOM;
-		} else {
-			val = TYPE_NAME_N88_ASCII;
-		}
-	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemN88::GetFileType2Pos()
-{
-	return GetFileAttr();
-}
-
-int	DiskBasicDirItemN88::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	int val = 0;
-	val = (pos1 == TYPE_NAME_N88_MACHINE ? FILE_TYPE_MACHINE_MASK : (
-		(pos1 == TYPE_NAME_N88_BINARY ? FILE_TYPE_BINARY_MASK : (
-		FILE_TYPE_ASCII_MASK
-	))));
-	val |= pos2;
-
-	external_attr = (pos1 == TYPE_NAME_N88_RANDOM ? 1 : 0);
-
-	return val;
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemN88::GetFileAttrStr()
+wxString DiskBasicDirItemN88::GetFileAttrStr() const
 {
 	// n88
 	wxString attr = wxGetTranslation(gTypeNameN88_1[GetFileType1Pos()]);
@@ -237,7 +203,7 @@ void DiskBasicDirItemN88::SetFileSize(int val)
 }
 
 /// ディレクトリサイズを返す
-size_t DiskBasicDirItemN88::GetDataSize()
+size_t DiskBasicDirItemN88::GetDataSize() const
 {
 	return sizeof(directory_n88_t);
 }
@@ -280,7 +246,9 @@ bool DiskBasicDirItemN88::NeedCheckEofCode()
 }
 
 /// データをエクスポートする前に必要な処理
-/// @return false エクスポート中断
+/// アスキーファイルをランダムアクセスファイルにするかダイアログ表示
+/// @param [in,out] filename ファイル名
+/// @return false このファイルは対象外とする
 bool DiskBasicDirItemN88::PreExportDataFile(wxString &filename)
 {
 	if (((GetFileType1() & (FILETYPE_N88_MACHINE | FILETYPE_N88_BINARY)) == 0) && (external_attr == 0)) {
@@ -331,6 +299,31 @@ void DiskBasicDirItemN88::ClearData()
 #define IDC_CHECK_READWRITE 53
 #define IDC_CHECK_ENCRYPT 54
 #define IDC_RADIO_TYPE2 55
+
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemN88::GetFileType1Pos() const
+{
+	int t = GetFileType1();
+	int val = 0;
+	if ((t & FILETYPE_N88_MACHINE) != 0) {
+		val = TYPE_NAME_N88_MACHINE;
+	} else {
+		if (t & FILETYPE_N88_BINARY) {
+			val = TYPE_NAME_N88_BINARY;
+		} else if (external_attr) {
+			val = TYPE_NAME_N88_RANDOM;
+		} else {
+			val = TYPE_NAME_N88_ASCII;
+		}
+	}
+	return val;
+}
+
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemN88::GetFileType2Pos() const
+{
+	return GetFileAttr().GetType();
+}
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -429,24 +422,36 @@ void DiskBasicDirItemN88::ChangeTypeInAttrDialog(IntNameBox *parent)
 	}
 }
 
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemN88::GetFileType1InAttrDialog(const IntNameBox *parent) const
+/// リストの位置から属性を返す(プロパティダイアログ用)
+int	DiskBasicDirItemN88::CalcFileTypeFromPos(int pos)
 {
-	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(IDC_RADIO_TYPE1);
+	int val = 0;
+	val = (pos == TYPE_NAME_N88_MACHINE ? FILE_TYPE_MACHINE_MASK : (
+		(pos == TYPE_NAME_N88_BINARY ? FILE_TYPE_BINARY_MASK : (
+		FILE_TYPE_ASCII_MASK
+	))));
 
-	return radType1->GetSelection();
+	external_attr = (pos == TYPE_NAME_N88_RANDOM ? 1 : 0);
+
+	return val;
 }
 
-/// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemN88::GetFileType2InAttrDialog(const IntNameBox *parent) const
+/// 機種依存の属性を設定する
+/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemN88::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
+	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(IDC_RADIO_TYPE1);
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkReadWrite = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READWRITE);
 	wxCheckBox *chkEncrypt = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ENCRYPT);
 
-	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
+	int val = CalcFileTypeFromPos(radType1->GetSelection());
+	val |= chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkEncrypt->GetValue() ? FILE_TYPE_ENCRYPTED_MASK : 0;
 	val |= chkReadWrite->GetValue() ? FILE_TYPE_READWRITE_MASK : 0;
 
-	return val;
+	DiskBasicDirItem::SetFileAttr(val);
+
+	return true;
 }

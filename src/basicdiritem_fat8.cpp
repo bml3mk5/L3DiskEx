@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_fat8.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+
 
 //
 //
@@ -41,7 +45,7 @@ DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sect
 DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 }
 
 /// 使用しているアイテムか
@@ -51,75 +55,40 @@ bool DiskBasicDirItemFAT8::CheckUsed(bool unuse)
 }
 
 /// 属性を設定する
-void DiskBasicDirItemFAT8::SetFileAttr(int file_type)
+void DiskBasicDirItemFAT8::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	if (file_type == -1) return;
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
 
 	SetFileType1(
-		file_type & FILE_TYPE_BASIC_MASK ? TYPE_NAME_1_BASIC : (
-		file_type & FILE_TYPE_DATA_MASK ? TYPE_NAME_1_DATA : (
-		file_type & FILE_TYPE_MACHINE_MASK ? TYPE_NAME_1_MACHINE : (
+		ftype & FILE_TYPE_BASIC_MASK ? TYPE_NAME_1_BASIC : (
+		ftype & FILE_TYPE_DATA_MASK ? TYPE_NAME_1_DATA : (
+		ftype & FILE_TYPE_MACHINE_MASK ? TYPE_NAME_1_MACHINE : (
 		0))));
 
 	SetFileType3(0);
-	if (file_type & FILE_TYPE_BINARY_MASK) {
+	if (ftype & FILE_TYPE_BINARY_MASK) {
 		SetFileType2(0);
-	} else if (file_type & FILE_TYPE_ASCII_MASK) {
+	} else if (ftype & FILE_TYPE_ASCII_MASK) {
 		SetFileType2(0xff);
-	} else if (file_type & FILE_TYPE_RANDOM_MASK) {
+	} else if (ftype & FILE_TYPE_RANDOM_MASK) {
 		SetFileType2(0xff);
 		SetFileType3(0xff);
 	}
 }
 
-int DiskBasicDirItemFAT8::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemFAT8::GetFileAttr() const
 {
 	int t1 = GetFileType1();
 	int val = (t1 >= TYPE_NAME_1_BASIC && t1 <= TYPE_NAME_1_MACHINE ? 1 << t1 : 0);
 	int t2 = GetFileType2();
 	int t3 = GetFileType3();
 	val |= (t2 & 1 ? (t3 & 1 ? FILE_TYPE_RANDOM_MASK : FILE_TYPE_ASCII_MASK) : FILE_TYPE_BINARY_MASK);
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFAT8::GetFileType1Pos()
-{
-	int t1 = GetFileType1();
-	if (t1 < TYPE_NAME_1_BASIC || t1 > TYPE_NAME_1_MACHINE) {
-		t1 = TYPE_NAME_1_UNKNOWN;
-	}
-	return t1;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFAT8::GetFileType2Pos()
-{
-	int t2 = GetFileType2();
-	int t3 = GetFileType3();
-	t2 = (t2 & 1 ? (t3 & 1 ? TYPE_NAME_2_RANDOM : TYPE_NAME_2_ASCII) : TYPE_NAME_2_BINARY);
-	return t2;
-}
-
-int	DiskBasicDirItemFAT8::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	int val = (pos1 >= TYPE_NAME_1_BASIC && pos1 <= TYPE_NAME_1_MACHINE ? 1 << pos1 : 0);
-	switch(pos2) {
-	case TYPE_NAME_2_BINARY:
-		val |= FILE_TYPE_BINARY_MASK;
-		break;
-	case TYPE_NAME_2_ASCII:
-		val |= FILE_TYPE_ASCII_MASK;
-		break;
-	case TYPE_NAME_2_RANDOM:
-		val |= FILE_TYPE_RANDOM_MASK;
-		break;
-	}
-	return val;
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemFAT8::GetFileAttrStr()
+wxString DiskBasicDirItemFAT8::GetFileAttrStr() const
 {
 	wxString attr;
 	attr = wxGetTranslation(gTypeName1[GetFileType1Pos()]);
@@ -131,7 +100,7 @@ wxString DiskBasicDirItemFAT8::GetFileAttrStr()
 /// ファイルサイズを計算
 void DiskBasicDirItemFAT8::CalcFileSize()
 {
-	if (!used) return;
+	if (!IsUsed()) return;
 
 	int calc_file_size = 0;
 	int calc_groups = 0; 
@@ -236,6 +205,25 @@ void DiskBasicDirItemFAT8::GetAllGroups(DiskBasicGroups &group_items)
 #include <wx/statbox.h>
 #include <wx/sizer.h>
 #include "intnamebox.h"
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemFAT8::GetFileType1Pos() const
+{
+	int t1 = GetFileType1();
+	if (t1 < TYPE_NAME_1_BASIC || t1 > TYPE_NAME_1_MACHINE) {
+		t1 = TYPE_NAME_1_UNKNOWN;
+	}
+	return t1;
+}
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemFAT8::GetFileType2Pos() const
+{
+	int t2 = GetFileType2();
+	int t3 = GetFileType3();
+	t2 = (t2 & 1 ? (t3 & 1 ? TYPE_NAME_2_RANDOM : TYPE_NAME_2_ASCII) : TYPE_NAME_2_BINARY);
+	return t2;
+}
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -345,22 +333,31 @@ void DiskBasicDirItemFAT8::ChangeTypeInAttrDialog(IntNameBox *parent)
 	}
 }
 
-/// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemFAT8::GetFileType1InAttrDialog(const IntNameBox *parent) const
+/// 機種依存の属性を設定する
+/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemFAT8::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
 	wxRadioBox *radType1 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE1);
-
-	return radType1->GetSelection();
-}
-
-/// 属性2を得る
-/// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemFAT8::GetFileType2InAttrDialog(const IntNameBox *parent) const
-{
 	wxRadioBox *radType2 = (wxRadioBox *)parent->FindWindow(ATTR_DIALOG_IDC_RADIO_TYPE2);
 
-	return radType2->GetSelection();
+	int pos1 = radType1->GetSelection();
+	int pos2 = radType2->GetSelection();
+	int val = (pos1 >= TYPE_NAME_1_BASIC && pos1 <= TYPE_NAME_1_MACHINE ? 1 << pos1 : 0);
+	switch(pos2) {
+	case TYPE_NAME_2_BINARY:
+		val |= FILE_TYPE_BINARY_MASK;
+		break;
+	case TYPE_NAME_2_ASCII:
+		val |= FILE_TYPE_ASCII_MASK;
+		break;
+	case TYPE_NAME_2_RANDOM:
+		val |= FILE_TYPE_RANDOM_MASK;
+		break;
+	}
+	DiskBasicDirItem::SetFileAttr(val);
+
+	return true;
 }
 
 ///
@@ -454,7 +451,7 @@ void DiskBasicDirItemFAT8F::SetFileType3(int val)
 }
 
 /// ディレクトリのサイズ
-size_t DiskBasicDirItemFAT8F::GetDataSize()
+size_t DiskBasicDirItemFAT8F::GetDataSize() const
 {
 	return sizeof(directory_fat8f_t);
 }

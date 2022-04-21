@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic directory
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIR_H_
 #define _BASICDIR_H_
 
@@ -13,11 +16,13 @@
 #include "basicfat.h"
 #include "diskd88.h"
 
+
 class DiskBasic;
 class DiskBasicType;
 class DiskBasicFormat;
 class DiskBasicFat;
 class DiskBasicDirItems;
+class DiskBasicFileName;
 class DiskBasicGroups;
 
 /// ディレクトリ
@@ -29,13 +34,11 @@ private:
 
 	const DiskBasicFormat *format_type;	///< フォーマットタイプ
 
-	int start_sector_pos;	///< ルートディレクトリの開始セクタ位置
-	int end_sector_pos;		///< ルートディレクトリの終了セクタ位置
-	int unique_number;		///< Assignするごとに+1 
+	DiskBasicDirItem	*root;			///< ルートディレクトリの仮想的なアイテム
 
-	DiskBasicDirItem	*parent_item;	///< 親ディレクトリのアイテム（ルートの場合NULL）
-	DiskBasicGroups		groups;			///< カレントディレクトリのあるグループ番号
-	DiskBasicDirItems	items;			///< ディレクトリ内の各アイテム
+	DiskBasicDirItem	*current_item;	///< 現ディレクトリのアイテム
+
+	DiskBasicGroups		root_groups;	///< ルートディレクトリのあるセクタリスト
 
 	DiskBasicDir();
 public:
@@ -48,27 +51,49 @@ public:
 	DiskBasicDirItem *NewItem(DiskD88Sector *newsec, wxUint8 *newdata);
 	/// ディレクトリアイテムを新規に作成してアサインする
 	DiskBasicDirItem *NewItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse);
-	/// ディレクトリアイテムを新規に作成してアサインする
-	DiskBasicDirItem *AssignItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse);
+//	/// ディレクトリアイテムを新規に作成してアサインする
+//	DiskBasicDirItem *AssignItem(int newnum, int newtrack, int newside, DiskD88Sector *newsec, int newpos, wxUint8 *newdata, bool &unuse);
+
+	/// ルートディレクトリのアイテムを返す
+	DiskBasicDirItem		*GetRootItem() const;
+	/// ルートディレクトリの一覧を返す
+	DiskBasicDirItems		*GetRootItems(DiskBasicDirItem **dir_item = NULL);
+	/// カレントディレクトリのアイテムを返す
+	DiskBasicDirItem		*GetCurrentItem() const;
+	/// カレントディレクトリの一覧を返す
+	DiskBasicDirItems		*GetCurrentItems(DiskBasicDirItem **dir_item = NULL);
+	/// カレントディレクトリの全ディレクトアイテムをクリア
+	void					EmptyCurrent();
+
+	/// ルートをカレントにする
+	void					SetCurrentAsRoot();
+
+	/// 親ディレクトリのアイテムを返す
+	DiskBasicDirItem		*GetParentItem() const;
 
 	/// ディレクトリアイテムのポインタを返す
 	DiskBasicDirItem *ItemPtr(size_t idx);
 	/// 未使用のディレクトリアイテムを返す
 	DiskBasicDirItem *GetEmptyItemPtr(DiskBasicDirItem **next_item);
 
-	/// ディレクトリアイテムの数
-	size_t		Count();
-	/// 全ディレクトアイテムをクリア
-	void		Clear();
-	/// 全ディレクトアイテムをクリア
-	void		Empty();
-
 	/// 現在のディレクトリ内に同じファイル名が既に存在するか
-	DiskBasicDirItem *FindFile(const wxString &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	DiskBasicDirItem *FindFile(const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 指定したディレクトリ内に同じファイル名が既に存在するか
+	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicFileName &filename, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内に同じファイル名が既に存在するか
 	DiskBasicDirItem *FindFile(const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 指定したディレクトリ内に同じファイル名が既に存在するか
+	DiskBasicDirItem *FindFile(const DiskBasicDirItem *dir_item, const DiskBasicDirItem &target_item, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
 	/// 現在のディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
 	DiskBasicDirItem *FindName(const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 指定したディレクトリ内に同じファイル名(拡張子除く)が既に存在するか
+	DiskBasicDirItem *FindName(const DiskBasicDirItem *dir_item, const wxString &name, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item);
+	/// 現在のディレクトリ内の属性に一致するファイルを検索
+	DiskBasicDirItem *FindFileByAttr(int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
+	/// ルートディレクトリ内の属性に一致するファイルを検索
+	DiskBasicDirItem *FindFileByAttrOnRoot(int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
+	/// 指定したディレクトリ内の属性に一致するファイルを検索
+	DiskBasicDirItem *FindFileByAttr(const DiskBasicDirItem *dir_item, int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
 	/// ルートディレクトリのチェック
 	bool		CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting);
 	/// ルートディレクトリをアサイン
@@ -78,29 +103,30 @@ public:
 	/// ディレクトリのチェック
 	bool		Check(DiskBasicType *type, DiskBasicGroups &group_items);
 	/// ディレクトリをアサイン
-	bool		Assign(DiskBasicType *type, DiskBasicGroups &group_items);
+	bool		Assign(DiskBasicType *type, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
+	/// ディレクトリをアサイン
+	bool		Assign(DiskBasicType *type, DiskBasicDirItem *dir_item);
+	/// ディレクトリをアサイン
+	bool		Assign(DiskBasicDirItem *dir_item);
 
 	/// ルートディレクトリを初期化
 	void        ClearRoot();
 	/// ルートディレクトリ領域を指定コードで埋める
 	void        Fill(int start_sector, int end_sector, wxUint8 code);
 
-	/// 親ディレクトリのアイテムを返す
-	const DiskBasicDirItem *GetParentItem() const { return parent_item; }
-	/// 親ディレクトリのアイテムを設定
-	void		SetParentItem(const DiskBasicDirItem *val);
-
-	/// ユニーク番号を得る
-	int			GetUniqueNumber() const { return unique_number; }
+	/// ディレクトリを移動する
+	bool		Change(DiskBasicDirItem * &dst_item);
 
 	/// フォーマット種類を設定
 	void		SetFormatType(const DiskBasicFormat *val) { format_type = val; }
 	/// フォーマット種類を得る
 	const DiskBasicFormat *GetFormatType() const { return format_type; }
 
+//	/// アイテムリストを返す
+//	const DiskBasicDirItems &GetItems() const { return items; }
 
-	/// アイテムリストを返す
-	DiskBasicDirItems &GetItems() { return items; }
+	/// ディレクトリの占有サイズを計算する
+	int			CalcSize();
 };
 
 #endif /* _BASICDIR_H_ */

@@ -2,9 +2,13 @@
 ///
 /// @brief disk basic fat
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicfat.h"
 #include "basicfmt.h"
 #include "basictype.h"
+
 
 //
 //

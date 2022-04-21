@@ -2,11 +2,15 @@
 ///
 /// @brief べたディスクパーサー
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskplainparser.h"
 #include "diskd88.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
+
 
 //
 //

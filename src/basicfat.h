@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic fat
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICFAT_H_
 #define _BASICFAT_H_
 
@@ -10,6 +13,7 @@
 #include <wx/dynarray.h>
 #include "basiccommon.h"
 #include "diskd88.h"
+
 
 class DiskBasicGroupItem;
 

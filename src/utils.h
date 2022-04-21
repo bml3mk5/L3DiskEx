@@ -2,12 +2,16 @@
 ///
 /// @brief いろいろ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _L3DISKUTILS_H_
 #define _L3DISKUTILS_H_
 
 #include "common.h"
 #include <wx/string.h>
 #include "charcodes.h"
+
 
 /// 各種ユーティリティー
 namespace L3DiskUtils
@@ -40,6 +44,9 @@ int		ToInt(const wxString &val);
 bool	ToBool(const wxString &val);
 
 wxString Escape(const wxString &src);
+
+wxString GetSideNumStr(int side_number, bool each_sides);
+wxString GetSideStr(int side_number, bool each_sides);
 
 }; /* namespace L3DiskUtils */
 

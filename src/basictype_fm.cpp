@@ -1,9 +1,13 @@
 ﻿/// @file basictype_fm.cpp
 ///
-/// @brief disk basic fat type for F-BASIC
+/// @brief disk basic type for F-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_fm.h"
 #include "basicfmt.h"
+
 
 //
 //
@@ -57,5 +61,5 @@ bool DiskBasicTypeFM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 int DiskBasicTypeFM::CalcDataStartSectorPos()
 {
 	// トラック0を除く
-	return basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
+	return basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 }

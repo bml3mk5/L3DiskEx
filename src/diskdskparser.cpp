@@ -2,11 +2,15 @@
 ///
 /// @brief CPC DSKディスクパーサー
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskdskparser.h"
 #include "diskd88parser.h"
 #include "diskd88.h"
 #include "fileparam.h"
 #include "diskresult.h"
+
 
 #pragma pack(1)
 /// CPC DSK header

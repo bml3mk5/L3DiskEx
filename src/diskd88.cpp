@@ -2,6 +2,9 @@
 ///
 /// @brief D88ディスクイメージ入出力
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskd88.h"
 #include <wx/wfstream.h>
 #include <wx/xml/xml.h>
@@ -9,6 +12,8 @@
 #include "diskwriter.h"
 #include "diskd88creator.h"
 #include "basicparam.h"
+#include "basicfmt.h"
+
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD
 const char *gDiskDensity[] = {
@@ -917,7 +922,8 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file) : DiskParam()
 //	this->buffer = NULL;
 //	this->buffer_size = 0;
 
-	this->basic_param = NULL;
+//	this->basic_param = NULL;
+	this->basics = new DiskBasics;
 
 	this->modified = false;
 }
@@ -937,7 +943,8 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file, const wxString &newname, int newnum,
 	this->SetDensity(param.GetParamDensity());
 	this->SetWriteProtect(write_protect);
 
-	this->basic_param = NULL;
+//	this->basic_param = NULL;
+	this->basics = new DiskBasics;
 
 	this->modified = true;
 }
@@ -955,7 +962,8 @@ DiskD88Disk::DiskD88Disk(DiskD88File *file, int n_num, d88_header_t *n_header) :
 
 	this->density = (n_header->disk_density >> 4);
 
-	this->basic_param = NULL;
+//	this->basic_param = NULL;
+	this->basics = new DiskBasics;
 
 	this->modified = false;
 }
@@ -969,6 +977,7 @@ DiskD88Disk::~DiskD88Disk()
 		}
 		delete tracks;
 	}
+	delete basics;
 	delete header;
 }
 
@@ -1438,7 +1447,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	}
 
 	// メディアのタイプ
-	DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave, numbering_sector, singles);
+	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, interleave, numbering_sector, singles);
 	if (disk_param != NULL) {
 		disk_type_name = disk_param->GetDiskTypeName();
 		reversible = disk_param->IsReversible();
@@ -1447,6 +1456,10 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 		density_name = disk_param->GetDensityName();
 		description = disk_param->GetDescription();
 	}
+
+	// DISK BASIC用の領域を確保
+	AllocDiskBasics();
+
 	return disk_param;
 }
 
@@ -1581,17 +1594,15 @@ bool DiskD88Disk::Initialize(int selected_side)
 
 		DiskD88Sectors *secs = track->GetSectors();
 		if (!secs) {
-			rc = false;
+//			rc = false;
 			continue;
 		}
 
 		for(size_t sec_pos=0; sec_pos<secs->Count(); sec_pos++) {
 			DiskD88Sector *sec = secs->Item(sec_pos);
-			wxUint8 *buffer = sec->GetSectorBuffer();
-			size_t buffer_size = sec->GetSectorBufferSize();
-
-			memset(buffer, 0, buffer_size);
-
+			if (sec) {
+				sec->Fill(0);
+			}
 		}
 	}
 	return rc;
@@ -1679,6 +1690,32 @@ bool DiskD88Disk::ExistTrack(int side_number)
 		}
 	}
 	return found;
+}
+
+/// DISK BASIC領域を確保
+void DiskD88Disk::AllocDiskBasics()
+{
+	basics->Add();
+	if (reversible) basics->Add();
+}
+
+/// DISK BASICを返す
+DiskBasic *DiskD88Disk::GetDiskBasic(int idx)
+{
+	if (idx < 0) idx = 0;
+	return basics->Item(idx);
+}
+
+/// キャラクターコードマップ番号設定
+void DiskD88Disk::SetCharCode(int sel)
+{
+	if (!basics) return;
+	for(size_t idx=0; idx<basics->Count(); idx++) {
+		DiskBasic *basic = GetDiskBasic((int)idx);
+		if (!basic) continue;
+
+		basic->SetCharCode(sel);
+	}
 }
 
 //
@@ -1976,7 +2013,7 @@ bool DiskD88::Delete(size_t disk_number)
 /// @param [in] filepath    ファイルパス
 /// @param [in] file_format ファイルの形式名("d88","plain"など)
 /// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
-/// @param [out] src_disk   ソースディスク
+/// @param [out] src_file   ソースディスク
 /// @param [out] tag_disk   ターゲットディスク
 /// @retval  0 正常
 /// @retval -1 エラーあり
@@ -2204,6 +2241,52 @@ wxString DiskD88::GetPath() const
 void DiskD88::SetFileName(const wxString &path)
 {
 	filename = wxFileName(path);
+}
+
+/// DISK BASICが一致するか
+bool DiskD88::MatchDiskBasic(const DiskBasic *target)
+{
+	bool match = false;
+	DiskD88Disks *disks = GetDisks();
+	if (!disks) return false;
+	for(size_t i = 0; i < disks->Count(); i++) {
+		DiskD88Disk *disk = disks->Item(i);
+		DiskBasics *basics = disk->GetDiskBasics();
+		if (!basics) return false;
+		for(size_t j = 0; j < basics->Count(); j++) {
+			if (target == basics->Item(j)) {
+				match = true;
+				break;
+			}
+		}
+	}
+	return match;
+}
+
+/// DISK BASICの解析状態をクリア
+void DiskD88::ClearDiskBasicParseAndAssign(int disk_number, int side_number)
+{
+	DiskD88Disk *disk = GetDisk(disk_number);
+	if (!disk) return;
+
+	if (file) {
+		file->SetBasicTypeHint(wxT(""));
+	}
+
+	DiskBasics *basics = disk->GetDiskBasics();
+	if (!basics) return;
+	basics->ClearParseAndAssign(side_number);
+}
+
+/// キャラクターコードマップ番号設定
+void DiskD88::SetCharCode(int sel)
+{
+	DiskD88Disks *disks = GetDisks();
+	if (!disks) return;
+	for(size_t i = 0; i < disks->Count(); i++) {
+		DiskD88Disk *disk = disks->Item(i);
+		disk->SetCharCode(sel);
+	}
 }
 
 /// エラーメッセージ

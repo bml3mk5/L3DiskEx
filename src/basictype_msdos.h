@@ -1,7 +1,10 @@
 ﻿/// @file basictype_msdos.h
 ///
-/// @brief disk basic fat type for MS-DOS
+/// @brief disk basic type for MS-DOS
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_MSDOS_H_
 #define _BASICTYPE_MSDOS_H_
 
@@ -9,7 +12,15 @@
 #include "basiccommon.h"
 #include "basictype_fat12.h"
 
-/// MS-DOSの処理
+
+/** @class DiskBasicTypeMSDOS
+
+@brief MS-DOSの処理
+
+DiskBasicParam
+@li MediaID : メディアID
+
+*/
 class DiskBasicTypeMSDOS : public DiskBasicTypeFAT12
 {
 private:

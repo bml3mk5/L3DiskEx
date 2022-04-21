@@ -2,6 +2,8 @@
 ///
 /// @brief ディスク置き換え確認ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "diskreplacebox.h"
 #include <wx/choice.h>

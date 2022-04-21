@@ -1,7 +1,10 @@
 ﻿/// @file basictype_fat8.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_FAT8_H_
 #define _BASICTYPE_FAT8_H_
 
@@ -9,7 +12,12 @@
 #include "basiccommon.h"
 #include "basictype.h"
 
-/// FAT8の処理
+
+/** @class DiskBasicTypeFAT8
+
+@brief FAT8の処理
+
+*/
 class DiskBasicTypeFAT8 : public DiskBasicType
 {
 protected:

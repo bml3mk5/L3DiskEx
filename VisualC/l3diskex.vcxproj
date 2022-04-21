@@ -50,8 +50,10 @@
     <ClCompile Include="..\src\basicdiritem_msdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_msx.cpp" />
     <ClCompile Include="..\src\basicdiritem_mz.cpp" />
+    <ClCompile Include="..\src\basicdiritem_mz_base.cpp" />
     <ClCompile Include="..\src\basicdiritem_n88.cpp" />
     <ClCompile Include="..\src\basicdiritem_os9.cpp" />
+    <ClCompile Include="..\src\basicdiritem_tfdos.cpp" />
     <ClCompile Include="..\src\basicdiritem_x1hu.cpp" />
     <ClCompile Include="..\src\basicerror.cpp" />
     <ClCompile Include="..\src\basicfat.cpp" />
@@ -69,8 +71,10 @@
     <ClCompile Include="..\src\basictype_msdos.cpp" />
     <ClCompile Include="..\src\basictype_msx.cpp" />
     <ClCompile Include="..\src\basictype_mz.cpp" />
+    <ClCompile Include="..\src\basictype_mz_base.cpp" />
     <ClCompile Include="..\src\basictype_n88.cpp" />
     <ClCompile Include="..\src\basictype_os9.cpp" />
+    <ClCompile Include="..\src\basictype_tfdos.cpp" />
     <ClCompile Include="..\src\basictype_x1hu.cpp" />
     <ClCompile Include="..\src\charcodes.cpp" />
     <ClCompile Include="..\src\common.cpp" />
@@ -122,8 +126,10 @@
     <ClInclude Include="..\src\basicdiritem_msdos.h" />
     <ClInclude Include="..\src\basicdiritem_msx.h" />
     <ClInclude Include="..\src\basicdiritem_mz.h" />
+    <ClInclude Include="..\src\basicdiritem_mz_base.h" />
     <ClInclude Include="..\src\basicdiritem_n88.h" />
     <ClInclude Include="..\src\basicdiritem_os9.h" />
+    <ClInclude Include="..\src\basicdiritem_tfdos.h" />
     <ClInclude Include="..\src\basicdiritem_x1hu.h" />
     <ClInclude Include="..\src\basicerror.h" />
     <ClInclude Include="..\src\basicfat.h" />
@@ -141,8 +147,10 @@
     <ClInclude Include="..\src\basictype_msdos.h" />
     <ClInclude Include="..\src\basictype_msx.h" />
     <ClInclude Include="..\src\basictype_mz.h" />
+    <ClInclude Include="..\src\basictype_mz_base.h" />
     <ClInclude Include="..\src\basictype_n88.h" />
     <ClInclude Include="..\src\basictype_os9.h" />
+    <ClInclude Include="..\src\basictype_tfdos.h" />
     <ClInclude Include="..\src\basictype_x1hu.h" />
     <ClInclude Include="..\src\charcodes.h" />
     <ClInclude Include="..\src\common.h" />

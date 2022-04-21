@@ -2,6 +2,9 @@
 ///
 /// @brief 本体
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "main.h"
 #include <wx/cmdline.h>
 #include <wx/filename.h>
@@ -54,6 +57,8 @@
 	_("can't get seek position on file descriptor %d")
 
 #define MOD_COUNT_MAX 20
+
+//////////////////////////////////////////////////////////////////////
 
 wxIMPLEMENT_APP(L3DiskApp);
 
@@ -318,6 +323,7 @@ void L3DiskApp::RemoveTempDirs()
 	}
 }
 
+//////////////////////////////////////////////////////////////////////
 //
 // Frame
 //
@@ -381,6 +387,8 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 {
 	// config
 	ini = wxGetApp().GetConfig();
+
+	unique_number = 0;
 
 	// icon
 #ifdef __WXMSW__
@@ -616,6 +624,11 @@ void L3DiskFrame::OpenDroppedFile(const wxString &path)
 	PreOpenDataFile(path);
 }
 
+////////////////////////////////////////
+//
+// イベントプロシージャ
+//
+
 /// ウィンドウを閉じたとき
 void L3DiskFrame::OnClose(wxCloseEvent& event)
 {
@@ -675,7 +688,7 @@ void L3DiskFrame::OnSaveDisk(wxCommandEvent& WXUNUSED(event))
 {
 	L3DiskList *list = GetDiskListPanel();
 	if (!list) return;
-	ShowSaveDiskDialog(list->GetSelectedDiskNumber(), list->GetSelectedDiskSide());
+	list->ShowSaveDiskDialog();
 }
 /// メニュー ディスクを新規に追加選択
 void L3DiskFrame::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
@@ -692,7 +705,8 @@ void L3DiskFrame::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
 {
 	L3DiskList *list = GetDiskListPanel();
 	if (!list) return;
-	ShowReplaceDiskDialog(list->GetSelectedDiskNumber(), list->GetSelectedDiskSide());
+	list->ReplaceDisk();
+//	ShowReplaceDiskDialog(list->GetSelectedDiskNumber(), list->GetSelectedDiskSide());
 }
 /// メニュー ファイルからディスクを削除選択
 void L3DiskFrame::OnDeleteDiskFromFile(wxCommandEvent& WXUNUSED(event))
@@ -750,13 +764,13 @@ void L3DiskFrame::OnConfigure(wxCommandEvent& WXUNUSED(event))
 /// ファイルモード選択
 void L3DiskFrame::OnBasicMode(wxCommandEvent& event)
 {
-	ChangeRPanel(0);
+	ChangeRPanel(0, NULL);
 }
 
 /// Rawディスクモード選択
 void L3DiskFrame::OnRawDiskMode(wxCommandEvent& event)
 {
-	ChangeRPanel(1);
+	ChangeRPanel(1, NULL);
 }
 
 /// キャラクターコード選択
@@ -783,7 +797,7 @@ void L3DiskFrame::OnOpenBinDump(wxCommandEvent& event)
 	}
 }
 
-/// FAT使用状況ウィンドウ選択
+/// 使用状況ウィンドウ選択
 void L3DiskFrame::OnOpenFatArea(wxCommandEvent& event)
 {
 	if (!fatarea_frame) {
@@ -801,442 +815,10 @@ void L3DiskFrame::OnChangeFont(wxCommandEvent& event)
 	ShowListFontDialog();
 }
 
-/// 右パネルのデータウィンドウを変更 ファイルリスト/RAWディスク
-void L3DiskFrame::ChangeRPanel(int num)
-{
-	L3DiskRPanel *rpanel = panel->GetRPanel();
-	if (rpanel) rpanel->ChangePanel(num);
-	L3DiskList *lpanel = panel->GetLPanel();
-	if (lpanel) lpanel->ReSelect();
-
-	UpdateMenuDisk();
-	UpdateMenuMode();
-}
-
-/// 選択しているModeメニュー BASICかRAW DISKか
-/// @retval 0 BASIC
-/// @retval 1 RAW DISK
-int L3DiskFrame::GetSelectedMode()
-{
-	if (!menuMode) return 0;
-
-	if (menuMode->FindItem(IDM_BASIC_MODE)->IsChecked()) {
-		return 0;
-	} else if (menuMode->FindItem(IDM_RAWDISK_MODE)->IsChecked()) {
-		return 1;
-	}
-	return 0;
-}
-
-/// 全パネルにデータをセットする（ディスク選択時）
-///
-/// ディスク選択orツリー展開で、ルートディレクトリをアサインする。
-/// refresh_listをtrueにすればファイルリストを更新する
-/// @param [in] disk         ディスク
-/// @param [in] side_number  AB面ありの時、サイド番号
-/// @param [in] refresh_list 右パネルのディスクを選択した時、左パネルのファイルリストを更新
-void L3DiskFrame::SetDataOnDisk(DiskD88Disk *disk, int side_number, bool refresh_list)
-{
-	AttachDiskBasicOnFileList(disk, side_number);
-	if (refresh_list) {
-		ClearFatAreaData();
-		SetFileListData();
-	}
-	SetRawPanelData(disk, side_number);
-	ClearBinDumpData();
-	UpdateMenuAndToolBarDiskList(GetLPanel());
-}
-
-/// 全パネルのデータをクリアする
-void L3DiskFrame::ClearAllData()
-{
-	ClearDiskAttrData();
-	ClearFileListData();
-	ClearRawPanelData();
-	ClearBinDumpData();
-	ClearFatAreaData();
-	DetachDiskBasicOnFileList();
-	UpdateMenuAndToolBarDiskList(GetLPanel());
-}
-
-/// 全パネルのデータをクリアしてRAW DISKパネルだけデータをセット
-void L3DiskFrame::ClearAllAndSetRawData(DiskD88Disk *disk, int side_number)
-{
-	ClearFileListData();
-	SetRawPanelData(disk, -2);
-	ClearBinDumpData();
-	ClearFatAreaData();
-	UpdateMenuAndToolBarDiskList(GetLPanel());
-}
-
-/// 左パネルを返す
-L3DiskList *L3DiskFrame::GetLPanel()
-{
-	return panel->GetLPanel();
-}
-/// 左パネルのディスクリストを返す
-L3DiskList *L3DiskFrame::GetDiskListPanel()
-{
-	return panel->GetLPanel();
-}
-/// 左パネルのディスクリストにデータを設定する
-void L3DiskFrame::SetDiskListData(const wxString &filename)
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) lpanel->SetFileName(filename);
-}
-/// 左パネルのディスクリストをクリア
-void L3DiskFrame::ClearDiskListData()
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) lpanel->ClearFileName();
-}
-//bool L3DiskFrame::IsDiskListSelectedDiskImage()
-//{
-//	L3DiskList *lpanel = GetDiskListPanel();
-//	if (lpanel) return lpanel->IsSelectedDiskImage();
-//	else return false;
-//}
-/// 左パネルのディスクリストのディスクを選択しているか
-bool L3DiskFrame::IsDiskListSelectedDisk()
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) return lpanel->IsSelectedDisk();
-	else return false;
-}
-
-/// 左パネルのディスクリストの選択している位置
-/// @param [out] disk_number ディスク番号
-/// @param [out] side_number サイド番号
-void L3DiskFrame::GetDiskListSelectedPos(int &disk_number, int &side_number)
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	int num = -1;
-	int sid = -1;
-	if (lpanel) {
-		lpanel->GetSelectedDisk(num, sid);
-	}
-	disk_number = num;
-	side_number = sid;
-}
-
-/// 左パネルのディスクリストを選択
-/// @param [in] disk_number ディスク番号
-/// @param [in] side_number サイド番号
-void L3DiskFrame::SetDiskListPos(int disk_number, int side_number)
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) {
-		lpanel->ChangeSelection(disk_number, side_number);
-	}
-}
-
-/// 左パネルのディスクリストにファイルパスを設定
-void L3DiskFrame::SetDiskListFilePath(const wxString &path)
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) {
-		lpanel->SetFilePath(path);
-	}
-}
-
-/// 左パネルのディスクリストにディスク名を設定
-void L3DiskFrame::SetDiskListName(const wxString &name)
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) {
-		lpanel->SetName(name);
-	}
-}
-
-/// 左パネルのディスクリストを再選択
-void L3DiskFrame::ReSelectDiskList()
-{
-	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) {
-		lpanel->ReSelect();
-	}
-}
-
+////////////////////////////////////////
 //
-
-/// 右パネルを返す
-L3DiskRPanel *L3DiskFrame::GetRPanel()
-{
-	return panel->GetRPanel();
-}
-/// 右パネルのすべてのコントロール内のデータをクリア
-void L3DiskFrame::ClearRPanelData()
-{
-	DetachDiskBasicOnFileList();
-	ClearDiskAttrData();
-	ClearFileListData();
-	ClearRawPanelData();
-	ClearBinDumpData();
-	ClearFatAreaData();
-}
-
-/// 右上パネルのディスク属性パネルを返す
-L3DiskDiskAttr *L3DiskFrame::GetDiskAttrPanel()
-{
-	L3DiskRPanel *rpanel = panel->GetRPanel();
-	if (rpanel) return rpanel->GetDiskAttrPanel();
-	else return NULL;
-}
-/// 右上パネルのディスク属性にデータを設定する
-void L3DiskFrame::SetDiskAttrData(DiskD88Disk *disk)
-{
-	L3DiskDiskAttr *dapanel = GetDiskAttrPanel();
-	if (dapanel) dapanel->SetAttr(disk);
-}
-/// 右上パネルのディスク属性をクリア
-void L3DiskFrame::ClearDiskAttrData()
-{
-	L3DiskDiskAttr *dapanel = GetDiskAttrPanel();
-	if (dapanel) dapanel->ClearData();
-}
-
-/// 右下パネルのファイルリストパネルを返す
-/// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
-L3DiskFileList *L3DiskFrame::GetFileListPanel(bool inst)
-{
-	L3DiskRPanel *rpanel = panel->GetRPanel();
-	if (rpanel) return rpanel->GetFileListPanel(inst);
-	else return NULL;
-}
-/// 右下パネルのファイルリストにDISK BASICをアタッチ
-void L3DiskFrame::AttachDiskBasicOnFileList(DiskD88Disk *disk, int side_num)
-{
-	L3DiskFileList *listpanel = GetFileListPanel();
-	if (listpanel) listpanel->AttachDiskBasic(disk, side_num);
-}
-/// 右下パネルのファイルリストからDISK BASICをデタッチ
-void L3DiskFrame::DetachDiskBasicOnFileList()
-{
-	L3DiskFileList *listpanel = GetFileListPanel(true);
-	if (listpanel) listpanel->DetachDiskBasic();
-}
-/// 右下パネルのファイルリストにデータを設定する
-void L3DiskFrame::SetFileListData()
-{
-	L3DiskFileList *listpanel = GetFileListPanel();
-	if (listpanel) listpanel->SetFiles();
-}
-/// 右下パネルのファイルリストをクリア
-void L3DiskFrame::ClearFileListData()
-{
-	L3DiskFileList *listpanel = GetFileListPanel();
-	if (listpanel) listpanel->ClearFiles();
-}
-
-/// ファイル名属性プロパティダイアログをすべて閉じる
-void L3DiskFrame::CloseAllFileAttr()
-{
-	L3DiskFileList *listpanel = GetFileListPanel(true);
-	if (listpanel) listpanel->CloseAllFileAttr();
-}
-
-/// 右下パネルのRAWディスクパネルを返す
-/// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
-L3DiskRawPanel *L3DiskFrame::GetDiskRawPanel(bool inst)
-{
-	L3DiskRPanel *rpanel = panel->GetRPanel();
-	if (rpanel) return rpanel->GetRawPanel(inst);
-	else return NULL;
-}
-/// 右下パネルのRAWディスクパネルにデータを設定する
-void L3DiskFrame::SetRawPanelData(DiskD88Disk *disk, int side_num)
-{
-	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
-	if (rawpanel) rawpanel->SetTrackListData(disk, side_num);
-}
-/// 右下パネルのRAWディスクパネルをクリア
-void L3DiskFrame::ClearRawPanelData()
-{
-	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
-	if (rawpanel) rawpanel->ClearTrackListData();
-}
-/// 右下パネルのRAWディスクパネルにデータを再設定する
-void L3DiskFrame::RefreshRawPanelData()
-{
-	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
-	if (rawpanel) rawpanel->RefreshTrackListData();
-}
-
-/// ダンプウィンドウにデータを設定する
-void L3DiskFrame::SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert)
-{
-//	L3DiskBinDump *binpanel = GetBinDumpPanel();
-//	if (binpanel) binpanel->SetDatas(buf, len, invert);
-	if (bindump_frame) {
-		bindump_frame->SetDataInvert(invert);
-		bindump_frame->SetDataChar(char_code);
-		bindump_frame->SetDatas(trk, sid, sec, buf, len);
-	}
-}
-/// ダンプウィンドウにデータを設定する
-void L3DiskFrame::SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
-{
-//	L3DiskBinDump *binpanel = GetBinDumpPanel();
-//	if (binpanel) binpanel->SetDatas(buf, len, invert);
-	if (bindump_frame) {
-		bindump_frame->SetDatas(trk, sid, sec, buf, len);
-	}
-}
-/// ダンプウィンドウにデータを追記する
-void L3DiskFrame::AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert)
-{
-//	L3DiskBinDump *binpanel = GetBinDumpPanel();
-//	if (binpanel) binpanel->AppendDatas(buf, len, invert);
-	if (bindump_frame) {
-		bindump_frame->SetDataInvert(invert);
-		bindump_frame->SetDataChar(char_code);
-		bindump_frame->AppendDatas(trk, sid, sec, buf, len);
-	}
-}
-/// ダンプウィンドウにデータを追記する
-void L3DiskFrame::AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
-{
-//	L3DiskBinDump *binpanel = GetBinDumpPanel();
-//	if (binpanel) binpanel->AppendDatas(buf, len, invert);
-	if (bindump_frame) {
-		bindump_frame->AppendDatas(trk, sid, sec, buf, len);
-	}
-}
-/// ダンプウィンドウをクリア
-void L3DiskFrame::ClearBinDumpData()
-{
-//	L3DiskBinDump *binpanel = GetBinDumpPanel();
-//	if (binpanel) binpanel->ClearDatas();
-	if (bindump_frame) {
-		bindump_frame->ClearDatas();
-	}
-}
-
-/// ダンプウィンドウを開く
-void L3DiskFrame::OpenBinDumpWindow()
-{
-	if (bindump_frame) return;
-
-	// ウィンドウを開く
-	bindump_frame = new L3DiskBinDumpFrame(this, _("Dump View"), wxSize(640, 480));
-	// 位置はメインウィンドウの右側
-	wxSize sz = GetSize();
-	wxPoint pt = GetPosition();
-	pt.x = pt.x + sz.x;
-	pt.y = pt.y;
-	bindump_frame->SetPosition(pt);
-	bindump_frame->Show();
-	bindump_frame->SetFocus();
-}
-/// ダンプウィンドウを閉じる
-void L3DiskFrame::CloseBinDumpWindow()
-{
-	if (!bindump_frame) return;
-
-	bindump_frame->Close();
-	bindump_frame = NULL;
-}
-/// ダンプウィンドウを閉じる時にウィンドウ側から呼ばれるコールバック
-void L3DiskFrame::BinDumpWindowClosed()
-{
-	bindump_frame = NULL;
-
-	if (!IsBeingDeleted()) {
-		wxMenuItem *mitem = menuWindow->FindItem(IDM_WINDOW_BINDUMP);
-		if (mitem) {
-			mitem->Check(false);
-		}
-	}
-}
-
-/// FAT使用状況ウィンドウにデータを設定する
-void L3DiskFrame::SetFatAreaData()
-{
-	if (fatarea_frame) {
-		wxUint32 offset = 0;
-		const wxArrayInt *arr = NULL;
-		L3DiskFileList *list = GetFileListPanel();
-		if (list) {
-			list->GetFatAvailability(&offset, &arr);
-			SetFatAreaData(offset, arr);
-		}
-	}
-}
-
-/// FAT使用状況ウィンドウにデータを設定する
-void L3DiskFrame::SetFatAreaData(wxUint32 offset, const wxArrayInt *arr)
-{
-	if (fatarea_frame && arr) {
-		fatarea_frame->SetData(offset, arr);
-	}
-}
-/// FAT使用状況ウィンドウをクリア
-void L3DiskFrame::ClearFatAreaData()
-{
-	if (fatarea_frame) {
-		fatarea_frame->ClearData();
-	}
-}
-/// FAT使用状況ウィンドウにフォーカスさせるグループ番号を設定する
-void L3DiskFrame::SetFatAreaGroup(wxUint32 group_num)
-{
-	if (fatarea_frame) {
-		fatarea_frame->SetGroup(group_num);
-	}
-}
-/// FAT使用状況ウィンドウにフォーカスさせるグループ番号を設定する
-void L3DiskFrame::SetFatAreaGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num)
-{
-	if (fatarea_frame) {
-		fatarea_frame->SetGroup(group_items, extra_group_num);
-	}
-}
-/// FAT使用状況ウィンドウでフォーカスしているグループ番号をクリア
-void L3DiskFrame::ClearFatAreaGroup()
-{
-	if (fatarea_frame) {
-		fatarea_frame->ClearGroup();
-	}
-}
-/// FAT使用状況ウィンドウを開く
-void L3DiskFrame::OpenFatAreaWindow()
-{
-	if (fatarea_frame) return;
-
-	// ウィンドウを開く
-	fatarea_frame = new L3DiskFatAreaFrame(this, _("Availability"), wxDefaultSize);
-	// 位置はメインウィンドウの右側
-	wxSize sz = GetSize();
-	wxPoint pt = GetPosition();
-	pt.x = pt.x + sz.x;
-	pt.y = pt.y + sz.y - 64;
-	fatarea_frame->SetPosition(pt);
-	fatarea_frame->Show();
-	fatarea_frame->SetFocus();
-
-	SetFatAreaData();
-}
-/// FAT使用状況ウィンドウを閉じる
-void L3DiskFrame::CloseFatAreaWindow()
-{
-	if (!fatarea_frame) return;
-
-	fatarea_frame->Close();
-	fatarea_frame = NULL;
-}
-/// FAT使用状況ウィンドウを閉じる時にウィンドウ側から呼ばれるコールバック
-void L3DiskFrame::FatAreaWindowClosed()
-{
-	fatarea_frame = NULL;
-
-	if (!IsBeingDeleted()) {
-		wxMenuItem *mitem = menuWindow->FindItem(IDM_WINDOW_FATAREA);
-		if (mitem) {
-			mitem->Check(false);
-		}
-	}
-}
+// ウィンドウ操作
+//
 
 /// ファイルメニューの更新
 void L3DiskFrame::UpdateMenuFile()
@@ -1400,6 +982,7 @@ void L3DiskFrame::UpdateMenuAndToolBarFileList(L3DiskFileList *list)
 	UpdateToolBarFileList(list);
 }
 
+/// メニューの生ディスク項目を更新
 void L3DiskFrame::UpdateMenuRawDisk(L3DiskRawPanel *rawpanel)
 {
 	L3DiskList *lpanel = GetLPanel();
@@ -1436,75 +1019,6 @@ void L3DiskFrame::UpdateMenuAndToolBarRawDisk(L3DiskRawPanel *rawpanel)
 {
 	UpdateMenuRawDisk(rawpanel);
 	UpdateToolBarRawDisk(rawpanel);
-}
-
-/// タイトル名を設定
-wxString L3DiskFrame::MakeTitleName(const wxString &path)
-{
-	wxString title;
-	if (path.IsEmpty()) {
-		title = _("(new file)");
-	} else {
-		title = path;
-	}
-	return title;
-}
-
-/// タイトル名を返す
-wxString L3DiskFrame::GetFileName()
-{
-	return MakeTitleName(d88.GetFileName());
-}
-
-/// 最近使用したパスを取得
-const wxString &L3DiskFrame::GetRecentPath() const
-{
-	return ini->GetFilePath();
-}
-
-/// 最近使用したパスを取得(エクスポート用)
-const wxString &L3DiskFrame::GetExportFilePath() const
-{
-	return ini->GetExportFilePath();
-}
-
-/// 最近使用したファイルを更新（一覧も更新）
-void L3DiskFrame::SetRecentPath(const wxString &path)
-{
-	// set recent file path
-	ini->AddRecentFile(path);
-	UpdateMenuRecentFiles();
-}
-
-/// 最近使用したパスを更新
-void L3DiskFrame::SetFilePath(const wxString &path)
-{
-	ini->SetFilePath(path);
-}
-
-/// 最近使用したパスを更新(エクスポート用)
-void L3DiskFrame::SetExportFilePath(const wxString &path)
-{
-	ini->SetExportFilePath(path);
-}
-
-/// ダンプフォントを更新
-void L3DiskFrame::SetDumpFont(const wxFont &font)
-{
-	ini->SetDumpFontName(font.GetFaceName());
-	ini->SetDumpFontSize(font.GetPointSize());
-}
-
-/// ダンプフォント名を返す
-const wxString &L3DiskFrame::GetDumpFontName() const
-{
-	return ini->GetDumpFontName();
-}
-
-/// ダンプフォントサイズを返す
-int L3DiskFrame::GetDumpFontSize() const
-{
-	return ini->GetDumpFontSize();
 }
 
 /// ウィンドウ上のデータを更新 タイトルバーにファイルパスを表示
@@ -1566,6 +1080,168 @@ void L3DiskFrame::UpdateFilePathOnWindow(const wxString &path)
 	SetDiskListFilePath(GetFileName());
 }
 
+/// キャラクターコード選択
+void L3DiskFrame::ChangeCharCode(int sel)
+{
+	if (GetCharCode() == sel) return;
+
+	d88.SetCharCode(sel);
+
+	L3DiskFileList *listpanel = GetFileListPanel(true);
+	if (listpanel) listpanel->ChangeCharCode(sel);
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) lpanel->ChangeCharCode(sel);
+
+	ini->SetCharCode(sel);
+
+	UpdateMenuMode();
+}
+
+/// キャラクターコード番号を返す
+int L3DiskFrame::GetCharCode() const
+{
+	return ini->GetCharCode();
+}
+
+/// キャラクターコード番号設定
+void L3DiskFrame::SetDefaultCharCode()
+{
+	int sel = ini->GetCharCode();
+
+	L3DiskFileList *listpanel = GetFileListPanel(true);
+	if (listpanel) listpanel->ChangeCharCode(sel);
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) lpanel->ChangeCharCode(sel);
+}
+
+/// フォント変更ダイアログ
+void L3DiskFrame::ShowListFontDialog()
+{
+	L3DiskList *rlist = GetDiskListPanel();
+	if (!rlist) return;
+
+	wxFont font = rlist->GetFont();
+
+	FontMiniBox dlg(this, wxID_ANY, GetFont());
+	wxString name = ini->GetListFontName();
+	if (name.IsEmpty()) name = font.GetFaceName();
+	int size = ini->GetListFontSize();
+	if (size == 0) size = font.GetPointSize();
+	dlg.SetFontName(name);
+	dlg.SetFontSize(size);
+	int sts = dlg.ShowModal();
+	if (sts == wxID_OK) {
+		wxFont new_font(dlg.GetFontSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, dlg.GetFontName());
+
+		SetListFont(new_font);
+
+		ini->SetListFontName(dlg.GetFontName());
+		ini->SetListFontSize(dlg.GetFontSize());
+	}
+}
+
+/// リストウィンドウのフォント変更
+void L3DiskFrame::SetListFont(const wxFont &font)
+{
+	L3DiskList *rlist = GetDiskListPanel();
+	if (rlist) rlist->SetListFont(font);
+
+	L3DiskRPanel *llist = GetRPanel();
+	if (llist) llist->SetListFont(font);
+}
+
+/// リストウィンドウのフォント設定
+void L3DiskFrame::GetDefaultListFont(wxFont &font)
+{
+	wxFont def_font = GetFont();
+
+	wxString name = ini->GetListFontName();
+	if (name.IsEmpty()) name = def_font.GetFaceName();
+	int size = ini->GetListFontSize();
+	if (size == 0) size = def_font.GetPointSize();
+
+	font = wxFont(size, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, name);
+}
+
+/// 選択しているModeメニュー BASICかRAW DISKか
+/// @retval 0 BASIC
+/// @retval 1 RAW DISK
+int L3DiskFrame::GetSelectedMode()
+{
+	if (!menuMode) return 0;
+
+	if (menuMode->FindItem(IDM_BASIC_MODE)->IsChecked()) {
+		return 0;
+	} else if (menuMode->FindItem(IDM_RAWDISK_MODE)->IsChecked()) {
+		return 1;
+	}
+	return 0;
+}
+
+/// 全パネルにデータをセットする（ディスク選択時）
+///
+/// ディスク選択orツリー展開で、ルートディレクトリをアサインする。
+/// refresh_listをtrueにすればファイルリストを更新する
+/// @param [in] disk         ディスク
+/// @param [in] side_number  AB面ありの時、サイド番号
+/// @param [in] refresh_list 右パネルのディスクを選択した時、左パネルのファイルリストを更新
+void L3DiskFrame::SetDataOnDisk(DiskD88Disk *disk, int side_number, bool refresh_list)
+{
+	AttachDiskBasicOnFileList(disk, side_number);
+	if (refresh_list) {
+		ClearFatAreaData();
+		SetFileListData();
+	}
+	SetRawPanelData(disk, side_number);
+	ClearBinDumpData();
+	UpdateMenuAndToolBarDiskList(GetLPanel());
+}
+
+/// 全パネルのデータをクリアする
+void L3DiskFrame::ClearAllData()
+{
+	ClearDiskAttrData();
+	ClearFileListData();
+	ClearRawPanelData();
+	ClearBinDumpData();
+	ClearFatAreaData();
+	DetachDiskBasicOnFileList();
+	UpdateMenuAndToolBarDiskList(GetLPanel());
+}
+
+/// 全パネルのデータをクリアしてRAW DISKパネルだけデータをセット
+void L3DiskFrame::ClearAllAndSetRawData(DiskD88Disk *disk, int side_number)
+{
+	ClearFileListData();
+	SetRawPanelData(disk, side_number);
+	ClearBinDumpData();
+	ClearFatAreaData();
+	UpdateMenuAndToolBarDiskList(GetLPanel());
+}
+
+/// タイトル名を設定
+wxString L3DiskFrame::MakeTitleName(const wxString &path)
+{
+	wxString title;
+	if (path.IsEmpty()) {
+		title = _("(new file)");
+	} else {
+		title = path;
+	}
+	return title;
+}
+
+/// タイトル名を返す
+wxString L3DiskFrame::GetFileName()
+{
+	return MakeTitleName(d88.GetFileName());
+}
+
+////////////////////////////////////////
+//
+// ディスク操作
+//
+
 /// 新規作成ダイアログ
 void L3DiskFrame::ShowCreateFileDialog()
 {
@@ -1599,6 +1275,8 @@ void L3DiskFrame::CreateDataFile(const wxString &diskname, const DiskParam &para
 		// message
 		d88.ShowErrorMessage();
 	}
+	unique_number++;
+
 	UpdateToolBar();
 }
 /// ディスク新規追加ダイアログ
@@ -1642,7 +1320,7 @@ void L3DiskFrame::ShowOpenFileDialog()
 
 	L3DiskFileDialog dlg(
 		_("Open File"),
-		GetRecentPath(),
+		GetIniRecentPath(),
 		wxEmptyString,
 		gFileTypes.GetWildcardForLoad(),
 		wxFD_OPEN);
@@ -1722,7 +1400,7 @@ bool L3DiskFrame::OpenDataFile(const wxString &path, const wxString &file_format
 	bool valid = false;
 
 	// set recent file path
-	SetRecentPath(path);
+	SetIniRecentPath(path);
 
 	// open disk
 	int rc = d88.Open(path, file_format, param_hint);
@@ -1736,6 +1414,7 @@ bool L3DiskFrame::OpenDataFile(const wxString &path, const wxString &file_format
 		// message
 		d88.ShowErrorMessage();
 	}
+	unique_number++;
 
 	UpdateToolBar();
 
@@ -1747,7 +1426,7 @@ void L3DiskFrame::ShowAddFileDialog()
 {
 	L3DiskFileDialog dlg(
 		_("Add File"),
-		GetRecentPath(),
+		GetIniRecentPath(),
 		wxEmptyString,
 		gFileTypes.GetWildcardForLoad(),
 /*		_("Supported files (*.d88;*.d77)|*.d88;*.d77|All files (*.*)|*.*"), */
@@ -1788,7 +1467,7 @@ bool L3DiskFrame::PreAddDiskFile(const wxString &path)
 void L3DiskFrame::AddDiskFile(const wxString &path, const wxString &file_format, const DiskParam &param_hint)
 {
 	// set recent file path
-	SetRecentPath(path);
+	SetIniRecentPath(path);
 
 	// open disk
 	int	rc = d88.Add(path, file_format, param_hint);
@@ -1872,6 +1551,8 @@ bool L3DiskFrame::CloseDataFile(bool force)
 		}
 	}
 
+	unique_number++;
+	
 	// プロパティウィンドウを閉じる
 	CloseAllFileAttr();
 
@@ -1916,7 +1597,7 @@ void L3DiskFrame::ShowSaveFileDialog()
 void L3DiskFrame::SaveDataFile(const wxString &path)
 {
 	// set recent file path
-	SetRecentPath(path);
+	SetIniRecentPath(path);
 
 	// save disk
 	int rc = d88.Save(path,
@@ -1936,7 +1617,8 @@ void L3DiskFrame::SaveDataFile(const wxString &path)
 /// ディスクをファイルに保存ダイアログ（指定ディスク）
 /// @param [in] disk_number ディスク番号
 /// @param [in] side_number サイド番号
-void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number)
+/// @param [in] each_sides  OSが各面で異なる
+void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number, bool each_sides)
 {
 
 	wxString filename = d88.GetDiskName(disk_number, true);
@@ -1944,14 +1626,17 @@ void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number)
 		filename = d88.GetFileNameBase();
 		filename += wxString::Format(wxT("_%02d"), disk_number);
 	}
-	if (side_number >= 0) filename += wxString::Format(wxT("_%c"), side_number + 0x41);
+	if (side_number >= 0) {
+		filename += wxT("_");
+		filename += L3DiskUtils::GetSideNumStr(side_number, each_sides);
+	}
 	filename += wxT(".d88");
 
 	wxString title = _("Save Disk");
-	if (side_number >= 0) title += wxString::Format(_(" (side %c)"), side_number + 0x41);
+	title += L3DiskUtils::GetSideStr(side_number, each_sides);
 	L3DiskFileDialog dlg(
 		title,
-		GetRecentPath(),
+		GetIniRecentPath(),
 		filename,
 		gFileTypes.GetWildcardForSave(),
 		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -1970,7 +1655,7 @@ void L3DiskFrame::ShowSaveDiskDialog(int disk_number, int side_number)
 void L3DiskFrame::SaveDataDisk(int disk_number, int side_number, const wxString &path)
 {
 	// set recent file path
-	SetRecentPath(path);
+	SetIniRecentPath(path);
 
 	// save disk
 	int rc = d88.SaveDisk(disk_number, side_number, path,
@@ -1988,13 +1673,20 @@ void L3DiskFrame::SaveDataDisk(int disk_number, int side_number, const wxString 
 	}
 }
 /// ディスクイメージ置換ダイアログ
-void L3DiskFrame::ShowReplaceDiskDialog(int disk_number, int side_number)
+/// @param [in] disk_number 置き換え対象ディスク番号
+/// @param [in] side_number 置き換え対象ディスクのサイド番号
+/// @param [in] subcaption  サブキャプション
+void L3DiskFrame::ShowReplaceDiskDialog(int disk_number, int side_number, const wxString &subcaption)
 {
 	wxString title = _("Replace Disk Data");
-	if (side_number >= 0) title += wxString::Format(_(" (side %c)"), side_number + 0x41);
+	if (!subcaption.IsEmpty()) {
+		title += wxT(" (");
+		title += subcaption;
+		title += wxT(")");
+	}
 	L3DiskFileDialog dlg(
 		title,
-		GetRecentPath(),
+		GetIniRecentPath(),
 		wxEmptyString,
 		gFileTypes.GetWildcardForLoad(),
 		wxFD_OPEN);
@@ -2007,6 +1699,9 @@ void L3DiskFrame::ShowReplaceDiskDialog(int disk_number, int side_number)
 	}
 }
 /// 拡張子でファイル種別を判別する 置換時
+/// @param [in] disk_number 置き換え対象ディスク番号
+/// @param [in] side_number 置き換え対象ディスクのサイド番号(両面なら-1)
+/// @param [in] path        置き換え元イメージファイルパス
 bool L3DiskFrame::PreReplaceDisk(int disk_number, int side_number, const wxString &path)
 {
 	wxFileName file_path(path);
@@ -2039,65 +1734,34 @@ bool L3DiskFrame::PreReplaceDisk(int disk_number, int side_number, const wxStrin
 	}
 	return true;
 }
-#if 0
-/// ファイル種類選択ダイアログ 置換時
-/// @param [in] disk_number  ディスク番号
-/// @param [in] side_number  サイド番号
-/// @param [out] file_format ファイルの形式名("d88","plain"など)
-/// @return 0:OK 1:NG
-int L3DiskFrame::ShowFileSelectDialogForReplace(int disk_number, int side_number, const wxString &path, wxString &file_format)
-{
-	return (ShowFileSelectDialog(path, file_format) ? 0 : 1);
-}
-#endif
+
 /// 指定したディスクイメージ置換
-/// @param [in] disk_number ディスク番号
-/// @param [in] side_number サイド番号
-/// @param [in] path        ファイルパス
-/// @param [in] file_format ファイルの形式名("d88","plain"など)
-/// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
+/// @param [in] disk_number 置き換え対象ディスク番号
+/// @param [in] side_number 置き換え対象ディスクのサイド番号(両面なら-1)
+/// @param [in] path        置き換え元イメージファイルパス
+/// @param [in] src_disk    置き換え元ディスク
+/// @param [in] tag_disk    置き換え対象ディスク
 void L3DiskFrame::ReplaceDisk(int disk_number, int side_number, const wxString &path, DiskD88Disk *src_disk, DiskD88Disk *tag_disk)
 {
 	// set recent file path
-	SetRecentPath(path);
+	SetIniRecentPath(path);
 
 	// open disk
 	int rc = d88.ReplaceDisk(disk_number, side_number, src_disk, tag_disk);
 	if (rc >= 0) {
-		// clear basic param
-		tag_disk->SetDiskBasicParam(NULL);
 		// update window
-		UpdateDataOnWindow(false);
+		ClearRPanelData();
+		d88.ClearDiskBasicParseAndAssign(disk_number, side_number);
+		RefreshDiskListOnSelectedDisk();
+//		ReSelectDiskList();
+//		UpdateDataOnWindow(wxEmptyString, true);
 	}
 	if (rc != 0) {
 		// message
 		d88.ShowErrorMessage();
 	}
 }
-#if 0
-/// 指定したディスクイメージ置換
-/// @param [in] disk_number ディスク番号
-/// @param [in] side_number サイド番号
-/// @param [in] path        ファイルパス
-/// @param [in] file_format ファイルの形式名("d88","plain"など)
-/// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
-void L3DiskFrame::ReplaceDisk(int disk_number, int side_number, const wxString &path, const wxString &file_format, const DiskParam &param_hint)
-{
-	// set recent file path
-	SetRecentPath(path);
 
-	// open disk
-	int rc = d88.ReplaceDisk(disk_number, side_number, path, file_format, param_hint);
-	if (rc >= 0) {
-		// update window
-		UpdateDataOnWindow(false);
-	}
-	if (rc != 0) {
-		// message
-		d88.ShowErrorMessage();
-	}
-}
-#endif
 /// ディスクをファイルから削除
 void L3DiskFrame::DeleteDisk()
 {
@@ -2203,7 +1867,7 @@ void L3DiskFrame::InitializeDisk()
 /// ディスクをDISK BASIC用に論理フォーマット
 void L3DiskFrame::FormatDisk()
 {
-	L3DiskFileList *list = GetFileListPanel();
+	L3DiskList *list = GetDiskListPanel();
 	if (list) {
 		list->FormatDisk();
 		return;
@@ -2220,91 +1884,525 @@ void L3DiskFrame::ShowBasicAttr()
 	}
 }
 
-/// キャラクターコード選択
-void L3DiskFrame::ChangeCharCode(int sel)
+/// ディレクトリをアサイン
+bool L3DiskFrame::AssignDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dir_item)
 {
-	if (GetCharCode() == sel) return;
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (!listpanel) return false;
+	return listpanel->AssignDirectory(disk, side_num, dir_item);
+}
 
+/// ディレクトリを移動
+bool L3DiskFrame::ChangeDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dir_item, bool refresh_list)
+{
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (!listpanel) return false;
+	return listpanel->ChangeDirectory(disk, side_num, dir_item, refresh_list);
+}
+
+/// ディレクトリを削除
+bool L3DiskFrame::DeleteDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dir_item)
+{
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (!listpanel) return false;
+	return listpanel->DeleteDirectory(disk, side_num, dir_item);
+}
+
+/// ファイル名属性プロパティダイアログをすべて閉じる
+void L3DiskFrame::CloseAllFileAttr()
+{
 	L3DiskFileList *listpanel = GetFileListPanel(true);
-	if (listpanel) listpanel->ChangeCharCode(sel);
+	if (listpanel) listpanel->CloseAllFileAttr();
+}
+
+////////////////////////////////////////
+//
+// 左パネル
+//
+
+/// 左パネルを返す
+L3DiskList *L3DiskFrame::GetLPanel()
+{
+	return panel->GetLPanel();
+}
+/// 左パネルのディスクツリーを返す
+L3DiskList *L3DiskFrame::GetDiskListPanel()
+{
+	return panel->GetLPanel();
+}
+/// 左パネルのディスクツリーにデータを設定する
+void L3DiskFrame::SetDiskListData(const wxString &filename)
+{
 	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) lpanel->ChangeCharCode(sel);
-
-	ini->SetCharCode(sel);
-
-	UpdateMenuMode();
+	if (lpanel) lpanel->SetFileName(filename);
 }
-
-/// キャラクターコード番号を返す
-int L3DiskFrame::GetCharCode() const
+/// 左パネルのディスクツリーをクリア
+void L3DiskFrame::ClearDiskListData()
 {
-	return ini->GetCharCode();
-}
-
-// キャラクターコード番号設定
-void L3DiskFrame::SetDefaultCharCode()
-{
-	int sel = ini->GetCharCode();
-
-	L3DiskFileList *listpanel = GetFileListPanel(true);
-	if (listpanel) listpanel->ChangeCharCode(sel);
 	L3DiskList *lpanel = GetDiskListPanel();
-	if (lpanel) lpanel->ChangeCharCode(sel);
+	if (lpanel) lpanel->ClearFileName();
+}
+//bool L3DiskFrame::IsDiskListSelectedDiskImage()
+//{
+//	L3DiskList *lpanel = GetDiskListPanel();
+//	if (lpanel) return lpanel->IsSelectedDiskImage();
+//	else return false;
+//}
+/// 左パネルのディスクツリーのディスクを選択しているか
+bool L3DiskFrame::IsDiskListSelectedDisk()
+{
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) return lpanel->IsSelectedDisk();
+	else return false;
 }
 
-/// フォント変更ダイアログ
-void L3DiskFrame::ShowListFontDialog()
+/// 左パネルのディスクツリーの選択している位置
+/// @param [out] disk_number ディスク番号
+/// @param [out] side_number サイド番号
+void L3DiskFrame::GetDiskListSelectedPos(int &disk_number, int &side_number)
 {
-	L3DiskList *rlist = GetDiskListPanel();
-	if (!rlist) return;
+	L3DiskList *lpanel = GetDiskListPanel();
+	int num = -1;
+	int sid = -1;
+	if (lpanel) {
+		lpanel->GetSelectedDisk(num, sid);
+	}
+	disk_number = num;
+	side_number = sid;
+}
 
-	wxFont font = rlist->GetFont();
-
-	FontMiniBox dlg(this, wxID_ANY, GetFont());
-	wxString name = ini->GetListFontName();
-	if (name.IsEmpty()) name = font.GetFaceName();
-	int size = ini->GetListFontSize();
-	if (size == 0) size = font.GetPointSize();
-	dlg.SetFontName(name);
-	dlg.SetFontSize(size);
-	int sts = dlg.ShowModal();
-	if (sts == wxID_OK) {
-		wxFont new_font(dlg.GetFontSize(), wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, dlg.GetFontName());
-
-		SetListFont(new_font);
-
-		ini->SetListFontName(dlg.GetFontName());
-		ini->SetListFontSize(dlg.GetFontSize());
+/// 左パネルのディスクツリーを選択
+/// @param [in] disk_number ディスク番号
+/// @param [in] side_number サイド番号
+void L3DiskFrame::SetDiskListPos(int disk_number, int side_number)
+{
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->ChangeSelection(disk_number, side_number);
 	}
 }
 
-/// リストウィンドウのフォント変更
-void L3DiskFrame::SetListFont(const wxFont &font)
+/// 左パネルのディスクツリーにファイルパスを設定
+void L3DiskFrame::SetDiskListFilePath(const wxString &path)
 {
-	L3DiskList *rlist = GetDiskListPanel();
-	if (rlist) rlist->SetListFont(font);
-
-	L3DiskRPanel *llist = GetRPanel();
-	if (llist) llist->SetListFont(font);
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->SetFilePath(path);
+	}
 }
 
-/// リストウィンドウのフォント設定
-void L3DiskFrame::GetDefaultListFont(wxFont &font)
+/// 左パネルのディスクツリーにディスク名を設定
+void L3DiskFrame::SetDiskListName(const wxString &name)
 {
-	wxFont def_font = GetFont();
-
-	wxString name = ini->GetListFontName();
-	if (name.IsEmpty()) name = def_font.GetFaceName();
-	int size = ini->GetListFontSize();
-	if (size == 0) size = def_font.GetPointSize();
-
-	font = wxFont(size, wxFONTFAMILY_DEFAULT, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL, false, name);
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->SetName(name);
+	}
 }
 
-#ifdef USE_DND_ON_TOP_PANEL
+/// 左パネルの選択しているディスクの子供を削除
+/// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
+void L3DiskFrame::RefreshDiskListOnSelectedDisk(const DiskBasicParam *newparam)
+{
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->RefreshSelectedDisk(newparam);
+	}
+}
+
+/// 選択しているディスクのサイドを再選択
+void L3DiskFrame::RefreshDiskListOnSelectedSide(const DiskBasicParam *newparam)
+{
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->RefreshSelectedSide(newparam);
+	}
+}
+
+/// 左パネルのディスクツリーを再選択
+/// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
+void L3DiskFrame::ReSelectDiskList(const DiskBasicParam *newparam)
+{
+	L3DiskList *lpanel = GetDiskListPanel();
+	if (lpanel) {
+		lpanel->ReSelect(newparam);
+	}
+}
+
+////////////////////////////////////////
+//
+// 右パネル
+//
+
+/// 右パネルを返す
+L3DiskRPanel *L3DiskFrame::GetRPanel()
+{
+	return panel->GetRPanel();
+}
+
+/// 右パネルのデータウィンドウを変更 ファイルリスト/RAWディスク
+void L3DiskFrame::ChangeRPanel(int num, const DiskBasicParam *param)
+{
+	L3DiskRPanel *rpanel = panel->GetRPanel();
+	if (rpanel) rpanel->ChangePanel(num);
+	L3DiskList *lpanel = panel->GetLPanel();
+	if (lpanel) lpanel->ReSelect(param);
+
+	UpdateMenuDisk();
+	UpdateMenuMode();
+}
+
+/// 右パネルのすべてのコントロール内のデータをクリア
+void L3DiskFrame::ClearRPanelData()
+{
+	DetachDiskBasicOnFileList();
+	ClearDiskAttrData();
+	ClearFileListData();
+	ClearRawPanelData();
+	ClearBinDumpData();
+	ClearFatAreaData();
+}
+
+////////////////////////////////////////
+//
+// 右上パネルのディスク属性
+//
+
+/// 右上パネルのディスク属性パネルを返す
+L3DiskDiskAttr *L3DiskFrame::GetDiskAttrPanel()
+{
+	L3DiskRPanel *rpanel = panel->GetRPanel();
+	if (rpanel) return rpanel->GetDiskAttrPanel();
+	else return NULL;
+}
+/// 右上パネルのディスク属性にデータを設定する
+void L3DiskFrame::SetDiskAttrData(DiskD88Disk *disk)
+{
+	L3DiskDiskAttr *dapanel = GetDiskAttrPanel();
+	if (dapanel) dapanel->SetAttr(disk);
+}
+/// 右上パネルのディスク属性をクリア
+void L3DiskFrame::ClearDiskAttrData()
+{
+	L3DiskDiskAttr *dapanel = GetDiskAttrPanel();
+	if (dapanel) dapanel->ClearData();
+}
+
+////////////////////////////////////////
+//
+// 右下パネルのファイルリスト
+//
+
+/// 右下パネルのファイルリストパネルを返す
+/// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
+L3DiskFileList *L3DiskFrame::GetFileListPanel(bool inst)
+{
+	L3DiskRPanel *rpanel = panel->GetRPanel();
+	if (rpanel) return rpanel->GetFileListPanel(inst);
+	else return NULL;
+}
+/// 右下パネルのファイルリストにDISK BASICをアタッチ
+void L3DiskFrame::AttachDiskBasicOnFileList(DiskD88Disk *disk, int side_num)
+{
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (listpanel) listpanel->AttachDiskBasic(disk, side_num);
+}
+/// 右下パネルのファイルリストからDISK BASICをデタッチ
+void L3DiskFrame::DetachDiskBasicOnFileList()
+{
+	L3DiskFileList *listpanel = GetFileListPanel(true);
+	if (listpanel) listpanel->DetachDiskBasic();
+}
+/// 右下パネルのファイルリストにデータを設定する
+void L3DiskFrame::SetFileListData()
+{
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (listpanel) listpanel->SetFiles();
+}
+/// 右下パネルのファイルリストをクリア
+void L3DiskFrame::ClearFileListData()
+{
+	L3DiskFileList *listpanel = GetFileListPanel();
+	if (listpanel) listpanel->ClearFiles();
+}
+
+////////////////////////////////////////
+//
+// 右下パネルのRAWディスクパネル
+//
+
+/// 右下パネルのRAWディスクパネルを返す
+/// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
+L3DiskRawPanel *L3DiskFrame::GetDiskRawPanel(bool inst)
+{
+	L3DiskRPanel *rpanel = panel->GetRPanel();
+	if (rpanel) return rpanel->GetRawPanel(inst);
+	else return NULL;
+}
+/// 右下パネルのRAWディスクパネルにデータを設定する
+void L3DiskFrame::SetRawPanelData(DiskD88Disk *disk, int side_num)
+{
+	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
+	if (rawpanel) rawpanel->SetTrackListData(disk, side_num);
+}
+/// 右下パネルのRAWディスクパネルをクリア
+void L3DiskFrame::ClearRawPanelData()
+{
+	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
+	if (rawpanel) rawpanel->ClearTrackListData();
+}
+/// 右下パネルのRAWディスクパネルにデータを再設定する
+void L3DiskFrame::RefreshRawPanelData()
+{
+	L3DiskRawPanel *rawpanel = GetDiskRawPanel();
+	if (rawpanel) rawpanel->RefreshTrackListData();
+}
+
+////////////////////////////////////////
+//
+// ダンプウィンドウ
+//
+
+/// ダンプウィンドウにデータを設定する
+void L3DiskFrame::SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert)
+{
+//	L3DiskBinDump *binpanel = GetBinDumpPanel();
+//	if (binpanel) binpanel->SetDatas(buf, len, invert);
+	if (bindump_frame) {
+		bindump_frame->SetDataInvert(invert);
+		bindump_frame->SetDataChar(char_code);
+		bindump_frame->SetDatas(trk, sid, sec, buf, len);
+	}
+}
+/// ダンプウィンドウにデータを設定する
+void L3DiskFrame::SetBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+//	L3DiskBinDump *binpanel = GetBinDumpPanel();
+//	if (binpanel) binpanel->SetDatas(buf, len, invert);
+	if (bindump_frame) {
+		bindump_frame->SetDatas(trk, sid, sec, buf, len);
+	}
+}
+/// ダンプウィンドウにデータを追記する
+void L3DiskFrame::AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len, int char_code, bool invert)
+{
+//	L3DiskBinDump *binpanel = GetBinDumpPanel();
+//	if (binpanel) binpanel->AppendDatas(buf, len, invert);
+	if (bindump_frame) {
+		bindump_frame->SetDataInvert(invert);
+		bindump_frame->SetDataChar(char_code);
+		bindump_frame->AppendDatas(trk, sid, sec, buf, len);
+	}
+}
+/// ダンプウィンドウにデータを追記する
+void L3DiskFrame::AppendBinDumpData(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+//	L3DiskBinDump *binpanel = GetBinDumpPanel();
+//	if (binpanel) binpanel->AppendDatas(buf, len, invert);
+	if (bindump_frame) {
+		bindump_frame->AppendDatas(trk, sid, sec, buf, len);
+	}
+}
+/// ダンプウィンドウをクリア
+void L3DiskFrame::ClearBinDumpData()
+{
+//	L3DiskBinDump *binpanel = GetBinDumpPanel();
+//	if (binpanel) binpanel->ClearDatas();
+	if (bindump_frame) {
+		bindump_frame->ClearDatas();
+	}
+}
+
+/// ダンプウィンドウを開く
+void L3DiskFrame::OpenBinDumpWindow()
+{
+	if (bindump_frame) return;
+
+	// ウィンドウを開く
+	bindump_frame = new L3DiskBinDumpFrame(this, _("Dump View"), wxSize(640, 480));
+	// 位置はメインウィンドウの右側
+	wxSize sz = GetSize();
+	wxPoint pt = GetPosition();
+	pt.x = pt.x + sz.x;
+	pt.y = pt.y;
+	bindump_frame->SetPosition(pt);
+	bindump_frame->Show();
+	bindump_frame->SetFocus();
+}
+/// ダンプウィンドウを閉じる
+void L3DiskFrame::CloseBinDumpWindow()
+{
+	if (!bindump_frame) return;
+
+	bindump_frame->Close();
+	bindump_frame = NULL;
+}
+/// ダンプウィンドウを閉じる時にウィンドウ側から呼ばれるコールバック
+void L3DiskFrame::BinDumpWindowClosed()
+{
+	bindump_frame = NULL;
+
+	if (!IsBeingDeleted()) {
+		wxMenuItem *mitem = menuWindow->FindItem(IDM_WINDOW_BINDUMP);
+		if (mitem) {
+			mitem->Check(false);
+		}
+	}
+}
+
+////////////////////////////////////////
+//
+// 使用状況ウィンドウ
+//
+
+/// 使用状況ウィンドウにデータを設定する
+void L3DiskFrame::SetFatAreaData()
+{
+	if (fatarea_frame) {
+		wxUint32 offset = 0;
+		const wxArrayInt *arr = NULL;
+		L3DiskFileList *list = GetFileListPanel();
+		if (list) {
+			list->GetFatAvailability(&offset, &arr);
+			SetFatAreaData(offset, arr);
+		}
+	}
+}
+
+/// 使用状況ウィンドウにデータを設定する
+void L3DiskFrame::SetFatAreaData(wxUint32 offset, const wxArrayInt *arr)
+{
+	if (fatarea_frame && arr) {
+		fatarea_frame->SetData(offset, arr);
+	}
+}
+/// 使用状況ウィンドウをクリア
+void L3DiskFrame::ClearFatAreaData()
+{
+	if (fatarea_frame) {
+		fatarea_frame->ClearData();
+	}
+}
+/// 使用状況ウィンドウにフォーカスさせるグループ番号を設定する
+void L3DiskFrame::SetFatAreaGroup(wxUint32 group_num)
+{
+	if (fatarea_frame) {
+		fatarea_frame->SetGroup(group_num);
+	}
+}
+/// 使用状況ウィンドウにフォーカスさせるグループ番号を設定する
+void L3DiskFrame::SetFatAreaGroup(const DiskBasicGroups *group_items, wxUint32 extra_group_num)
+{
+	if (fatarea_frame) {
+		fatarea_frame->SetGroup(group_items, extra_group_num);
+	}
+}
+/// 使用状況ウィンドウでフォーカスしているグループ番号をクリア
+void L3DiskFrame::ClearFatAreaGroup()
+{
+	if (fatarea_frame) {
+		fatarea_frame->ClearGroup();
+	}
+}
+/// 使用状況ウィンドウを開く
+void L3DiskFrame::OpenFatAreaWindow()
+{
+	if (fatarea_frame) return;
+
+	// ウィンドウを開く
+	fatarea_frame = new L3DiskFatAreaFrame(this, _("Availability"), wxDefaultSize);
+	// 位置はメインウィンドウの右側
+	wxSize sz = GetSize();
+	wxPoint pt = GetPosition();
+	pt.x = pt.x + sz.x;
+	pt.y = pt.y + sz.y - 64;
+	fatarea_frame->SetPosition(pt);
+	fatarea_frame->Show();
+	fatarea_frame->SetFocus();
+
+	SetFatAreaData();
+}
+/// 使用状況ウィンドウを閉じる
+void L3DiskFrame::CloseFatAreaWindow()
+{
+	if (!fatarea_frame) return;
+
+	fatarea_frame->Close();
+	fatarea_frame = NULL;
+}
+/// 使用状況ウィンドウを閉じる時にウィンドウ側から呼ばれるコールバック
+void L3DiskFrame::FatAreaWindowClosed()
+{
+	fatarea_frame = NULL;
+
+	if (!IsBeingDeleted()) {
+		wxMenuItem *mitem = menuWindow->FindItem(IDM_WINDOW_FATAREA);
+		if (mitem) {
+			mitem->Check(false);
+		}
+	}
+}
+
+////////////////////////////////////////
+//
+// 設定ファイル
+//
+
+/// 最近使用したパスを取得
+const wxString &L3DiskFrame::GetIniRecentPath() const
+{
+	return ini->GetFilePath();
+}
+
+/// 最近使用したパスを取得(エクスポート用)
+const wxString &L3DiskFrame::GetIniExportFilePath() const
+{
+	return ini->GetExportFilePath();
+}
+
+/// 最近使用したファイルを更新（一覧も更新）
+void L3DiskFrame::SetIniRecentPath(const wxString &path)
+{
+	// set recent file path
+	ini->AddRecentFile(path);
+	UpdateMenuRecentFiles();
+}
+
+/// 最近使用したパスを更新
+void L3DiskFrame::SetIniFilePath(const wxString &path)
+{
+	ini->SetFilePath(path);
+}
+
+/// 最近使用したパスを更新(エクスポート用)
+void L3DiskFrame::SetIniExportFilePath(const wxString &path)
+{
+	ini->SetExportFilePath(path);
+}
+
+/// ダンプフォントを更新
+void L3DiskFrame::SetIniDumpFont(const wxFont &font)
+{
+	ini->SetDumpFontName(font.GetFaceName());
+	ini->SetDumpFontSize(font.GetPointSize());
+}
+
+/// ダンプフォント名を返す
+const wxString &L3DiskFrame::GetIniDumpFontName() const
+{
+	return ini->GetDumpFontName();
+}
+
+/// ダンプフォントサイズを返す
+int L3DiskFrame::GetIniDumpFontSize() const
+{
+	return ini->GetDumpFontSize();
+}
+
+//////////////////////////////////////////////////////////////////////
+
 // ドラッグアンドドロップ時のフォーマットID
 wxDataFormat *L3DiskPanelDataFormat = NULL;
-#endif
 
 //
 // メインパネルは分割ウィンドウ
@@ -2335,21 +2433,17 @@ L3DiskPanel::L3DiskPanel(L3DiskFrame *parent)
 
 	SetMinimumPaneSize(10);
 
-#ifdef USE_DND_ON_TOP_PANEL
 	// drag and drop
 	if (!L3DiskPanelDataFormat) {
-		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATAV3"));
+		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATAV4"));
 	}
 	SetDropTarget(new L3DiskPanelDropTarget(parent, this));
-#endif
 }
 
 L3DiskPanel::~L3DiskPanel()
 {
-#ifdef USE_DND_ON_TOP_PANEL
 	delete L3DiskPanelDataFormat;
 	L3DiskPanelDataFormat = NULL;
-#endif
 }
 
 /// ドロップされたファイルを処理
@@ -2409,7 +2503,7 @@ bool L3DiskPanel::ProcessDroppedFile(wxCoord x, wxCoord y, const wxUint8 *buffer
 	return true;
 }
 
-#ifdef USE_DND_ON_TOP_PANEL
+//////////////////////////////////////////////////////////////////////
 //
 // File Drag and Drop
 //
@@ -2457,8 +2551,8 @@ wxDragResult L3DiskPanelDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult de
 	}
 	return (sts ? def : wxDragNone);
 }
-#endif
 
+//////////////////////////////////////////////////////////////////////
 //
 // File Dialog
 //
@@ -2467,6 +2561,7 @@ L3DiskFileDialog::L3DiskFileDialog(const wxString& message, const wxString& defa
 {
 }
 
+//////////////////////////////////////////////////////////////////////
 //
 // Dir Dialog
 //
@@ -2475,6 +2570,7 @@ L3DiskDirDialog::L3DiskDirDialog(const wxString& message, const wxString& defaul
 {
 }
 
+//////////////////////////////////////////////////////////////////////
 //
 // About dialog
 //

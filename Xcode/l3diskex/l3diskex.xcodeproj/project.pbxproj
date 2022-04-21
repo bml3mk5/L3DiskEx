@@ -11,6 +11,10 @@
 		D91DA3F121900D8900C27018 /* diskreplacebox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91DA3EF21900D8900C27018 /* diskreplacebox.cpp */; };
 		D91F9B272178D44A0060D5BB /* rawtrackbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91F9B242178D44A0060D5BB /* rawtrackbox.cpp */; };
 		D91F9B2A2178D5130060D5BB /* basictype_msdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D91F9B282178D5130060D5BB /* basictype_msdos.cpp */; };
+		D923191521A5314600EB1FCD /* basicdiritem_mz_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D923191121A5314600EB1FCD /* basicdiritem_mz_base.cpp */; };
+		D923191621A5314600EB1FCD /* basictype_mz_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D923191321A5314600EB1FCD /* basictype_mz_base.cpp */; };
+		D93D1939219DBB8800A3E51C /* basicdiritem_tfdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D93D1935219DBB8800A3E51C /* basicdiritem_tfdos.cpp */; };
+		D93D193A219DBB8800A3E51C /* basictype_tfdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D93D1937219DBB8800A3E51C /* basictype_tfdos.cpp */; };
 		D99171A8213296F10086F44F /* basiccommon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D991716D213296F10086F44F /* basiccommon.cpp */; };
 		D99171A9213296F10086F44F /* basicdir.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D991716F213296F10086F44F /* basicdir.cpp */; };
 		D99171AA213296F10086F44F /* basicdiritem_fat8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9917171213296F10086F44F /* basicdiritem_fat8.cpp */; };
@@ -126,6 +130,14 @@
 		D91F9B252178D44A0060D5BB /* rawtrackbox.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rawtrackbox.h; sourceTree = "<group>"; };
 		D91F9B282178D5130060D5BB /* basictype_msdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_msdos.cpp; sourceTree = "<group>"; };
 		D91F9B292178D5130060D5BB /* basictype_msdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_msdos.h; sourceTree = "<group>"; };
+		D923191121A5314600EB1FCD /* basicdiritem_mz_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_mz_base.cpp; sourceTree = "<group>"; };
+		D923191221A5314600EB1FCD /* basicdiritem_mz_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_mz_base.h; sourceTree = "<group>"; };
+		D923191321A5314600EB1FCD /* basictype_mz_base.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_mz_base.cpp; sourceTree = "<group>"; };
+		D923191421A5314600EB1FCD /* basictype_mz_base.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_mz_base.h; sourceTree = "<group>"; };
+		D93D1935219DBB8800A3E51C /* basicdiritem_tfdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_tfdos.cpp; sourceTree = "<group>"; };
+		D93D1936219DBB8800A3E51C /* basicdiritem_tfdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_tfdos.h; sourceTree = "<group>"; };
+		D93D1937219DBB8800A3E51C /* basictype_tfdos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_tfdos.cpp; sourceTree = "<group>"; };
+		D93D1938219DBB8800A3E51C /* basictype_tfdos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_tfdos.h; sourceTree = "<group>"; };
 		D93E43582161EDBA0041FCCA /* fd_5inch_16_1.xpm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = fd_5inch_16_1.xpm; path = res/fd_5inch_16_1.xpm; sourceTree = "<group>"; };
 		D93E43592161EDBA0041FCCA /* fd_5inch_16_2.xpm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = fd_5inch_16_2.xpm; path = res/fd_5inch_16_2.xpm; sourceTree = "<group>"; };
 		D93E435A2161EDBA0041FCCA /* fd_5inch_16_add.xpm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = fd_5inch_16_add.xpm; path = res/fd_5inch_16_add.xpm; sourceTree = "<group>"; };
@@ -358,12 +370,16 @@
 				D991717A213296F10086F44F /* basicdiritem_msdos.h */,
 				D991717B213296F10086F44F /* basicdiritem_msx.cpp */,
 				D991717C213296F10086F44F /* basicdiritem_msx.h */,
+				D923191121A5314600EB1FCD /* basicdiritem_mz_base.cpp */,
+				D923191221A5314600EB1FCD /* basicdiritem_mz_base.h */,
 				D991717D213296F10086F44F /* basicdiritem_mz.cpp */,
 				D991717E213296F10086F44F /* basicdiritem_mz.h */,
 				D991717F213296F10086F44F /* basicdiritem_n88.cpp */,
 				D9917180213296F10086F44F /* basicdiritem_n88.h */,
 				D9A3F3CE2143EC160090DA99 /* basicdiritem_os9.cpp */,
 				D9A3F3CF2143EC160090DA99 /* basicdiritem_os9.h */,
+				D93D1935219DBB8800A3E51C /* basicdiritem_tfdos.cpp */,
+				D93D1936219DBB8800A3E51C /* basicdiritem_tfdos.h */,
 				D9917181213296F10086F44F /* basicdiritem_x1hu.cpp */,
 				D9917182213296F10086F44F /* basicdiritem_x1hu.h */,
 				D9917183213296F10086F44F /* basicdiritem.cpp */,
@@ -398,12 +414,16 @@
 				D91F9B292178D5130060D5BB /* basictype_msdos.h */,
 				D9917195213296F10086F44F /* basictype_msx.cpp */,
 				D9917196213296F10086F44F /* basictype_msx.h */,
+				D923191321A5314600EB1FCD /* basictype_mz_base.cpp */,
+				D923191421A5314600EB1FCD /* basictype_mz_base.h */,
 				D9917197213296F10086F44F /* basictype_mz.cpp */,
 				D9917198213296F10086F44F /* basictype_mz.h */,
 				D9917199213296F10086F44F /* basictype_n88.cpp */,
 				D991719A213296F10086F44F /* basictype_n88.h */,
 				D9A3F3D42143EC160090DA99 /* basictype_os9.cpp */,
 				D9A3F3D52143EC160090DA99 /* basictype_os9.h */,
+				D93D1937219DBB8800A3E51C /* basictype_tfdos.cpp */,
+				D93D1938219DBB8800A3E51C /* basictype_tfdos.h */,
 				D991719B213296F10086F44F /* basictype_x1hu.cpp */,
 				D991719C213296F10086F44F /* basictype_x1hu.h */,
 				D991719D213296F10086F44F /* basictype.cpp */,
@@ -616,6 +636,7 @@
 				D91620501BF261BC00DB06A7 /* rawparambox.cpp in Sources */,
 				D9C49EAD1BF1BDC000831032 /* result.cpp in Sources */,
 				D9C49EAF1BF1BDC000831032 /* rawsectorbox.cpp in Sources */,
+				D923191521A5314600EB1FCD /* basicdiritem_mz_base.cpp in Sources */,
 				D9C49EB11BF1BDC000831032 /* uibindump.cpp in Sources */,
 				D996BCF1213CF34000902715 /* logging.cpp in Sources */,
 				D996BCF2213CF34000902715 /* uirpanel.cpp in Sources */,
@@ -632,6 +653,7 @@
 				D9A3F3DA2143EC160090DA99 /* basicdiritem_os9.cpp in Sources */,
 				D996BCEC213CF34000902715 /* diskplainparser.cpp in Sources */,
 				D99171A9213296F10086F44F /* basicdir.cpp in Sources */,
+				D93D193A219DBB8800A3E51C /* basictype_tfdos.cpp in Sources */,
 				D9C49EB91BF1BDC000831032 /* uirawdisk.cpp in Sources */,
 				D9A3F3DC2143EC160090DA99 /* basictype_flex.cpp in Sources */,
 				D99171B2213296F10086F44F /* basicdiritem_x1hu.cpp in Sources */,
@@ -668,6 +690,8 @@
 				D99171BE213296F10086F44F /* basictype_n88.cpp in Sources */,
 				D9C49E931BF1BDB100831032 /* diskd88.cpp in Sources */,
 				D99171C3213296F10086F44F /* diskparser.cpp in Sources */,
+				D93D1939219DBB8800A3E51C /* basicdiritem_tfdos.cpp in Sources */,
+				D923191621A5314600EB1FCD /* basictype_mz_base.cpp in Sources */,
 				D9C49E951BF1BDB100831032 /* diskparambox.cpp in Sources */,
 				D9A3F3DB2143EC160090DA99 /* basictype_cpm.cpp in Sources */,
 				D91DA3F121900D8900C27018 /* diskreplacebox.cpp in Sources */,

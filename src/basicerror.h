@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic error messages
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICERROR_H_
 #define _BASICERROR_H_
 
 #include "common.h"
 #include "result.h"
+
 
 extern const char *gDiskBasicErrorMsgs[];
 
@@ -58,6 +62,8 @@ public:
 		ERRV_CANNOT_EDIT_ENAME,
 		ERRV_CANNOT_DELETE,
 		ERRV_CANNOT_DELETE_DIRECTORY,
+		ERRV_ALREADY_DELETED,
+		ERRV_ALREADY_EXISTS,
 		ERRV_END
 	};
 

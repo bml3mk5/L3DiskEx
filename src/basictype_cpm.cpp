@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic type for CP/M
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_cpm.h"
 #include "basicfmt.h"
 #include "basicdir.h"
 #include "basicdiritem_cpm.h"
 #include "logging.h"
+
 
 //
 //
@@ -37,12 +41,14 @@ int DiskBasicTypeCPM::ParseParamOnDisk(DiskD88Disk *disk)
 /// ルートディレクトリをアサイン
 /// @param [in]     start_sector 開始セクタ番号
 /// @param [in]     end_sector   終了セクタ番号
-bool DiskBasicTypeCPM::AssignRootDirectory(int start_sector, int end_sector)
+/// @param [out]    group_items  セクタリスト
+/// @param [in,out] dir_item     ルートディレクトリアイテム
+bool DiskBasicTypeCPM::AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item)
 {
-	DiskBasicType::AssignRootDirectory(start_sector, end_sector);
+	bool sts = DiskBasicType::AssignRootDirectory(start_sector, end_sector, group_items, dir_item);
 
 	// エクステント 同じファイル名 を関連付ける
-	DiskBasicDirItems sort_items = dir->GetItems();
+	DiskBasicDirItems sort_items = *dir_item->GetChildren();
 	sort_items.Sort(&DiskBasicDirItemCPM::Compare);
 	DiskBasicDirItem *prev_item = NULL;
 	for(size_t i = 0; i < sort_items.Count(); i++) {
@@ -68,7 +74,7 @@ bool DiskBasicTypeCPM::AssignRootDirectory(int start_sector, int end_sector)
 		}
 	}
 
-	return true;
+	return sts;
 }
 
 /// 使用可能なディスクサイズを得る
@@ -87,7 +93,7 @@ void DiskBasicTypeCPM::CalcDiskFreeSize(bool wrote)
 
 	fat_availability.SetCount(basic->GetFatEndGroup() + 1, FAT_AVAIL_FREE);
 
-	const DiskBasicDirItems *items = &dir->GetItems();
+	const DiskBasicDirItems *items = dir->GetCurrentItems();
 	for(size_t idx = 0; idx < items->Count(); idx++) {
 		DiskBasicDirItemCPM *citem = (DiskBasicDirItemCPM *)items->Item(idx);
 		if (!citem || !citem->IsUsed()) continue;
@@ -103,8 +109,8 @@ void DiskBasicTypeCPM::CalcDiskFreeSize(bool wrote)
 	}
 
 	// 空きをチェック
-	int dir_area = ((basic->GetDirEndSector() - basic->GetDirStartSector() + 1) / basic->GetSectorsPerGroup());
-	for(int pos = 0; pos <= (int)basic->GetFatEndGroup(); pos++) {
+	wxUint32 dir_area = ((basic->GetDirEndSector() - basic->GetDirStartSector() + 1) / basic->GetSectorsPerGroup());
+	for(wxUint32 pos = 0; pos <= basic->GetFatEndGroup(); pos++) {
 		if (pos < dir_area) {
 			// ディレクトリエリアは使用済み
 			fat_availability.Item(pos) = FAT_AVAIL_SYSTEM;
@@ -182,15 +188,17 @@ int DiskBasicTypeCPM::AllocateGroups(DiskBasicDirItem *item, int data_size, Allo
 	int group_entries = ditem->GetGroupEntries();
 
 	int start_gpos = 0;
-	// 空きエントリをさがす
-	while(ditem->GetGroup(start_gpos) != 0) {
-		start_gpos++;
-		if ((start_gpos % group_entries) == 0) {
-			// グループエントリ数に達したら次のディレクトリエントリに移動
-			ditem = ditem->GetNextItem();
-			if (!ditem) {
-				// 次がない
-				break;
+	if (flags == ALLOCATE_GROUPS_APPEND) {
+		// 追加の時、空きエントリをさがす
+		while(ditem->GetGroup(start_gpos) != 0) {
+			start_gpos++;
+			if ((start_gpos % group_entries) == 0) {
+				// グループエントリ数に達したら次のディレクトリエントリに移動
+				ditem = ditem->GetNextItem();
+				if (!ditem) {
+					// 次がない
+					break;
+				}
 			}
 		}
 	}

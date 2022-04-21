@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for X1 Hu-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_X1HU_H_
 #define _BASICDIRITEM_X1HU_H_
 
 #include "basicdiritem.h"
+
 
 /// X1 Hu-BASIC 属性名1
 extern const char *gTypeNameX1HU_1[];
@@ -40,9 +44,9 @@ enum en_data_type_mask_x1hu {
 };
 #define DATATYPE_X1HU_MASK (DATATYPE_X1HU_RESERVED | DATATYPE_X1HU_HIDDEN | DATATYPE_X1HU_READ_WRITE | DATATYPE_X1HU_READ_ONLY)
 
-#define	DATATYPE_X1HU_PASSWORD_NONE 0x2000000
-#define DATATYPE_X1HU_PASSWORD_MASK 0xff00000
-#define DATATYPE_X1HU_PASSWORD_POS  20
+#define	DATATYPE_X1HU_PASSWORD_NONE 0x20
+#define DATATYPE_X1HU_PASSWORD_MASK 0xff
+//#define DATATYPE_X1HU_PASSWORD_POS  20
 
 /// ディレクトリ１アイテム X1 Hu-BASIC
 class DiskBasicDirItemX1HU : public DiskBasicDirItem
@@ -70,6 +74,19 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int		GetFileType1Pos() const;
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int		GetFileType2Pos() const;
+	/// 属性1を得る
+	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
+	/// 属性2を得る
+	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// リストの位置から属性を返す(プロパティダイアログ用)
+	int		CalcFileTypeFromPos(int pos);
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 public:
 	DiskBasicDirItemX1HU(DiskBasic *basic);
 	DiskBasicDirItemX1HU(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
@@ -79,31 +96,23 @@ public:
 	bool			Check(bool &last);
 
 	/// ファイル名が一致するか
-	bool			IsSameFileName(const wxString &filename);
+	bool			IsSameFileName(const DiskBasicFileName &filename) const;
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void			SetFileAttr(const DiskBasicFileType &file_type);
 	/// ディレクトリを初期化 未使用にする
 	void			InitialData();
 
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr();
+	wxString		GetFileAttrStr() const;
 
 	/// ファイルサイズをセット
 	void			SetFileSize(int val);
 	/// ファイルサイズとグループ数を計算する
 	void			CalcFileSize();
-	/// ファイルサイズが適正か
-	bool			IsFileValidSize(int file_type1, int size, int *limit);
 
 	/// 指定ディレクトリのすべてのグループを取得
 	void			GetAllGroups(DiskBasicGroups &group_items);
@@ -118,13 +127,13 @@ public:
 	bool			HasDate() const { return true; }
 	bool			HasTime() const { return true; }
 	/// 日付を返す
-	void			GetFileDate(struct tm *tm);
+	void			GetFileDate(struct tm *tm) const;
 	/// 時間を返す
-	void			GetFileTime(struct tm *tm);
+	void			GetFileTime(struct tm *tm) const;
 	/// 日付を返す
-	wxString		GetFileDateStr();
+	wxString		GetFileDateStr() const;
 	/// 時間を返す
-	wxString		GetFileTimeStr();
+	wxString		GetFileTimeStr() const;
 	/// 日付をセット
 	void			SetFileDate(const struct tm *tm);
 	/// 時間をセット
@@ -142,7 +151,7 @@ public:
 	void			SetExecuteAddress(int val);
 
 	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize();
+	size_t			GetDataSize() const;
 
 	/// ファイルの終端コードをチェックする必要があるか
 	bool			NeedCheckEofCode();
@@ -158,12 +167,10 @@ public:
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// ファイルサイズが適正か
+	bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit);
 	//@}
 };
 

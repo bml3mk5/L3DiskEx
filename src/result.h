@@ -2,12 +2,16 @@
 ///
 /// @brief 結果保存用
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _RESULTINFO_H_
 #define _RESULTINFO_H_
 
 #include "common.h"
 #include <wx/string.h>
 #include <wx/arrstr.h>
+
 
 /// 結果保存用のクラス abstract
 class ResultInfo

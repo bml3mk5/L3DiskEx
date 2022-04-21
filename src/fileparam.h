@@ -2,6 +2,9 @@
 ///
 /// @brief ファイルパラメータ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _FILE_PARAMETER_H_
 #define _FILE_PARAMETER_H_
 
@@ -9,6 +12,7 @@
 #include <wx/string.h>
 #include <wx/arrstr.h>
 #include <wx/dynarray.h>
+
 
 /// ファイル形式種類
 class FileFormat

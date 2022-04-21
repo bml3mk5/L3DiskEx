@@ -2,11 +2,15 @@
 ///
 /// @brief ディスク解析結果
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISK_RESULT_H_
 #define _DISK_RESULT_H_
 
 #include "common.h"
 #include "result.h"
+
 
 extern const char *gDiskResultMsgs[];
 

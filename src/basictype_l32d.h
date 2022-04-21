@@ -1,7 +1,10 @@
 ﻿/// @file basictype_l32d.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type for L3 BASIC 2D
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_L32D_H_
 #define _BASICTYPE_L32D_H_
 
@@ -9,7 +12,12 @@
 #include "basiccommon.h"
 #include "basictype_fat8.h"
 
-/// LEVEL-3 BASIC 2Dの処理
+
+/** @class DiskBasicTypeL32D
+
+@brief LEVEL-3 BASIC 2D(両面・倍密度)の処理
+
+*/
 class DiskBasicTypeL32D : public DiskBasicTypeFAT8
 {
 private:

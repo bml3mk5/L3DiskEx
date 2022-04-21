@@ -2,6 +2,9 @@
 ///
 /// @brief D88ディスクイメージ入出力
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISKD88_H_
 #define _DISKD88_H_
 
@@ -13,6 +16,7 @@
 #include <wx/hashmap.h>
 #include "diskparam.h"
 #include "diskresult.h"
+
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD
 extern const char *gDiskDensity[];
@@ -284,6 +288,8 @@ WX_DEFINE_ARRAY(DiskD88Track *, DiskD88Tracks);
 
 class DiskD88File;
 class DiskBasicParam;
+class DiskBasic;
+class DiskBasics;
 
 /// １ディスクへのポインタを保持するクラス
 class DiskD88Disk : public DiskParam
@@ -301,7 +307,9 @@ private:
 
 	bool modified;	///< 変更したか
 
-	const DiskBasicParam *basic_param;
+//	const DiskBasicParam *basic_param;
+
+	DiskBasics *basics;
 
 	DiskD88Disk() : DiskParam() {}
 	DiskD88Disk(const DiskD88Disk &src) : DiskParam(src) {}
@@ -405,10 +413,18 @@ public:
 	/// トラックが存在するか
 	bool	ExistTrack(int side_number);
 
-	/// DISK BASICパラメータを設定
-	void	SetDiskBasicParam(const DiskBasicParam *val) { basic_param = val; }
-	/// DISK BASICパラメータを返す
-	const DiskBasicParam *GetDiskBasicParam() const { return basic_param; }
+	/// DISK BASIC領域を確保
+	void	AllocDiskBasics();
+//	/// DISK BASICパラメータを設定
+//	void	SetDiskBasicParam(const DiskBasicParam *val) { basic_param = val; }
+//	/// DISK BASICパラメータを返す
+//	const	DiskBasicParam *GetDiskBasicParam() const { return basic_param; }
+	/// DISK BASICを返す
+	DiskBasic *GetDiskBasic(int idx);
+	/// DISK BASICを返す
+	DiskBasics *GetDiskBasics() { return basics; }
+	/// キャラクターコードマップ番号設定
+	void	SetCharCode(int sel);
 
 	/// ディスク番号を比較
 	static int Compare(DiskD88Disk *item1, DiskD88Disk *item2);
@@ -546,6 +562,13 @@ public:
 
 	/// ファイル名を設定
 	void SetFileName(const wxString &path);
+
+	/// DISK BASICが一致するか
+	bool MatchDiskBasic(const DiskBasic *target);
+	/// DISK BASICの解析状態をクリア
+	void ClearDiskBasicParseAndAssign(int disk_number, int side_number);
+	/// キャラクターコードマップ番号設定
+	void SetCharCode(int sel);
 
 	/// エラーメッセージ
 	const wxArrayString &GetErrorMessage(int maxrow = 20);

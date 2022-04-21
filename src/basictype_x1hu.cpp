@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic fat type for X1 Hu-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_x1hu.h"
 #include "basicfmt.h"
 #include "basicdiritem.h"
 #include "basicdir.h"
 #include "logging.h"
+
 
 //
 //
@@ -158,7 +162,7 @@ wxUint32 DiskBasicTypeX1HU::GetNextEmptyGroupNumber(wxUint32 curr_group)
 void DiskBasicTypeX1HU::GetUsableDiskSize(int &disk_size, int &group_size) const
 {
 	group_size = basic->GetFatEndGroup() + 1;
-	if (group_size >= (int)basic->GetGroupFinalCode()) group_size += basic->GetGroupFinalCode();
+	if (group_size >= (int)basic->GetGroupFinalCode()) group_size -= basic->GetGroupFinalCode();
 	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
 }
 
@@ -172,11 +176,12 @@ void DiskBasicTypeX1HU::CalcDiskFreeSize(bool wrote)
 	fat_availability.Empty();
 
 	for(wxUint32 pos = 0; pos <= basic->GetFatEndGroup(); pos++) {
-		if (pos == basic->GetGroupFinalCode()) pos += basic->GetGroupFinalCode();
 		wxUint32 gnum = GetGroupNumber(pos);
 		int fsts = FAT_AVAIL_USED;
 //		myLog.SetDebug("  pos:0x%02x gnum:0x%02x", pos, gnum);
-		if (gnum == basic->GetGroupUnusedCode()) {
+		if (pos >= basic->GetGroupFinalCode() && pos <= basic->GetGroupSystemCode()) {
+			fsts = FAT_AVAIL_MISSING;
+		} else if (gnum == basic->GetGroupUnusedCode()) {
 			fsize += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
 			grps++;
 			fsts = FAT_AVAIL_FREE;

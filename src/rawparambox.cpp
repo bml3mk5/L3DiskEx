@@ -2,6 +2,8 @@
 ///
 /// @brief Rawパラメータダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "rawparambox.h"
 #include <wx/textctrl.h>
@@ -11,6 +13,7 @@
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(RawParamBox, wxDialog)

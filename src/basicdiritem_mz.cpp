@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic directory item for MZ DISK BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_mz.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
 #include "utils.h"
+
 
 //
 //
@@ -30,22 +34,18 @@ const char *gTypeNameMZ[] = {
 ///
 ///
 DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic)
-	: DiskBasicDirItem(basic)
+	: DiskBasicDirItemMZBase(basic)
 {
-	// MZ
-	if (data) {
-		mem_invert(data, sizeof(directory_mz_t));	// invert
-	}
 }
 DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data)
-	: DiskBasicDirItem(basic, sector, data)
+	: DiskBasicDirItemMZBase(basic, sector, data)
 {
 }
 DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
-	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
+	: DiskBasicDirItemMZBase(basic, num, track, side, sector, secpos, data, unuse)
 {
 	// MZ
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 
 	CalcFileSize();
 }
@@ -103,18 +103,6 @@ bool DiskBasicDirItemMZ::CheckUsed(bool unuse)
 	return (GetFileType1() != 0);
 }
 
-/// 削除
-/// @param [in] code : 削除コード(デフォルト0)
-bool DiskBasicDirItemMZ::Delete(wxUint8 code)
-{
-	// エントリの先頭にコードを入れる
-	SetFileType1(code);
-	used = false;
-	// 開始グループを未使用にする
-	type->SetGroupNumber(GetStartGroup(), 0);
-	return true;
-}
-
 /// ディレクトリアイテムのチェック
 /// @param [in,out] last チェックを終了するか
 /// @return チェックOK
@@ -124,38 +112,39 @@ bool DiskBasicDirItemMZ::Check(bool &last)
 
 	bool valid = true;
 	wxUint8 t = GetFileType1();
-	if ((t & 0x70) != 0) {
+	if ((t & 0x70) != 0 && basic->MatchVolumeAttr(t) != true) {
 		valid = false;
 	}
 	return valid;
 }
 
-void DiskBasicDirItemMZ::SetFileAttr(int file_type)
+void DiskBasicDirItemMZ::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	if (file_type == -1) return;
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
 
 	int val = 0;
 	// MZ
-	if (file_type & FILE_TYPE_MACHINE_MASK) {
+	if (ftype & FILE_TYPE_MACHINE_MASK) {
 		val = FILETYPE_MZ_OBJ;
-	} else if (file_type & FILE_TYPE_BINARY_MASK) {
+	} else if (ftype & FILE_TYPE_BINARY_MASK) {
 		val = FILETYPE_MZ_BTX;
-	} else if (file_type & FILE_TYPE_ASCII_MASK) {
+	} else if (ftype & FILE_TYPE_ASCII_MASK) {
 		val = FILETYPE_MZ_BSD;
-	} else if (file_type & FILE_TYPE_RANDOM_MASK) {
+	} else if (ftype & FILE_TYPE_RANDOM_MASK) {
 		val = FILETYPE_MZ_BRD;
-	} else if (file_type & FILE_TYPE_DIRECTORY_MASK) {
+	} else if (ftype & FILE_TYPE_DIRECTORY_MASK) {
 		val = FILETYPE_MZ_DIR;
-	} else if (file_type & FILE_TYPE_VOLUME_MASK) {
+	} else if (ftype & FILE_TYPE_VOLUME_MASK) {
 		val = FILETYPE_MZ_VOL;
 	}
 	SetFileType1(val);
 
 	val = 0;
-	if (file_type & FILE_TYPE_READONLY_MASK) {
+	if (ftype & FILE_TYPE_READONLY_MASK) {
 		val |= DATATYPE_MZ_READ_ONLY;
 	}
-	if (file_type & (DATATYPE_MZ_SEAMLESS << DATATYPE_MZ_SEAMLESS_POS)) {
+	if (ftype & (DATATYPE_MZ_SEAMLESS << DATATYPE_MZ_SEAMLESS_POS)) {
 		val |= DATATYPE_MZ_SEAMLESS;
 	}
 	SetFileType2(val);
@@ -170,13 +159,7 @@ void DiskBasicDirItemMZ::ClearData()
 	basic->InvertMem(data, sizeof(directory_mz_t));	// invert
 }
 
-/// ディレクトリを初期化 未使用にする
-void DiskBasicDirItemMZ::InitialData()
-{
-	ClearData();
-}
-
-int DiskBasicDirItemMZ::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemMZ::GetFileAttr() const
 {
 	int t1 = GetFileType1();
 	int val = 0;
@@ -207,6 +190,11 @@ int DiskBasicDirItemMZ::GetFileAttr()
 //	case 0x81:
 //		attr = wxGetTranslation(gTypeNameMZ[6]);	// ???
 //		break;
+	default:
+		if (basic->MatchVolumeAttr(t1)) {
+			val = FILE_TYPE_VOLUME_MASK;	// Volume
+		}
+		break;
 	}
 	int t2 = GetFileType2();
 	if (t2 & DATATYPE_MZ_READ_ONLY) {
@@ -215,84 +203,11 @@ int DiskBasicDirItemMZ::GetFileAttr()
 	}
 	val |= ((t2 & DATATYPE_MZ_SEAMLESS) << DATATYPE_MZ_SEAMLESS_POS);
 
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemMZ::GetFileType1Pos()
-{
-	int t1 = GetFileType1();
-	int val = 0;
-	// MZ
-	switch(t1) {
-	case FILETYPE_MZ_OBJ:
-		val = TYPE_NAME_MZ_OBJ;
-		break;
-	case FILETYPE_MZ_BTX:
-		val = TYPE_NAME_MZ_BTX;
-		break;
-	case FILETYPE_MZ_BSD:
-		val = TYPE_NAME_MZ_BSD;
-		break;
-	case FILETYPE_MZ_BRD:
-		val = TYPE_NAME_MZ_BRD;
-		break;
-	case FILETYPE_MZ_DIR:
-		val = TYPE_NAME_MZ_DIR;
-		break;
-	case FILETYPE_MZ_VOL:
-		val = TYPE_NAME_MZ_VOL;
-		break;
-	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemMZ::GetFileType2Pos()
-{
-	int t2 = GetFileType2();
-	int val = 0;
-	if (t2 & DATATYPE_MZ_READ_ONLY) {
-		// write protect
-		val |= FILE_TYPE_READONLY_MASK;
-	}
-	val |= ((t2 & DATATYPE_MZ_SEAMLESS) << DATATYPE_MZ_SEAMLESS_POS);
-	return val;
-}
-
-int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	int val = 0;
-	switch(pos1) {
-	case TYPE_NAME_MZ_OBJ:
-		val = FILE_TYPE_MACHINE_MASK;	// machine
-		val |= FILE_TYPE_BINARY_MASK;	// binary
-		break;
-	case TYPE_NAME_MZ_BTX:
-		val = FILE_TYPE_BASIC_MASK;		// BASIC
-		val |= FILE_TYPE_BINARY_MASK;	// binary
-		break;
-	case TYPE_NAME_MZ_BSD:
-		val = FILE_TYPE_BASIC_MASK;		// BASIC
-		val |= FILE_TYPE_ASCII_MASK;	// ascii
-		break;
-	case TYPE_NAME_MZ_BRD:
-		val = FILE_TYPE_DATA_MASK;		// DATA
-		val |= FILE_TYPE_RANDOM_MASK;	// random access
-		break;
-	case TYPE_NAME_MZ_DIR:
-		val = FILE_TYPE_DIRECTORY_MASK;		// Sub directory
-		break;
-	case TYPE_NAME_MZ_VOL:
-		val = FILE_TYPE_VOLUME_MASK;		// Volume
-		break;
-	}
-	val |= pos2;
-	return val;
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemMZ::GetFileAttrStr()
+wxString DiskBasicDirItemMZ::GetFileAttrStr() const
 {
 	wxString attr = wxGetTranslation(gTypeNameMZ[GetFileType1Pos()]);
 
@@ -312,6 +227,12 @@ wxString DiskBasicDirItemMZ::GetFileAttrStr()
 	return attr;
 }
 
+/// データ内にファイルサイズをセット
+void DiskBasicDirItemMZ::SetFileSizeBase(int val)
+{
+	data->mz.file_size = basic->InvertUint16(val);	// invert
+}
+
 /// ファイルサイズをセット
 void DiskBasicDirItemMZ::SetFileSize(int val)
 {
@@ -320,35 +241,42 @@ void DiskBasicDirItemMZ::SetFileSize(int val)
 		// BRD file
 		val = ((val + 31) / 32);
 	}
-	data->mz.file_size = basic->InvertUint16(wxUINT16_SWAP_ON_BE(val));	// invert
+	SetFileSizeBase(val);
 }
 
-/// ファイルサイズとグループ数を計算する
-void DiskBasicDirItemMZ::CalcFileSize()
+/// データ内のファイルサイズを返す
+int DiskBasicDirItemMZ::GetFileSizeBase() const
 {
-	if (!used) return;
+	return basic->InvertUint16(data->mz.file_size);
+}
 
-	// ファイルサイズ
-	file_size = basic->InvertUint16(wxUINT16_SWAP_ON_BE(data->mz.file_size));	// invert
+struct st_brd_params {
+	int		  pos;
+	int		  cnt;
+	wxUint16 *maps;
+};
+
+/// ファイルサイズとグループ数を計算する前処理
+void DiskBasicDirItemMZ::PreCalcFileSize()
+{
 	if (GetFileType1() == FILETYPE_MZ_BRD) {
 		// BRD file
 		file_size *= 32;
 	}
+}
 
-//	int calc_file_size = item->GetFileSize();
-	int calc_groups = 0;
-	wxUint32 last_group = GetStartGroup();
-//	int last_sector = 0;
-
-	bool rc = true;
-	wxUint32 group_num = last_group;
-	int remain = file_size;
+/// グループ取得計算前処理
+void DiskBasicDirItemMZ::PreCalcAllGroups(int &calc_flags, wxUint32 &group_num, int &remain, int &sec_size, void **user_data)
+{
 	bool is_chain = NeedChainInData();
 	bool is_brd = (GetFileType1() == FILETYPE_MZ_BRD);
-	int sec_size = basic->GetSectorSize();
-	int brd_pos = 0;
-	int brd_cnt = 0;
-	wxUint16 *brd_maps = NULL;
+	calc_flags = ((is_chain ? 1 : 0) | (is_brd ? 2 : 0));
+
+	struct st_brd_params *brd = new struct st_brd_params;
+	brd->pos = 0;
+	brd->cnt = 0;
+	brd->maps = NULL;
+
 	if (is_chain) {
 		// 各セクタの最後2バイト分を減算
 		sec_size -= 2;
@@ -357,93 +285,9 @@ void DiskBasicDirItemMZ::CalcFileSize()
 		// 開始セクタを得る
 		DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
 		// ここが各開始セクタへのポインタマップになっている
-		brd_maps = (wxUint16 *)sector->GetSectorBuffer();
+		brd->maps = (wxUint16 *)sector->GetSectorBuffer();
 
-		group_num = wxUINT16_SWAP_ON_BE(brd_maps[brd_pos]);
-		group_num = basic->InvertUint16(group_num);	// invert
-		group_num /= basic->GetSectorsPerGroup();
-	}
-
-	int limit = basic->GetFatEndGroup() + 1;
-	while(remain > 0 && limit >= 0) {
-		// 使用しているか
-		bool used_group = type->IsUsedGroupNumber(group_num);
-		if (used_group) {
-			if (is_chain) {
-				// BSD
-				int start_sec = type->GetStartSectorFromGroup(group_num);
-				int end_sec = type->GetEndSectorFromGroup(group_num, 0, start_sec, sec_size, remain);
-				group_num = type->GetNextGroupNumber(group_num, end_sec);
-			} else {
-				// BTX,OBJ
-				group_num++;
-				if (is_brd) {
-					// BRD
-					brd_cnt += basic->GetSectorsPerGroup();
-					if (brd_cnt >= 16) {
-						// 16セクタ分に達したらポインタマップを見て次のセクタ番号を得る
-						brd_cnt = 0;
-						if (((brd_pos + 1) * 2) < basic->GetSectorSize()) {
-							brd_pos++;
-						}
-						group_num = wxUINT16_SWAP_ON_BE(brd_maps[brd_pos]);
-						group_num = basic->InvertUint16(group_num);	// invert
-						group_num /= basic->GetSectorsPerGroup();
-					}
-				}
-			}
-			calc_groups++;
-			remain -= (sec_size * basic->GetSectorsPerGroup());
-		} else {
-			limit = 0;
-			rc = false;
-		}
-		limit--;
-	}
-	if (limit < 0) {
-		rc = false;
-	}
-
-	// グループ数を計算
-	if (rc) {
-		groups = calc_groups;
-	}
-}
-
-/// ファイルサイズが適正か
-bool DiskBasicDirItemMZ::IsFileValidSize(int file_type1, int size, int *limit)
-{
-	int limit_size = 0xffff;
-	if (file_type1 == TYPE_NAME_MZ_BRD) {
-		limit_size = (128 * 256 * 16 - 1);
-	}
-	if (limit) *limit = limit_size;
-
-	return (size <= limit_size);
-}
-
-/// 指定ディレクトリのすべてのグループを取得
-void DiskBasicDirItemMZ::GetAllGroups(DiskBasicGroups &group_items)
-{
-	wxUint32 group_num = GetStartGroup();
-	int remain = file_size;
-	bool is_chain = NeedChainInData();
-	bool is_brd = (GetFileType1() == FILETYPE_MZ_BRD);
-	int sec_size = basic->GetSectorSize();
-	int brd_pos = 0;
-	int brd_cnt = 0;
-	wxUint16 *brd_maps = NULL;
-	if (is_chain) {
-		// 各セクタの最後2バイト分を減算
-		sec_size -= 2;
-	}
-	if (is_brd) {
-		// 開始セクタを得る
-		DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
-		// ここが各開始セクタへのポインタマップになっている
-		brd_maps = (wxUint16 *)sector->GetSectorBuffer();
-
-		group_num = wxUINT16_SWAP_ON_BE(brd_maps[brd_pos]);
+		group_num = wxUINT16_SWAP_ON_BE(brd->maps[brd->pos]);
 		group_num = basic->InvertUint16(group_num);	// invert
 		group_num /= basic->GetSectorsPerGroup();
 
@@ -452,50 +296,47 @@ void DiskBasicDirItemMZ::GetAllGroups(DiskBasicGroups &group_items)
 		remain = ((remain + block_size - 1) / block_size) * block_size;
 	}
 
-	int limit = basic->GetFatEndGroup() + 1;
-	while(remain > 0 && limit >= 0) {
-		// 使用しているか
-		bool used_group = type->IsUsedGroupNumber(group_num);
-		if (used_group) {
-			int end_sec = -1;
-			basic->GetNumsFromGroup(group_num, 0, sec_size, remain, group_items, &end_sec);
-			if (is_chain) {
-				// BSD
-				group_num = type->GetNextGroupNumber(group_num, end_sec);
-			} else {
-				// BTX,OBJ
-				group_num++;
-				if (is_brd) {
-					// BRD
-					brd_cnt += basic->GetSectorsPerGroup();
-					if (brd_cnt >= 16) {
-						// 16セクタ分に達したらポインタマップを見て次のセクタ番号を得る
-						brd_cnt = 0;
-						if (((brd_pos + 1) * 2) < basic->GetSectorSize()) {
-							brd_pos++;
-						}
-						group_num = wxUINT16_SWAP_ON_BE(brd_maps[brd_pos]);
-						group_num = basic->InvertUint16(group_num);	// invert
-						group_num /= basic->GetSectorsPerGroup();
-					}
-				}
-			}
-			remain -= (sec_size * basic->GetSectorsPerGroup());
-		} else {
-			limit = 0;
-//			rc = false;
-		}
-		limit--;
-	}
-
-	group_items.SetSize(file_size);
-
-//	if (limit < 0) {
-//		rc = false;
-//	}
+	*user_data = (void *)brd;
 }
 
-void DiskBasicDirItemMZ::GetFileDate(struct tm *tm)
+/// グループ取得計算中処理
+void DiskBasicDirItemMZ::CalcAllGroups(int calc_flags, wxUint32 &group_num, int &remain, int &sec_size, int &end_sec, void *user_data)
+{
+	bool is_chain = ((calc_flags & 1) != 0);
+	bool is_brd = ((calc_flags & 2) != 0);
+	struct st_brd_params *brd = (struct st_brd_params *)user_data;
+
+	if (is_chain) {
+		// BSD
+		group_num = type->GetNextGroupNumber(group_num, end_sec);
+	} else {
+		// BTX,OBJ
+		group_num++;
+		if (is_brd) {
+			// BRD
+			brd->cnt += basic->GetSectorsPerGroup();
+			if (brd->cnt >= 16) {
+				// 16セクタ分に達したらポインタマップを見て次のセクタ番号を得る
+				brd->cnt = 0;
+				if (((brd->pos + 1) * 2) < basic->GetSectorSize()) {
+					brd->pos++;
+				}
+				group_num = wxUINT16_SWAP_ON_BE(brd->maps[brd->pos]);
+				group_num = basic->InvertUint16(group_num);	// invert
+				group_num /= basic->GetSectorsPerGroup();
+			}
+		}
+	}
+}
+
+/// グループ取得計算後処理
+void DiskBasicDirItemMZ::PostCalcAllGroups(void *user_data)
+{
+	struct st_brd_params *brd = (struct st_brd_params *)user_data;
+	delete brd;
+}
+
+void DiskBasicDirItemMZ::GetFileDate(struct tm *tm) const
 {
 	int ymd; 
 	ymd = data->mz.date_time[0] << 16 | data->mz.date_time[1] << 8 | data->mz.date_time[2];
@@ -506,7 +347,7 @@ void DiskBasicDirItemMZ::GetFileDate(struct tm *tm)
 	if (tm->tm_year < 80) tm->tm_year += 100;	// 2000 - 2079
 }
 
-void DiskBasicDirItemMZ::GetFileTime(struct tm *tm)
+void DiskBasicDirItemMZ::GetFileTime(struct tm *tm) const
 {
 	int hms;
 	hms = data->mz.date_time[2] << 8 | data->mz.date_time[3];
@@ -516,14 +357,14 @@ void DiskBasicDirItemMZ::GetFileTime(struct tm *tm)
 	tm->tm_sec = 0;
 }
 
-wxString DiskBasicDirItemMZ::GetFileDateStr()
+wxString DiskBasicDirItemMZ::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
 	return L3DiskUtils::FormatYMDStr(&tm);
 }
 
-wxString DiskBasicDirItemMZ::GetFileTimeStr()
+wxString DiskBasicDirItemMZ::GetFileTimeStr() const
 {
 	struct tm tm;
 	GetFileTime(&tm);
@@ -585,7 +426,7 @@ void DiskBasicDirItemMZ::SetExecuteAddress(int val)
 }
 
 /// ディレクトリアイテムのサイズ
-size_t DiskBasicDirItemMZ::GetDataSize()
+size_t DiskBasicDirItemMZ::GetDataSize() const
 {
 	return sizeof(directory_mz_t);
 }
@@ -619,23 +460,22 @@ wxUint32 DiskBasicDirItemMZ::GetExtraGroup() const
 }
 
 /// ファイルパスから内部ファイル名を生成する
-wxString DiskBasicDirItemMZ::RemakeFileNameStr(const wxString &filepath)
+wxString DiskBasicDirItemMZ::RemakeFileNameStr(const wxString &filepath) const
 {
 	wxString newname;
 	wxFileName fn(filepath);
-	// MZ 17文字
 	newname = fn.GetFullName().Left(GetFileNameSize());
 	return newname;
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMZ::InvalidateChars()
+wxString DiskBasicDirItemMZ::InvalidateChars() const
 {
 	return wxT("\"\\/:*?");
 }
 
 /// 同じファイル名か
-bool DiskBasicDirItemMZ::IsSameFileName(const wxString &filename)
+bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicFileName &filename) const
 {
 	// 属性が0以外
 	if (GetFileType1() == 0) return false;
@@ -645,40 +485,7 @@ bool DiskBasicDirItemMZ::IsSameFileName(const wxString &filename)
 /// データ内部にチェインデータが必要か
 bool DiskBasicDirItemMZ::NeedChainInData()
 {
-	return ((GetFileAttr() & FILE_TYPE_ASCII_MASK) != 0);
-}
-
-bool DiskBasicDirItemMZ::IsDeletable()
-{
-	bool valid = true;
-	int attr = GetFileAttr();
-	if (attr & FILE_TYPE_VOLUME_MASK) {
-		// ボリューム番号は削除できない
-		valid = false;
-	} else if (attr & FILE_TYPE_DIRECTORY_MASK) {
-		wxString name =	GetFileNamePlainStr();
-		if (name == wxT(".") || name == wxT("..")) {
-			// ディレクトリ ".", ".."は削除不可
-			valid = false;
-		}
-	}
-	return valid;
-}
-bool DiskBasicDirItemMZ::IsFileNameEditable()
-{
-	bool valid = true;
-	int attr = GetFileAttr();
-	if (attr & FILE_TYPE_VOLUME_MASK) {
-		// ボリューム番号は編集できない
-		valid = false;
-	} else if (attr & FILE_TYPE_DIRECTORY_MASK) {
-		wxString name =	GetFileNamePlainStr();
-		if (name == wxT(".") || name == wxT("..")) {
-			// ディレクトリ ".", ".."は編集不可
-			valid = false;
-		}
-	}
-	return valid;
+	return (GetFileAttr().MatchType(FILE_TYPE_ASCII_MASK, FILE_TYPE_ASCII_MASK));
 }
 
 //
@@ -695,6 +502,53 @@ bool DiskBasicDirItemMZ::IsFileNameEditable()
 #define IDC_RADIO_TYPE1 51
 #define IDC_CHECK_READONLY 52
 #define IDC_CHECK_SEAMLESS 53
+
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemMZ::GetFileType1Pos() const
+{
+	int t1 = GetFileType1();
+	int val = 0;
+	// MZ
+	switch(t1) {
+	case FILETYPE_MZ_OBJ:
+		val = TYPE_NAME_MZ_OBJ;
+		break;
+	case FILETYPE_MZ_BTX:
+		val = TYPE_NAME_MZ_BTX;
+		break;
+	case FILETYPE_MZ_BSD:
+		val = TYPE_NAME_MZ_BSD;
+		break;
+	case FILETYPE_MZ_BRD:
+		val = TYPE_NAME_MZ_BRD;
+		break;
+	case FILETYPE_MZ_DIR:
+		val = TYPE_NAME_MZ_DIR;
+		break;
+	case FILETYPE_MZ_VOL:
+		val = TYPE_NAME_MZ_VOL;
+		break;
+	default:
+		if (basic->MatchVolumeAttr(t1)) {
+			val = TYPE_NAME_MZ_VOL;	// Volume
+		}
+		break;
+	}
+	return val;
+}
+
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemMZ::GetFileType2Pos() const
+{
+	int t2 = GetFileType2();
+	int val = 0;
+	if (t2 & DATATYPE_MZ_READ_ONLY) {
+		// write protect
+		val |= FILE_TYPE_READONLY_MASK;
+	}
+	val |= ((t2 & DATATYPE_MZ_SEAMLESS) << DATATYPE_MZ_SEAMLESS_POS);
+	return val;
+}
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -786,17 +640,69 @@ int DiskBasicDirItemMZ::GetFileType1InAttrDialog(const IntNameBox *parent) const
 	return radType1->GetSelection();
 }
 
-/// 属性2を得る
-/// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemMZ::GetFileType2InAttrDialog(const IntNameBox *parent) const
+/// リストの位置から属性を返す(プロパティダイアログ用)
+int	DiskBasicDirItemMZ::CalcFileTypeFromPos(int pos)
+{
+	int val = 0;
+	switch(pos) {
+	case TYPE_NAME_MZ_OBJ:
+		val = FILE_TYPE_MACHINE_MASK;	// machine
+		val |= FILE_TYPE_BINARY_MASK;	// binary
+		break;
+	case TYPE_NAME_MZ_BTX:
+		val = FILE_TYPE_BASIC_MASK;		// BASIC
+		val |= FILE_TYPE_BINARY_MASK;	// binary
+		break;
+	case TYPE_NAME_MZ_BSD:
+		val = FILE_TYPE_BASIC_MASK;		// BASIC
+		val |= FILE_TYPE_ASCII_MASK;	// ascii
+		break;
+	case TYPE_NAME_MZ_BRD:
+		val = FILE_TYPE_DATA_MASK;		// DATA
+		val |= FILE_TYPE_RANDOM_MASK;	// random access
+		break;
+	case TYPE_NAME_MZ_DIR:
+		val = FILE_TYPE_DIRECTORY_MASK;		// Sub directory
+		break;
+	case TYPE_NAME_MZ_VOL:
+		val = FILE_TYPE_VOLUME_MASK;		// Volume
+		break;
+	}
+	return val;
+}
+
+/// 機種依存の属性を設定する
+/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemMZ::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkSeamless = (wxCheckBox *)parent->FindWindow(IDC_CHECK_SEAMLESS);
 
-	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
+	int val = CalcFileTypeFromPos(GetFileType1InAttrDialog(parent));
+	val |= chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkSeamless->GetValue() ? (DATATYPE_MZ_SEAMLESS << DATATYPE_MZ_SEAMLESS_POS) : 0;
 
-	return val;
+	DiskBasicDirItem::SetFileAttr(val);
+
+	return true;
+}
+
+/// ファイルサイズが適正か
+/// @param [in]  parent     ダイアログ
+/// @param [in]  size       ファイルサイズ
+/// @param [out] limit      制限サイズ
+/// @return true 適正
+bool DiskBasicDirItemMZ::IsFileValidSize(const IntNameBox *parent, int size, int *limit)
+{
+	int limit_size = 0xffff;
+	int file_type1 = GetFileType1InAttrDialog(parent);
+	if (file_type1 == TYPE_NAME_MZ_BRD) {
+		limit_size = (128 * 256 * 16 - 1);
+	}
+	if (limit) *limit = limit_size;
+
+	return (size <= limit_size);
 }
 
 /// ダイアログ入力後のファイル名チェック

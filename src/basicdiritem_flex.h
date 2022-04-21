@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for FLEX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_FLEX_H_
 #define _BASICDIRITEM_FLEX_H_
 
 #include "basicdiritem.h"
+
 
 // FLEX属性名
 extern const char *gTypeNameFLEX[];
@@ -51,6 +55,9 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 public:
 	DiskBasicDirItemFLEX(DiskBasic *basic);
 	DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
@@ -60,30 +67,26 @@ public:
 	bool			Check(bool &last);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		InvalidateChars();
+	wxString		InvalidateChars() const;
 	/// ダイアログ入力前のファイル名を変換 大文字にする
-	void			ConvertToFileNameStr(wxString &filename);
+	void			ConvertToFileNameStr(wxString &filename) const;
 	/// ダイアログ入力後のファイル名文字列を変換 大文字にする
-	void			ConvertFromFileNameStr(wxString &filename);
+	void			ConvertFromFileNameStr(wxString &filename) const;
 	/// ファイル名は必須（空文字不可）か
-	bool			IsFileNameRequired() { return true; }
+	bool			IsFileNameRequired() const { return true; }
 
 	/// 削除
 	bool			Delete(wxUint8 code);
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void			SetFileAttr(const DiskBasicFileType &file_type);
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
+//	/// リストの位置から属性を返す(プロパティダイアログ用)
+//	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr();
+	wxString		GetFileAttrStr() const;
 
 	/// ファイルサイズをセット
 	void			SetFileSize(int val);
@@ -106,25 +109,25 @@ public:
 	bool			HasDate() const { return true; }
 	bool			HasTime() const { return false; }
 	/// 日付を返す
-	void			GetFileDate(struct tm *tm);
+	void			GetFileDate(struct tm *tm) const;
 	/// 時間を返す
-	void			GetFileTime(struct tm *tm);
+	void			GetFileTime(struct tm *tm) const;
 	/// 日付を返す
-	wxString		GetFileDateStr();
+	wxString		GetFileDateStr() const;
 	/// 時間を返す
-	wxString		GetFileTimeStr();
+	wxString		GetFileTimeStr() const;
 	/// 日付をセット
 	void			SetFileDate(const struct tm *tm);
 	/// 時間をセット
 	void			SetFileTime(const struct tm *tm);
 
 	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize();
+	size_t			GetDataSize() const;
 
 	/// アイテムを削除できるか
-	bool			IsDeletable();
-	/// ファイル名を編集できるか
-	bool			IsFileNameEditable();
+	bool			IsDeletable() const;
+//	/// ファイル名を編集できるか
+//	bool			IsFileNameEditable() const;
 
 
 	/// 最初のトラック番号をセット
@@ -151,12 +154,8 @@ public:
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}
 };
 

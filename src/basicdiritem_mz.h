@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for MZ DISK BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_MZ_H_
 #define _BASICDIRITEM_MZ_H_
 
-#include "basicdiritem.h"
+#include "basicdiritem_mz_base.h"
+
 
 /// MZ S-BASIC 属性名
 extern const char *gTypeNameMZ[];
@@ -37,11 +41,11 @@ enum en_data_type_mask_mz {
 #define DATATYPE_MZ_SEAMLESS_POS  20
 
 /// ディレクトリ１アイテム MZ DISK BASIC
-class DiskBasicDirItemMZ : public DiskBasicDirItem
+class DiskBasicDirItemMZ : public DiskBasicDirItemMZBase
 {
 private:
-	DiskBasicDirItemMZ() : DiskBasicDirItem() {}
-	DiskBasicDirItemMZ(const DiskBasicDirItemMZ &src) : DiskBasicDirItem(src) {}
+	DiskBasicDirItemMZ() : DiskBasicDirItemMZBase() {}
+	DiskBasicDirItemMZ(const DiskBasicDirItemMZ &src) : DiskBasicDirItemMZBase(src) {}
 
 	/// ファイル名を格納する位置を返す
 	wxUint8 *GetFileNamePos(size_t &len, bool *invert = NULL) const;
@@ -60,94 +64,98 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int	    GetFileType1Pos() const;
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int	    GetFileType2Pos() const;
+	/// リストの位置から属性を返す(プロパティダイアログ用)
+	int		CalcFileTypeFromPos(int pos);
+	/// 属性1を得る
+	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
+	/// データ内にファイルサイズをセット
+	void	SetFileSizeBase(int val);
+	/// データ内のファイルサイズを返す
+	int		GetFileSizeBase() const;
+	/// ファイルサイズとグループ数を計算する前処理
+	void	PreCalcFileSize();
+	/// グループ取得計算前処理
+	void	PreCalcAllGroups(int &calc_flags, wxUint32 &group_num, int &remain, int &sec_size, void **user_data);
+	/// グループ取得計算中処理
+	void	CalcAllGroups(int calc_flags, wxUint32 &group_num, int &remain, int &sec_size, int &end_sec, void *user_data);
+	/// グループ取得計算後処理
+	void	PostCalcAllGroups(void *user_data);
+
 public:
 	DiskBasicDirItemMZ(DiskBasic *basic);
 	DiskBasicDirItemMZ(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
 	DiskBasicDirItemMZ(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
 	/// ディレクトリアイテムのチェック
-	bool			Check(bool &last);
+	bool	Check(bool &last);
 
-	/// 削除
-	bool			Delete(wxUint8 code);
 	/// ファイル名が一致するか
-	bool			IsSameFileName(const wxString &filename);
+	bool	IsSameFileName(const DiskBasicFileName &filename) const;
 	/// ファイルパスから内部ファイル名を生成する
-	wxString		RemakeFileNameStr(const wxString &filepath);
+	wxString RemakeFileNameStr(const wxString &filepath) const;
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		InvalidateChars();
+	wxString InvalidateChars() const;
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void	SetFileAttr(const DiskBasicFileType &file_type);
 	/// ディレクトリをクリア ファイル新規作成時
-	void			ClearData();
-	/// ディレクトリを初期化 未使用にする
-	void			InitialData();
+	void	ClearData();
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr();
+	wxString GetFileAttrStr() const;
 
 	/// ファイルサイズをセット
-	void			SetFileSize(int val);
-	/// ファイルサイズとグループ数を計算する
-	void			CalcFileSize();
-	/// ファイルサイズが適正か
-	bool			IsFileValidSize(int file_type1, int size, int *limit);
+	void	SetFileSize(int val);
 
-	/// 指定ディレクトリのすべてのグループを取得
-	void			GetAllGroups(DiskBasicGroups &group_items);
 	/// 最初のグループ番号をセット
-	void			SetStartGroup(wxUint32 val);
+	void	SetStartGroup(wxUint32 val);
 	/// 最初のグループ番号を返す
-	wxUint32		GetStartGroup() const;
+	wxUint32 GetStartGroup() const;
 	/// 追加のグループ番号を返す
-	wxUint32		GetExtraGroup() const;
+	wxUint32 GetExtraGroup() const;
 
 	/// アイテムが日時を持っているか
-	bool			HasDateTime() const { return true; }
-	bool			HasDate() const { return true; }
-	bool			HasTime() const { return true; }
+	bool	HasDateTime() const { return true; }
+	bool	HasDate() const { return true; }
+	bool	HasTime() const { return true; }
 	/// 日付を返す
-	void			GetFileDate(struct tm *tm);
+	void	GetFileDate(struct tm *tm) const;
 	/// 時間を返す
-	void			GetFileTime(struct tm *tm);
+	void	GetFileTime(struct tm *tm) const;
 	/// 日付を返す
-	wxString		GetFileDateStr();
+	wxString GetFileDateStr() const;
 	/// 時間を返す
-	wxString		GetFileTimeStr();
+	wxString GetFileTimeStr() const;
 	/// 日付をセット
-	void			SetFileDate(const struct tm *tm);
+	void	SetFileDate(const struct tm *tm);
 	/// 時間をセット
-	void			SetFileTime(const struct tm *tm);
+	void	SetFileTime(const struct tm *tm);
 
 	/// アイテムがアドレスを持っているか
-	bool			HasAddress() const { return true; }
+	bool	HasAddress() const { return true; }
 	/// 開始アドレスを返す
-	int				GetStartAddress() const;
+	int		GetStartAddress() const;
 	/// 実行アドレスを返す
-	int				GetExecuteAddress() const;
+	int		GetExecuteAddress() const;
 	/// 開始アドレスをセット
-	void			SetStartAddress(int val);
+	void	SetStartAddress(int val);
 	/// 実行アドレスをセット
-	void			SetExecuteAddress(int val);
+	void	SetExecuteAddress(int val);
 
 	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize();
+	size_t	GetDataSize() const;
 
-	/// アイテムを削除できるか
-	bool			IsDeletable();
-	/// ファイル名を編集できるか
-	bool			IsFileNameEditable();
 	/// データをチェインする必要があるか（非連続データか）
-	bool			NeedChainInData();
+	bool	NeedChainInData();
 
 
 	/// @name プロパティダイアログ用
@@ -156,12 +164,10 @@ public:
 	void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// 機種依存の属性を設定する
+	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
+	/// ファイルサイズが適正か
+	bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit);
 	/// ダイアログ入力後のファイル名チェック
 	bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	//@}

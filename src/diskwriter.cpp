@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクライター
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskwriter.h"
 #include <wx/filename.h>
 #include <wx/wfstream.h>

@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic error messages
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicerror.h"
 #include <wx/intl.h>
 #include <wx/wfstream.h>
 #include <wx/numformatter.h>
+
 
 const char *gDiskBasicErrorMsgs[] = {
 	//	ERR_NONE
@@ -85,6 +89,11 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("Cannot delete '%ls'."),
 	//	ERRV_CANNOT_DELETE_DIRECTORY v:1
 	wxTRANSLATE("Cannot delete '%ls' which is not empty."),
+	//	ERRV_ALREADY_DELETED v:1
+	wxTRANSLATE("File '%ls' is already deleted."),
+	//	ERRV_ALREADY_EXISTS v:1
+	wxTRANSLATE("File '%ls' already exists."),
+
 	//	ERRV_END  v:1
 	wxTRANSLATE("Unknown error. code:%d"),
 	NULL

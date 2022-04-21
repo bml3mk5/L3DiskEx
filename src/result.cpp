@@ -2,12 +2,14 @@
 ///
 /// @brief 結果保存用
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "result.h"
 #include <wx/intl.h>
 #include <wx/msgdlg.h>
 #include "logging.h"
-//#include "resultbox.h"
+
 
 //
 //
@@ -106,6 +108,4 @@ void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
 	}
 
 	wxMessageBox(msg, caption, style);
-//	ResultBox dlg(NULL, wxID_ANY, caption, msg);
-//	dlg.ShowModal();
 }

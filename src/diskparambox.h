@@ -2,6 +2,8 @@
 ///
 /// @brief ディスクパラメータダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _DISKPARAMBOX_H_
 #define _DISKPARAMBOX_H_
@@ -16,6 +18,7 @@ _("'%s' should only contain ASCII characters.")
 #include "common.h"
 #include <wx/dialog.h>
 #include <wx/arrstr.h>
+
 
 class wxComboBox;
 class wxChoice;

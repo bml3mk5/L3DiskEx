@@ -1,13 +1,17 @@
 ﻿/// @file basictype_fat12.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_FAT12_H_
 #define _BASICTYPE_FAT12_H_
 
 #include "common.h"
 #include "basiccommon.h"
 #include "basictype.h"
+
 
 #pragma pack(1)
 /// FAT BPB
@@ -29,7 +33,11 @@ typedef struct st_fat_bpb {
 #pragma pack()
 
 
-/// FAT12の処理
+/** @class DiskBasicTypeFAT12
+
+@brief FAT12の処理
+
+*/
 class DiskBasicTypeFAT12 : public DiskBasicType
 {
 protected:

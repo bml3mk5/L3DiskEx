@@ -1,7 +1,10 @@
 ﻿/// @file basictype_fm.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type for F-BASIC 
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_FM_H_
 #define _BASICTYPE_FM_H_
 
@@ -9,7 +12,16 @@
 #include "basiccommon.h"
 #include "basictype_fat8.h"
 
-/// F-BASICの処理
+
+/** @class DiskBasicTypeFM
+
+@brief F-BASICの処理
+
+DiskBasicParam
+@li IDSectorPosition : IDセクタの論理セクタ番号
+@li IDString         : IDセクタの最初の文字列
+
+*/
 class DiskBasicTypeFM : public DiskBasicTypeFAT8F
 {
 private:

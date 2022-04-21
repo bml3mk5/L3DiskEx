@@ -2,6 +2,9 @@
 ///
 /// @brief 右パネル
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _UIRPANEL_H_
 #define _UIRPANEL_H_
 
@@ -9,6 +12,7 @@
 #include <wx/string.h>
 #include <wx/panel.h>
 #include <wx/splitter.h>
+
 
 class L3DiskFrame;
 class L3DiskRPanel;

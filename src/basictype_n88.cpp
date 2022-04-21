@@ -1,7 +1,10 @@
 ﻿/// @file basictype_n88.cpp
 ///
-/// @brief disk basic fat type for N88-BASIC
+/// @brief disk basic type for N88-BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_n88.h"
 #include "basicfmt.h"
 #include "basicdiritem.h"
@@ -49,11 +52,30 @@ wxUint32 DiskBasicTypeN88::GetEmptyGroupNumber()
 	return new_num;
 }
 
+/// FATエリアをチェック
+/// @return false エラーあり
+bool DiskBasicTypeN88::CheckFat()
+{
+	bool valid = DiskBasicTypeFAT8::CheckFat();
+	if (valid) {
+		// FAT,ディレクトリエリアはシステム予約となっているか
+		wxArrayInt groups = basic->GetReservedGroups();
+		for(size_t idx = 0; idx < groups.Count(); idx++) {
+			wxUint32 grp = GetGroupNumber((wxUint32)groups.Item(idx));
+			if (grp != basic->GetGroupSystemCode()) {
+				valid = false;
+				break;
+			}
+		}
+	}
+	return valid;
+}
+
 /// セクタデータを指定コードで埋める
 void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 {
 	// FAT,DIRエリアが属するトラック、サイド
-	int sec_pos = basic->GetFatStartSector() + (basic->GetFatSideNumber() * basic->GetSectorsOnBasic()) - 1;
+	int sec_pos = basic->GetFatStartSector() + (basic->GetFatSideNumber() * basic->GetSectorsPerTrackOnBasic()) - 1;
 
 	if (track == basic->GetManagedTrack(sec_pos)) {
 		// ファイル管理エリアの場合(指定サイドのみ)

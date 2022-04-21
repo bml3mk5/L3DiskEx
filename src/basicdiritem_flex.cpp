@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic directory item for FLEX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_flex.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
 #include "utils.h"
+
 
 //
 //
@@ -36,7 +40,7 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *sect
 DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse)
 	: DiskBasicDirItem(basic, num, track, side, sector, secpos, data, unuse)
 {
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 
 	CalcFileSize();
 }
@@ -103,7 +107,7 @@ bool DiskBasicDirItemFLEX::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
 	data->flex.name[0] = code;
-	used = false;
+	Used(false);
 	return true;
 }
 
@@ -128,49 +132,53 @@ bool DiskBasicDirItemFLEX::Check(bool &last)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemFLEX::InvalidateChars()
+wxString DiskBasicDirItemFLEX::InvalidateChars() const
 {
 	return wxT(" !\"#$%&'()*+,/:;<=>?@[\\]^{|}~");
 }
 
 /// ダイアログ入力前のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemFLEX::ConvertToFileNameStr(wxString &filename)
+void DiskBasicDirItemFLEX::ConvertToFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }
 
 /// ダイアログ入力後のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemFLEX::ConvertFromFileNameStr(wxString &filename)
+void DiskBasicDirItemFLEX::ConvertFromFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }
 
-void DiskBasicDirItemFLEX::SetFileAttr(int file_type)
+void DiskBasicDirItemFLEX::SetFileAttr(const DiskBasicFileType &file_type)
 {
+	int ftype = file_type.GetType();
+	if (ftype == -1) return;
+
 	int val = 0;
-	if (file_type & FILE_TYPE_READONLY_MASK) {
+	if (ftype & FILE_TYPE_READONLY_MASK) {
 		val |= FILETYPE_MASK_FLEX_READ_ONLY;
 	}
-	if (file_type & FILE_TYPE_UNDELETE_MASK) {
+	if (ftype & FILE_TYPE_UNDELETE_MASK) {
 		val |= FILETYPE_MASK_FLEX_UNDELETE;
 	}
-	if (file_type & FILE_TYPE_WRITEONLY_MASK) {
+	if (ftype & FILE_TYPE_WRITEONLY_MASK) {
 		val |= FILETYPE_MASK_FLEX_WRITE_ONLY;
 	}
-	if (file_type & FILE_TYPE_HIDDEN_MASK) {
+	if (ftype & FILE_TYPE_HIDDEN_MASK) {
 		val |= FILETYPE_MASK_FLEX_HIDDEN;
 	}
-	if (file_type & FILE_TYPE_RANDOM_MASK) {
-		int val2 = (file_type >> FILETYPE_FLEX_RANDOM_POS);
+	if (ftype & FILE_TYPE_RANDOM_MASK) {
+		int val2 = file_type.GetOrigin();
 		SetFileType2(val2 ? val2 : 0x02);
 	}
 
 	SetFileType1(val);
 }
 
-int DiskBasicDirItemFLEX::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemFLEX::GetFileAttr() const
 {
 	int val = 0;
+	int random = 0;
 	int type1 = GetFileType1();
 	if (type1 & FILETYPE_MASK_FLEX_READ_ONLY) {
 		val |= FILE_TYPE_READONLY_MASK;
@@ -186,30 +194,13 @@ int DiskBasicDirItemFLEX::GetFileAttr()
 	}
 	if (GetFileType2() != 0) {
 		val |= FILE_TYPE_RANDOM_MASK;
-		val |= (GetFileType2() << FILETYPE_FLEX_RANDOM_POS);
+		random = GetFileType2();
 	}
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFLEX::GetFileType1Pos()
-{
-	return GetFileAttr();
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFLEX::GetFileType2Pos()
-{
-	return GetFileType2();
-}
-
-int	DiskBasicDirItemFLEX::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	return (pos1 | pos2);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), val, random);
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemFLEX::GetFileAttrStr()
+wxString DiskBasicDirItemFLEX::GetFileAttrStr() const
 {
 	wxString str;
 	int oval = GetFileType1();
@@ -247,7 +238,7 @@ void DiskBasicDirItemFLEX::SetFileSize(int val)
 /// ファイルサイズとグループ数を計算する
 void DiskBasicDirItemFLEX::CalcFileSize()
 {
-	if (!used) return;
+	if (!IsUsed()) return;
 
 	// セクタ先頭4バイトを除く
 	int sec_size = (basic->GetSectorSize() - 4);
@@ -352,7 +343,7 @@ void DiskBasicDirItemFLEX::GetAllGroups(DiskBasicGroups &group_items)
 //	}
 }
 
-void DiskBasicDirItemFLEX::GetFileDate(struct tm *tm)
+void DiskBasicDirItemFLEX::GetFileDate(struct tm *tm) const
 {
 	tm->tm_year = (data->flex.year % 100);
 	if (tm->tm_year < 80) tm->tm_year += 100;
@@ -360,21 +351,21 @@ void DiskBasicDirItemFLEX::GetFileDate(struct tm *tm)
 	tm->tm_mday = data->flex.day;
 }
 
-void DiskBasicDirItemFLEX::GetFileTime(struct tm *tm)
+void DiskBasicDirItemFLEX::GetFileTime(struct tm *tm) const
 {
 	tm->tm_hour = 0; 
 	tm->tm_min = 0;
 	tm->tm_sec = 0;
 }
 
-wxString DiskBasicDirItemFLEX::GetFileDateStr()
+wxString DiskBasicDirItemFLEX::GetFileDateStr() const
 {
 	struct tm tm;
 	GetFileDate(&tm);
 	return L3DiskUtils::FormatYMDStr(&tm);
 }
 
-wxString DiskBasicDirItemFLEX::GetFileTimeStr()
+wxString DiskBasicDirItemFLEX::GetFileTimeStr() const
 {
 	return wxEmptyString;
 }
@@ -393,7 +384,7 @@ void DiskBasicDirItemFLEX::SetFileTime(const struct tm *tm)
 }
 
 /// ディレクトリアイテムのサイズ
-size_t DiskBasicDirItemFLEX::GetDataSize()
+size_t DiskBasicDirItemFLEX::GetDataSize() const
 {
 	return sizeof(directory_flex_t);
 }
@@ -432,15 +423,17 @@ wxUint32 DiskBasicDirItemFLEX::GetLastGroup() const
 	return val;
 }
 
-bool DiskBasicDirItemFLEX::IsDeletable()
+bool DiskBasicDirItemFLEX::IsDeletable() const
 {
 	return true;
 }
+#if 0
 /// ファイル名を編集できるか
-bool DiskBasicDirItemFLEX::IsFileNameEditable()
+bool DiskBasicDirItemFLEX::IsFileNameEditable() const
 {
 	return true;
 }
+#endif
 
 /// 最初のトラック番号をセット
 void DiskBasicDirItemFLEX::SetStartTrack(wxUint8 val)
@@ -517,8 +510,8 @@ void DiskBasicDirItemFLEX::SetFileTypeForAttrDialog(int show_flags, const wxStri
 /// @param [in] flags
 void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+	int file_type_1 = GetFileAttr().GetType();
+	int file_type_2 = GetFileType2();
 	wxCheckBox *chkReadOnly;
 	wxCheckBox *chkUndelete;
 	wxCheckBox *chkWriteOnly;
@@ -546,7 +539,7 @@ void DiskBasicDirItemFLEX::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	sizer->Add(staType4, flags);
 
 	// ユーザ定義データ(ランダムファイル属性値)
-	parent->SetUserData(file_type_1 & FILETYPE_FLEX_RANDOM_MASK);
+	parent->SetUserData(file_type_2);
 }
 
 /// 属性を変更した際に呼ばれるコールバック
@@ -554,29 +547,30 @@ void DiskBasicDirItemFLEX::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
 }
 
-/// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemFLEX::GetFileType1InAttrDialog(const IntNameBox *parent) const
+/// 機種依存の属性を設定する
+/// @param [in]     parent  プロパティダイアログ
+/// @param [in,out] errinfo エラー情報
+bool DiskBasicDirItemFLEX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkUndelete = (wxCheckBox *)parent->FindWindow(IDC_CHECK_UNDELETE);
 	wxCheckBox *chkWriteOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_WRITEONLY);
 	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
+	wxCheckBox *chkRandom = (wxCheckBox *)parent->FindWindow(IDC_CHECK_RANDOM);
 
 	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkUndelete->GetValue() ? FILE_TYPE_UNDELETE_MASK : 0;
 	val |= chkWriteOnly->GetValue() ? FILE_TYPE_WRITEONLY_MASK : 0;
 	val |= chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
 
-	return val;
-}
-
-/// 属性2を得る
-/// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemFLEX::GetFileType2InAttrDialog(const IntNameBox *parent) const
-{
-	wxCheckBox *chkRandom = (wxCheckBox *)parent->FindWindow(IDC_CHECK_RANDOM);
-
 	// ユーザ定義データ(ランダムファイル属性値)
-	return (chkRandom->GetValue() ? (FILE_TYPE_RANDOM_MASK | parent->GetUserData()) : 0);
+	int random = 0;
+	if (chkRandom->GetValue()) {
+		val |= FILE_TYPE_RANDOM_MASK;
+		random = parent->GetUserData();
+	}
+
+	DiskBasicDirItem::SetFileAttr(val, random);
+
+	return true;
 }

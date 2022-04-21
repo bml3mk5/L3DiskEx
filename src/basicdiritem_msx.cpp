@@ -2,9 +2,13 @@
 ///
 /// @brief disk basic directory item for MSX DISK BASIC / MSX-DOS
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_msx.h"
 #include "basicfmt.h"
 #include "charcodes.h"
+
 
 ///
 ///
@@ -23,17 +27,17 @@ DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int num, int track, i
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemMSX::InvalidateChars()
+wxString DiskBasicDirItemMSX::InvalidateChars() const
 {
 	return wxT(" \"\\/:;*?+,=[]");
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemMSX::GetFileAttrStr()
+wxString DiskBasicDirItemMSX::GetFileAttrStr() const
 {
 	wxString attr;
 	// MSX-DOS
-	if (GetFileAttr() & FILE_TYPE_HIDDEN_MASK) {
+	if (GetFileAttr().MatchType(FILE_TYPE_HIDDEN_MASK, FILE_TYPE_HIDDEN_MASK)) {
 		attr = wxGetTranslation(gTypeNameMS[TYPE_NAME_MS_HIDDEN]);	// hidden
 	}
 	if (attr.IsEmpty()) {
@@ -43,7 +47,7 @@ wxString DiskBasicDirItemMSX::GetFileAttrStr()
 }
 
 /// 日付のタイトル名（ダイアログ用）
-wxString DiskBasicDirItemMSX::GetFileDateTimeTitle()
+wxString DiskBasicDirItemMSX::GetFileDateTimeTitle() const
 {
 	return _("Created Date:");
 }
@@ -76,8 +80,8 @@ void DiskBasicDirItemMSX::SetFileTypeForAttrDialog(int show_flags, const wxStrin
 /// @param [in] flags
 void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags)
 {
-	int file_type_1 = GetFileType1Pos();
-	int file_type_2 = GetFileType2Pos();
+	int file_type_1 = GetFileAttr().GetType();
+	int file_type_2 = 0;
 	wxCheckBox *chkHidden;
 
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
@@ -94,19 +98,14 @@ void DiskBasicDirItemMSX::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 //	controls.Add(chkHidden);
 }
 
-/// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemMSX::GetFileType1InAttrDialog(const IntNameBox *parent) const
-{
-	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
-
-	return chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
-}
-
 /// 機種依存の属性を設定する
 bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
-	DiskBasicDirItem::SetAttrInAttrDialog(parent, errinfo);
+	wxCheckBox *chkHidden = (wxCheckBox *)parent->FindWindow(IDC_CHECK_HIDDEN);
+
+	int val = chkHidden->GetValue() ? FILE_TYPE_HIDDEN_MASK : 0;
+
+	DiskBasicDirItem::SetFileAttr(val);
 
 	return true;
 }

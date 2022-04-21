@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic type for CP/M
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_CPM_H_
 #define _BASICTYPE_CPM_H_
 
@@ -9,7 +12,12 @@
 #include "basiccommon.h"
 #include "basictype.h"
 
-/// CP/Mの処理
+
+/** @class DiskBasicTypeCPM
+
+@brief CP/Mの処理
+
+*/
 class DiskBasicTypeCPM : public DiskBasicType
 {
 private:
@@ -44,7 +52,7 @@ public:
 	/// @name check / assign directory area
 	//@{
 	/// ルートディレクトリをアサイン
-	bool		AssignRootDirectory(int start_sector, int end_sector);
+	bool		AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	//@}
 
 	/// @name disk size

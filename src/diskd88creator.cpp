@@ -2,11 +2,14 @@
 ///
 /// @brief D88ディスクイメージ作成
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "diskd88creator.h"
 #include "diskparam.h"
 #include "diskd88.h"
 #include "diskresult.h"
+
 
 //
 //
@@ -126,6 +129,7 @@ wxUint32 DiskD88Creator::CreateDisk(int disk_number, short mod_flags)
 		} else {
 			// テンプレートから設定
 			disk->SetDiskParam(*param);
+			disk->AllocDiskBasics();
 		}
 		disk->SetSizeWithoutHeader((wxUint32)create_size);
 		file->Add(disk, mod_flags);

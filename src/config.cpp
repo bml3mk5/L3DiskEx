@@ -2,9 +2,13 @@
 ///
 /// @brief 設定ファイル入出力
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "config.h"
 #include <wx/filename.h>
 #include <wx/fileconf.h>
+
 
 Params::Params()
 {

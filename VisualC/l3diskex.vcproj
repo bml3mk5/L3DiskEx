@@ -238,11 +238,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_mz_base.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_n88.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_os9.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_tfdos.cpp"
 				>
 			</File>
 			<File
@@ -318,11 +326,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_mz_base.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_n88.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_os9.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_tfdos.cpp"
 				>
 			</File>
 			<File
@@ -524,11 +540,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basicdiritem_mz_base.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basicdiritem_n88.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basicdiritem_os9.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basicdiritem_tfdos.h"
 				>
 			</File>
 			<File
@@ -604,11 +628,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\basictype_mz_base.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\basictype_n88.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\basictype_os9.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\basictype_tfdos.h"
 				>
 			</File>
 			<File

@@ -2,9 +2,13 @@
 ///
 /// @brief disk basic fat type
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_fat8.h"
 #include "basicfmt.h"
 #include "basicdiritem.h"
+
 
 //
 //

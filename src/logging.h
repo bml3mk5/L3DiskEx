@@ -2,11 +2,15 @@
 ///
 /// @brief メッセージ保存用
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _MY_LOGGING_H_
 #define _MY_LOGGING_H_
 
 #include "common.h"
 #include <stdarg.h>
+
 
 class wxFFile;
 

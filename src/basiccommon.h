@@ -2,8 +2,12 @@
 ///
 /// @brief disk basic common
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICCOMMON_H_
 #define _BASICCOMMON_H_
+
 
 #include "common.h"
 #include <wx/string.h>
@@ -230,9 +234,19 @@ typedef struct st_directory_cpm {
 	} map; // array of allocation block number
 } directory_cpm_t;
 
+/// ディレクトリエントリ TF-DOS (16bytes)
+typedef struct st_directory_tfdos {
+	wxUint8  type;
+	wxUint8  name[8];	// file name uses $0D as space for padding it
+	wxUint16 file_size;
+	wxUint16 load_addr;
+	wxUint16 exec_addr;
+	wxUint8  track;
+} directory_tfdos_t;
+
 /// ディレクトリエントリ サイズに注意！
 typedef union un_directory {
-	wxUint8				name[11];
+	wxUint8				name[16];
 	directory_l3_2d_t	l3_2d;
 	directory_fat8f_t	fat8f;
 	directory_msdos_t	msdos;
@@ -242,6 +256,7 @@ typedef union un_directory {
 	directory_flex_t	flex;
 	directory_os9_t		os9;
 	directory_cpm_t		cpm;
+	directory_tfdos_t	tfdos;
 } directory_t;
 #pragma pack()
 
@@ -259,6 +274,34 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_FLEX	= 8,
 	FORMAT_TYPE_OS9		= 9,
 	FORMAT_TYPE_CPM		= 10,
+	FORMAT_TYPE_TFDOS	= 71,
+};
+
+/// 属性保存クラス
+class DiskBasicFileType
+{
+private:
+	DiskBasicFormatType format;	///< DISK BASIC種類
+	int type;					///< 共通属性 enum #en_file_type_mask の値の組み合わせ
+	int origin;					///< 本来の属性
+
+public:
+	DiskBasicFileType();
+	DiskBasicFileType(DiskBasicFormatType n_format, int n_type, int n_origin = 0);
+	~DiskBasicFileType();
+
+	DiskBasicFormatType GetFormat() const { return format; }
+	void SetFormat(DiskBasicFormatType val) { format = val; }
+	int GetType() const { return type; }
+	void SetType(int val) { type = val; }
+	int GetOrigin() const { return origin; }
+	void SetOrigin(int val) { origin = val; }
+
+	bool MatchType(int mask, int value) const;
+	bool UnmatchType(int mask, int value) const;
+
+	bool IsVolume() const;
+	bool IsDirectory() const;
 };
 
 //
@@ -270,6 +313,7 @@ enum en_fat_availability {
 	FAT_AVAIL_SYSTEM,
 	FAT_AVAIL_USED,
 	FAT_AVAIL_USED_LAST,
+	FAT_AVAIL_MISSING
 };
 
 #endif /* _BASICCOMMON_H_ */

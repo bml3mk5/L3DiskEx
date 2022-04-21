@@ -2,6 +2,8 @@
 ///
 /// @brief Rawエクスポート＆インポートダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "rawexpbox.h"
 #include <wx/stattext.h>
@@ -10,6 +12,7 @@
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
 #include "diskd88.h"
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(RawExpBox, wxDialog)

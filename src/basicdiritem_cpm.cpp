@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for CP/M
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_cpm.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+
 
 //
 //
@@ -62,7 +66,7 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int num, int track, i
 
 	next_item = NULL;
 
-	used = CheckUsed(unuse);
+	Used(CheckUsed(unuse));
 }
 
 /// ファイル名を格納する位置を返す
@@ -211,19 +215,19 @@ void DiskBasicDirItemCPM::SetFileExt(const wxUint8 *fileext, int length)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemCPM::InvalidateChars()
+wxString DiskBasicDirItemCPM::InvalidateChars() const
 {
 	return wxT(" \"*,:;<=>?[\\]");
 }
 
 /// ダイアログ入力前のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemCPM::ConvertToFileNameStr(wxString &filename)
+void DiskBasicDirItemCPM::ConvertToFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }
 
 /// ダイアログ入力後のファイル名文字列を変換 大文字にする
-void DiskBasicDirItemCPM::ConvertFromFileNameStr(wxString &filename)
+void DiskBasicDirItemCPM::ConvertFromFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }
@@ -240,7 +244,7 @@ bool DiskBasicDirItemCPM::Delete(wxUint8 code)
 {
 	// 削除はエントリの先頭にコードを入れるだけ
 	SetFileType1(code);
-	used = false;
+	Used(false);
 
 	// 複数ある時
 	if (next_item) {
@@ -256,27 +260,30 @@ bool DiskBasicDirItemCPM::Check(bool &last)
 {
 	if (!data) return false;
 
-	bool valid = true;
+	bool valid = false;
 	// ユーザIDが0～15でファイル名がオール0ならダメ
 	if (GetFileType1() < 0x10) {
 		wxUint8 name[sizeof(data->cpm.name) + 1];
-		memcpy(name, data->cpm.name, sizeof(data->cpm.name));
-		if (basic->IsDataInverted()) mem_invert(name, sizeof(data->cpm.name));
-		valid = false;
+		basic->InvertMem(data->cpm.name, sizeof(data->cpm.name), name);
 		for(size_t n=0; n<sizeof(data->cpm.name); n++) {
 			if (name[n] != 0) {
 				valid = true;
 				break;
 			}
 		}
+		if (valid && !last) {
+			valid = DiskBasicDirItem::Check(last);
+		}
+	} else {
+		valid = !CheckUsed(false);
 	}
 	return valid;
 }
 
-void DiskBasicDirItemCPM::SetFileAttr(int file_type)
+void DiskBasicDirItemCPM::SetFileAttr(const DiskBasicFileType &file_type)
 {
-	SetFileType1((file_type & FILETYPE_CPM_USERID_MASK) >> FILETYPE_CPM_USERID_POS);
-	SetFileType2(file_type);
+	SetFileType1(file_type.GetOrigin());
+	SetFileType2(file_type.GetType());
 
 	// 複数ある場合
 	if (next_item) {
@@ -284,34 +291,13 @@ void DiskBasicDirItemCPM::SetFileAttr(int file_type)
 	}
 }
 
-int DiskBasicDirItemCPM::GetFileAttr()
+DiskBasicFileType DiskBasicDirItemCPM::GetFileAttr() const
 {
-	int val = GetFileType1();	// user id
-	val <<= FILETYPE_CPM_USERID_POS;
-	val &= FILETYPE_CPM_USERID_MASK;
-	val |= GetFileType2();		// attr in extend
-	return val;
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemCPM::GetFileType1Pos()
-{
-	return GetFileType1();
-}
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemCPM::GetFileType2Pos()
-{
-	return GetFileType2();
-}
-
-int	DiskBasicDirItemCPM::CalcFileTypeFromPos(int pos1, int pos2)
-{
-	return (((pos1 << FILETYPE_CPM_USERID_POS) & FILETYPE_CPM_USERID_MASK) | pos2);
+	return DiskBasicFileType(basic->GetFormatTypeNumber(), GetFileType2(), GetFileType1());
 }
 
 /// 属性の文字列を返す(ファイル一覧画面表示用)
-wxString DiskBasicDirItemCPM::GetFileAttrStr()
+wxString DiskBasicDirItemCPM::GetFileAttrStr() const
 {
 	int val = GetFileType2();
 	wxString str;
@@ -343,7 +329,7 @@ void DiskBasicDirItemCPM::SetFileSize(int val)
 /// ファイルサイズとグループ数を計算する
 void DiskBasicDirItemCPM::CalcFileSize()
 {
-	if (used) {
+	if (IsUsed()) {
 		file_size = 0;
 
 		int bytes_per_group = basic->GetSectorSize() * basic->GetSectorsPerGroup();
@@ -392,7 +378,7 @@ void DiskBasicDirItemCPM::GetAllGroups(DiskBasicGroups &group_items)
 }
 
 /// ディレクトリアイテムのサイズ
-size_t DiskBasicDirItemCPM::GetDataSize()
+size_t DiskBasicDirItemCPM::GetDataSize() const
 {
 	return sizeof(directory_cpm_t);
 }
@@ -430,15 +416,17 @@ wxUint32 DiskBasicDirItemCPM::GetStartGroup() const
 	return val;
 }
 
-bool DiskBasicDirItemCPM::IsDeletable()
+bool DiskBasicDirItemCPM::IsDeletable() const
 {
 	return true;
 }
+#if 0
 /// ファイル名を編集できるか
-bool DiskBasicDirItemCPM::IsFileNameEditable()
+bool DiskBasicDirItemCPM::IsFileNameEditable() const
 {
 	return true;
 }
+#endif
 
 /// グループ番号をセット
 void DiskBasicDirItemCPM::SetGroup(int pos, wxUint32 val)
@@ -559,6 +547,18 @@ int DiskBasicDirItemCPM::CompareName(DiskBasicDirItem **item1, DiskBasicDirItem 
 #define IDC_CHECK_ARCHIVE	54
 #define IDC_RADIO_BINASC	55
 
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemCPM::GetFileType1Pos() const
+{
+	return GetFileType1();
+}
+
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemCPM::GetFileType2Pos() const
+{
+	return GetFileType2();
+}
+
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
 /// @param [in] show_flags      ダイアログ表示フラグ
@@ -627,30 +627,23 @@ void DiskBasicDirItemCPM::ChangeTypeInAttrDialog(IntNameBox *parent)
 {
 }
 
-/// 属性1を得る
-/// @return CalcFileTypeFromPos()のpos1に渡す値
-int DiskBasicDirItemCPM::GetFileType1InAttrDialog(const IntNameBox *parent) const
+/// 機種依存の属性を設定する
+bool DiskBasicDirItemCPM::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo)
 {
 	wxSpinCtrl *spnUserId = (wxSpinCtrl *)parent->FindWindow(IDC_SPIN_USERID);
-
-	int val = spnUserId->GetValue();
-	return val;
-}
-
-/// 属性2を得る
-/// @return CalcFileTypeFromPos()のpos2に渡す値
-int DiskBasicDirItemCPM::GetFileType2InAttrDialog(const IntNameBox *parent) const
-{
 	wxRadioBox *radBinAsc = (wxRadioBox *)parent->FindWindow(IDC_RADIO_BINASC);
 	wxCheckBox *chkReadOnly = (wxCheckBox *)parent->FindWindow(IDC_CHECK_READONLY);
 	wxCheckBox *chkSystem = (wxCheckBox *)parent->FindWindow(IDC_CHECK_SYSTEM);
 	wxCheckBox *chkArchive = (wxCheckBox *)parent->FindWindow(IDC_CHECK_ARCHIVE);
 
-	int val = 0;
-	val |= chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
+	int user_id = spnUserId->GetValue();
+//	val = (val << FILETYPE_CPM_USERID_POS) & FILETYPE_CPM_USERID_MASK;
+	int val = chkReadOnly->GetValue() ? FILE_TYPE_READONLY_MASK : 0;
 	val |= chkSystem->GetValue() ? FILE_TYPE_SYSTEM_MASK : 0;
 	val |= chkArchive->GetValue() ? FILE_TYPE_ARCHIVE_MASK : 0;
 	val |= radBinAsc->GetSelection() == TYPE_NAME_CPM_BINARY ? FILE_TYPE_BINARY_MASK : 0;
 
-	return val;
+	DiskBasicDirItem::SetFileAttr(val, user_id);
+
+	return true;
 }

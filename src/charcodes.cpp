@@ -2,6 +2,9 @@
 ///
 /// @brief キャラクタコード
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "charcodes.h"
 #include <wx/xml/xml.h>
 

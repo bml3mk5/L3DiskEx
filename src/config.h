@@ -2,12 +2,16 @@
 ///
 /// @brief 設定ファイル入出力
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _CONFIG_H_
 #define _CONFIG_H_
 
 #include "common.h"
 #include <wx/string.h>
 #include <wx/arrstr.h>
+
 
 #define MAX_RECENT_FILES 20
 

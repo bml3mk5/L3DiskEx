@@ -1,8 +1,13 @@
 ﻿/// @file common.cpp
 ///
+/// @brief common functions
+///
+/// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
 #include <stdio.h>
+#include <string.h>
+
 
 /// 右側の指定文字をトリミング
 size_t rtrim(void *buf, size_t len, char ch)
@@ -43,4 +48,18 @@ size_t str_shrink(void *buf, size_t len)
 		p++;
 	}
 	return l;
+}
+
+/// 文字列をバッファにコピー 余りはfillで埋める
+/// @param [in]   src     元バッファ
+/// @param [in]   slen    元バッファの長さ
+/// @param [in]   fill    余り部分を埋める文字
+/// @param [out]  dst     出力先バッファ
+/// @param [in]   dlen    出力先バッファの長さ
+void mem_copy(const void *src, size_t slen, char fill, void *dst, size_t dlen)
+{
+	size_t l = slen;
+	if (l > dlen) l = dlen;
+	memset(dst, fill, dlen);
+	memcpy(dst, src, l);
 }

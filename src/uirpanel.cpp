@@ -2,11 +2,15 @@
 ///
 /// @brief 右パネル
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "uirpanel.h"
 #include "main.h"
 #include "uidiskattr.h"
 #include "uirawdisk.h"
 #include "uifilelist.h"
+
 
 //
 // 右パネル上下
@@ -39,6 +43,7 @@ L3DiskRPanel::L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int
 }
 
 /// パネルの切り替え
+/// @param [in] num 0:ファイルリスト 1:RAWディスク
 void L3DiskRPanel::ChangePanel(int num)
 {
 	if (bpanel) bpanel->ChangePanel(num);
@@ -46,6 +51,7 @@ void L3DiskRPanel::ChangePanel(int num)
 
 /// ファイルリストパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
+/// @return パネル
 L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
 {
 	if (bpanel) return bpanel->GetFileListPanel(inst);
@@ -54,6 +60,7 @@ L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
 
 /// Rawディスクパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
+/// @return パネル
 L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
 {
 	if (bpanel) return bpanel->GetRawPanel(inst);
@@ -61,6 +68,7 @@ L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
 }
 
 /// フォントをセット
+/// @param [in] font フォント
 void L3DiskRPanel::SetListFont(const wxFont &font)
 {
 	L3DiskFileList *flist = GetFileListPanel(true);

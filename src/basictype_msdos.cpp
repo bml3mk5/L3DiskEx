@@ -1,10 +1,14 @@
 ﻿/// @file basictype_msdos.cpp
 ///
-/// @brief disk basic fat type for MS-DOS
+/// @brief disk basic type for MS-DOS
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_msdos.h"
 #include "basicfmt.h"
 #include "basicdir.h"
+
 
 //
 //
@@ -41,9 +45,19 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 /// IPLや管理エリアの属性を得る
 void DiskBasicTypeMSDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
+	// volume label
+	DiskBasicDirItem *ditem = dir->FindFileByAttrOnRoot(FILE_TYPE_VOLUME_MASK, FILE_TYPE_VOLUME_MASK | FILE_TYPE_DIRECTORY_MASK);
+	if (ditem) {
+		data.SetVolumeName(ditem->GetFileNameStr());
+	}
 }
 
 /// IPLや管理エリアの属性をセット
 void DiskBasicTypeMSDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
+	// volume label
+	DiskBasicDirItem *ditem = dir->FindFileByAttrOnRoot(FILE_TYPE_VOLUME_MASK, FILE_TYPE_VOLUME_MASK | FILE_TYPE_DIRECTORY_MASK);
+	if (ditem) {
+		ditem->SetFileNamePlain(data.GetVolumeName());
+	}
 }

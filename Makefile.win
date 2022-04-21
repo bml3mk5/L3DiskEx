@@ -57,12 +57,14 @@ OBJS=	utils.o \
 	basictype_l32d.o \
 	basictype_msdos.o \
 	basictype_msx.o \
+	basictype_mz_base.o \
 	basictype_mz.o \
 	basictype_n88.o \
 	basictype_x1hu.o \
 	basictype_flex.o \
 	basictype_os9.o \
 	basictype_cpm.o \
+	basictype_tfdos.o \
 	basicfat.o \
 	basicdiritem_fat8.o \
 	basicdiritem_fm.o \
@@ -70,12 +72,14 @@ OBJS=	utils.o \
 	basicdiritem_l32d.o \
 	basicdiritem_msdos.o \
 	basicdiritem_msx.o \
+	basicdiritem_mz_base.o \
 	basicdiritem_mz.o \
 	basicdiritem_n88.o \
 	basicdiritem_x1hu.o \
 	basicdiritem_flex.o \
 	basicdiritem_os9.o \
 	basicdiritem_cpm.o \
+	basicdiritem_tfdos.o \
 	basicdiritem.o \
 	basicdir.o \
 	basicfmt.o \

@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for L3/S1 BASIC 2D/2HD
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_l32d.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "charcodes.h"
+
 
 ///
 ///
@@ -51,7 +55,7 @@ bool DiskBasicDirItemL32D::Check(bool &last)
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL32D::InvalidateChars()
+wxString DiskBasicDirItemL32D::InvalidateChars() const
 {
 	return wxT("\":()");
 }
@@ -108,9 +112,18 @@ void DiskBasicDirItemL32D::SetFileType2(int val)
 }
 
 /// ディレクトリのサイズ
-size_t DiskBasicDirItemL32D::GetDataSize()
+size_t DiskBasicDirItemL32D::GetDataSize() const
 {
 	return sizeof(directory_l3_2d_t);
+}
+
+/// ファイルサイズをセット
+/// @param [in] val サイズ
+void DiskBasicDirItemL32D::SetFileSize(int val)
+{
+	DiskBasicDirItemFAT8::SetFileSize(val);
+	// 最終セクタのサイズをセット
+	SetDataSizeOnLastSecotr(val % basic->GetSectorSize());
 }
 
 /// ファイルサイズとグループ数を計算する
@@ -119,8 +132,8 @@ void DiskBasicDirItemL32D::CalcFileSize()
 	DiskBasicDirItemFAT8::CalcFileSize();
 
 	// 最終セクタのサイズを足す
-	if (used && file_size >= 0) {
-		file_size = file_size - basic->GetSectorSize() + (int)this->data->l3_2d.end_bytes.h * 256 + this->data->l3_2d.end_bytes.l;
+	if (IsUsed() && file_size >= 0) {
+		file_size = file_size - basic->GetSectorSize() + GetDataSizeOnLastSector();
 	}
 }
 
@@ -146,21 +159,21 @@ void DiskBasicDirItemL32D::SetDataSizeOnLastSecotr(int val)
 	data->l3_2d.end_bytes.l = (val & 0x00ff);
 }
 /// 最終セクタのサイズ(2Dのときのみ有効)
-int DiskBasicDirItemL32D::GetDataSizeOnLastSector()
+int DiskBasicDirItemL32D::GetDataSizeOnLastSector() const
 {
 	// L3/S1 2D/2HD
 	return (int)data->l3_2d.end_bytes.h * 256 + data->l3_2d.end_bytes.l;
 }
 
 /// ダイアログ入力前のファイル名を変換 大文字にする
-void DiskBasicDirItemL32D::ConvertToFileNameStr(wxString &filename)
+void DiskBasicDirItemL32D::ConvertToFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }
 
 /// 内部ファイル名から変換＆拡張子を付加
 /// コピー、このアプリからインポート時のダイアログを出す前
-wxString DiskBasicDirItemL32D::RemakeFileName(const wxUint8 *src, size_t srclen)
+wxString DiskBasicDirItemL32D::RemakeFileName(const wxUint8 *src, size_t srclen) const
 {
 	wxString dst;
 	basic->ConvCharsToString(src, srclen, dst);

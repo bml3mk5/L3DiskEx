@@ -2,6 +2,8 @@
 ///
 /// @brief 内部ファイル名ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _INTNAMEBOX_H_
 #define _INTNAMEBOX_H_
@@ -11,7 +13,8 @@
 #include <wx/validate.h>
 #include <wx/valtext.h>
 //#include "basicfmt.h"
-#include "basicdiritem.h"
+//#include "basicdiritem.h"
+
 
 #define INTNAMEBOX_CLASSNAME "INTNAMEBOX"
 
@@ -21,18 +24,20 @@ class wxListEvent;
 class L3DiskFrame;
 class DiskBasic;
 class DiskBasicDirItem;
+class DiskBasicFileName;
 class DiskBasicGroups;
 
+/// 内部ファイル名ボックスの表示フラグ
 typedef enum en_intnamebox_show_flags {
-	INTNAME_SHOW_TEXT			 = 0x0001,	// 内部ファイル名を表示する
-	INTNAME_SHOW_ATTR			 = 0x0002,	// 属性を表示する
+	INTNAME_SHOW_TEXT			 = 0x0001,	///< 内部ファイル名を表示する
+	INTNAME_SHOW_ATTR			 = 0x0002,	///< 属性を表示する
 	INTNAME_SHOW_NO_PROPERTY	 = 0x0003,
-	INTNAME_SHOW_PROPERTY		 = 0x0004,	// プロパティ表示（グループ一覧表示）
+	INTNAME_SHOW_PROPERTY		 = 0x0004,	///< プロパティ表示（グループ一覧表示）
 	INTNAME_SHOW_ALL			 = 0x000f,
-	INTNAME_NEW_FILE			 = 0x0010,
-	INTNAME_IMPORT_INTERNAL		 = 0x0020,
-	INTNAME_SPECIFY_FILE_NAME	 = 0x0100,	// ファイル名を別途指定
-	INTNAME_INVALID_FILE_TYPE	 = 0x0200,	// アイテム内の属性は無効
+	INTNAME_NEW_FILE			 = 0x0010,	///< 新規ファイル時
+	INTNAME_IMPORT_INTERNAL		 = 0x0020,	///< アプリ内インポート
+	INTNAME_SPECIFY_FILE_NAME	 = 0x0100,	///< ファイル名を別途指定
+	INTNAME_INVALID_FILE_TYPE	 = 0x0200,	///< アイテム内の属性は無効
 } IntNameBoxShowFlags;
 
 /// 内部ファイル名ボックス
@@ -62,8 +67,8 @@ private:
 	wxListCtrl *lstGroups;
 
 public:
-	IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption
-		, DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
+	IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
+		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
 
 	enum {
 		IDC_TEXT_INTNAME = 1,
@@ -78,18 +83,24 @@ public:
 
 	/// @name functions
 	//@{
+	void CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption,
+		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, int show_flags);
+
 	int ShowModal();
 
 	void SetValuesToDirItem();
 	//@}
 
-	// event procedures
+	/// @name event procedures
+	//@{
 	void OnOK(wxCommandEvent& event);
 	void OnChangeType1(wxCommandEvent& event);
 
 	void OnListItemSelected(wxListEvent& event);
+	//@}
 
-	// properties
+	/// @name properties
+	//@{
 	void SetDiskBasicDirItem(DiskBasicDirItem *item);
 	DiskBasic *GetDiskBasic() { return basic; }
 	DiskBasicDirItem *GetDiskBasicDirItem() { return item; }
@@ -97,7 +108,7 @@ public:
 
 	void ChangedType1();
 	void SetInternalName(const wxString &name);
-	wxString GetInternalName() const;
+	void GetInternalName(DiskBasicFileName &name) const;
 
 	int GetStartAddress() const;
 	int GetExecuteAddress() const;
@@ -113,6 +124,7 @@ public:
 
 	int GetUserData() const { return user_data; }
 	void SetUserData(int val) { user_data = val; }
+	//@}
 
 	wxDECLARE_EVENT_TABLE();
 };
@@ -132,6 +144,8 @@ private:
 public:
 	IntNameValidator(DiskBasic *basic, DiskBasicDirItem *item);
 	IntNameValidator(const IntNameValidator& val);
+
+	void CreateValidator(DiskBasic *basic, DiskBasicDirItem *item);
 
 	wxObject *Clone() const { return new IntNameValidator(*this); }
 

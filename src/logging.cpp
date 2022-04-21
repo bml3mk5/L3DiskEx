@@ -2,6 +2,8 @@
 ///
 /// @brief メッセージ保存用
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "logging.h"
 #include <wx/wx.h>
@@ -10,6 +12,7 @@
 #include <wx/dir.h>
 #include <wx/datetime.h>
 #include <wx/regex.h>
+
 
 MyLogging myLog;
 

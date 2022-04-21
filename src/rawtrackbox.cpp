@@ -2,6 +2,8 @@
 ///
 /// @brief Rawトラックダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "rawtrackbox.h"
 #include <wx/stattext.h>
@@ -9,6 +11,7 @@
 #include <wx/numformatter.h>
 #include <wx/valtext.h>
 #include "diskd88.h"
+
 
 // Attach Event
 BEGIN_EVENT_TABLE(RawTrackBox, wxDialog)

@@ -1,9 +1,13 @@
 ﻿/// @file basictype_msx.cpp
 ///
-/// @brief disk basic fat type for MSX
+/// @brief disk basic type for MSX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_msx.h"
 #include "basicfmt.h"
+
 
 //
 //

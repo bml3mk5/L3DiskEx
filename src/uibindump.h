@@ -2,6 +2,9 @@
 ///
 /// @brief バイナリダンプ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _UIBINDUMP_H_
 #define _UIBINDUMP_H_
 
@@ -9,11 +12,30 @@
 #include <wx/frame.h>
 #include <wx/scrolwin.h>
 #include <wx/splitter.h>
-//#include <wx/toolbar.h>
 #include "utils.h"
 
+
+#undef USE_RICH_TEXT_ON_BINDUMP
+
+#ifdef USE_RICH_TEXT_ON_BINDUMP
+#include <wx/richtext/richtextctrl.h>
+#else
+#include <wx/textctrl.h>
+#endif
+
+/// テキストコントロール
+class L3DiskBinDumpTextCtrl
+#ifdef USE_RICH_TEXT_ON_BINDUMP
+	: public wxRichTextCtrl
+#else
+	: public wxTextCtrl
+#endif
+{
+public:
+	L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id); 
+};
+
 class wxMenu;
-class wxTextCtrl;
 class wxCheckBox;
 class wxRadioButton;
 class wxButton;
@@ -171,8 +193,8 @@ private:
 	wxWindow *parent;
 	L3DiskBinDumpFrame *frame;
 
-	wxTextCtrl *txtHex;
-	wxTextCtrl *txtAsc;
+	L3DiskBinDumpTextCtrl *txtHex;
+	L3DiskBinDumpTextCtrl *txtAsc;
 
 	L3MemoryBuffers buffers;
 
@@ -190,6 +212,9 @@ private:
 	void AppendDatasMain(const L3MemoryBuffer *buf);
 	void SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append);
 	void SetDatasTextMain(const L3MemoryBuffer *buf, bool append);
+
+	void CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows);
+	int CalcHeightOnTextCtrl(const L3DiskBinDumpTextCtrl *ctrl, int rows, const wxString &str);
 
 public:
 	L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parent);

@@ -2,9 +2,13 @@
 ///
 /// @brief disk basic directory item for L3 BASIC 1S
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicdiritem_l31s.h"
 #include "basicfmt.h"
 #include "charcodes.h"
+
 
 ///
 ///
@@ -23,13 +27,13 @@ DiskBasicDirItemL31S::DiskBasicDirItemL31S(DiskBasic *basic, int num, int track,
 }
 
 /// ファイル名に設定できない文字を文字列にして返す
-wxString DiskBasicDirItemL31S::InvalidateChars()
+wxString DiskBasicDirItemL31S::InvalidateChars() const
 {
 	return wxT("\":");
 }
 
 /// ダイアログ入力前のファイル名を変換 大文字にする
-void DiskBasicDirItemL31S::ConvertToFileNameStr(wxString &filename)
+void DiskBasicDirItemL31S::ConvertToFileNameStr(wxString &filename) const
 {
 	filename = filename.Upper();
 }

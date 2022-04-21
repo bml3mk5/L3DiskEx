@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item for OS-9
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_OS9_H_
 #define _BASICDIRITEM_OS9_H_
 
 #include "basicdiritem.h"
+
 
 /// OS-9属性名
 extern const char *gTypeNameOS9[];
@@ -112,19 +116,26 @@ private:
 	/// 使用しているアイテムか
 	bool	CheckUsed(bool unuse);
 
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int		GetFileType1Pos();
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int		GetFileType2Pos();
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 	/// ファイル名を設定
 	void	SetFileName(const wxUint8 *filename, int length);
 	/// ファイル名を得る
 	void	GetFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 
 	/// 日付を変換
-	void			ConvDateToTm(const os9_cdate_t &date, struct tm *tm);
+	void			ConvDateToTm(const os9_cdate_t &date, struct tm *tm) const;
 	/// 時間を変換
-	void			ConvTimeToTm(const os9_date_t &time, struct tm *tm);
+	void			ConvTimeToTm(const os9_date_t &time, struct tm *tm) const;
 	/// 日付に変換
-	void			ConvTmToDate(const struct tm *tm, os9_cdate_t &date);
+	void			ConvTmToDate(const struct tm *tm, os9_cdate_t &date) const;
 	/// 時間に変換
-	void			ConvTmToTime(const struct tm *tm, os9_date_t &time);
+	void			ConvTmToTime(const struct tm *tm, os9_date_t &time) const;
 
 public:
 	DiskBasicDirItemOS9(DiskBasic *basic);
@@ -137,31 +148,27 @@ public:
 	bool			Check(bool &last);
 
 	/// ファイル名に設定できない文字を文字列にして返す
-	wxString		InvalidateChars();
+	wxString		InvalidateChars() const;
 	/// ファイル名は必須（空文字不可）か
-	bool			IsFileNameRequired() { return true; }
+	bool			IsFileNameRequired() const { return true; }
 
 	/// 削除
 	bool			Delete(wxUint8 code);
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void			SetFileAttr(const DiskBasicFileType &file_type);
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
+//	/// リストの位置から属性を返す(プロパティダイアログ用)
+//	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString		GetFileAttrStr();
+	wxString		GetFileAttrStr() const;
 
 	/// ファイルサイズをセット
 	void			SetFileSize(int val);
 	/// ファイルサイズを返す
-	int				GetFileSize();
+	int				GetFileSize() const;
 	/// ファイルサイズとグループ数を計算する
 	void			CalcFileSize();
 	/// 指定ディレクトリのすべてのグループを取得
@@ -181,31 +188,31 @@ public:
 	bool			HasDate() const { return true; }
 	bool			HasTime() const { return true; }
 	/// 日付を返す
-	void			GetFileDate(struct tm *tm);
+	void			GetFileDate(struct tm *tm) const;
 	/// 時間を返す
-	void			GetFileTime(struct tm *tm);
+	void			GetFileTime(struct tm *tm) const;
 	/// 日付を返す
-	wxString		GetFileDateStr();
+	wxString		GetFileDateStr() const;
 	/// 時間を返す
-	wxString		GetFileTimeStr();
+	wxString		GetFileTimeStr() const;
 	/// 日付をセット
 	void			SetFileDate(const struct tm *tm);
 	/// 時間をセット
 	void			SetFileTime(const struct tm *tm);
 	/// 日付のタイトル名（ダイアログ用）
-	wxString		GetFileDateTimeTitle();
+	wxString		GetFileDateTimeTitle() const;
 	/// 日付を返す
-	wxString		GetCDateStr();
+	wxString		GetCDateStr() const;
 	/// 日付をセット
 	void			SetCDate(const struct tm *tm);
 
 	/// ディレクトリアイテムのサイズ
-	size_t			GetDataSize();
+	size_t			GetDataSize() const;
 
 	/// アイテムを削除できるか
-	bool			IsDeletable();
+	bool			IsDeletable() const;
 	/// ファイル名を編集できるか
-	bool			IsFileNameEditable();
+	bool			IsFileNameEditable() const;
 
 	/// アイテムをコピー
 	void			CopyItem(const DiskBasicDirItem &src);
@@ -231,12 +238,6 @@ public:
 	void	InitializeForAttrDialog(IntNameBox *parent, int showitems, int *user_data);
 	/// 属性を変更した際に呼ばれるコールバック
 	void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
 	/// 機種依存の属性を設定する
 	bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 	//@}

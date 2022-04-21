@@ -2,12 +2,16 @@
 ///
 /// @brief べたディスクライター
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "diskwriter.h"
 #include "diskplainwriter.h"
 #include <wx/stream.h>
 #include "diskd88.h"
 #include "diskd88creator.h"
 #include "diskresult.h"
+
 
 //
 // べた形式で保存
@@ -48,24 +52,20 @@ int DiskPlainWriter::SaveDisk(DiskD88 *image, int disk_number, int side_number, 
 		}
 		for(size_t disk_num = 0; disk_num < 1; disk_num++) {
 			DiskD88Disk *disk = disks->Item(disk_num);
-			SaveDisk(disk, ostream); 
+			SaveDisk(disk, -1, ostream); 
 		}
 	} else {
 		// 指定したディスクを保存
 		DiskD88Disk *disk = file->GetDisk(disk_number);
 
-		if (side_number < 0) {
-			SaveDisk(disk, ostream);
-		} else {
-			SaveDisk(disk, side_number, ostream); 
-		}
+		SaveDisk(disk, side_number, ostream); 
 	}
 
 	return result->GetValid();
 }
 
 /// べたイメージでディスク1つを保存
-int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
+int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream)
 {
 	if (!disk) {
 		result->SetError(DiskResult::ERR_NO_DISK);
@@ -78,7 +78,11 @@ int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 		return result->GetValid();
 	}
 
-	for(size_t track_num = 0; track_num < tracks->Count(); track_num++) {
+	size_t track_start = (side_number < 0 ? 0 : side_number);
+	size_t track_count = tracks->Count();
+	size_t track_step  = (side_number < 0 ? 1 : 2);
+
+	for(size_t track_num = track_start; track_num < track_count; track_num += track_step) {
 		DiskD88Track *track = tracks->Item(track_num);
 		if (!track) continue;
 		DiskD88Sectors *sectors = track->GetSectors();
@@ -102,40 +106,4 @@ int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, wxOutputStream *ostream)
 //	disk->ClearModify();
 
 	return result->GetValid();
-}
-
-/// べたイメージでディスクの1つサイドだけを保存(1S用)
-int DiskPlainWriter::SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream)
-{
-	if (!disk) {
-		result->SetError(DiskResult::ERR_NO_DISK);
-		return result->GetValid();
-	}
-
-	// 1S用のディスクを作成
-	SingleDensities singles;
-	singles.Add(new SingleDensity(-1, -1, disk->GetSectorsPerTrack(), 128));
-	wxArrayString basic_types;
-	DiskParam param(wxT("1S"), basic_types, false, 1, 40, 16, 128, 0, 0, disk->GetInterleave(), singles, wxT(""), wxT(""));
-
-	DiskD88File tmpfile;
-	DiskD88Creator cr("", param, false, &tmpfile, *result);
-	int valid_disk = cr.Create();
-	if (valid_disk != 0) {
-		return valid_disk;
-	}
-
-	DiskD88Disk *tmpdisk = tmpfile.GetDisk(0);
-	if (!tmpdisk) {
-		result->SetError(DiskResult::ERR_NO_DATA);
-		return result->GetValid();
-	}
-
-	// 新しいディスクにコピーする
-	valid_disk = tmpdisk->Replace(0, disk, side_number);
-	if (valid_disk != 0) {
-		result->SetError(DiskResult::ERR_REPLACE);
-	}
-
-	return SaveDisk(tmpdisk, ostream);
 }

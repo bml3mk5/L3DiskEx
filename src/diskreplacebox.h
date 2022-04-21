@@ -2,12 +2,15 @@
 ///
 /// @brief ディスク置き換え確認ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _DISKREPLACEBOX_H_
 #define _DISKREPLACEBOX_H_
 
 #include "common.h"
 #include <wx/dialog.h>
+
 
 class wxChoice;
 class DiskD88File;

@@ -2,10 +2,14 @@
 ///
 /// @brief disk basic directory item
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICDIRITEM_FAT8_H_
 #define _BASICDIRITEM_FAT8_H_
 
 #include "basicdiritem.h"
+
 
 /// L3 BASIC
 /// F-BASIC
@@ -36,25 +40,28 @@ protected:
 	/// 使用しているアイテムか
 	bool			CheckUsed(bool unuse);
 
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int			    GetFileType1Pos() const;
+	/// 属性からリストの位置を返す(プロパティダイアログ用)
+	int			    GetFileType2Pos() const;
+	/// インポート時ダイアログ表示前にファイルの属性を設定
+	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+
 public:
 	DiskBasicDirItemFAT8(DiskBasic *basic);
 	DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *sector, wxUint8 *data);
 	DiskBasicDirItemFAT8(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
 	/// 属性を設定
-	void			SetFileAttr(int file_type);
+	void			SetFileAttr(const DiskBasicFileType &file_type);
 
 	/// 属性を返す
-	int				GetFileAttr();
+	DiskBasicFileType GetFileAttr() const;
 
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType1Pos();
-	/// 属性からリストの位置を返す(プロパティダイアログ用)
-	int			    GetFileType2Pos();
-	/// リストの位置から属性を返す(プロパティダイアログ用)
-	int				CalcFileTypeFromPos(int pos1, int pos2);
+//	/// リストの位置から属性を返す(プロパティダイアログ用)
+//	int				CalcFileTypeFromPos(int pos1, int pos2);
 	/// 属性の文字列を返す(ファイル一覧画面表示用)
-	wxString 		GetFileAttrStr();
+	wxString 		GetFileAttrStr() const;
 
 	/// ファイルサイズとグループ数を計算する
 	virtual void	CalcFileSize();
@@ -71,12 +78,8 @@ public:
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// 属性を変更した際に呼ばれるコールバック
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
-	/// インポート時ダイアログ表示前にファイルの属性を設定
-	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
-	/// 属性1を得る
-	virtual int		GetFileType1InAttrDialog(const IntNameBox *parent) const;
-	/// 属性2を得る
-	virtual int		GetFileType2InAttrDialog(const IntNameBox *parent) const;
+	/// 機種依存の属性を設定する
+	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicError &errinfo);
 };
 
 //
@@ -115,7 +118,7 @@ public:
 	DiskBasicDirItemFAT8F(DiskBasic *basic, int num, int track, int side, DiskD88Sector *sector, int secpos, wxUint8 *data, bool &unuse);
 
 	/// ディレクトリアイテムのサイズ
-	virtual size_t	GetDataSize();
+	virtual size_t	GetDataSize() const;
 
 	/// 最初のグループ番号をセット
 	virtual void	SetStartGroup(wxUint32 val);

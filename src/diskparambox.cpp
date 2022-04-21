@@ -2,6 +2,8 @@
 ///
 /// @brief ディスクパラメータダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "diskparambox.h"
 //#include <wx/numformatter.h>
@@ -16,6 +18,7 @@
 #include <wx/msgdlg.h>
 #include "basicparam.h"
 #include "diskd88.h"
+
 
 const char *gNumberingSector[] = {
 	wxTRANSLATE("By each side (default)"),
@@ -344,7 +347,7 @@ void DiskParamBox::SetTemplateValuesFromGlobals()
 
 	comTemplate->Clear();
 	for(size_t i=0; i < gDiskTemplates.Count(); i++) {
-		DiskParam *item = gDiskTemplates.ItemPtr(i);
+		const DiskParam *item = gDiskTemplates.ItemPtr(i);
 
 		if (type_names.Count() > 0) {
 			bool match = false;

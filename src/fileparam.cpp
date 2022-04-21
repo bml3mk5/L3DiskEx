@@ -2,9 +2,13 @@
 ///
 /// @brief ファイルパラメータ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "fileparam.h"
 #include <wx/intl.h>
 #include <wx/xml/xml.h>
+
 
 FileTypes gFileTypes;
 
@@ -182,12 +186,22 @@ void FileTypes::MakeWildcard()
 			if (format->GetType() == wxT("d88")) {
 				if (!d88s.IsEmpty()) d88s += wxT(";");
 				d88s += wxT("*.");
-				d88s += param->GetExt();
+				d88s += param->GetExt().Lower();
+#if !defined(__WXMSW__)
+				if (!d88s.IsEmpty()) d88s += wxT(";");
+				d88s += wxT("*.");
+				d88s += param->GetExt().Upper();
+#endif
 			}
 		}
 		if (!exts.IsEmpty()) exts += wxT(";");
 		exts += wxT("*.");
-		exts += param->GetExt();
+		exts += param->GetExt().Lower();
+#if !defined(__WXMSW__)
+		if (!exts.IsEmpty()) exts += wxT(";");
+		exts += wxT("*.");
+		exts += param->GetExt().Upper();
+#endif
 	}
 	wcard_for_load = _("Supported files");
 	wcard_for_load += wxT(" (");
@@ -212,9 +226,9 @@ void FileTypes::MakeWildcard()
 			if (format->GetType() == wxT("d88") || format->GetType() == wxT("plain")) {
 				wcard_for_save += param->GetDescription();
 				wcard_for_save += wxT(" (*.");
-				wcard_for_save += param->GetExt();
+				wcard_for_save += param->GetExt().Lower();
 				wcard_for_save += wxT(")|*.");
-				wcard_for_save += param->GetExt();
+				wcard_for_save += param->GetExt().Lower();
 				wcard_for_save += wxT("|");
 			}
 		}

@@ -2,6 +2,9 @@
 ///
 /// @brief ディスクライター
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _DISK_WRITER_H_
 #define _DISK_WRITER_H_
 

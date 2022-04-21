@@ -2,6 +2,8 @@
 ///
 /// @brief BASIC情報ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _BASICPARAMBOX_H_
 #define _BASICPARAMBOX_H_
@@ -10,6 +12,7 @@
 #include <wx/dialog.h>
 #include <wx/dynarray.h>
 #include "basicparam.h"
+
 
 class wxListBox;
 class wxTextCtrl;

@@ -1,7 +1,10 @@
 ﻿/// @file basictype_l31s.h
 ///
-/// @brief disk basic fat type
+/// @brief disk basic type for L3 BASIC 1S
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_L31S_H_
 #define _BASICTYPE_L31S_H_
 
@@ -9,7 +12,12 @@
 #include "basiccommon.h"
 #include "basictype_fat8.h"
 
-/// LEVEL-3 BASIC 1Sの処理
+
+/** @class DiskBasicTypeL31S
+
+@brief LEVEL-3 BASIC 1S(片面・単密度)の処理
+
+*/
 class DiskBasicTypeL31S : public DiskBasicTypeFAT8F
 {
 private:

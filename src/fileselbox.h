@@ -2,12 +2,15 @@
 ///
 /// @brief ファイル種類選択ダイアログ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #ifndef _FILESELBOX_H_
 #define _FILESELBOX_H_
 
 #include "common.h"
 #include <wx/dialog.h>
+
 
 class wxListBox;
 

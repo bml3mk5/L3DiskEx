@@ -2,12 +2,16 @@
 ///
 /// @brief disk basic type for FLEX
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _BASICTYPE_FLEX_H_
 #define _BASICTYPE_FLEX_H_
 
 #include "common.h"
 #include "basiccommon.h"
 #include "basictype.h"
+
 
 #pragma pack(1)
 /// FLEX INIT (track0 sector3)
@@ -29,8 +33,14 @@ typedef struct st_flex_sir {
 } flex_sir_t;
 #pragma pack()
 
+/** @class DiskBasicTypeFLEX
 
-/// FLEXの処理
+@brief FLEXの処理
+
+DiskBasicParam
+@li DirStartPositionOnSector : ディレクトリエントリの開始位置
+
+*/
 class DiskBasicTypeFLEX : public DiskBasicType
 {
 private:
@@ -63,6 +73,12 @@ public:
 	bool		CheckFat();
 	/// ディスクから各パラメータを取得
 	int			ParseParamOnDisk(DiskD88Disk *disk);
+	//@}
+
+	/// @name check / assign directory area
+	//@{
+	/// ルートディレクトリのセクタリストを計算
+	bool		CalcGroupsOnRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items);
 	//@}
 
 	/// @name disk size

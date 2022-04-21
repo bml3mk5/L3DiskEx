@@ -1,11 +1,16 @@
 ﻿/// @file basictype_mz.cpp
 ///
-/// @brief disk basic fat type for MZ DISK BASIC
+/// @brief disk basic type for MZ DISK BASIC
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_mz.h"
 #include "basicfmt.h"
+#include "basicdir.h"
 #include "basicdiritem.h"
 #include "logging.h"
+
 
 /// MZ 使用状況セクタ
 struct st_fat_mz {
@@ -21,7 +26,7 @@ struct st_fat_mz {
 //
 //
 DiskBasicTypeMZ::DiskBasicTypeMZ(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
-	: DiskBasicType(basic, fat, dir)
+	: DiskBasicTypeMZBase(basic, fat, dir)
 {
 }
 
@@ -51,17 +56,31 @@ bool DiskBasicTypeMZ::CheckFat()
 		valid = false;
 	}
 	if (valid) {
+		// セクタ数/クラスタ
 		basic->SetSectorsPerGroup(mag + 1);
+		// クラスタ数
+		basic->SetFatEndGroup(basic->InvertUint16(b->all) - 1);
 	}
 
 	return valid;
 }
 
-/// 使用可能なディスクサイズを得る
-void DiskBasicTypeMZ::GetUsableDiskSize(int &disk_size, int &group_size) const
+/// ルートディレクトリをアサイン
+/// @param [in]     start_sector 開始セクタ番号
+/// @param [in]     end_sector   終了セクタ番号
+/// @param [out]    group_items  セクタリスト
+/// @param [in,out] dir_item     ルートディレクトリアイテム
+/// @return true / false
+bool DiskBasicTypeMZ::AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item)
 {
-	group_size = basic->GetFatEndGroup() + 1 - data_start_group;
-	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
+	bool sts = DiskBasicType::AssignRootDirectory(start_sector, end_sector, group_items, dir_item);
+
+	// 開始グループ
+	int sec_pos = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + start_sector - 1;
+	sec_pos /= basic->GetSectorsPerGroup();
+	dir_item->SetStartGroup(sec_pos);
+
+	return sts;
 }
 
 /// 残りディスクサイズを計算
@@ -119,13 +138,13 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 		return;
 	}
 
-	int pos = num - data_start_group;
+	int pos = (int)num - (int)data_start_group;
 	if (pos < 0) {
 		return;
 	}
 
-	pos = (pos >> 3) + 6;
-	int mask = 1 << (num & 7);
+	int mask = 0;
+	CalcUsedGroupPos(num, pos, mask);
 
 	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
 	if (!fatbuf) {
@@ -150,8 +169,8 @@ void DiskBasicTypeMZ::SetGroupNumber(wxUint32 num, wxUint32 val)
 	}
 	b->used = basic->InvertUint16(used_group);	// invert
 
-	myLog.SetDebug("DiskBasicTypeMZ::SetGroupNumber: g:%d v:%d pos:%d msk:%d used:%d"
-		, num, val, pos, mask, used_group);
+//	myLog.SetDebug("DiskBasicTypeMZ::SetGroupNumber: g:%d v:%d pos:%d msk:%d used:%d"
+//		, num, val, pos, mask, used_group);
 }
 
 wxUint32 DiskBasicTypeMZ::GetGroupNumber(wxUint32 num) const
@@ -167,36 +186,11 @@ wxUint32 DiskBasicTypeMZ::GetGroupNumber(wxUint32 num) const
 	return num;
 }
 
-/// FAT位置が使用されているか
-/// @param [in] num グループ番号(0...)
-bool DiskBasicTypeMZ::IsUsedGroupNumber(wxUint32 num)
+/// 使用しているグループの位置を得る
+void DiskBasicTypeMZ::CalcUsedGroupPos(wxUint32 num, int &pos, int &mask)
 {
-	bool exist = false;
-
-	if (num > basic->GetFatEndGroup()) {
-		return false;
-	}
-
-	int pos = num - data_start_group;
-	if (pos < 0) {
-		// システムエリアは使用済み
-		return true;
-	}
-
+	mask = 1 << (pos & 7);
 	pos = (pos >> 3) + 6;
-	int mask = 1 << (num & 7);
-
-	DiskBasicFatBuffer *fatbuf = fat->GetDiskBasicFatBuffer(0, 0);
-	if (!fatbuf) {
-		return true;
-	}
-	// FATには未使用使用テーブルがある
-	if (pos < fatbuf->size) {
-		if (basic->InvertUint8(fatbuf->buffer[pos]) & mask) {	// invert
-			exist = true;
-		}
-	}
-	return exist;
 }
 
 /// 次のグループ番号を得る
@@ -237,31 +231,6 @@ wxUint32 DiskBasicTypeMZ::GetEmptyGroupNumber()
 	return new_num;
 }
 
-/// 次の空き位置を返す 未使用
-/// @return INVALID_GROUP_NUMBER: 空きなし
-wxUint32 DiskBasicTypeMZ::GetNextEmptyGroupNumber(wxUint32 curr_group)
-{
-	return INVALID_GROUP_NUMBER;
-}
-
-/// 未使用が連続している位置をさがす
-wxUint32 DiskBasicTypeMZ::FindContinuousArea(wxUint32 group_size, wxUint32 &group_start)
-{
-	// 未使用が連続している位置をさがす
-	wxUint32 cnt = 0;
-	for(wxUint32 gnum = GetGroupNumber(0); gnum <= basic->GetFatEndGroup() && cnt < group_size; gnum++) {
-		if (!IsUsedGroupNumber(gnum)) {
-			if (cnt == 0) {
-				group_start = gnum;
-			}
-			cnt++;
-		} else {
-			cnt = 0;
-		}
-	}
-	return cnt;
-}
-
 /// データサイズ分のグループを確保する
 /// @param [in]  item        ディレクトリアイテム
 /// @param [in]  data_size   確保するデータサイズ（バイト）
@@ -277,7 +246,7 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, Alloc
 //	wxUint32 group_num = 0;
 	int remain = data_size;
 	bool is_chain = item->NeedChainInData();
-	bool is_brd = ((item->GetFileAttr() & FILE_TYPE_RANDOM_MASK) != 0);
+	bool is_brd = item->GetFileAttr().MatchType(FILE_TYPE_RANDOM_MASK, FILE_TYPE_RANDOM_MASK);
 	int sec_size = basic->GetSectorSize();
 	if (is_chain) {
 		sec_size -= 2;
@@ -356,55 +325,6 @@ int DiskBasicTypeMZ::AllocateGroups(DiskBasicDirItem *item, int data_size, Alloc
 	return rc;
 }
 
-/// グループを確保して使用中にする
-int DiskBasicTypeMZ::AllocateGroupsSub(DiskBasicDirItem *item, wxUint32 group_start, int remain, int sec_size, DiskBasicGroups &group_items, int &file_size, int &groups)
-{
-	int rc = 0;
-	wxUint32 group_num = group_start;
-	wxUint32 prev_group = 0;
-
-	int limit = basic->GetFatEndGroup() + 1;
-	while(remain > 0 && limit >= 0) {
-		// 使用しているか
-		bool used_group = IsUsedGroupNumber(group_num);
-		if (!used_group) {
-			if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
-				// 使用済みにする
-				basic->GetNumsFromGroup(prev_group, group_num, sec_size, remain, group_items);
-				SetGroupNumber(prev_group, 1);
-				file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
-				groups++;
-			}
-			remain -= (sec_size * basic->GetSectorsPerGroup());
-			prev_group = group_num;
-		}
-		// 次のグループ
-		group_num++;
-		limit--;
-	}
-	if (prev_group > 0 && prev_group <= basic->GetFatEndGroup()) {
-		// 使用済みにする
-		basic->GetNumsFromGroup(prev_group, 0, sec_size, remain, group_items);
-		SetGroupNumber(prev_group, 1);
-		file_size += (basic->GetSectorSize() * basic->GetSectorsPerGroup());
-		groups++;
-	}
-	if (prev_group > basic->GetFatEndGroup()) {
-		// ファイルがオーバフローしている
-		rc = -2;
-	} else if (limit < 0) {
-		// 無限ループ？
-		rc = -2;
-	}
-	return rc;
-}
-
-///// ファイルの最終セクタのデータサイズを求める
-//int DiskBasicTypeMZ::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size)
-//{
-//	return remain_size;
-//}
-
 /// データの読み込み/比較処理
 /// @param [in] item          ディレクトリアイテム
 /// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
@@ -446,21 +366,6 @@ int DiskBasicTypeMZ::AccessFile(DiskBasicDirItem *item, wxInputStream *istream, 
 	return size;
 }
 
-/// グループ番号からセクタ番号を得る
-int DiskBasicTypeMZ::GetStartSectorFromGroup(wxUint32 group_num)
-{
-	// MZ
-	return group_num * basic->GetSectorsPerGroup();
-}
-
-/// グループ番号から最終セクタ番号を得る
-int DiskBasicTypeMZ::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size)
-{
-	// MZ
-	int end_sector = sector_start + basic->GetSectorsPerGroup() - 1;
-	return end_sector;
-}
-
 /// ルートディレクトリか
 bool DiskBasicTypeMZ::IsRootDirectory(wxUint32 group_num)
 {
@@ -486,7 +391,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	newitem->SetFileAttr(FILE_TYPE_VOLUME_MASK | FILE_TYPE_READONLY_MASK);
 
 	buf += newitem->GetDataSize();
-	newitem->SetDataPtr((directory_t *)buf);
+	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
 
 	// カレント
 	newitem->CopyData(item->GetData());
@@ -494,7 +399,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK | FILE_TYPE_READONLY_MASK);
 
 	buf += newitem->GetDataSize();
-	newitem->SetDataPtr((directory_t *)buf);
+	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
 
 	// 親
 	if (parent_item) {
@@ -512,12 +417,6 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 
 }
 
-/// セクタデータを指定コードで埋める
-void DiskBasicTypeMZ::FillSector(DiskD88Track *track, DiskD88Sector *sector)
-{
-	sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFormat()));
-}
-
 /// セクタデータを埋めた後の個別処理
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
@@ -526,13 +425,14 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
-		int len = (int)basic->GetIPLString().Length();
-		if (len > 0) {
-			wxUint8 buf[16];
-			if (len > 16) len = 16;
-			memcpy(buf, basic->GetIPLString().To8BitData(), len);
-			basic->InvertMem(buf, len);
-			sector->Copy(buf, len);
+		wxUint8 *buf = sector->GetSectorBuffer();
+		if (buf) {
+			wxCharBuffer ipl = basic->GetIPLString().To8BitData();
+			size_t len = ipl.length();
+			if (len > 0) {
+				if (len > 32) len = 32;
+				basic->InvertMem((const wxUint8 *)ipl.data(), len, buf);
+			}
 		}
 	}
 
@@ -663,7 +563,7 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 /// データの書き込み終了後の処理
 void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
-	if (!item || (item->GetFileAttr() & FILE_TYPE_DIRECTORY_MASK) == 0) return;
+	if (!item || !item->GetFileAttr().IsDirectory()) return;
 
 	// ディレクトリの場合は、下位にあるボリューム名も変更する
 	DiskD88Sector *sector = basic->GetSectorFromGroup(item->GetStartGroup());
@@ -685,9 +585,20 @@ void DiskBasicTypeMZ::AdditionalProcessOnRenamedFile(DiskBasicDirItem *item)
 	AdditionalProcessOnSavedFile(item);
 }
 
-/// FAT領域を削除する
-void DiskBasicTypeMZ::DeleteGroupNumber(wxUint32 group_num)
+/// IPLや管理エリアの属性を得る
+void DiskBasicTypeMZ::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
-	// FATを未使用にする
-	SetGroupNumber(group_num, 0);
+	// ルートディレクトリのボリューム番号
+	DiskBasicDirItem *ditem = dir->FindFileByAttrOnRoot(FILE_TYPE_VOLUME_MASK, FILE_TYPE_VOLUME_MASK | FILE_TYPE_DIRECTORY_MASK);
+	if (ditem) {
+		wxUint8 buf[8];
+		buf[0] = 0;
+		ditem->GetFileName(buf, sizeof(buf));
+		data.SetVolumeNumber(buf[0]);
+	}
+}
+
+/// IPLや管理エリアの属性をセット
+void DiskBasicTypeMZ::SetIdentifiedData(const DiskBasicIdentifiedData &data)
+{
 }

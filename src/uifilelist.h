@@ -2,6 +2,9 @@
 ///
 /// @brief BASICファイル名一覧
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #ifndef _UIFILELIST_H_
 #define _UIFILELIST_H_
 
@@ -27,7 +30,13 @@
 
 class wxCustomDataObject;
 class wxFileDataObject;
+class wxButton;
+class wxTextCtrl;
+class wxRadioButton;
+class wxStaticText;
+class wxBoxSizer;
 class DiskBasic;
+class DiskBasics;
 class DiskBasicGroupItem;
 class DiskBasicDirItem;
 class DiskBasicDirItems;
@@ -62,6 +71,8 @@ enum en_disk_file_list_columns {
 	LISTCOL_END
 };
 
+//////////////////////////////////////////////////////////////////////
+
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
 /// ファイルリストの挙動を設定
 class L3DiskFileListStoreModel : public wxDataViewListStore
@@ -75,6 +86,8 @@ public:
 	virtual bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col);
 };
 #endif
+
+//////////////////////////////////////////////////////////////////////
 
 /// リストコントロール
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
@@ -92,11 +105,13 @@ public:
 	L3DiskFileListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id, const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
 	~L3DiskFileListCtrl();
 
+	/// リストにデータを挿入
 	long InsertListData(long row, int icon, const wxString &filename, const wxString &attr, int size, int groups, int start, int trk, int sid, int sec, const wxString &date, wxUIntPtr data);
-	void SetListData(DiskBasic *basic, DiskBasicDirItems *dir_items);
+	/// リストにデータを設定する
+	void SetListData(DiskBasic *basic, const DiskBasicDirItems *dir_items);
 
 //	int GetDirItemPos(const L3FileListItem &item) const;
-	/// テキストを設定
+	/// ファイル名テキストを設定
 	void SetListText(const L3FileListItem &item, const wxString &text);
 	/// 選択している行の位置を返す
 	int  GetListSelectedRow() const;
@@ -114,6 +129,8 @@ public:
 	wxUIntPtr GetListItemData(const L3FileListItem &item) const;
 };
 
+//////////////////////////////////////////////////////////////////////
+
 /// 右パネルのファイルリスト
 class L3DiskFileList : public wxPanel
 {
@@ -123,13 +140,15 @@ private:
 
 	wxTextCtrl *textAttr;
 	wxButton *btnChange;
+	wxStaticText *lblCharCode;
 	wxRadioButton *radCharAscii;
 	wxRadioButton *radCharSJIS;
 	L3DiskFileListCtrl *list;
+	wxBoxSizer *szrButtons;
 
 	wxMenu *menuPopup;
 
-	/// BASICフォーマットの情報
+	/// BASICフォーマットの情報 左パネルのディスクを選択すると設定される
 	DiskBasic *basic;
 
 	bool initialized;
@@ -259,6 +278,8 @@ public:
 
 	/// 指定したファイルを削除
 	bool DeleteDataFile();
+	/// ディレクトリを削除する
+	bool DeleteDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dst_item);
 
 	/// ファイル名の編集開始
 	void StartEditingFileName();
@@ -270,8 +291,10 @@ public:
 	/// ダブルクリックしたとき
 	void DoubleClicked();
 
+	/// ディレクトリをアサインする
+	bool AssignDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dst_item);
 	/// ディレクトリを移動する
-	bool ChangeDirectory(DiskBasicDirItem *dir_item);
+	bool ChangeDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dst_item, bool refresh_list);
 
 	/// ファイル属性プロパティダイアログを表示
 	void ShowFileAttr();
@@ -286,9 +309,6 @@ public:
 	bool ChangeBasicType();
 	/// BASIC情報ダイアログ
 	void ShowBasicAttr();
-
-	/// ディスクを論理フォーマット
-	bool FormatDisk();
 
 	/// ディレクトリを作成できるか
 	bool CanMakeDirectory() const;
@@ -329,21 +349,6 @@ public:
 
 	wxDECLARE_EVENT_TABLE();
 };
-
-#ifndef USE_DND_ON_TOP_PANEL
-/// ディスクファイル ドラッグ＆ドロップ
-class L3DiskFileListDropTarget : public wxDropTarget
-{
-	L3DiskFileList *parent;
-    L3DiskFrame *frame;
-
-public:
-    L3DiskFileListDropTarget(L3DiskFrame *parentframe, L3DiskFileList *parentwindow);
-
-	wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
-    bool OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames);
-};
-#endif
 
 #endif /* _UIFILELIST_H_ */
 

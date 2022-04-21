@@ -2,6 +2,9 @@
 ///
 /// @brief disk basic parameter
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basicparam.h"
 #include "utils.h"
 #include <wx/xml/xml.h>
@@ -9,6 +12,7 @@
 
 DiskBasicTemplates gDiskBasicTemplates;
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -31,6 +35,21 @@ DiskBasicFormat::DiskBasicFormat(
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicFormats);
 
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+SpecialAttribute::SpecialAttribute(int n_type, int n_value, int n_mask)
+{
+	type = n_type;
+	value = n_value;
+	mask = n_mask;
+}
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(SpecialAttributes);
+
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -49,6 +68,7 @@ DiskBasicParam::DiskBasicParam(
 	int					n_sectors_per_group,
 	int					n_sides_on_basic,
 	int					n_sectors_on_basic,
+	int					n_tracks_on_basic,
 	int					n_managed_track_number,
 	int					n_reserved_sectors,
 	int					n_number_of_fats,
@@ -73,6 +93,7 @@ DiskBasicParam::DiskBasicParam(
 	const wxString &	n_id_string,
 	const wxString &	n_ipl_string,
 	const wxString &	n_volume_string,
+	const SpecialAttributes & n_special_attrs,
 	wxUint8				n_fillcode_on_format,
 	wxUint8				n_fillcode_on_fat,
 	wxUint8				n_fillcode_on_dir,
@@ -89,6 +110,7 @@ DiskBasicParam::DiskBasicParam(
 	sectors_per_group = n_sectors_per_group;
 	sides_on_basic = n_sides_on_basic;
 	sectors_on_basic = n_sectors_on_basic;
+	tracks_on_basic = n_tracks_on_basic;
 	managed_track_number = n_managed_track_number;
 	reserved_sectors = n_reserved_sectors;
 	number_of_fats = n_number_of_fats;
@@ -113,6 +135,7 @@ DiskBasicParam::DiskBasicParam(
 	id_string = n_id_string;
 	ipl_string = n_ipl_string;
 	volume_string = n_volume_string;
+	special_attrs = n_special_attrs;
 	fillcode_on_format = n_fillcode_on_format;
 	fillcode_on_fat = n_fillcode_on_fat;
 	fillcode_on_dir = n_fillcode_on_dir;
@@ -131,6 +154,7 @@ void DiskBasicParam::ClearBasicParam()
 	sectors_per_group	 = 0;
 	sides_on_basic		 = 0;
 	sectors_on_basic	 = -1;
+	tracks_on_basic		 = -1;
 	managed_track_number = 0;
 	reserved_sectors	 = 0;
 	number_of_fats		 = 0;
@@ -155,6 +179,7 @@ void DiskBasicParam::ClearBasicParam()
 	id_string.Empty();
 	ipl_string.Empty();
 	volume_string.Empty();
+	special_attrs.Empty();
 	fillcode_on_format	 = 0x40;
 	fillcode_on_fat		 = 0xff;
 	fillcode_on_dir		 = 0xff;
@@ -173,6 +198,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	sectors_per_group = src.sectors_per_group;
 	sides_on_basic = src.sides_on_basic;
 	sectors_on_basic = src.sectors_on_basic;
+	tracks_on_basic = src.tracks_on_basic;
 	managed_track_number = src.managed_track_number;
 	reserved_sectors = src.reserved_sectors;
 	number_of_fats = src.number_of_fats;
@@ -197,6 +223,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	id_string = src.id_string;
 	ipl_string = src.ipl_string;
 	volume_string = src.volume_string;
+	special_attrs = src.special_attrs;
 	fillcode_on_format = src.fillcode_on_format;
 	fillcode_on_fat = src.fillcode_on_fat;
 	fillcode_on_dir = src.fillcode_on_dir;
@@ -233,6 +260,24 @@ bool DiskBasicParam::CanMountEachSides() const
 {
 	return (mount_each_sides && sides_on_basic == 1);
 }
+/// 属性が一致するか
+bool DiskBasicParam::MatchSpecialAttr(int type, int value) const
+{
+	bool match = false;
+	for(size_t i=0; i<special_attrs.Count(); i++) {
+		SpecialAttribute *attr = &special_attrs.Item(i);
+		if (attr->GetType() == type && attr->GetValue() == (value & attr->GetMask())) {
+			match = true;
+			break;
+		}
+	}
+	return match;
+}
+/// ボリューム属性が一致するか
+bool DiskBasicParam::MatchVolumeAttr(int value) const
+{
+	return MatchSpecialAttr(FILE_TYPE_VOLUME_MASK, value);
+}
 /// 説明文でソート
 int DiskBasicParam::SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2)
 {
@@ -242,6 +287,7 @@ int DiskBasicParam::SortByDescription(const DiskBasicParam **item1, const DiskBa
 #include <wx/arrimpl.cpp>
 WX_DEFINE_OBJARRAY(DiskBasicParams);
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -261,6 +307,7 @@ DiskBasicCategory::DiskBasicCategory(const wxString & n_basic_type_name, const w
 
 WX_DEFINE_OBJARRAY(DiskBasicCategories);
 
+//////////////////////////////////////////////////////////////////////
 //
 //
 //
@@ -275,18 +322,40 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 	if (!doc.Load(data_path + wxT("basic_types.xml"))) return false;
 
 	// start processing the XML file
-	if (doc.GetRoot()->GetName() != "DiskBasicTypes") return false;
+	if (doc.GetRoot()->GetName() != "DiskBasics") return false;
 
+	bool valid = true;
 	wxXmlNode *item = doc.GetRoot()->GetChildren();
-	while (item) {
+	while (item && valid) {
+		if (item->GetName() == "DiskBasicTypes") {
+			valid = LoadTypes(item, locale_name, errmsgs);
+		}
+		else if (item->GetName() == "DiskBasicFormats") {
+			valid = LoadFormats(item, locale_name, errmsgs);
+		}
+		else if (item->GetName() == "DiskBasicCategories") {
+			valid = LoadCategories(item, locale_name, errmsgs);
+		}
+		item = item->GetNext();
+	}
+	return valid;
+}
+
+/// DiskBasicTypeタグのロード
+bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+{
+	bool valid = true;
+	wxXmlNode *item = node->GetChildren();
+	while(item && valid) {
 		if (item->GetName() == "DiskBasicType") {
 			wxString type_name = item->GetAttribute("name");
 			wxString type_category = item->GetAttribute("category");
-			wxXmlNode *itemnode = item->GetChildren();
+
 			wxArrayInt reserved_groups;
 			int format_type_number	 = -1;
 			int sides_on_basic		 = 0;
 			int sectors_on_basic	 = -1;
+			int tracks_on_basic		 = -1;
 			int sectors_per_group	 = 0;
 			int managed_track_number = 0;
 			int fat_start_sector	 = 0;
@@ -294,7 +363,6 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			int fat_side_number		 = -1;
 			int fat_start_position	 = 0;
 			int fat_end_group		 = 0;
-			int reserved_group		 = 0;
 			int dir_start_sector	 = -1;
 			int dir_end_sector		 = -1;
 			int dir_entry_count		 = -1;
@@ -320,8 +388,12 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			bool side_reversed		 = false;
 			bool mount_each_sides	 = false;
 			wxString desc, desc_locale;
-			wxString id_string, ipl_string, volume_string;
+			wxString id_string;
+			wxString ipl_string;
+			wxString volume_string;
+			SpecialAttributes special_attrs;
 
+			wxXmlNode *itemnode = item->GetChildren();
 			while (itemnode) {
 				if (itemnode->GetName() == "FormatType") {
 					wxString str = itemnode->GetNodeContent();
@@ -335,6 +407,9 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				} else if (itemnode->GetName() == "SectorsPerTrack") {
 					wxString str = itemnode->GetNodeContent();
 					sectors_on_basic = L3DiskUtils::ToInt(str);
+				} else if (itemnode->GetName() == "TracksPerSide") {
+					wxString str = itemnode->GetNodeContent();
+					tracks_on_basic = L3DiskUtils::ToInt(str);
 				} else if (itemnode->GetName() == "ManagedTrackNumber") {
 					wxString str = itemnode->GetNodeContent();
 					managed_track_number = L3DiskUtils::ToInt(str);
@@ -367,8 +442,8 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 					while(citemnode) {
 						if (citemnode->GetName() == "Group") {
 							wxString str = citemnode->GetNodeContent();
-							reserved_group = L3DiskUtils::ToInt(str);
-							reserved_groups.Add((int)reserved_group);
+							int reserved_group = L3DiskUtils::ToInt(str);
+							reserved_groups.Add(reserved_group);
 						}
 						citemnode = citemnode->GetNext();
 					}
@@ -441,6 +516,18 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 					ipl_string = L3DiskUtils::Escape(itemnode->GetNodeContent());
 				} else if (itemnode->GetName() == "VolumeString") {
 					volume_string = L3DiskUtils::Escape(itemnode->GetNodeContent());
+				} else if (itemnode->GetName() == "SpecialAttributes") {
+					wxXmlNode *citemnode = itemnode->GetChildren();
+					while(citemnode) {
+						if (citemnode->GetName() == "Volume") {
+							wxString sval = item->GetAttribute("value");
+							wxString smsk = item->GetAttribute("mask");
+							int val = L3DiskUtils::ToInt(sval);
+							int msk = L3DiskUtils::ToInt(smsk);
+							special_attrs.Add(SpecialAttribute(FILE_TYPE_VOLUME_MASK, val, msk));
+						}
+						citemnode = citemnode->GetNext();
+					}
 				} else if (itemnode->GetName() == "Description") {
 					if (itemnode->HasAttribute("lang")) {
 						wxString lang = itemnode->GetAttribute("lang");
@@ -462,7 +549,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 			if (!desc_locale.IsEmpty()) {
 				desc = desc_locale;
 			}
-			DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)format_type_number);
+			const DiskBasicFormat *format_type = FindFormat((DiskBasicFormatType)format_type_number);
 			DiskBasicParam p(
 				type_name,
 				type_category,
@@ -470,6 +557,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				sectors_per_group,
 				sides_on_basic,
 				sectors_on_basic,
+				tracks_on_basic,
 				managed_track_number,
 				reserved_sectors,
 				number_of_fats,
@@ -494,6 +582,7 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				id_string,
 				ipl_string,
 				volume_string,
+				special_attrs,
 				fill_code_on_format,
 				fill_code_on_fat,
 				fill_code_on_dir,
@@ -514,14 +603,26 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				return false;
 			}
 		}
-		else if (item->GetName() == "DiskBasicFormat") {
+		item = item->GetNext();
+	}
+	return valid;
+}
+
+/// DiskBasicFormatタグのロード
+bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+{
+	bool valid = true;
+	wxXmlNode *item = node->GetChildren();
+	while(item && valid) {
+		if (item->GetName() == "DiskBasicFormat") {
 			wxString s_type_number = item->GetAttribute("type");
 			int type_number = L3DiskUtils::ToInt(s_type_number);
 //			wxString name = item->GetAttribute("name");
-			wxXmlNode *itemnode = item->GetChildren();
 			wxString str;
 			bool has_volume_name = false;
 			bool has_volume_number = false;
+
+			wxXmlNode *itemnode = item->GetChildren();
 			while (itemnode) {
 				if (itemnode->GetName() == "HasVolumeName") {
 					str = itemnode->GetNodeContent();
@@ -543,13 +644,26 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				errmsgs += wxT("\n");
 				errmsgs += _("Duplicate type number in DiskBasicFormat : ");
 				errmsgs += wxString::Format(wxT("%d"), type_number);
-				return false;
+				valid = false;
+				break;
 			}
 		}
-		else if (item->GetName() == "DiskBasicCategory") {
+		item = item->GetNext();
+	}
+	return valid;
+}
+
+/// DiskBasicCategoryタグのロード
+bool DiskBasicTemplates::LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+{
+	bool valid = true;
+	wxXmlNode *item = node->GetChildren();
+	while(item && valid) {
+		if (item->GetName() == "DiskBasicCategory") {
 			wxString type_name = item->GetAttribute("name");
-			wxXmlNode *itemnode = item->GetChildren();
 			wxString desc, desc_locale;
+
+			wxXmlNode *itemnode = item->GetChildren();
 			while (itemnode) {
 				if (itemnode->GetName() == "Description") {
 					if (itemnode->HasAttribute("lang")) {
@@ -576,19 +690,20 @@ bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_
 				errmsgs += wxT("\n");
 				errmsgs += _("Duplicate type name in DiskBasicCategory : ");
 				errmsgs += type_name;
-				return false;
+				valid = false;
+				break;
 			}
 		}
 		item = item->GetNext();
 	}
-	return true;
+	return valid;
 }
 
 /// カテゴリとタイプに一致するパラメータを検索
 /// @param [in] n_category  : カテゴリ名 空文字列の場合は検索条件からはずす
 /// @param [in] n_basic_type: タイプ名
 /// @return 一致したパラメータ
-DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxString &n_basic_type)
+const DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxString &n_basic_type) const
 {
 	DiskBasicParam *match_item = NULL;
 	for(size_t i=0; i<types.Count(); i++) {
@@ -606,9 +721,9 @@ DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const w
 /// @param [in] n_category   : カテゴリ名 空文字列の場合は検索条件からはずす
 /// @param [in] n_basic_types: タイプ名リスト
 /// @return 一致したパラメータ
-DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxArrayString &n_basic_types)
+const DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxArrayString &n_basic_types) const
 {
-	DiskBasicParam *match_item = NULL;
+	const DiskBasicParam *match_item = NULL;
 	for(size_t i=0; i<n_basic_types.Count() && match_item == NULL; i++) {
 		match_item = this->FindType(n_category, n_basic_types.Item(i));
 	}
@@ -621,9 +736,9 @@ DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const w
 /// @param [in] n_sides      : サイド数
 /// @param [in] n_sectors    : セクタ数/トラック -1の場合は検索条件からはずす
 /// @return 一致したパラメータ
-DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors)
+const DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const wxString &n_basic_type, int n_sides, int n_sectors) const
 {
-	DiskBasicParam *match_item = NULL;
+	const DiskBasicParam *match_item = NULL;
 	// カテゴリ、タイプで一致するか
 	match_item = FindType(n_category, n_basic_type);
 	// カテゴリ、サイド数、セクタ数で一致するか
@@ -631,8 +746,8 @@ DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const w
 		for(size_t i=0; i<types.Count(); i++) {
 			DiskBasicParam *item = &types[i];
 			if (n_category == item->GetBasicCategoryName()) {
-				if (n_sides == item->GetSidesOnBasic()) {
-					if (n_sectors < 0 || item->GetSectorsOnBasic() < 0 || n_sectors == item->GetSectorsOnBasic()) {
+				if (n_sides == item->GetSidesPerDiskOnBasic()) {
+					if (n_sectors < 0 || item->GetSectorsPerTrackOnBasic() < 0 || n_sectors == item->GetSectorsPerTrackOnBasic()) {
 						match_item = item;
 						break;
 					}
@@ -646,7 +761,7 @@ DiskBasicParam *DiskBasicTemplates::FindType(const wxString &n_category, const w
 /// @param [in]  n_format_types : DISK BASICフォーマット種類
 /// @param [out] n_types        : 一致したタイプリスト
 /// @return リストの数
-size_t DiskBasicTemplates::FindTypes(const wxArrayInt &n_format_types, DiskBasicParams &n_types)
+size_t DiskBasicTemplates::FindTypes(const wxArrayInt &n_format_types, DiskBasicParams &n_types) const
 {
 	n_types.Clear();
 	for(size_t n=0; n<types.Count(); n++) {
@@ -664,7 +779,7 @@ size_t DiskBasicTemplates::FindTypes(const wxArrayInt &n_format_types, DiskBasic
 /// @param [in]  n_category_index : カテゴリ番号
 /// @param [out] n_type_names     : タイプ名リスト
 /// @return リストの数
-size_t DiskBasicTemplates::FindTypeNames(size_t n_category_index, wxArrayString &n_type_names)
+size_t DiskBasicTemplates::FindTypeNames(size_t n_category_index, wxArrayString &n_type_names) const
 {
 	return FindTypeNames(categories.Item(n_category_index).GetBasicTypeName(), n_type_names);
 }
@@ -672,7 +787,7 @@ size_t DiskBasicTemplates::FindTypeNames(size_t n_category_index, wxArrayString 
 /// @param [in]  n_category_name  : カテゴリ名
 /// @param [out] n_type_names     : タイプ名リスト
 /// @return リストの数
-size_t DiskBasicTemplates::FindTypeNames(const wxString &n_category_name, wxArrayString &n_type_names)
+size_t DiskBasicTemplates::FindTypeNames(const wxString &n_category_name, wxArrayString &n_type_names) const
 {
 	n_type_names.Clear();
 	for(size_t n=0; n<types.Count(); n++) {
@@ -685,7 +800,7 @@ size_t DiskBasicTemplates::FindTypeNames(const wxString &n_category_name, wxArra
 }
 /// フォーマット種類を検索
 /// @param [in]  format_type  : フォーマット種類
-DiskBasicFormat *DiskBasicTemplates::FindFormat(DiskBasicFormatType format_type)
+const DiskBasicFormat *DiskBasicTemplates::FindFormat(DiskBasicFormatType format_type) const
 {
 	DiskBasicFormat *match = NULL;
 	for(size_t n=0; n<formats.Count(); n++) {
@@ -703,10 +818,10 @@ DiskBasicFormat *DiskBasicTemplates::FindFormat(DiskBasicFormatType format_type)
 /// @param [in]  n_type_names     : タイプ名リスト
 /// @param [out] params           : パラメータリスト
 /// @return パラメータリストの数
-size_t DiskBasicTemplates::FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params)
+size_t DiskBasicTemplates::FindParams(const wxArrayString &n_type_names, DiskBasicParamPtrs &params) const
 {
 	for(size_t n = 0; n < n_type_names.Count(); n++) {
-		DiskBasicParam *param = FindType(wxEmptyString, n_type_names.Item(n));
+		const DiskBasicParam *param = FindType(wxEmptyString, n_type_names.Item(n));
 		if (!param) continue;
 		params.Add(param);
 	}
@@ -717,7 +832,7 @@ size_t DiskBasicTemplates::FindParams(const wxArrayString &n_type_names, DiskBas
 
 /// カテゴリを検索
 /// @param [in]  n_category : カテゴリ名
-DiskBasicCategory *DiskBasicTemplates::FindCategory(const wxString &n_category)
+const DiskBasicCategory *DiskBasicTemplates::FindCategory(const wxString &n_category) const
 {
 	DiskBasicCategory *match = NULL;
 	for(size_t n=0; n<categories.Count(); n++) {

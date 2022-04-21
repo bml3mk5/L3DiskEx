@@ -2,11 +2,15 @@
 ///
 /// @brief disk basic fat type
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
+
 #include "basictype_fat12.h"
 #include "basicfmt.h"
 #include "basicdir.h"
 #include "basicdiritem.h"
 #include "logging.h"
+
 
 //
 //
@@ -57,7 +61,7 @@ bool DiskBasicTypeFAT12::CheckFat()
 
 	// 最終グループ番号を計算
 	int max_grp_on_fat = basic->GetSectorsPerFat() * basic->GetSectorSize() * 2 / 3;
-	int max_grp_on_prm = (basic->GetSidesOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
+	int max_grp_on_prm = (basic->GetSidesPerDiskOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
 
 	basic->SetFatEndGroup(max_grp_on_fat > max_grp_on_prm ? max_grp_on_prm : max_grp_on_fat);
 
@@ -88,7 +92,7 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 		// サイド数が少ない
 		valid = 1;
 	}
-	if (basic->GetSidesOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
+	if (basic->GetSidesPerDiskOnBasic() != wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads)) {
 		// BASICテンプレートのサイド数が異なる
 		valid = 1;
 	}
@@ -98,7 +102,7 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 	}
 
 	if (valid == 0) {
-		basic->SetSidesOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads));
+		basic->SetSidesPerDiskOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads));
 		basic->SetSectorsPerGroup(bpb->BPB_SecPerClus);
 		basic->SetReservedSectors(wxUINT16_SWAP_ON_BE(bpb->BPB_RsvdSecCnt));
 		basic->SetNumberOfFats(bpb->BPB_NumFATs);
@@ -112,17 +116,24 @@ int DiskBasicTypeFAT12::ParseParamOnDisk(DiskD88Disk *disk)
 		basic->SetSectorsPerTrackOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_SecPerTrk));
 
 		basic->SetMediaId(bpb->BPB_Media);
+
+		// トラック数
+		int tracks_per_side = wxUINT16_SWAP_ON_BE(bpb->BPB_TotSec16);
+		if (tracks_per_side > 0) {
+			tracks_per_side = tracks_per_side / basic->GetSidesPerDiskOnBasic() / basic->GetSectorsPerTrackOnBasic();
+			basic->SetTracksPerSideOnBasic(tracks_per_side);
+		}
 	}
 
 	// 最終グループ番号を計算
 	int max_grp_on_fat = basic->GetSectorsPerFat() * basic->GetSectorSize() * 2 / 3;
-//	int max_grp_on_prm = ((basic->GetSidesOnBasic() * disk->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup());
-	int max_grp_on_prm = (basic->GetSidesOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
+//	int max_grp_on_prm = ((basic->GetSidesPerDiskOnBasic() * disk->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup());
+	int max_grp_on_prm = (basic->GetSidesPerDiskOnBasic() * basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() - basic->GetDirEndSector()) / basic->GetSectorsPerGroup() + 1;
 
 	basic->SetFatEndGroup(max_grp_on_fat > max_grp_on_prm ? max_grp_on_prm : max_grp_on_fat);
 
 	// テンプレートに一致するものがあるか
-	DiskBasicParam *param = gDiskBasicTemplates.FindType(basic->GetBasicCategoryName(), basic->GetBasicTypeName(), basic->GetSidesOnBasic(), basic->GetSectorsPerTrackOnBasic());
+	const DiskBasicParam *param = gDiskBasicTemplates.FindType(basic->GetBasicCategoryName(), basic->GetBasicTypeName(), basic->GetSidesPerDiskOnBasic(), basic->GetSectorsPerTrackOnBasic());
 	if (param) {
 		basic->SetBasicDescription(param->GetBasicDescription());
 	}
@@ -356,12 +367,12 @@ bool DiskBasicTypeFAT12::CreateBiosParameterBlock(const char *jmp, const char *n
 	hed->BPB_RsvdSecCnt = wxUINT16_SWAP_ON_BE(basic->GetReservedSectors());
 	hed->BPB_NumFATs = basic->GetNumberOfFats();
 	hed->BPB_RootEntCnt = wxUINT16_SWAP_ON_BE(basic->GetDirEntryCount());
-	len = basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesOnBasic();
+	len = basic->GetTracksPerSide() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
 	hed->BPB_TotSec16 = wxUINT16_SWAP_ON_BE(len);
 	hed->BPB_Media = basic->GetMediaId();
 	hed->BPB_FATSz16 = wxUINT16_SWAP_ON_BE(basic->GetSectorsPerFat());
 	hed->BPB_SecPerTrk =  wxUINT16_SWAP_ON_BE(basic->GetSectorsPerTrackOnBasic());
-	hed->BPB_NumHeads = wxUINT16_SWAP_ON_BE(basic->GetSidesOnBasic());
+	hed->BPB_NumHeads = wxUINT16_SWAP_ON_BE(basic->GetSidesPerDiskOnBasic());
 
 	// FATの先頭にメディアIDをセット
 	SetGroupNumber(0, 0xffffff00 | basic->GetMediaId());
@@ -402,7 +413,7 @@ void DiskBasicTypeFAT12::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
 
 	buf += newitem->GetDataSize();
-	newitem->SetDataPtr((directory_t *)buf);
+	newitem->SetDataPtr(0, 0, 0, sector, 0, buf);
 
 	// 親
 	if (parent_item) {

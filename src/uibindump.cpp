@@ -2,10 +2,11 @@
 ///
 /// @brief バイナリダンプ
 ///
+/// @author Copyright (c) Sasaji. All rights reserved.
+///
 
 #include "uibindump.h"
 #include <wx/statline.h>
-#include <wx/textctrl.h>
 #include <wx/radiobut.h>
 #include <wx/checkbox.h>
 #include <wx/button.h>
@@ -16,15 +17,26 @@
 #include "main.h"
 #include "fontminibox.h"
 #include "utils.h"
+#include "logging.h"
+
 
 #define SCROLLBAR_UNIT	4
 
 //
 //
 //
-//static const int IDT_TOOLBAR = 501;
-//static const long TOOLBAR_STYLE = wxTB_FLAT | wxTB_DOCKABLE | wxTB_TEXT;
+L3DiskBinDumpTextCtrl::L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id)
+#ifdef USE_RICH_TEXT_ON_BINDUMP
+	: wxRichTextCtrl(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, wxRE_MULTILINE | wxRE_READONLY)
+#else
+	: wxTextCtrl(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 | wxTE_NO_VSCROLL)
+#endif
+{
+};
 
+//
+//
+//
 // Attach Event
 wxBEGIN_EVENT_TABLE(L3DiskBinDumpFrame, wxFrame)
 	EVT_MENU(wxID_CLOSE, L3DiskBinDumpFrame::OnClose)
@@ -51,7 +63,7 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 	menuView->AppendSeparator();
 	menuView->AppendCheckItem(IDM_VIEW_INVERT, _("&Invert Datas"));
 	menuView->AppendSeparator();
-	menuView->AppendCheckItem(IDM_VIEW_FONT, _("&Font..."));
+	menuView->Append(IDM_VIEW_FONT, _("&Font..."));
 
 	// menu bar
 	wxMenuBar *menuBar = new wxMenuBar;
@@ -152,14 +164,14 @@ void L3DiskBinDumpFrame::SetDataFont(const wxFont &font)
 {
 	panel->SetDataFont(font);
 	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
-	parent->SetDumpFont(font);
+	parent->SetIniDumpFont(font);
 }
 
 void L3DiskBinDumpFrame::GetDefaultDataFont(wxFont &font)
 {
 	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
-	wxString name = parent->GetDumpFontName();
-	int size = parent->GetDumpFontSize();
+	wxString name = parent->GetIniDumpFontName();
+	int size = parent->GetIniDumpFontSize();
 	if (size == 0) size = 10;
 	if (name.IsEmpty()) {
 		font = wxFont(size, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
@@ -377,6 +389,7 @@ void L3DiskBinDumpAttr::SetDataChar(int val)
 		break;
 	}
 }
+
 //
 //
 //
@@ -397,40 +410,41 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	wxFont font;
 	frame->GetDefaultDataFont(font);
 
-	wxPoint pt(0, 0);
-	wxSize sz;
-
-	txtHex = new wxTextCtrl(this, IDC_TXT_HEX, wxT(""), pt, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 | wxTE_NO_VSCROLL);
+	txtHex = new L3DiskBinDumpTextCtrl(this, IDC_TXT_HEX);
 	txtHex->SetFont(font);
-	sz = txtHex->GetTextExtent(wxString((char)'0', 60));
-	sz.y *= 35;
-	txtHex->SetSize(sz);
 	txtHex->Bind(wxEVT_MOUSEWHEEL, &L3DiskBinDump::OnMouseWheelOnChild, this);
-	pt.x += sz.x;
 
-	txtAsc = new wxTextCtrl(this, IDC_TXT_ASC, wxT(""), pt, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY | wxTE_RICH2 | wxTE_NO_VSCROLL);
+	txtAsc = new L3DiskBinDumpTextCtrl(this, IDC_TXT_ASC);
 	txtAsc->SetFont(font);
-	sz = txtAsc->GetTextExtent(wxString((char)'0', 30));
-	sz.y *= 35;
-	txtAsc->SetSize(sz);
 	txtAsc->Bind(wxEVT_MOUSEWHEEL, &L3DiskBinDump::OnMouseWheelOnChild, this);
-	pt.x += sz.x;
-
-	pt.y += sz.y;
-
-	min_x = pt.x;
-	min_y = pt.y;
 
 	txt_height = 0;
 	text_binary = 1;
 
+	CalcWidthOnTextCtrl(wxPoint(0, 0), 35);
+
 	parent->SetClientSize(min_x, min_y);
-	SetScrollBarPos(min_x, min_y, 0, 0);
 }
 
 L3DiskBinDump::~L3DiskBinDump()
 {
 	ClearBuffer();
+}
+
+void L3DiskBinDump::OnSize(wxSizeEvent& event)
+{
+}
+
+void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
+{
+	wxPoint pt = GetViewStart();
+	int sx, sy;
+	GetScrollPixelsPerUnit(&sx, &sy);
+#ifdef __WXOSX__
+	Scroll(wxDefaultCoord, pt.y - (event.GetWheelRotation() / sy));
+#else
+	Scroll(wxDefaultCoord, pt.y - (event.GetWheelRotation() / sy));
+#endif
 }
 
 void L3DiskBinDump::ClearBuffer()
@@ -453,28 +467,14 @@ L3MemoryBuffer *L3DiskBinDump::AppendBuffer(int trk, int sid, int sec, const wxU
 	return p;
 }
 
-void L3DiskBinDump::OnSize(wxSizeEvent& event)
-{
-}
-
-void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
-{
-	wxPoint pt = GetViewStart();
-	int sx, sy;
-	GetScrollPixelsPerUnit(&sx, &sy);
-#ifdef __WXOSX__
-	Scroll(wxDefaultCoord, pt.y - (event.GetWheelRotation() / sy));
-#else
-	Scroll(wxDefaultCoord, pt.y - (event.GetWheelRotation() / sy));
-#endif
-}
-
+/// ダンプにデータを表示
 void L3DiskBinDump::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
 	ClearBuffer();
 	SetDatasMain(AppendBuffer(trk, sid, sec, buf, len));
 }
 
+/// ダンプにデータを表示
 void L3DiskBinDump::SetDatasMain(const L3MemoryBuffer *buf)
 {
 	switch(text_binary) {
@@ -487,6 +487,26 @@ void L3DiskBinDump::SetDatasMain(const L3MemoryBuffer *buf)
 	}
 }
 
+/// ダンプにデータを表示（追記）
+void L3DiskBinDump::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+{
+	AppendDatasMain(AppendBuffer(trk, sid, sec, buf, len));
+}
+
+/// ダンプにデータを表示（追記）
+void L3DiskBinDump::AppendDatasMain(const L3MemoryBuffer *buf)
+{
+	switch(text_binary) {
+	case 1:
+		SetDatasBinaryMain(buf, true);
+		break;
+	default:
+		SetDatasTextMain(buf, true);
+		break;
+	}
+}
+
+/// バイナリダンプ時のデータ設定
 void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
 {
 	wxString str, stra;
@@ -519,15 +539,7 @@ void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
 	cszH = txtHex->GetSize();
 	cszA = txtAsc->GetSize();
 
-#ifdef __WXOSX__
-	sz = txtAsc->GetTextExtent(str);
-	int yy = txt_height + ((double)sz.y * 1.4) * rows;
-#else
-	wxPoint pz = txtAsc->PositionToCoords(txtAsc->GetLastPosition());
-	sz = txtAsc->GetTextExtent(stra);
-	tz = txtAsc->GetSizeFromTextSize(sz);
-	int yy = pz.y + tz.y;
-#endif
+	int yy = CalcHeightOnTextCtrl(txtAsc, rows, stra);
 
 	txt_height = yy;
 
@@ -546,6 +558,7 @@ void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
 	Thaw();
 }
 
+/// テキストダンプ時のデータ設定
 void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
 {
 	wxString str;
@@ -568,15 +581,7 @@ void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
 
 	cszH = txtHex->GetSize();
 
-#ifdef __WXOSX__
-	sz = txtHex->GetTextExtent(str);
-	int yy = txt_height + ((double)sz.y * 1.4) * rows;
-#else
-	wxPoint pz = txtHex->PositionToCoords(txtHex->GetLastPosition());
-	sz = txtHex->GetTextExtent(str);
-	tz = txtHex->GetSizeFromTextSize(sz);
-	int yy = pz.y + tz.y;
-#endif
+	int yy = CalcHeightOnTextCtrl(txtHex, rows, str);
 
 	txt_height = yy;
 
@@ -593,74 +598,98 @@ void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
 	Thaw();
 }
 
-void L3DiskBinDump::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+/// テキストコントロールの幅を計算して設定する
+/// @param [in] pv       ビューポイント
+/// @param [in] def_rows 初期行数
+void L3DiskBinDump::CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows)
 {
-	AppendDatasMain(AppendBuffer(trk, sid, sec, buf, len));
-}
+	wxPoint pt;
+	wxSize hsz, asz, htz, atz;
 
-void L3DiskBinDump::AppendDatasMain(const L3MemoryBuffer *buf)
-{
-	switch(text_binary) {
-	case 1:
-		SetDatasBinaryMain(buf, true);
-		break;
-	default:
-		SetDatasTextMain(buf, true);
-		break;
+	htz = txtHex->GetTextExtent(wxString((char)'0', 64));
+	if (def_rows >= 0) {
+		txtHex->SetPosition(wxPoint(0, 0));
+		hsz.x = htz.x;
+		hsz.y = htz.y * def_rows;
+	} else {
+		hsz = txtHex->GetSize();
+		hsz.x = htz.x;
 	}
+
+	atz = txtAsc->GetTextExtent(wxString((char)'0', 30));
+	if (def_rows >= 0) {
+		asz.x = atz.x;
+		asz.y = atz.y * def_rows;
+	} else {
+		asz = txtAsc->GetSize();
+		asz.x = atz.x;
+	}
+
+	if (def_rows >= 0) {
+		pt.x = hsz.x;
+		pt.y = 0;
+	} else {
+//		pt = txtAsc->GetPosition();
+		pt.x = htz.x - pv.x;
+		pt.y = -pv.y;
+	}
+	txtAsc->SetPosition(pt);
+
+	min_x = hsz.x + asz.x;
+	if (def_rows >= 0) {
+		min_y = asz.y;
+	}
+
+	if (text_binary == 0) {
+		// text
+		hsz.x += asz.x;
+	}
+
+	txtHex->SetSize(hsz);
+	txtAsc->SetSize(asz);
+
+	SetScrollBarPos(min_x, asz.y, pv.x, pv.y);
 }
 
-#if 0
-void L3DiskBinDump::AppendDatasBinaryMain(const L3MemoryBuffer *buf)
+/// テキストコントロールの高さを計算し設定する
+/// @param [in] ctrl テキストコントロール
+/// @param [in] rows 行数
+/// @param [in] str  文字列
+int L3DiskBinDump::CalcHeightOnTextCtrl(const L3DiskBinDumpTextCtrl *ctrl, int rows, const wxString &str)
 {
-	wxString str, stra;
-	wxSize sz, tz, cszH, cszA;
+	int yy = 0;
+	wxSize sz;
 
-	Freeze();
+#if defined(__WXOSX__)
+	sz = ctrl->GetTextExtent(str);
+	yy = txt_height + ((double)sz.y * 1.4) * rows;
 
-	int rows = dump.DumpBinary(buf->GetByteData(),buf->GetDataLen(),str,data_invert);
-	dump.DumpAscii(buf->GetByteData(),buf->GetDataLen(),data_char,stra,data_invert);
+#elif defined(__WXGTK__)
+	sz = ctrl->GetTextExtent(wxT("#\n") + str);
+	wxSize tz = ctrl->GetSizeFromTextSize(sz);
+	yy = txt_height + tz.y;
 
-	txtHex->AppendText(wxT("\n"));	
-	txtHex->AppendText(wxString::Format(wxT("# C:%d H:%d R:%d\n"),buf->GetTrackNumber(),buf->GetSideNumber(),buf->GetSectorNumber()));	
-	txtHex->AppendText(str);
-	txtAsc->AppendText(wxT("\n"));	
-	txtAsc->AppendText(wxT("#\n"));	
-	txtAsc->AppendText(stra);
-
-	rows++;
-
-	txtHex->ShowPosition(0);
-	txtAsc->ShowPosition(0);
-
-	sz = txtAsc->GetTextExtent(str);
-	tz = txtAsc->GetSizeFromTextSize(sz);
-	cszH = txtHex->GetSize();
-	cszA = txtAsc->GetSize();
-
-#ifdef __WXOSX__
-	int yy = txt_height + ((double)sz.y * 1.4) * rows;
+//	myLog.SetInfo("sz.y:%d tz.y:%d", sz.y, tz.y);
 #else
-	int yy = txt_height + sz.y * rows + (tz.y - sz.y) * rows / 2;
+	wxTextPos last_pos = ctrl->GetLastPosition();
+#ifdef USE_RICH_TEXT_ON_BINDUMP
+	long pz_col = 0;
+	long pz_row = 0;
+	ctrl->PositionToXY(last_pos, &pz_col, &pz_row);
+	sz = ctrl->GetTextExtent(str);
+	wxSize tz = ctrl->GetSizeFromTextSize(sz);
+	yy = (int)(pz_row * (tz.y >= 0 ? tz.y : (sz.y + 8)));
+#else
+	wxPoint pz = ctrl->PositionToCoords(last_pos);
+	sz = ctrl->GetTextExtent(str);
+	wxSize tz = ctrl->GetSizeFromTextSize(sz);
+	yy = pz.y + tz.y;
+
+//	myLog.SetInfo("pz.y:%d sz.y:%d tz.y:%d", pz.y, sz.y, tz.y);
 #endif
-
-	txt_height = yy;
-
-	if (min_y > yy) {
-		yy = min_y;
-	}
-
-	cszH.y = yy;
-	cszA.y = yy;
-
-	txtHex->SetSize(cszH);
-	txtAsc->SetSize(cszA);
-
-	SetScrollBarPos(min_x, yy, -1, -1);
-
-	Thaw();
+#endif
+	return yy;
 }
-#endif
 
 void L3DiskBinDump::RefreshData()
 {
@@ -716,41 +745,20 @@ void L3DiskBinDump::SetDataChar(int val)
 		RefreshData();
 	}
 }
+
+/// フォントを設定
 void L3DiskBinDump::SetDataFont(const wxFont &font)
 {
-	wxPoint pt, pv;
-	wxSize hsz, asz, sz;
+	wxPoint pv;
 
 	pv = GetViewStart();
 	pv.x *= SCROLLBAR_UNIT;
 	pv.y *= SCROLLBAR_UNIT;
 
 	txtHex->SetFont(font);
-	hsz = txtHex->GetSize();
-	sz = txtHex->GetTextExtent(wxString((char)'0', 60));
-	hsz.x = sz.x;
-
 	txtAsc->SetFont(font);
-	pt = txtAsc->GetPosition();
-	pt.x = sz.x - pv.x;
-	pt.y = -pv.y;
-	txtAsc->SetPosition(pt);
 
-	asz = txtAsc->GetSize();
-	sz = txtAsc->GetTextExtent(wxString((char)'0', 30));
-	asz.x = sz.x;
-
-	min_x = hsz.x + asz.x;
-
-	if (text_binary == 0) {
-		// text
-		hsz.x += asz.x;
-	}
-
-	txtHex->SetSize(hsz);
-	txtAsc->SetSize(asz);
-
-	SetScrollBarPos(min_x, asz.y, pv.x, pv.y);
+	CalcWidthOnTextCtrl(pv, -1);
 
 	RefreshData();
 }
