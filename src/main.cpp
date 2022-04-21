@@ -450,7 +450,7 @@ void L3DiskFrame::OnMenuOpen(wxMenuEvent& event)
 #endif
 
 /// ドロップされたファイルを開く
-void L3DiskFrame::OpenDroppedFile(wxString &path)
+void L3DiskFrame::OpenDroppedFile(const wxString &path)
 {
  	if (!CloseDataFile()) return;
 	OpenDataFile(path);
@@ -856,10 +856,11 @@ void L3DiskFrame::UpdateMenuFileList(L3DiskFileList *list)
 	opened = (opened && list->IsFormattedBasicDisk());
 	menuDisk->Enable(IDM_IMPORT_DISK, opened);
 
-	int	pos = list->GetSelectedRow();
-	opened = (opened && pos >= 0);
+	int	cnt = list->GetSelectedItemCount();
+	opened = (opened && cnt > 0);
 	menuDisk->Enable(IDM_EXPORT_DISK, opened);
 	menuDisk->Enable(IDM_DELETE_DISK, opened);
+	opened = (opened && cnt == 1);
 	menuDisk->Enable(IDM_RENAME_FILE_ON_DISK, opened);
 	menuDisk->Enable(IDM_PROPERTY_DISK, opened);
 }
@@ -872,8 +873,8 @@ void L3DiskFrame::UpdateToolBarFileList(L3DiskFileList *list)
 	bool opened = (list && list->IsFormattedBasicDisk());
 	toolBar->EnableTool(IDM_IMPORT_DISK, opened);
 
-	int pos = list->GetSelectedRow();
-	opened = (opened && pos >= 0);
+	int	cnt = list->GetSelectedItemCount();
+	opened = (opened && cnt > 0);
 	toolBar->EnableTool(IDM_EXPORT_DISK, opened);
 	toolBar->EnableTool(IDM_DELETE_DISK, opened);
 //	toolBar->EnableTool(IDM_RENAME_FILE_ON_DISK, opened);
@@ -900,6 +901,8 @@ void L3DiskFrame::UpdateMenuRawDisk(L3DiskRawPanel *rawpanel)
 	int pos = rawpanel->GetSectorListSelectedRow();
 	opened = (opened && pos >= 0);
 	menuDisk->Enable(IDM_PROPERTY_DISK, opened);
+
+	menuDisk->Enable(IDM_RENAME_FILE_ON_DISK, false);
 }
 
 void L3DiskFrame::UpdateToolBarRawDisk(L3DiskRawPanel *rawpanel)
@@ -946,6 +949,12 @@ const wxString &L3DiskFrame::GetRecentPath() const
 	return ini->GetFilePath();
 }
 
+/// 最近使用したパスを取得(エクスポート用)
+const wxString &L3DiskFrame::GetExportFilePath() const
+{
+	return ini->GetExportFilePath();
+}
+
 /// 最近使用したファイルを更新（一覧も更新）
 void L3DiskFrame::SetRecentPath(const wxString &path)
 {
@@ -958,6 +967,12 @@ void L3DiskFrame::SetRecentPath(const wxString &path)
 void L3DiskFrame::SetFilePath(const wxString &path)
 {
 	ini->SetFilePath(path);
+}
+
+/// 最近使用したパスを更新(エクスポート用)
+void L3DiskFrame::SetExportFilePath(const wxString &path)
+{
+	ini->SetExportFilePath(path);
 }
 
 /// ウィンドウ上のデータを更新
@@ -1372,6 +1387,11 @@ void L3DiskFrame::FormatDisk()
 	}
 }
 
+#ifdef USE_DND_ON_TOP_PANEL
+// ドラッグアンドドロップ時のフォーマットID
+wxDataFormat *L3DiskPanelDataFormat = NULL;
+#endif
+
 //
 // メインパネルは分割ウィンドウ
 //
@@ -1399,7 +1419,118 @@ L3DiskPanel::L3DiskPanel(L3DiskFrame *parent)
 	SplitVertically(lpanel, rpanel, 200);
 
 	SetMinimumPaneSize(10);
+
+#ifdef USE_DND_ON_TOP_PANEL
+	// drag and drop
+	if (!L3DiskPanelDataFormat) {
+		L3DiskPanelDataFormat = new wxDataFormat(wxT("L3DISKPANELDATA"));
+	}
+	SetDropTarget(new L3DiskPanelDropTarget(parent, this));
+#endif
 }
+
+L3DiskPanel::~L3DiskPanel()
+{
+#ifdef USE_DND_ON_TOP_PANEL
+	delete L3DiskPanelDataFormat;
+	L3DiskPanelDataFormat = NULL;
+#endif
+}
+
+/// ドロップされたファイルを処理
+/// @return : d88ファイルを処理した時true
+bool L3DiskPanel::ProcessDroppedFile(const wxString &filename)
+{
+	bool is_d88_file = false;
+	// is d88 file?
+	wxFileName fname(filename);
+	wxString ext = fname.GetExt().Lower();
+	if (ext == wxT("d88") || ext == wxT("d77")) {
+		is_d88_file = true;
+	}
+	if (is_d88_file) {
+		frame->OpenDroppedFile(filename);
+	} else {
+		L3DiskFileList *file_list = rpanel->GetFileListPanel();
+		if (file_list) {
+			file_list->ImportDataFile(filename);
+		}
+		L3DiskRawPanel *raw_panel = rpanel->GetRawPanel();
+		if (raw_panel) {
+			raw_panel->ShowImportTrackRangeDialog(filename);
+		}
+	}
+	return is_d88_file;
+}
+
+bool L3DiskPanel::ProcessDroppedFiles(const wxArrayString &filenames)
+{
+	for(int n = 0; n < (int)filenames.Count(); n++) {
+		if (ProcessDroppedFile(filenames.Item(n))) {
+			// d88ファイルを処理した時はここで中断
+			break;
+		}
+	}
+	return true;
+}
+
+bool L3DiskPanel::ProcessDroppedFile(const wxUint8 *buffer, size_t buflen)
+{
+	L3DiskFileList *list = rpanel->GetFileListPanel();
+	if (list) {
+		list->ImportDataFile(buffer, buflen);
+	}
+	return true;
+}
+
+#ifdef USE_DND_ON_TOP_PANEL
+//
+// File Drag and Drop
+//
+L3DiskPanelDropTarget::L3DiskPanelDropTarget(L3DiskFrame *parentframe, L3DiskPanel *parentwindow)
+	: wxDropTarget()
+{
+	parent = parentwindow;
+	frame = parentframe;
+
+	wxDataObjectComposite* dataobj = new wxDataObjectComposite();
+	// from explorer, finder etc.
+	dataobj->Add(new wxFileDataObject(), true);
+	// from own appli
+	dataobj->Add(new wxCustomDataObject(*L3DiskPanelDataFormat));
+	SetDataObject(dataobj);
+}
+
+bool L3DiskPanelDropTarget::OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames)
+{
+	if (filenames.Count() > 0) {
+		parent->ProcessDroppedFiles(filenames);
+	}
+    return true;
+}
+
+wxDragResult L3DiskPanelDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult def)
+{
+	if ( !GetData() ) return wxDragNone;
+	bool sts = false;
+	wxDataObjectComposite *comobj = (wxDataObjectComposite *)GetDataObject();
+	if (comobj) {
+		wxDataFormat fmt = comobj->GetReceivedFormat();
+		if (fmt.GetType() == wxDF_FILENAME) {
+			// エクスプローラからのDnD
+			wxFileDataObject *dobj = (wxFileDataObject *)comobj->GetObject(fmt);
+			sts = OnDropFiles( x, y, dobj->GetFilenames() );
+		} else if (fmt == *L3DiskPanelDataFormat) {
+			// このアプリからのDnD
+			wxCustomDataObject *dobj = (wxCustomDataObject *)comobj->GetObject(fmt);
+			size_t buflen = dobj->GetDataSize();
+			wxUint8 *buffer = (wxUint8 *)dobj->GetData();
+			sts = parent->ProcessDroppedFile(buffer, buflen);
+		}
+	}
+	return (sts ? def : wxDragNone);
+}
+#endif
 
 //
 // 右パネル上下

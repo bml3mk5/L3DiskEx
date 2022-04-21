@@ -13,6 +13,8 @@
 
 #define DEFAULT_TEXTWIDTH 140
 
+#define USE_DND_ON_TOP_PANEL 1
+
 #if defined(__WXMSW__)
 
 // ignore warning

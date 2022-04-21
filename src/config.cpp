@@ -10,18 +10,33 @@ Params::Params()
 {
 	// default value
 	mFilePath = _T("");
+	mExportFilePath = _T("");
 	mRecentFiles.Empty();
 }
 
 void Params::SetFilePath(const wxString &val)
 {
-	mFilePath = wxFileName::FileName(val).GetPath(wxPATH_GET_SEPARATOR);
+	mFilePath = wxFileName::FileName(val).GetPath();
+}
+
+void Params::SetExportFilePath(const wxString &val)
+{
+	mExportFilePath = wxFileName::FileName(val).GetPath();
+}
+
+wxString &Params::GetExportFilePath()
+{
+	if (mExportFilePath.IsEmpty()) {
+		return mFilePath;
+	} else {
+		return mExportFilePath;
+	}
 }
 
 void Params::AddRecentFile(const wxString &val)
 {
 	wxFileName fpath = wxFileName::FileName(val);
-	mFilePath = fpath.GetPath(wxPATH_GET_SEPARATOR);
+	mFilePath = fpath.GetPath();
 	// 同じファイルがあるか
 	int pos = mRecentFiles.Index(fpath.GetFullPath());
 	if (pos >= 0) {
@@ -70,6 +85,7 @@ void Config::Load()
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
 
 	ini->Read(_T("Path"), &mFilePath, mFilePath);
+	ini->Read(_T("ExportPath"), &mExportFilePath, mExportFilePath);
 	for(int i=0; i<MAX_RECENT_FILES; i++) {
 		wxString sval;
 		ini->Read(wxString::Format(_T("Recent%d"), i), &sval);
@@ -95,6 +111,7 @@ void Config::Save()
 		,wxCONFIG_USE_LOCAL_FILE | wxCONFIG_USE_RELATIVE_PATH | wxCONFIG_USE_NO_ESCAPE_CHARACTERS);
 
 	ini->Write(_T("Path"), mFilePath);
+	ini->Write(_T("ExportPath"), mExportFilePath);
 	for(int i=0,row=0; row<MAX_RECENT_FILES && i<(int)mRecentFiles.Count(); i++) {
 		wxString sval = mRecentFiles.Item(i);
 		if (sval.IsEmpty()) continue;

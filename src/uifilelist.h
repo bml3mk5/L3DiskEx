@@ -59,6 +59,7 @@ private:
 
 	bool initialized;
 
+	DiskBasicDirItem *GetFileName(const wxDataViewItem &item, wxString &name, int *item_pos = NULL);
 	int ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg);
 
 public:
@@ -95,7 +96,7 @@ public:
 	void UnselectItem();
 
 	bool ShowExportDataFileDialog();
-	bool ExportDataFile(int dir_pos, const wxString &path);
+	bool ExportDataFile(DiskBasicDirItem *item, const wxString &path);
 
 	bool DragDataSource();
 
@@ -114,6 +115,7 @@ public:
 	bool FormatDisk();
 
 	int  GetSelectedRow() const;
+	int  GetSelectedItemCount() const;
 
 	bool CanUseBasicDisk() const;
 	bool IsFormattedBasicDisk() const;
@@ -131,6 +133,7 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
+#ifndef USE_DND_ON_TOP_PANEL
 /// ディスクファイル ドラッグ＆ドロップ
 class L3DiskFileListDropTarget : public wxDropTarget
 {
@@ -143,7 +146,7 @@ public:
 	wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
     bool OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames);
 };
-
+#endif
 
 #endif /* _UIFILELIST_H_ */
 

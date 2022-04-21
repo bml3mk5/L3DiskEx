@@ -97,8 +97,10 @@ L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	// fit size on parent window
     SetSize(parentwindow->GetClientSize());
 
+#ifndef USE_DND_ON_TOP_PANEL
 	// drag and drop
 	SetDropTarget(new L3DiskListDropTarget(parentframe, this));
+#endif
 
 	// popup menu
 	menuPopup = new wxMenu;
@@ -584,6 +586,7 @@ bool L3DiskList::IsSelectedDiskSide()
 	return (selected_disk && disk != NULL && disk->GetDiskType() == 1);	// AB面あり;
 }
 
+#ifndef USE_DND_ON_TOP_PANEL
 //
 // File Drag and Drop
 //
@@ -602,3 +605,4 @@ bool L3DiskListDropTarget::OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString
 	}
     return true;
 }
+#endif

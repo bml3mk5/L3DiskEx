@@ -45,6 +45,7 @@ public:
 
 	bool ShowExportTrackDialog();
 	bool ShowImportTrackDialog();
+	bool ShowImportTrackRangeDialog(const wxString &path);
 
 	bool ShowExportDataFileDialog();
 	bool ShowImportDataFileDialog();
@@ -88,6 +89,7 @@ public:
 	bool ShowExportTrackDialog();
 	bool ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec);
 	bool ShowImportTrackDialog();
+	bool ShowImportTrackRangeDialog(const wxString &path, int st_trk, int st_sid, int st_sec);
 	bool ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec);
 	void ModifyIDonDisk(int type_num);
 	void ModifyDensityOnDisk();

@@ -15,6 +15,7 @@ class Params
 {
 protected:
 	wxString mFilePath;
+	wxString mExportFilePath;
 	wxArrayString mRecentFiles;
 
 public:
@@ -25,6 +26,8 @@ public:
 	//@{
 	void SetFilePath(const wxString &val);
 	wxString &GetFilePath() { return mFilePath; }
+	void SetExportFilePath(const wxString &val);
+	wxString &GetExportFilePath();
 	void AddRecentFile(const wxString &val);
 	wxString &GetRecentFile();
 	void GetRecentFiles(wxArrayString &vals);

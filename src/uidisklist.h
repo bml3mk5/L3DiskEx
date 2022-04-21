@@ -137,6 +137,7 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
+#ifndef USE_DND_ON_TOP_PANEL
 /// ディスクファイル ドラッグ＆ドロップ
 class L3DiskListDropTarget : public wxFileDropTarget
 {
@@ -147,6 +148,7 @@ public:
     L3DiskListDropTarget(L3DiskFrame *parentframe, L3DiskList *parentwindow);
     bool OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames);
 };
+#endif
 
 #endif /* _UIDISKLIST_H_ */
 

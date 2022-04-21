@@ -203,7 +203,7 @@ public:
 	void PropertyOnDisk();
 	void InitializeDisk();
 	void FormatDisk();
-	void OpenDroppedFile(wxString &path);
+	void OpenDroppedFile(const wxString &path);
 
 	//@}
 
@@ -242,8 +242,10 @@ public:
 	wxString GetFileName();
 
 	const wxString &GetRecentPath() const;
+	const wxString &GetExportFilePath() const;
 	void SetRecentPath(const wxString &path);
 	void SetFilePath(const wxString &path);
+	void SetExportFilePath(const wxString &path);
 	//@}
 
 	enum en_menu_id
@@ -309,15 +311,38 @@ private:
 
 public:
 	L3DiskPanel(L3DiskFrame *parent);
+	~L3DiskPanel();
 
 	// event handlers
 
 	L3DiskList *GetLPanel() { return lpanel; }
 	L3DiskRPanel *GetRPanel() { return rpanel; }
 
+	bool ProcessDroppedFile(const wxString &filename);
+	bool ProcessDroppedFile(const wxUint8 *buffer, size_t buflen);
+	bool ProcessDroppedFiles(const wxArrayString &filenames);
+
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskPanel);
 };
+
+#ifdef USE_DND_ON_TOP_PANEL
+// ドラッグアンドドロップ時のフォーマットID
+extern wxDataFormat *L3DiskPanelDataFormat;
+
+/// ドラッグ＆ドロップ
+class L3DiskPanelDropTarget : public wxDropTarget
+{
+	L3DiskPanel *parent;
+    L3DiskFrame *frame;
+
+public:
+    L3DiskPanelDropTarget(L3DiskFrame *parentframe, L3DiskPanel *parentwindow);
+
+	wxDragResult OnData(wxCoord x, wxCoord y, wxDragResult def);
+    bool OnDropFiles(wxCoord x, wxCoord y ,const wxArrayString &filenames);
+};
+#endif
 
 /// 右パネル
 class L3DiskRPanel : public wxSplitterWindow

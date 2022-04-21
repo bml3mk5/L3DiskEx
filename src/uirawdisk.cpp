@@ -86,6 +86,11 @@ bool L3DiskRawPanel::ShowImportTrackDialog()
 	return lpanel->ShowImportTrackDialog();
 }
 
+bool L3DiskRawPanel::ShowImportTrackRangeDialog(const wxString &path)
+{
+	return lpanel->ShowImportTrackRangeDialog(path, -1, 0, 1);
+}
+
 bool L3DiskRawPanel::ShowExportDataFileDialog()
 {
 	return rpanel->ShowExportDataFileDialog();
@@ -351,7 +356,7 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 
 	L3DiskFileDialog fdlg(
 		caption,
-		frame->GetRecentPath(),
+		frame->GetExportFilePath(),
 		filename,
 		_("All files (*.*)|*.*"),
 		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -371,7 +376,7 @@ bool L3DiskRawTrack::ShowExportTrackDialog()
 /// 指定したファイルにトラックデータをエクスポート
 bool L3DiskRawTrack::ExportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
 	if (!disk) return false;
 
@@ -432,7 +437,7 @@ bool L3DiskRawTrack::ShowImportTrackDialog()
 
 	L3DiskFileDialog fdlg(
 		caption,
-		frame->GetRecentPath(),
+		frame->GetExportFilePath(),
 		wxEmptyString,
 		_("All files (*.*)|*.*"),
 		wxFD_OPEN);
@@ -441,48 +446,56 @@ bool L3DiskRawTrack::ShowImportTrackDialog()
 
 	wxString path = fdlg.GetPath();
 
-	int start_track = track->GetTrackNumber();
-	int start_side = track->GetSideNumber();
-	int start_sector = sector->GetSectorNumber();
-	int end_track = start_track;
-	int end_side = start_side;
-	int end_sector = start_sector;
+	return ShowImportTrackRangeDialog(path,
+		track->GetTrackNumber(),
+		track->GetSideNumber(),
+		sector->GetSectorNumber()
+	);
+}
+
+bool L3DiskRawTrack::ShowImportTrackRangeDialog(const wxString &path, int st_trk, int st_sid, int st_sec)
+{
+	int ed_trk = st_trk;
+	int ed_sid = st_sid;
+	int ed_sec = st_sec;
+
+	wxString caption = _("Import data to track");
 
 	wxRegEx re("([0-9][0-9])-([0-9][0-9])-([0-9][0-9])--([0-9][0-9])-([0-9][0-9])-([0-9][0-9])");
 	if (re.Matches(path)) {
 		wxString sval;
 		long lval;
 		sval = re.GetMatch(path, 1); sval.ToLong(&lval);
-		start_track = (int)lval;
+		st_trk = (int)lval;
 		sval = re.GetMatch(path, 2); sval.ToLong(&lval);
-		start_side = (int)lval;
+		st_sid = (int)lval;
 		sval = re.GetMatch(path, 3); sval.ToLong(&lval);
-		start_sector = (int)lval;
+		st_sec = (int)lval;
 		sval = re.GetMatch(path, 4); sval.ToLong(&lval);
-		end_track = (int)lval;
+		ed_trk = (int)lval;
 		sval = re.GetMatch(path, 5); sval.ToLong(&lval);
-		end_side = (int)lval;
+		ed_sid = (int)lval;
 		sval = re.GetMatch(path, 6); sval.ToLong(&lval);
-		end_sector = (int)lval;
+		ed_sec = (int)lval;
+	} else {
+		if (st_trk < 0) return false;
 	}
 
-
-	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number, start_track, start_side, start_sector, end_track, end_side, end_sector);
-	sts = dlg.ShowModal();
-
-	if (sts == wxID_OK) {
-		return ImportTrackDataFile(path
-		, dlg.GetTrackNumber(0), dlg.GetSideNumber(0), dlg.GetSectorNumber(0)
-		, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1));
-	} else {
+	RawExpBox dlg(this, wxID_ANY, caption, disk, side_number, st_trk, st_sid, st_sec, ed_trk, ed_sid, ed_sec);
+	int sts = dlg.ShowModal();
+	if (sts != wxID_OK) {
 		return false;
 	}
+
+	return ImportTrackDataFile(path
+	, dlg.GetTrackNumber(0), dlg.GetSideNumber(0), dlg.GetSectorNumber(0)
+	, dlg.GetTrackNumber(1), dlg.GetSideNumber(1), dlg.GetSectorNumber(1));
 }
 
 /// 指定したファイルからトラックデータをインポート
 bool L3DiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
 	if (!disk) return false;
 
@@ -917,7 +930,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 
 	L3DiskFileDialog dlg(
 		_("Export data from sector"),
-		frame->GetRecentPath(),
+		frame->GetExportFilePath(),
 		filename,
 		_("All files (*.*)|*.*"),
 		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
@@ -935,7 +948,7 @@ bool L3DiskRawSector::ShowExportDataFileDialog()
 /// 指定したファイルにセクタのデータをエクスポート
 bool L3DiskRawSector::ExportDataFile(const wxString &path)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
 	if (!track) return false;
 
@@ -965,7 +978,7 @@ bool L3DiskRawSector::ShowImportDataFileDialog()
 {
 	L3DiskFileDialog dlg(
 		_("Import data to sector"),
-		frame->GetRecentPath(),
+		frame->GetExportFilePath(),
 		wxEmptyString,
 		_("All files (*.*)|*.*"),
 		wxFD_OPEN);
@@ -983,7 +996,7 @@ bool L3DiskRawSector::ShowImportDataFileDialog()
 /// 指定したファイルからセクタにデータをインポート
 bool L3DiskRawSector::ImportDataFile(const wxString &path)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
 	if (!track) return false;
 

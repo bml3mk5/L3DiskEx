@@ -8,8 +8,10 @@
 #include "uifilelist.h"
 #include "intnamebox.h"
 
+#ifndef USE_DND_ON_TOP_PANEL
 // ドラッグアンドドロップ時のフォーマットID
 wxDataFormat *L3DiskFileListDataFormat = NULL;
+#endif
 
 // ドラッグ時のデータ構成
 typedef struct st_directory_for_dnd {
@@ -86,7 +88,7 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	text = new wxTextCtrl(this, IDC_TEXT_ATTR, wxT(""), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxTE_LEFT);
 	vbox->Add(text, wxSizerFlags().Expand().Border(wxBOTTOM, 2));
 
-	list = new wxDataViewListCtrl(this, IDC_VIEW_LIST);
+	list = new wxDataViewListCtrl(this, IDC_VIEW_LIST, wxDefaultPosition, wxDefaultSize, wxDV_ROW_LINES | wxDV_MULTIPLE);
 	vbox->Add(list, wxSizerFlags().Expand());
 
 	L3DiskFileListStoreModel *model = new L3DiskFileListStoreModel(parentframe);
@@ -107,11 +109,13 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	SetSizerAndFit(vbox);
 	Layout();
 
+#ifndef USE_DND_ON_TOP_PANEL
 	// drag and drop
 	if (!L3DiskFileListDataFormat) {
 		L3DiskFileListDataFormat = new wxDataFormat(wxT("L3DISKFILELISTDATA"));
 	}
 	SetDropTarget(new L3DiskFileListDropTarget(parentframe, this));
+#endif
 
 	// popup menu
 	menuPopup = new wxMenu;
@@ -143,8 +147,10 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 L3DiskFileList::~L3DiskFileList()
 {
 	delete menuPopup;
+#ifndef USE_DND_ON_TOP_PANEL
 	delete L3DiskFileListDataFormat;
 	L3DiskFileListDataFormat = NULL;
+#endif
 }
 
 /// リサイズ
@@ -265,9 +271,11 @@ void L3DiskFileList::ShowPopupMenu()
 	bool opened = basic.IsFormatted();
 	menuPopup->Enable(IDM_IMPORT_FILE, opened);
 
-	opened = (opened && (list->GetSelectedRow() != wxNOT_FOUND));
+	opened = (opened && (list->GetSelectedItemsCount() > 0));
 	menuPopup->Enable(IDM_EXPORT_FILE, opened);
 	menuPopup->Enable(IDM_DELETE_FILE, opened);
+
+	opened = (opened && (list->GetSelectedRow() != wxNOT_FOUND));
 	menuPopup->Enable(IDM_RENAME_FILE, opened);
 	menuPopup->Enable(IDM_PROPERTY, opened);
 
@@ -390,38 +398,59 @@ void L3DiskFileList::UnselectItem()
 /// エクスポートダイアログ
 bool L3DiskFileList::ShowExportDataFileDialog()
 {
-	if (list->GetSelectedRow() == wxNOT_FOUND) return false;
+	bool sts = true;
+	int selcount = list->GetSelectedItemsCount();
+	if (selcount <= 0) return false;
 
-	wxDataViewItem selected_item = list->GetSelection();
-	size_t dir_pos = list->GetItemData(selected_item);
+	wxDataViewItemArray selected_items;
+	list->GetSelections(selected_items);
 
-	DiskBasicDirItem *item = basic.GetDirectory().ItemPtr(dir_pos);
-	if (!item) return false;
-	wxString filename = item->GetFileNameStr();
+	for(int n = 0; n < selcount; n++) {
+		wxString filename;
+		DiskBasicDirItem *item = GetFileName(selected_items.Item(n), filename);
+		if (!item) return false;
 
-	L3DiskFileDialog dlg(
-		_("Export file"),
-		frame->GetRecentPath(),
-		filename,
-		_("All files (*.*)|*.*"),
-		wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+		L3DiskFileDialog dlg(
+			_("Export a file"),
+			frame->GetExportFilePath(),
+			filename,
+			_("All files (*.*)|*.*"),
+			wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
-	int dlgsts = dlg.ShowModal();
-	wxString path = dlg.GetPath();
+		int dlgsts = dlg.ShowModal();
+		if (dlgsts != wxID_OK) {
+			return false;
+		}
 
-	if (dlgsts == wxID_OK) {
-		return ExportDataFile((int)dir_pos, path);
-	} else {
-		return false;
+		wxString path = dlg.GetPath();
+
+		sts = ExportDataFile(item, path);
 	}
+
+	return sts;
+}
+
+DiskBasicDirItem *L3DiskFileList::GetFileName(const wxDataViewItem &item, wxString &name, int *item_pos)
+{
+	if (!list) return NULL;
+
+	size_t dir_pos = list->GetItemData(item);
+
+	DiskBasicDirItem *basic_item = basic.GetDirectory().ItemPtr(dir_pos);
+	if (!basic_item) return NULL;
+
+	name = basic_item->GetFileNameStr();
+	if (item_pos) *item_pos = (int)dir_pos;
+
+	return basic_item;
 }
 
 /// 指定したファイルにエクスポート
-bool L3DiskFileList::ExportDataFile(int dir_pos, const wxString &path)
+bool L3DiskFileList::ExportDataFile(DiskBasicDirItem *item, const wxString &path)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
-	bool sts = basic.LoadFile(dir_pos, path);
+	bool sts = basic.LoadFile(item, path);
 	if (!sts) {
 		L3DiskErrorMessageBox(basic.GetErrorLevel(), basic.GetErrorMessage());
 	}
@@ -454,7 +483,11 @@ bool L3DiskFileList::DragDataSource()
 
 	wxStreamBuffer *buffer = ostream.GetOutputStreamBuffer();
 
+#ifdef USE_DND_ON_TOP_PANEL
+	wxCustomDataObject custom_data(*L3DiskPanelDataFormat);
+#else
 	wxCustomDataObject custom_data(*L3DiskFileListDataFormat);
+#endif
 	custom_data.SetData(buffer->GetBufferSize(), buffer->GetBufferStart());
 
     wxDropSource dragSource(this);
@@ -475,7 +508,7 @@ bool L3DiskFileList::ShowImportDataFileDialog()
 
 	L3DiskFileDialog dlg(
 		_("Import file"),
-		frame->GetRecentPath(),
+		frame->GetExportFilePath(),
 		wxEmptyString,
 		_("All files (*.*)|*.*"),
 		wxFD_OPEN);
@@ -516,7 +549,7 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(IntNameBox &dlg)
 /// 指定したファイルをインポート
 bool L3DiskFileList::ImportDataFile(const wxString &path)
 {
-	frame->SetFilePath(path);
+	frame->SetExportFilePath(path);
 
 	if (!basic.IsFormatted()) {
 		return false;
@@ -582,26 +615,49 @@ void L3DiskFileList::StartEditingFileName()
 /// 指定したファイルを削除
 bool L3DiskFileList::DeleteDataFile()
 {
-	if (list->GetSelectedRow() == wxNOT_FOUND) return false;
+	bool sts = true;
+	int selcount = list->GetSelectedItemsCount();
+	if (selcount < 0) return false;
 
-	wxDataViewItem selected_item = list->GetSelection();
-	size_t dir_pos = list->GetItemData(selected_item);
+	if (selcount == 1) {
+		// 1ファイル選択時
+		wxString filename;
+		DiskBasicDirItem *item = GetFileName(list->GetSelection(), filename);
+		if (!item) return false;
 
-	DiskBasicDirItem *item = basic.GetDirectory().ItemPtr(dir_pos);
-	if (!item) return false;
-	wxString filename = item->GetFileNameStr();
-
-	wxString msg = wxString::Format(_("Do you really want to delete '%s'?"), filename);
-	int ans = wxMessageBox(msg, _("Delete a file"), wxYES_NO);
-
-	bool sts = false;
-	if (ans == wxYES) {
-		sts = basic.DeleteFile(item);
-		if (!sts) {
-			L3DiskErrorMessageBox(basic.GetErrorLevel(), basic.GetErrorMessage());
+		wxString msg = wxString::Format(_("Do you really want to delete '%s'?"), filename);
+		int ans = wxMessageBox(msg, _("Delete a file"), wxYES_NO);
+		if (ans != wxYES) {
+			return false;
 		}
-		RefreshFiles();
+
+		sts = basic.DeleteFile(item);
+
+	} else {
+		// 複数ファイル選択時
+		wxString msg = _("Do you really want to delete selected files?");
+		int ans = wxMessageBox(msg, _("Delete files"), wxYES_NO);
+		if (ans != wxYES) {
+			return false;
+		}
+
+		wxDataViewItemArray selected_items;
+		list->GetSelections(selected_items);
+		for(int n = 0; n < selcount; n++) {
+			wxString filename;
+			DiskBasicDirItem *item = GetFileName(selected_items.Item(n), filename);
+			if (!item) continue;
+
+			sts &= basic.DeleteFile(item);
+		}
+
 	}
+
+	if (!sts) {
+		L3DiskErrorMessageBox(basic.GetErrorLevel(), basic.GetErrorMessage());
+	}
+	RefreshFiles();
+
 	return sts;
 }
 
@@ -704,6 +760,11 @@ int L3DiskFileList::GetSelectedRow() const
 {
 	return list->GetSelectedRow();
 }
+/// 選択しているアイテム数
+int L3DiskFileList::GetSelectedItemCount() const
+{
+	return list->GetSelectedItemsCount();
+}
 /// BASICディスクとして使用できるか
 bool L3DiskFileList::CanUseBasicDisk() const
 {
@@ -715,6 +776,7 @@ bool L3DiskFileList::IsFormattedBasicDisk() const
 	return basic.IsFormatted();
 }
 
+#ifndef USE_DND_ON_TOP_PANEL
 //
 // File Drag and Drop
 //
@@ -762,3 +824,4 @@ wxDragResult L3DiskFileListDropTarget::OnData(wxCoord x, wxCoord y, wxDragResult
 	}
 	return (sts ? def : wxDragNone);
 }
+#endif
