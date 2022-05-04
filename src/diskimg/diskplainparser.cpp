@@ -39,14 +39,20 @@ void DiskPlainParser::ParseInterleave(DiskD88Track *track, int interleave, int s
 	size_t count = sectors->Count();
 
 	wxArrayInt sector_nums;
-	if (!DiskD88Track::CalcSectorNumbersForInterleave(interleave, count, sector_nums, sector_offset)) {
+	for(size_t idx = 0; idx < count; idx++) {
+		DiskD88Sector *sector = sectors->Item(idx);
+		sector_nums.Add(sector->GetSectorNumber());
+	}
+
+	wxArrayInt sector_idxs;
+	if (!DiskD88Track::CalcSectorNumbersForInterleave(interleave, count, sector_idxs, 0)) {
 		return;
 	}
 
 	for(size_t idx = 0; idx < count; idx++) {
 		DiskD88Sector *sector = sectors->Item(idx);
 		if (sector) {
-			sector->SetSectorNumber(sector_nums.Item(idx));
+			sector->SetSectorNumber(sector_nums.Item(sector_idxs.Item(idx)));
 		}
 	}
 
@@ -106,7 +112,7 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 	bool single_density = disk_param->FindSingleDensity(track_number, side_number, &sector_nums, &sector_size);
 
 	wxUint32 track_size = 0;
-	int sector_offset = disk_param->GetSectorNumberBase();
+	int sector_offset = disk_param->GetSectorNumberBaseOnDisk();
 
 	// セクタ番号の付番方法(0:サイド毎、1:トラック毎)
 	if (disk_param->GetNumberingSector()) {
@@ -146,7 +152,7 @@ wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, con
 
 	wxUint32 offset = (int)sizeof(d88_header_t);
 	int offset_pos = 0;
-	int track_num = disk_param->GetTrackNumberBase();
+	int track_num = disk_param->GetTrackNumberBaseOnDisk();
 	int tracks_per_side = disk_param->GetTracksPerSide() + track_num;
 	for(; track_num < tracks_per_side && result->GetValid() >= 0; track_num++) {
 		for(int side_num = 0; side_num < disk_param->GetSidesPerDisk() && result->GetValid() >= 0; side_num++) {
@@ -206,7 +212,7 @@ int DiskPlainParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskPlainParser::Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskPlainParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	int rc = 0;
 	int stream_size = (int)istream.GetLength();
@@ -223,7 +229,7 @@ int DiskPlainParser::Check(DiskParser &dp, wxInputStream &istream, const wxArray
 
 		// 優先順位の高い候補
 		for(size_t i=0; i<disk_hints->Count(); i++) {
-			wxString hint = disk_hints->Item(i);
+			wxString hint = disk_hints->Item(i).GetHint();
 			const DiskParam *param = gDiskTemplates.Find(hint);
 			if (param) {
 				int disk_size_hint = param->CalcDiskSize();

@@ -961,7 +961,7 @@ bool DiskBasicDirItemOS9::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItemOS9::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItemOS9::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 //	SetCDate(attr.GetCreateDateTime());
 }

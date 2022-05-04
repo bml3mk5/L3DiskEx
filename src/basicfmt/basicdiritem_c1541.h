@@ -167,10 +167,10 @@ public:
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// @brief 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
-	/// @brief ダイアログ入力後のファイル名チェック
-	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
-	/// @brief その他の属性値を設定する
-	virtual void	SetAttr(DiskBasicDirItemAttr &attr);
+//	/// @brief ダイアログ入力後のファイル名チェック
+//	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
+//	/// @brief その他の属性値を設定する
+//	virtual void	SetOptionalAttr(DiskBasicDirItemAttr &attr);
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}

@@ -86,7 +86,7 @@ double DiskBasicTypeAppleDOS::CheckFat(bool is_formatting)
 		}
 
 		sector = basic->GetSectorFromSectorPos(
-			GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBase(), p->next_sector + basic->GetSectorNumberBase())
+			GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBaseOnDisk(), p->next_sector + basic->GetSectorNumberBase())
 		);
 	}
 
@@ -214,7 +214,7 @@ bool DiskBasicTypeAppleDOS::CalcGroupsOnRootDirectory(int start_sector, int end_
 
 		// 次のセクタを得る
 		sector = basic->GetSectorFromSectorPos(
-			GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBase(), p->next_sector + basic->GetSectorNumberBase())
+			GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBaseOnDisk(), p->next_sector + basic->GetSectorNumberBase())
 			, trk_num, sid_num);
 	}
 	group_items.SetSize(dir_size);
@@ -272,7 +272,7 @@ void DiskBasicTypeAppleDOS::SetGroupNumber(wxUint32 num, wxUint32 val)
 	int track_num = 0;
 	int sector_num = 0;
 	GetNumFromSectorPosS(num, track_num, sector_num);
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 	ModifyTrackMap(track_num, sector_num, val != 0);
 }
@@ -573,7 +573,7 @@ void DiskBasicTypeAppleDOS::GetNumFromSectorPos(int sector_pos, int &track_num, 
 		sector_num += (side_num * sectors_per_track);
 	}
 
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 
 	// サイド番号を逆転するか
@@ -603,7 +603,7 @@ void DiskBasicTypeAppleDOS::GetNumFromSectorPosS(int sector_pos, int &track_num,
 		sector_num = (sector_pos % (groups_per_track * sides_per_disk));
 	}
 
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 }
 
@@ -626,7 +626,7 @@ int  DiskBasicTypeAppleDOS::GetSectorPosFromNum(int track_num, int side_num, int
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	if (selected_side >= 0) {
@@ -660,7 +660,7 @@ int  DiskBasicTypeAppleDOS::GetSectorPosFromNumS(int track_num, int sector_num)
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	if (selected_side >= 0) {
@@ -785,7 +785,7 @@ bool DiskBasicTypeAppleDOS::AdditionalProcessOnDeletedFile(DiskBasicDirItem *ite
 		if (!sector) break;
 		apledos_chain_t *p = (apledos_chain_t *)sector->GetSectorBuffer();
 		if (!p) break;
-		gnum = GetSectorPosFromNumS(p->next.next_track + basic->GetTrackNumberBase(),  p->next.next_sector + basic->GetSectorNumberBase());
+		gnum = GetSectorPosFromNumS(p->next.next_track + basic->GetTrackNumberBaseOnDisk(),  p->next.next_sector + basic->GetSectorNumberBase());
 	}
 
 	DiskBasicDirItemAppleDOS *ditem = (DiskBasicDirItemAppleDOS *)item;

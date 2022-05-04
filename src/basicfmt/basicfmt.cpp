@@ -42,6 +42,8 @@
 #include "basictype_prodos.h"
 #include "basictype_c1541.h"
 #include "basictype_amiga.h"
+#include "basictype_m68fdos.h"
+#include "basictype_trsdos.h"
 #include "../logging.h"
 #include "../utils.h"
 
@@ -287,6 +289,15 @@ void DiskBasic::CreateType()
 		break;
 	case FORMAT_TYPE_AMIGA:
 		type = new DiskBasicTypeAmiga(this, fat, dir);
+		break;
+	case FORMAT_TYPE_M68FDOS:
+		type = new DiskBasicTypeM68FDOS(this, fat, dir);
+		break;
+	case FORMAT_TYPE_TRSD23:
+		type = new DiskBasicTypeTRSD23(this, fat, dir);
+		break;
+	case FORMAT_TYPE_TRSD13:
+		type = new DiskBasicTypeTRSD13(this, fat, dir);
 		break;
 	default:
 		wxFAIL_MSG(wxT("Unknown type is defined in basic_type.xml."));
@@ -536,7 +547,7 @@ DiskD88Track *DiskBasic::GetManagedTrack(int sector_pos, int *side_num, int *sec
 
 	int track_num = GetManagedTrackNumber();
 	track_num += track0_num;
-	track_num -= GetTrackNumberBase();
+	track_num -= GetTrackNumberBaseOnDisk();
 
 	if (side_num) *side_num = side0_num;
 	if (sector_num) *sector_num = sec_num;
@@ -1400,7 +1411,7 @@ bool DiskBasic::ChangeAttr(DiskBasicDirItem *item, DiskBasicDirItemAttr &attr)
 		item->SetFileAccessDateTime(attr.GetAccessDateTime());
 	}
 	// 他の属性
-	item->SetAttr(attr);
+	item->SetOptionalAttr(attr);
 
 	// 変更されたか
 	item->Refresh();
@@ -2034,6 +2045,15 @@ DiskD88Sector *DiskBasic::GetSectorFromPosition(size_t position, wxUint32 *start
 	wxUint32 gnum = item->GetStartGroup(0);
 	if (start_group) *start_group = gnum;
 	return GetSectorFromGroup(gnum);
+}
+
+/// 開始セクタ番号を返す
+/// @note DiskBasicParamを優先
+int DiskBasic::GetSectorNumberBase() const
+{
+	int val = GetSectorNumberBaseOnBasic();
+	if (val < 0) val = GetSectorNumberBaseOnDisk();
+	return val;
 }
 
 /// キャラクターコードの文字体系を設定

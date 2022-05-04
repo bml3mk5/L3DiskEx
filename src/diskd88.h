@@ -103,9 +103,9 @@ public:
 	/// セクタのデータを置き換える
 	bool	Replace(DiskD88Sector *src_sector);
 	/// セクタのデータを埋める
-	bool	Fill(wxUint8 code, size_t len = (size_t)-1, size_t start = 0); 
+	bool	Fill(wxUint8 code, int len = -1, int start = 0); 
 	/// セクタのデータを上書き
-	bool	Copy(const void *buf, size_t len, size_t start = 0); 
+	bool	Copy(const void *buf, int len, int start = 0); 
 	/// セクタのデータに指定したバイト列があるか
 	int		Find(const void *buf, size_t len); 
 	/// 指定位置のセクタデータを返す

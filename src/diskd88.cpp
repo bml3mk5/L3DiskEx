@@ -140,39 +140,56 @@ bool DiskD88Sector::Replace(DiskD88Sector *src_sector)
 }
 
 /// セクタのデータを埋める
-bool DiskD88Sector::Fill(wxUint8 code, size_t len, size_t start)
+/// @param[in] code : コード
+/// @param[in] len : 長さ
+/// @param[in] start : 開始位置
+/// @return false : 失敗
+bool DiskD88Sector::Fill(wxUint8 code, int len, int start)
 {
 	if (!header || !data) {
 		return false;
 	}
-	if (start >= header->size) {
+	if (start < 0) {
+		start = (int)header->size - start;
+	}
+	if (start < 0 || start >= (int)header->size) {
 		return false;
 	}
 
-	if ((start + len) > header->size) len = (size_t)header->size - start;
+	if (len < 0) len = (int)header->size - start;
+	else if ((start + len) > (int)header->size) len = (int)header->size - start;
 	memset(&data[start], code, len);
 //	SetModify();
 	return true;
 }
 
 /// セクタのデータを上書き
-bool DiskD88Sector::Copy(const void *buf, size_t len, size_t start)
+/// @param[in] buf : データ
+/// @param[in] len : 長さ
+/// @param[in] start : 開始位置
+/// @return false : 失敗
+bool DiskD88Sector::Copy(const void *buf, int len, int start)
 {
 	if (!header || !data) {
 		return false;
 	}
-	if (start >= header->size) {
+	if (start < 0) {
+		start = (int)header->size - start;
+	}
+	if (len < 0 || start < 0 || start >= (int)header->size) {
 		return false;
 	}
 
-	if ((start + len) > header->size) len = (size_t)header->size - start;
+	if ((start + len) > (int)header->size) len = (int)header->size - start;
 	memcpy(&data[start], buf, len);
 //	SetModify();
 	return true;
 }
 
 /// セクタのデータに指定したバイト列があるか
-/// @return -1:なし >=0:あり
+/// @param[in] buf : データ
+/// @param[in] len : 長さ
+/// @return -1:なし >=0:あり・その位置
 int DiskD88Sector::Find(const void *buf, size_t len)
 {
 	if (!header || !data) {
@@ -189,19 +206,30 @@ int DiskD88Sector::Find(const void *buf, size_t len)
 }
 
 /// 指定位置のセクタデータを返す
+/// @param[in] pos : バッファ内の位置　負を指定すると末尾からの位置となる
+/// @return 値
 wxUint8	DiskD88Sector::Get(int pos) const
 {
 	if (!header || !data) {
 		return 0;
 	}
+	if (pos < 0) {
+		pos += GetSectorSize();
+	}
 	return data[pos];
 }
 
 /// 指定位置のセクタデータを返す
+/// @param[in] pos : バッファ内の位置　負を指定すると末尾からの位置となる
+/// @param[in] big_endian : ビッグエンディアンか
+/// @return 値
 wxUint16 DiskD88Sector::Get16(int pos, bool big_endian) const
 {
 	if (!header || !data) {
 		return 0;
+	}
+	if (pos < 0) {
+		pos += GetSectorSize();
 	}
 	return big_endian ? ((wxUint16)data[pos] << 8 | data[pos+1]) : ((wxUint16)data[pos+1] << 8 | data[pos]);
 }
@@ -974,13 +1002,13 @@ int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
 /// sector_nums[0] = sector_offset, sector_nums[2] = sector_offset + 1, sector_nums[4] = sector_offset + 2, ... となる
 bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset)
 {
-	sector_nums.SetCount(sectors_count, 0);
+	sector_nums.SetCount(sectors_count, -1);
 	int sector_pos = 0;
 	bool err = false;
 	for(int sector_number = 0; sector_number < (int)sectors_count && err == false; sector_number++) {
 		if (sector_pos >= (int)sectors_count) {
 			sector_pos -= sectors_count;
-			while (sector_nums[sector_pos] > 0) {
+			while (sector_nums[sector_pos] >= 0) {
 				sector_pos++;
 				if (sector_pos >= (int)sectors_count) {
 					// ?? error
@@ -1574,7 +1602,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 
 	// ディスク内で最も多く使われているセクタ数を調べる
 	sides_per_disk = side_number_max + 1;
-	tracks_per_side = track_number_max - track_number_min + 1;
+	tracks_per_side = tracks ? (track_number_max - track_number_min + 1) : 0;
 	sector_size = (int)sector_masize;
 	interleave = (int)interleave_max;
 	if (sides_per_disk > 1 && sector_number_min_side1 != 0x7fffffff && sector_number_max_side0 < sector_number_min_side1) {
@@ -1619,8 +1647,8 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 		Reversible(disk_param->IsReversible());
 		SetBasicTypes(disk_param->GetBasicTypes());
 		SetSingles(singles);
-		SetTrackNumberBase(disk_param->GetTrackNumberBase());
-		SetSectorNumberBase(disk_param->GetSectorNumberBase());
+		SetTrackNumberBaseOnDisk(disk_param->GetTrackNumberBaseOnDisk());
+		SetSectorNumberBaseOnDisk(disk_param->GetSectorNumberBaseOnDisk());
 		VariableSectorsPerTrack(disk_param->IsVariableSectorsPerTrack());
 		SetParamDensity(disk_param->GetParamDensity());
 		SetParticularTracks(disk_param->GetParticularTracks());
@@ -1821,7 +1849,7 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 	wxString diskname;
 	DiskD88Creator cr(diskname, param, false, NULL, result);
 	bool rc = true;
-	int trk = param.GetTrackNumberBase();
+	int trk = param.GetTrackNumberBaseOnDisk();
 	int trks = param.GetTracksPerSide() + trk;
 	int sid = 0;
 	int sides = param.GetSidesPerDisk();

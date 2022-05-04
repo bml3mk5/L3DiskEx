@@ -1,17 +1,17 @@
 ﻿/// @file version.h
 ///
-/// @author Copyright (c) 2015-2021 Sasaji. All rights reserved.
+/// @author Copyright (c) 2015-2022 Sasaji. All rights reserved.
 ///
 
 #ifndef _VERSION_H_
 #define _VERSION_H_
 
-#define APPLICATION_VERSION	"0.5.3"
+#define APPLICATION_VERSION	"0.6.0"
 #define APP_VER_MAJOR	0
-#define APP_VER_MINOR	5
-#define APP_VER_REV	3
+#define APP_VER_MINOR	6
+#define APP_VER_REV	0
 #define APP_VER_BUILD	0
-#define APP_COPYRIGHT	"Copyright (C) 2015-2021 Sasaji"
+#define APP_COPYRIGHT	"Copyright (C) 2015-2022 Sasaji"
 
 #if defined(__MINGW32__)
 #if defined(x86_64) || defined(__x86_64)

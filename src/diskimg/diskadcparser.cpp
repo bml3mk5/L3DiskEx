@@ -72,7 +72,7 @@ int DiskADCParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskADCParser::Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskADCParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 

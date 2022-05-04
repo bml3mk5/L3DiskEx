@@ -246,6 +246,7 @@ DiskBasicFormat::DiskBasicFormat()
 	fillcode_on_dir		 = 0;
 	delete_code			 = 0;
 	text_terminate_code	 = 0x1a;
+	extension_pre_code	 = 0x2e; // '.'
 	compare_case_insense = false;
 	to_upper_before_dialog = false;
 	to_upper_after_renamed = false;
@@ -286,6 +287,7 @@ void DiskBasicParam::ClearBasicParam()
 	sides_on_basic		 = 0;
 	sectors_on_basic	 = -1;
 	sectors_on_basic_list.Empty();
+	sector_number_base	 = -1;
 	tracks_on_basic		 = -1;
 	managed_track_number = 0;
 	groups_per_track	 = 0;
@@ -323,6 +325,7 @@ void DiskBasicParam::ClearBasicParam()
 	delete_code			 = 0;
 	media_id			 = 0x00;
 	text_terminate_code	 = 0x1a;
+	extension_pre_code	 = 0x2e; // '.'
 	valid_file_name.Empty();
 	valid_volume_name.Empty();
 	compare_case_insense = false;
@@ -347,6 +350,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	sides_on_basic = src.sides_on_basic;
 	sectors_on_basic = src.sectors_on_basic;
 	sectors_on_basic_list = src.sectors_on_basic_list;
+	sector_number_base = src.sector_number_base;
 	tracks_on_basic = src.tracks_on_basic;
 	managed_track_number = src.managed_track_number;
 	groups_per_track = src.groups_per_track;
@@ -384,6 +388,7 @@ void DiskBasicParam::SetBasicParam(const DiskBasicParam &src)
 	delete_code = src.delete_code;
 	media_id = src.media_id;
 	text_terminate_code = src.text_terminate_code;
+	extension_pre_code = src.extension_pre_code;
 	valid_file_name = src.valid_file_name;
 	valid_volume_name = src.valid_volume_name;
 	compare_case_insense = src.compare_case_insense;
@@ -577,6 +582,7 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 				p.SetFillCodeOnDir(format_type->GetFillCodeOnDir());
 				p.SetDeleteCode(format_type->GetDeleteCode());
 				p.SetTextTerminateCode(format_type->GetTextTerminateCode());
+				p.SetExtensionPreCode(format_type->GetExtensionPreCode());
 				p.SetValidFileName(format_type->GetValidFileName());
 				p.SetValidVolumeName(format_type->GetValidVolumeName());
 				p.CompareCaseInsense(format_type->IsCompareCaseInsense());
@@ -620,6 +626,8 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 					int sec_param = p.GetSectorsPerTrackOnBasic();
 					LoadNumSectorsMap(itemnode, str, sec_param, p.SectorsPerTrackOnBasicList());
 					p.SetSectorsPerTrackOnBasic(sec_param);
+				} else if (name == "SectorNumberBase") {
+					p.SetSectorNumberBaseOnBasic(Utils::ToInt(str));
 				} else if (name == "TracksPerSide") {
 					p.SetTracksPerSideOnBasic(Utils::ToInt(str));
 				} else if (name == "ManagedTrackNumber") {
@@ -700,6 +708,8 @@ bool DiskBasicTemplates::LoadTypes(const wxXmlNode *node, const wxString &locale
 					p.SetMediaId(Utils::ToInt(str));
 				} else if (name == "TextTerminateCode") {
 					p.SetTextTerminateCode(Utils::ToInt(str));
+				} else if (name == "ExtensionPreCode") {
+					p.SetExtensionPreCode(Utils::ToInt(str));
 				} else if (name == "FileNameCharacters") {
 					valid = LoadValidChars(itemnode, p.ValidFileName(), errmsgs);
 				} else if (name == "VolumeNameCharacters") {
@@ -1124,6 +1134,8 @@ bool DiskBasicTemplates::LoadFormats(const wxXmlNode *node, const wxString &loca
 					f.SetDeleteCode(Utils::ToInt(str));
 				} else if (name == "TextTerminateCode") {
 					f.SetTextTerminateCode(Utils::ToInt(str));
+				} else if (name == "ExtensionPreCode") {
+					f.SetExtensionPreCode(Utils::ToInt(str));
 				} else if (name == "FileNameCharacters") {
 					valid = LoadValidChars(itemnode, f.ValidFileName(), errmsgs);
 					if (!set_volume_rule) {

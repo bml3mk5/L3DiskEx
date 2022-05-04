@@ -385,7 +385,7 @@ void DiskBasicTypeXDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 	sector->Fill(0, basic->GetDirStartPos());
 	// セクタ名を設定
 	wxUint8 name[32];
-	size_t nlen = sizeof(name);
+	int nlen = (int)sizeof(name);
 	memset(name, 0, nlen);
 	item->GetFileName(name, nlen);
 	sector->Copy(name, nlen);
@@ -423,7 +423,7 @@ bool DiskBasicTypeXDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnDir()));
 		wxCharBuffer ipl = basic->GetVariousStringParam(wxT("IPLString")).To8BitData();
-		size_t len = ipl.length();
+		int len = (int)ipl.length();
 		if (len > 0) {
 			if (len > 32) len = 32;
 			basic->InvertMem(ipl.data(), len);

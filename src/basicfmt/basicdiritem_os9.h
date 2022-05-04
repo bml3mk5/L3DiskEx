@@ -273,7 +273,7 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 	/// @brief その他の属性値を設定する
-	virtual void	SetAttr(DiskBasicDirItemAttr &attr);
+	virtual void	SetOptionalAttr(DiskBasicDirItemAttr &attr);
 
 	/// @name プロパティダイアログ用
 	//@{

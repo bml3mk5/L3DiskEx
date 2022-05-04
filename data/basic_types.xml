@@ -388,6 +388,71 @@
 			<DataAscii     name="TXT" />
 		</AttributesByExtension>
 	</DiskBasicFormat>
+	<DiskBasicFormat type="17" name="TRSD23">
+		<HasVolumeName>true</HasVolumeName>
+		<HasVolumeDate>true</HasVolumeDate>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<FillCodeOnFAT>0xff</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<FileNameCharacters>
+			<ValidFirstCodeRange first="0x41" last="0x5a" />
+			<ValidFirstCodeRange first="0x61" last="0x7a" />
+			<ValidCharSet>./</ValidCharSet>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<ExtensionPreCode>0x2f</ExtensionPreCode><!-- "/" -->
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
+		<RequireVolumeName>true</RequireVolumeName>
+		<VolumeNameMaxLength>8</VolumeNameMaxLength>
+		<TextTerminateCode>0x00</TextTerminateCode>
+		<AttributesByExtension>
+			<BasicBinary   name="BAS" />
+			<MachineBinary name="CMD" />
+			<DataAscii     name="TXT" />
+			<Binary        name="CIM" />
+			<MachineBinary name="REL" />
+			<System        name="SYS" />
+			<Binary        name="OV1" />
+			<Binary        name="DVR" />
+		</AttributesByExtension>
+	</DiskBasicFormat>
+	<DiskBasicFormat type="18" name="TRSD13">
+		<HasVolumeName>true</HasVolumeName>
+		<HasVolumeDate>true</HasVolumeDate>
+		<FillCodeOnFormat>0xe5</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<FileNameCharacters>
+			<ValidFirstCodeRange first="0x41" last="0x5a" />
+			<ValidFirstCodeRange first="0x61" last="0x7a" />
+			<ValidCharSet>./</ValidCharSet>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<ExtensionPreCode>0x2f</ExtensionPreCode><!-- "/" -->
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+		<RequireFileName>true</RequireFileName>
+		<RequireVolumeName>true</RequireVolumeName>
+		<VolumeNameMaxLength>8</VolumeNameMaxLength>
+		<TextTerminateCode>0x00</TextTerminateCode>
+		<AttributesByExtension>
+			<BasicBinary   name="BAS" />
+			<MachineBinary name="CMD" />
+			<DataAscii     name="TXT" />
+			<DataAscii     name="DAT" />
+			<Binary        name="OBJ" />
+		</AttributesByExtension>
+	</DiskBasicFormat>
 	<DiskBasicFormat type="20" name="C1541">
 		<HasVolumeName>true</HasVolumeName>
 		<HasVolumeNumber>true</HasVolumeNumber>
@@ -658,6 +723,22 @@
 			<System name="CMD" value="0x0a" mask="0xff" /><!-- SYS -->
 		</AttributesByExtension>
 	</DiskBasicFormat>
+	<DiskBasicFormat type="81" name="M68KDOS">
+		<GroupUnusedCode>0x000</GroupUnusedCode>
+		<FillCodeOnFormat>0x40</FillCodeOnFormat>
+		<FillCodeOnFAT>0x00</FillCodeOnFAT>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<Endian>big</Endian>
+		<FileNameCharacters>
+			<ValidCode>0x20</ValidCode>
+			<ValidCode>0x2e</ValidCode>
+			<ValidCodeRange first="0x30" last="0x39" />
+			<ValidCodeRange first="0x41" last="0x5a" />
+			<ValidCodeRange first="0x61" last="0x7a" />
+		</FileNameCharacters>
+		<ToUpperFileNameBeforeDialog>true</ToUpperFileNameBeforeDialog>
+		<ToUpperFileNameAfterRenamed>true</ToUpperFileNameAfterRenamed>
+	</DiskBasicFormat>
 	<DiskBasicFormat type="91" name="FALCOM">
 		<HasVolumeName>false</HasVolumeName>
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -781,6 +862,18 @@
 	<DiskBasicCategory name="AMIGA">
 		<Description>Commodore Amiga DOS</Description>
 		<Description lang="ja">コモドール Amiga DOS / AROS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="M68KDOS">
+		<Description>SORD M68 KDOS</Description>
+		<Description lang="ja">ソード M68 KDOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TRSD23">
+		<Description>Tandy TRSDOS 2.x</Description>
+		<Description lang="ja">タンディ TRSDOS 2.x</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TRSD13">
+		<Description>Tandy TRSDOS 1.3</Description>
+		<Description lang="ja">タンディ TRSDOS 1.3</Description>
 	</DiskBasicCategory>
 </DiskBasicCategories>
 
@@ -1627,6 +1720,37 @@
 		</SectorSkewMap>
 		<Description>CP/M for Apple II (1D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="CPMTRS-1D-256-2" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<SectorSkew>2</SectorSkew>
+		<GroupWidth>1</GroupWidth>
+		<Description>CP/M for TRS-80 (1D, 8groups, sector skew 2)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPMTRS-2D-256-2" type="10" category="CPM">
+		<SectorsPerGroup>8</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<ManagedTrackNumber>2</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>16</DirEndSector>
+		<SectorSkew>2</SectorSkew>
+		<GroupWidth>1</GroupWidth>
+		<Description>CP/M for TRS-80 (2D, 8groups, sector skew 2)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CPMTRS-1D-512-4" type="10" category="CPM">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>4</DirEndSector>
+		<Description>CP/M for TRS-80 (1D, 2groups)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="CPM86-1D-512-2" type="10" category="CPM">
 		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>
@@ -1977,6 +2101,7 @@
 	</DiskBasicType>
 	<DiskBasicType name="HU68K-9SC2" type="14" category="HU68K">
 		<SectorsPerGroup>1</SectorsPerGroup>
+		<SectorNumberBase>1</SectorNumberBase>
 		<SidesPerDisk>2</SidesPerDisk>
 		<ManagedTrackNumber>0</ManagedTrackNumber>
 		<ReservedSectors>1</ReservedSectors>
@@ -2045,6 +2170,26 @@
 		<DirStartSector>2</DirStartSector>
 		<DirEndSector>5</DirEndSector>
 		<Description>Apple ProDOS 16 (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TRSD23-1S" type="17" category="TRSD23">
+		<SectorsPerGroup>5</SectorsPerGroup><!-- sectors per granule -->
+		<SectorsPerTrack>10</SectorsPerTrack>
+		<SidesPerDisk>1</SidesPerDisk>
+		<ManagedTrackNumber>17</ManagedTrackNumber>
+		<DirStartSector>2</DirStartSector>
+		<DirEndSector>9</DirEndSector>
+		<FATStartSector>0</FATStartSector><!-- GAT -->
+		<Description>Tandy TRSDOS 2.x (1S)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="TRSD13-1D" type="18" category="TRSD13">
+		<SectorsPerGroup>3</SectorsPerGroup><!-- sectors per granule -->
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<SidesPerDisk>1</SidesPerDisk>
+		<ManagedTrackNumber>17</ManagedTrackNumber>
+		<DirStartSector>3</DirStartSector>
+		<DirEndSector>18</DirEndSector>
+		<FATStartSector>1</FATStartSector><!-- GAT -->
+		<Description>Tandy TRSDOS 1.3 (1D)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="C1541-1D" type="20" category="C1541">
 		<SidesPerDisk>1</SidesPerDisk>
@@ -2454,6 +2599,19 @@
 		<IPLString type="string">\x01</IPLString>
 		<Description>MZ Floppy DOS (2D)</Description>
 		<Description lang="ja">MZ Floppy DOS (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="M68KDOS-2HD" type="81" category="M68KDOS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<TracksPerSide>75</TracksPerSide>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<FATStartSector>9</FATStartSector>
+		<DirStartSector>12</DirStartSector>
+		<DirEndSector>40</DirEndSector>
+		<FillCodeOnFormat>0x40</FillCodeOnFormat>
+		<Description>SORD M68 KDOS (2HD)</Description>
+		<Description lang="ja">ソード M68 KDOS (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="FALCOM-2D" type="91" category="FALCOM">
 		<FormatSubType>0</FormatSubType>

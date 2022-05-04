@@ -706,6 +706,7 @@ bool DiskBasicDirItemC1541::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 	return valid;
 }
 
+#if 0
 /// ダイアログ入力後のファイル名チェック
 bool DiskBasicDirItemC1541::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
 {
@@ -718,9 +719,10 @@ bool DiskBasicDirItemC1541::ValidateFileName(const wxWindow *parent, const wxStr
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItemC1541::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItemC1541::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 }
+#endif
 
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemC1541::SetInternalDataInAttrDialog(KeyValArray &vals)

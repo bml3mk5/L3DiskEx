@@ -184,7 +184,7 @@ double DiskBasicTypeC1541::ParseParamOnDisk(bool is_formatting)
 	c1541_bam.SetMyGroupNumber((wxUint32)bam_sector_pos);
 
 	// ディレクトリエリア
-	if (bam->start_dir.track >= (basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBase())
+	if (bam->start_dir.track >= (basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBaseOnDisk())
 		|| bam->start_dir.sector > basic->GetSectorsPerTrack()) {
 		return -1.0;
 	}
@@ -337,7 +337,7 @@ void DiskBasicTypeC1541::CalcDiskFreeSize(bool wrote)
 		int trk_num = 0;
 		int sec_num = 0;
 		GetNumFromSectorPosS(sec_pos, trk_num, sec_num);
-		trk_num -= basic->GetTrackNumberBase();
+		trk_num -= basic->GetTrackNumberBaseOnDisk();
 		sec_num -= basic->GetSectorNumberBase();
 		if (c1541_bam.IsFree(trk_num, sec_num)) {
 			fat_availability.Add(FAT_AVAIL_FREE, basic->GetSectorSize(), 1);
@@ -366,7 +366,7 @@ void DiskBasicTypeC1541::SetGroupNumber(wxUint32 num, wxUint32 val)
 	int trk_num = 0;
 	int sec_num = 0;
 	GetNumFromSectorPosS((int)num, trk_num, sec_num);
-	trk_num -= basic->GetTrackNumberBase();
+	trk_num -= basic->GetTrackNumberBaseOnDisk();
 	sec_num -= basic->GetSectorNumberBase();
 	c1541_bam.Modify(trk_num, sec_num, val != 0);
 }
@@ -418,13 +418,13 @@ wxUint32 DiskBasicTypeC1541::GetEmptyGroupNumberM(int method)
 		case 0:
 			// 内側から検索
 			sta_trk = basic->GetManagedTrackNumber() - 1;
-			end_trk = basic->GetTrackNumberBase() - 1;
+			end_trk = basic->GetTrackNumberBaseOnDisk() - 1;
 			ndir = -1;
 			break;
 		case 1:
 			// 外側へ検索
 			sta_trk = basic->GetManagedTrackNumber() + 1;
-			end_trk = basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBase();
+			end_trk = basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBaseOnDisk();
 			ndir = 1;
 			break;
 		case 2:
@@ -436,7 +436,7 @@ wxUint32 DiskBasicTypeC1541::GetEmptyGroupNumberM(int method)
 		}
 
 		for(int trk_num = sta_trk; trk_num != end_trk && new_num == INVALID_GROUP_NUMBER; trk_num += ndir) {
-			int trk_anum = trk_num - basic->GetTrackNumberBase();
+			int trk_anum = trk_num - basic->GetTrackNumberBaseOnDisk();
 			const SectorsPerTrack *item = sector_map.FindByTrackNum(trk_anum);
 			int num_of_secs = item->GetNumOfSectors();
 			for(int sec_pos = 0; sec_pos < num_of_secs; sec_pos++) {
@@ -702,7 +702,7 @@ void DiskBasicTypeC1541::GetNumFromSectorPos(int sector_pos, int &track_num, int
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 
 	if (div_num)  *div_num = 0;
@@ -722,7 +722,7 @@ void DiskBasicTypeC1541::GetNumFromSectorPosS(int sector_pos, int &track_num, in
 	sector_map.GetNumFromSectorPos(sector_pos, track_num, sector_num, sectors_per_track);
 
 	sector_num += basic->GetSectorNumberBase();
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 }
 
 /// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
@@ -739,7 +739,7 @@ int  DiskBasicTypeC1541::GetSectorPosFromNum(int track_num, int side_num, int se
 	int numbering_sector = basic->GetNumberingSector();
 	int sectors_per_track = basic->GetSectorsPerTrackOnBasic();
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	int sector_pos = sector_map.GetSectorPosFromNum(track_num, sector_num, sectors_per_track);
@@ -765,7 +765,7 @@ int  DiskBasicTypeC1541::GetSectorPosFromNumS(int track_num, int sector_num)
 {
 	int sectors_per_track = 1;
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	return sector_map.GetSectorPosFromNum(track_num, sector_num, sectors_per_track);
@@ -826,7 +826,7 @@ bool DiskBasicTypeC1541::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 		const SectorsPerTrack *item = sector_map.FindByTrackNum(trk);
 		c1541_bam.FreeTrack(trk, item->GetNumOfSectors());
 	}
-	int trk_npos = trk_num - basic->GetTrackNumberBase();
+	int trk_npos = trk_num - basic->GetTrackNumberBaseOnDisk();
 	int sec_npos = sec_num - basic->GetSectorNumberBase();
 	c1541_bam.Modify(trk_npos, sec_npos, true);
 	c1541_bam.Modify(trk_npos, sec_npos + 1, true);

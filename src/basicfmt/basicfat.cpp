@@ -125,7 +125,7 @@ bool BitMLBuffer::IsSet(wxUint32 num) const
 /// @param[in]  num ビット位置
 /// @param[out] pos バッファ位置
 /// @param[out] bit ビット
-void BitMLBuffer::GetPos(wxUint32 num, wxUint32 &pos, wxUint32 &bit)
+void BitMLBuffer::GetPos(wxUint32 num, wxUint32 &pos, wxUint32 &bit) const
 {
 	pos = num >> 3;
 	bit = num & 7;
@@ -879,7 +879,7 @@ void DiskBasicFat::Copy(const wxUint8 *buf, size_t len)
 	for(int fat_num = 0; fat_num < vcount; fat_num++) {
 		DiskD88Sector *sector = basic->GetSectorFromSectorPos(start_sector);
 		if (sector) {
-			sector->Copy(buf, len);
+			sector->Copy(buf, (int)len);
 		}
 		start_sector += size;
 	}

@@ -76,7 +76,7 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 	// interleave
 //	int *sector_nums = new int[sector_max + 1];
 	wxArrayInt sector_nums;
-	if (!DiskD88Track::CalcSectorNumbersForInterleave(param->GetInterleave(), sector_max, sector_nums, param->GetSectorNumberBase())) {
+	if (!DiskD88Track::CalcSectorNumbersForInterleave(param->GetInterleave(), sector_max, sector_nums, param->GetSectorNumberBaseOnDisk())) {
 		result->SetError(DiskResult::ERR_INTERLEAVE);
 	}
 
@@ -116,7 +116,7 @@ wxUint32 DiskD88Creator::CreateDisk(int disk_number, short mod_flags)
 
 	// create tracks
 	size_t create_size = 0;
-	int track_num = param->GetTrackNumberBase();
+	int track_num = param->GetTrackNumberBaseOnDisk();
 	int side_num = 0;
 	int tracks_per_side = param->GetTracksPerSide() + track_num;
 

@@ -629,6 +629,70 @@ typedef struct st_directory_amiga {
 	amiga_block_post_t *post;
 } directory_amiga_t;
 
+/// @brief ディレクトリエントリ M68 FDOS (31bytes)
+typedef struct st_directory_m68fdos {
+	union {
+		wxUint16 w[2];		// big endien
+		wxUint8  b[4];
+	} name;
+	union {
+		wxUint16 w;			// big endien
+		wxUint8  b[2];
+	} ext;
+	wxUint16 attr1;
+	wxUint16 attr2;			// unknown
+	wxUint16 block_size;
+	wxUint8  eof_in_sector;
+	wxUint16 date;
+	wxUint16 time;			// unknown
+	union {
+		wxUint16 w;			// big endien
+		wxUint8  b[2];
+	} rev;
+	wxUint16 start_sector;
+	wxUint8  attr3;
+	wxUint16 end_sector;	// unknown
+	wxUint16 load_addr;
+	wxUint16 exec_addr;
+	wxUint8  unknown2[3];
+} directory_m68fdos_t;
+
+/// @brief TRSDOS gap
+typedef struct st_trsdos_gap {
+	wxUint8  track;
+	wxUint8  granules;
+} trdos_gap_t;
+
+/// @brief ディレクトリエントリ TRSDOS 2.x (32bytes)
+typedef struct st_directory_trsd23 {
+	wxUint8  access_control;
+	wxUint8  overflow;
+	wxUint8  reserved1;
+	wxUint8  eof_byte_offset;
+	wxUint8  record_length;
+	wxUint8  name[8];
+	wxUint8  ext[3];
+	wxUint16 update_password;
+	wxUint16 access_password;
+	wxUint16 eof_sector;
+	trdos_gap_t gap[5];
+} directory_trsd23_t;
+
+/// @brief ディレクトリエントリ TRSDOS 1.3 (48bytes)
+typedef struct st_directory_trsd13 {
+	wxUint8  access_control;
+	wxUint8  month;	// 0x01 - 0x0c
+	wxUint8  year;
+	wxUint8  eof_byte_offset;
+	wxUint8  record_length;
+	wxUint8  name[8];
+	wxUint8  ext[3];
+	wxUint16 update_password;
+	wxUint16 access_password;
+	wxUint16 eof_sector;
+	trdos_gap_t gap[13];
+} directory_trsd13_t;
+
 /// @brief ディレクトリエントリ サイズに注意！
 typedef union un_directory {
 	wxUint8				name[16];
@@ -659,6 +723,9 @@ typedef union un_directory {
 	directory_prodos_t	prodos;
 	directory_c1541_t	c1541;
 	directory_amiga_t	amiga;
+	directory_m68fdos_t	m68fdos;
+	directory_trsd23_t	trsd23;
+	directory_trsd13_t	trsd13;
 } directory_t;
 #pragma pack()
 
@@ -682,6 +749,8 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_HU68K	= 14,
 	FORMAT_TYPE_APLEDOS	= 15,
 	FORMAT_TYPE_PRODOS	= 16,
+	FORMAT_TYPE_TRSD23	= 17,
+	FORMAT_TYPE_TRSD13	= 18,
 	FORMAT_TYPE_C1541	= 20,
 	FORMAT_TYPE_AMIGA	= 21,
 	FORMAT_TYPE_LOSA	= 31,
@@ -695,6 +764,7 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_TFDOS	= 71,
 	FORMAT_TYPE_CDOS	= 72,
 	FORMAT_TYPE_MZ_FDOS	= 73,
+	FORMAT_TYPE_M68FDOS	= 81,
 	FORMAT_TYPE_FALCOM	= 91,
 };
 

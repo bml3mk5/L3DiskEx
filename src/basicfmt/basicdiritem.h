@@ -333,6 +333,8 @@ public:
 	void			CopyFileName(const DiskBasicDirItem &src);
 	/// @brief ファイル名を返す 名前 + "." + 拡張子
 	wxString		GetFileNameStr() const;
+	/// @brief ファイル名を返す 名前 + "." + 拡張子 エクスポート時
+	wxString		GetFileNameStrForExport() const;
 	/// @brief ファイル名を得る 名前 + "." + 拡張子
 	void			GetFileName(wxUint8 *filename, size_t length) const;
 	/// @brief ファイル名と拡張子を得る
@@ -358,8 +360,8 @@ public:
 	virtual int		GetOptionalName() const { return 0; }
 	/// @brief 文字列をバッファにコピー あまりはfillでパディング
 	static void		MemoryCopy(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 *dst, size_t dsize, size_t &dlen);
-	/// @brief 文字列をバッファにコピー "."で拡張子とを分ける
-	static void		SplitFileName(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 *dname, size_t dnsize, size_t &dnlen, wxUint8 *dext, size_t desize, size_t &delen);
+	/// @brief 文字列をバッファにコピー spchr(通常".")で拡張子とを分ける
+	static void		SplitFileName(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 *dname, size_t dnsize, size_t &dnlen, wxUint8 *dext, size_t desize, size_t &delen, wxUint8 spchr);
 	//@}
 
 	/// @name 属性へのアクセス
@@ -631,7 +633,7 @@ public:
 	/// @brief ファイルの終端コードを返す
 	virtual wxUint8	GetEofCode() const;
 	/// @brief データをチェインする必要があるか（非連続データか）
-	virtual bool	NeedChainInData() { return false; }
+	virtual bool	NeedChainInData() const { return false; }
 	/// @brief データをエクスポートする前に必要な処理
 	virtual bool	PreExportDataFile(wxString &filename);
 	/// @brief データをインポートする前に必要な処理
@@ -649,7 +651,7 @@ public:
 	/// @brief 属性値を加工する
 	virtual bool	ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 	/// @brief その他の属性値を設定する
-	virtual void	SetAttr(DiskBasicDirItemAttr &attr);
+	virtual void	SetOptionalAttr(DiskBasicDirItemAttr &attr);
 	//@}
 
 	/// @name 文字コード
@@ -680,6 +682,8 @@ public:
 	int				GetNumber() const { return m_num; }
 	/// @brief 通し番号をセット
 	void			SetNumber(int val) { m_num = val; }
+	/// @brief セクタ内の位置（バイト）を返す
+	int				GetPosition() const { return m_position; }
 	//@}
 
 	/// @name プロパティダイアログ用　機種依存部分を設定する

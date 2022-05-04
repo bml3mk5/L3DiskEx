@@ -561,6 +561,21 @@ bool DiskParam::Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors
 	return match;
 }
 /// 指定したパラメータで一致するものがあるか
+/// @param[in] n_sides_per_disk     サイド/ディスク
+/// @param[in] n_tracks_per_side    トラック/サイド
+/// @param[in] n_sectors_per_track  セクタ/トラック
+/// @param[in] n_sector_size        セクタサイズ
+/// @return true:一致する
+bool DiskParam::Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size)
+{
+	bool match = (sides_per_disk == n_sides_per_disk)
+		&& (tracks_per_side == n_tracks_per_side)
+		&& (sectors_per_track == n_sectors_per_track)
+		&& (sector_size == n_sector_size);
+	
+	return match;
+}
+/// 指定したパラメータで一致するものがあるか
 /// @param[in] param パラメータ
 /// @return true:一致する
 bool DiskParam::Match(const DiskParam &param)
@@ -745,7 +760,7 @@ int DiskParam::HasSingleDensity(int *sectors_per_track, int *sector_size) const
 int DiskParam::CalcDiskSize() const
 {
 	int disk_size = 0;
-	int trk = GetTrackNumberBase();
+	int trk = GetTrackNumberBaseOnDisk();
 	int trks = GetTracksPerSide() + trk;
 	for(; trk < trks; trk++) {
 		for(int sid = 0; sid < GetSidesPerDisk(); sid++) {
@@ -944,9 +959,9 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 				} else if (itemnode->GetName() == "Interleave") {
 					p.SetInterleave(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "TrackNumberBase") {
-					p.SetTrackNumberBase(Utils::ToInt(str));
+					p.SetTrackNumberBaseOnDisk(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SectorNumberBase") {
-					p.SetSectorNumberBase(Utils::ToInt(str));
+					p.SetSectorNumberBaseOnDisk(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "VariableSectorsPerTrack") {
 					p.VariableSectorsPerTrack(Utils::ToBool(str));
 				} else if (itemnode->GetName() == "DiskBasicTypes") {
@@ -1260,7 +1275,6 @@ const DiskParam *DiskTemplates::FindStrict(int n_sides_per_disk, int n_tracks_pe
 /// @param[in] n_sectors_per_track セクタ数
 /// @param[in] n_sector_size       セクタサイズ
 /// @param[in] n_interleave        インターリーブ
-/// @param[in] n_interleave        インターリーブ
 /// @param[in] n_track_number_base  開始トラック番号
 /// @param[in] n_sector_number_base 開始セクタ番号
 /// @param[in] n_numbering_sector  セクタ採番方法
@@ -1291,4 +1305,31 @@ const DiskParam *DiskTemplates::Find(int n_sides_per_disk, int n_tracks_per_side
 		}
 	}
 	return match_item;
+}
+
+/// パラメータに一致するテンプレートのリストを返す
+/// @param[in] n_sides_per_disk    サイド数
+/// @param[in] n_tracks_per_side   トラック数
+/// @param[in] n_sectors_per_track セクタ数
+/// @param[in] n_sector_size       セクタサイズ
+/// @param[out] n_list             候補リスト
+/// @param[in] n_separator         リストの最初にセパレータ(NULL)を追加するか
+/// @return リスト内のアイテム数
+int DiskTemplates::Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, DiskParamPtrs &n_list, bool n_separator) const
+{
+	for(size_t i=0; i<params.Count(); i++) {
+		DiskParam *item = &params[i];
+		if (item->Match(n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size)) {
+			// 重複してなければ追加
+			if (n_list.Index(item) == wxNOT_FOUND) {
+				if (n_separator) {
+					// 最初の候補の前にセパレータを追加
+					n_list.Add(NULL);
+					n_separator = false;
+				}
+				n_list.Add(item);
+			}
+		}
+	}
+	return (int)n_list.Count();
 }

@@ -36,6 +36,36 @@ WX_DEFINE_OBJARRAY(FileFormats);
 
 //////////////////////////////////////////////////////////////////////
 //
+// ディスク解析で用いるヒント
+//
+DiskTypeHint::DiskTypeHint()
+{
+	m_kind = 0;
+}
+DiskTypeHint::DiskTypeHint(const wxString &hint)
+{
+	m_hint = hint;
+	m_kind = 0;
+}
+DiskTypeHint::DiskTypeHint(const wxString &hint, int kind)
+{
+	m_hint = hint;
+	m_kind = kind;
+}
+/// セット
+void DiskTypeHint::Set(const wxString &hint, int kind)
+{
+	m_hint = hint;
+	m_kind = kind;
+}
+
+//////////////////////////////////////////////////////////////////////
+
+#include <wx/arrimpl.cpp>
+WX_DEFINE_OBJARRAY(DiskTypeHints);
+
+//////////////////////////////////////////////////////////////////////
+//
 // ファイル形式パラメータ
 //
 FileParamFormat::FileParamFormat()
@@ -47,9 +77,9 @@ FileParamFormat::FileParamFormat(const wxString &type)
 	m_type = type;
 }
 /// ヒントを追加
-void FileParamFormat::AddHint(const wxString &val)
+void FileParamFormat::AddHint(const wxString &val, int kind)
 {
-	m_hints.Add(val);
+	m_hints.Add(DiskTypeHint(val, kind));
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -176,7 +206,12 @@ bool FileTypes::Load(const wxString &data_path, const wxString &locale_name)
 							str = citemnode->GetNodeContent();
 							str = str.Trim(false).Trim(true);
 							if (!str.IsEmpty()) {
-								fmt.AddHint(str);
+								wxString skind = citemnode->GetAttribute("kind");
+								long kind = 0;
+								if (!skind.IsEmpty()) {
+									skind.ToLong(&kind);
+								}
+								fmt.AddHint(str, (int)kind);
 							}
 						}
 						citemnode = citemnode->GetNext();

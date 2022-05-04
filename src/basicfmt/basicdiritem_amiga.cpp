@@ -1739,6 +1739,7 @@ bool DiskBasicDirItemAmiga::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 	return valid;
 }
 
+#if 0
 /// ダイアログ入力後のファイル名チェック
 bool DiskBasicDirItemAmiga::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
 {
@@ -1746,9 +1747,10 @@ bool DiskBasicDirItemAmiga::ValidateFileName(const wxWindow *parent, const wxStr
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItemAmiga::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItemAmiga::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 }
+#endif
 
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemAmiga::SetInternalDataInAttrDialog(KeyValArray &vals)

@@ -30,6 +30,7 @@ protected:
 	int track_num;
 	int side_num;
 	int sector_num;
+
 public:
 	SectorParam();
 	SectorParam(int n_track_num, int n_side_num, int n_sector_num);
@@ -319,6 +320,8 @@ public:
 		, int n_interleave, int n_track_number_base, int n_sector_number_base, int n_numbering_sector
 		, const DiskParticulars &n_singles, const DiskParticulars &n_ptracks);
 	/// @brief 指定したパラメータで一致するものがあるか
+	bool Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size);
+	/// @brief 指定したパラメータで一致するものがあるか
 	bool Match(const DiskParam &param);
 	/// @brief 名前を除いて指定したパラメータで一致するものがあるか
 	bool MatchExceptName(const DiskParam &param);
@@ -358,9 +361,9 @@ public:
 	/// @brief セクタの間隔を設定
 	void SetInterleave(int val) { interleave = val; }
 	/// @brief 開始トラック番号を設定
-	void SetTrackNumberBase(int val) { track_number_base = val; }
+	void SetTrackNumberBaseOnDisk(int val) { track_number_base = val; }
 	/// @brief 開始セクタ番号を設定
-	void SetSectorNumberBase(int val) { sector_number_base = val; }
+	void SetSectorNumberBaseOnDisk(int val) { sector_number_base = val; }
 	/// @brief セクタ数がトラックごとに異なる
 	void VariableSectorsPerTrack(bool val) { variable_secs_per_trk = val; }
 	/// @brief 単密度にするトラックを設定
@@ -402,9 +405,9 @@ public:
 	/// @brief セクタの間隔を返す
 	int GetInterleave() const { return interleave; }
 	/// @brief 開始トラック番号を返す
-	int GetTrackNumberBase() const { return track_number_base; }
+	int GetTrackNumberBaseOnDisk() const { return track_number_base; }
 	/// @brief 開始セクタ番号を返す
-	int GetSectorNumberBase() const { return sector_number_base; }
+	int GetSectorNumberBaseOnDisk() const { return sector_number_base; }
 	/// @brief セクタ数がトラックごとに異なる
 	bool IsVariableSectorsPerTrack() const { return variable_secs_per_trk; }
 	/// @brief 単密度にするトラックを返す
@@ -472,6 +475,8 @@ public:
 	const DiskParam *Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size
 		, int n_interleave, int n_track_number_base, int n_sector_number_base, int n_numbering_sector
 		, const DiskParticulars &n_singles, const DiskParticulars &n_ptracks) const;
+	/// @brief パラメータに一致するテンプレートのリストを返す
+	int Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, DiskParamPtrs &n_list, bool n_separator = false) const;
 	/// @brief テンプレートを返す
 	const DiskParam *ItemPtr(size_t index) const { return &params[index]; }
 	/// @brief テンプレートを返す

@@ -305,6 +305,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basicdiritem_m68fdos.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basicdiritem_magical.cpp"
 					>
 				</File>
@@ -350,6 +354,10 @@
 				</File>
 				<File
 					RelativePath="..\src\basicfmt\basicdiritem_tfdos.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\basicfmt\basicdiritem_trsdos.cpp"
 					>
 				</File>
 				<File
@@ -453,6 +461,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basictype_m68fdos.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basictype_magical.cpp"
 					>
 				</File>
@@ -509,6 +521,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basictype_trsdos.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basictype_x1hu.cpp"
 					>
 				</File>
@@ -549,6 +565,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\diskimg\diskdmkparser.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\diskimg\diskdskparser.cpp"
 					>
 				</File>
@@ -561,7 +581,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\diskimg\diskhfeparser.cpp"
+					>
+				</File>
+				<File
 					RelativePath="..\src\diskimg\diskimdparser.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\diskimg\diskjv3parser.cpp"
 					>
 				</File>
 				<File
@@ -827,6 +855,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basicdiritem_m68fdos.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basicdiritem_magical.h"
 					>
 				</File>
@@ -872,6 +904,10 @@
 				</File>
 				<File
 					RelativePath="..\src\basicfmt\basicdiritem_tfdos.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\basicfmt\basicdiritem_trsdos.h"
 					>
 				</File>
 				<File
@@ -975,6 +1011,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basictype_m68fdos.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basictype_magical.h"
 					>
 				</File>
@@ -1031,6 +1071,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\basicfmt\basictype_trsdos.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\basicfmt\basictype_x1hu.h"
 					>
 				</File>
@@ -1071,6 +1115,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\diskimg\diskdmkparser.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\diskimg\diskdskparser.h"
 					>
 				</File>
@@ -1083,7 +1131,15 @@
 					>
 				</File>
 				<File
+					RelativePath="..\src\diskimg\diskhfeparser.h"
+					>
+				</File>
+				<File
 					RelativePath="..\src\diskimg\diskimdparser.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\diskimg\diskjv3parser.h"
 					>
 				</File>
 				<File

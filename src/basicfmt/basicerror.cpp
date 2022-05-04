@@ -72,6 +72,8 @@ const char *gDiskBasicErrorMsgs[] = {
 	wxTRANSLATE("End address is smaller than load address."),
 	//	ERR_PATH_TOO_DEEP
 	wxTRANSLATE("Path is too deep."),
+	//	ERR_NO_FOUND_TRACK
+	wxTRANSLATE("No track found. Run \"Initialize\" to create tracks."),
 
 	//	ERRV_START v:1
 	wxTRANSLATE("Unknown error. code:%d"),

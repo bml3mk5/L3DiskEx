@@ -1,9 +1,9 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.5.3
-                                                                2021/12/02
+                                                              Version 0.6.0
+                                                                2022/05/05
 
-                            Copyright(C) Sasaji 2015-2021 All Rights Reserved.
+                            Copyright(C) Sasaji 2015-2022 All Rights Reserved.
 ==============================================================================
 
 ● はじめに
@@ -31,6 +31,8 @@
   ・Apple ProDOS 8/16
   ・Commodore 1541 DOS (Commodore 64)
   ・Commodore Amiga DOS / AROS
+  ・ソード M68 KDOS (FDOS)
+  ・Tandy TRSDOS 2.3 / 1.3
   ・TF-DOS
   ・キャリーラボ C-DOS
   ・キャリーラボ CDOS II
@@ -314,6 +316,7 @@
         サポートしているディスクイメージは：
           CPC DSK, CopyCQ, Teledisk TD0, Anex86 FDI, Virtual98 FDD,
           IMageDisk IMD, DSKSTR, VICE G64, Apple Disk Copy,
+          HxC HFE, TRS-80 DMK, TRS-80 JV3, 
           D88およびべた形式です。
         形式の判断は、拡張子で行います。
 

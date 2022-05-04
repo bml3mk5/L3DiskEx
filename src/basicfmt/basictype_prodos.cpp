@@ -734,7 +734,7 @@ void DiskBasicTypeProDOS::GetNumFromSectorPos(int sector_pos, int &track_num, in
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 
 	if (div_num)  *div_num = 0;
@@ -756,7 +756,7 @@ void DiskBasicTypeProDOS::GetNumFromSectorPosS(int sector_pos, int &track_num, i
 	// マッピング
 	sector_num = sector_skew.ToPhysical(sector_num);
 
-	track_num += basic->GetTrackNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 }
 
@@ -776,7 +776,7 @@ int  DiskBasicTypeProDOS::GetSectorPosFromNum(int track_num, int side_num, int s
 	int sectors_per_track = 1;
 //	int sector_pos;
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	// マッピング
@@ -819,7 +819,7 @@ int  DiskBasicTypeProDOS::GetSectorPosFromNumS(int track_num, int sector_num)
 
 	int sectors_per_track = 1;
 
-	track_num -= basic->GetTrackNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	// マッピング

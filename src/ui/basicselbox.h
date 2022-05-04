@@ -13,6 +13,7 @@
 #include <wx/dynarray.h>
 #include "../basicfmt/basicparam.h"
 
+#define VOLUME_ROWS 3
 
 class wxListBox;
 class wxTextCtrl;
@@ -22,17 +23,37 @@ class DiskBasicParam;
 class DiskBasicParamPtrs;
 class DiskD88Disk;
 
+/// VOLUMEコントロール
+class VolumeCtrl
+{
+protected:
+	wxStaticText *lblVolume[VOLUME_ROWS];
+	wxTextCtrl *txtVolume[VOLUME_ROWS];
+
+public:
+	VolumeCtrl();
+	virtual ~VolumeCtrl() {}
+	wxSizer *CreateVolumeCtrl(wxWindow* parent, wxWindowID id);
+
+	void EnableVolumeName(bool enable, size_t max_length, const ValidNameRule &rule);
+	void EnableVolumeNumber(bool enable);
+	void EnableVolumeDate(bool enable);
+
+	void SetVolumeName(const wxString &val);
+	void SetVolumeNumber(int val, bool is_hexa);
+	void SetVolumeDate(const wxString &val);
+
+	wxString GetVolumeName() const;
+	int GetVolumeNumber() const;
+	wxString GetVolumeDate() const;
+};
+
+
 /// BASIC種類選択ボックス
-class BasicSelBox : public wxDialog
+class BasicSelBox : public wxDialog, public VolumeCtrl
 {
 private:
 	wxListBox *comBasic;
-	wxStaticText *lblVolName;
-	wxTextCtrl *txtVolName;
-	wxStaticText *lblVolNum;
-	wxTextCtrl *txtVolNum;
-	wxStaticText *lblVolDate;
-	wxTextCtrl *txtVolDate;
 
 	DiskBasicParamPtrs params;
 
@@ -43,9 +64,7 @@ public:
 
 	enum {
 		IDC_LIST_BASIC = 1,
-		IDC_TEXT_VOLNAME,
-		IDC_TEXT_VOLNUM,
-		IDC_TEXT_VOLDATE,
+		IDC_VOLUME_CTRL,
 	};
 
 	enum en_show_flags {
@@ -66,9 +85,6 @@ public:
 
 	// properties
 	const DiskBasicParam *GetBasicParam() const;
-	wxString GetVolumeName() const;
-	int GetVolumeNumber() const;
-	wxString GetVolumeDate() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

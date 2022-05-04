@@ -74,6 +74,7 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 	this->basic = basic;
 
 	wxSizerFlags border = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags fborder = wxSizerFlags(1).Expand().Border(wxALL, 4);	// flexible
 //	wxSizerFlags aleft = wxSizerFlags().Left();
 	wxSizerFlags atitle = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	wxSize tsize(INTNAME_COLUMN_WIDTH, -1);
@@ -281,8 +282,9 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 		if (szrG) szrAll->Add(szrG, border);
 		szrG = NULL;
 	} else {
-		// グループのリスト
 		if (!szrG) szrG = new wxFlexGridSizer(3, 4, 4);
+
+		// グループサイズ
 
 		CreateFileSize(this, IDC_TEXT_GROUPS, _("Occupied Groups"), 12, false, tsize, atitle, szrG, txtGroups);
 
@@ -291,6 +293,7 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 		szrAll->Add(szrG, border);
 		szrG = NULL;
 
+		// グループ番号のリスト
 
 		sz.Set(INTNAME_LISTCOL_WIDTH * 6 + 32, -1);
 		lstGroups = new wxListCtrl(this, IDC_LIST_GROUPS, wxDefaultPosition, sz, wxLC_REPORT | wxLC_SINGLE_SEL);
@@ -300,17 +303,18 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 		lstGroups->AppendColumn(_("Start Sector"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
 		lstGroups->AppendColumn(_("End Sector"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
 		lstGroups->AppendColumn(_("Division"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
-		szrAll->Add(lstGroups, border);
+		szrAll->Add(lstGroups, fborder);
 
 		lstGroups->SetFont(font);
 		lstGroups->Bind(wxEVT_LIST_ITEM_SELECTED, &IntNameBox::OnListItemSelected, this);
 
 		lstInternal = NULL;
 		if (gConfig.DoesShowInterDirItem()) {
+			// ディレクトリ内部のメタデータリスト
 			lstInternal = new wxListCtrl(this, IDC_LIST_INTERNAL, wxDefaultPosition, sz, wxLC_REPORT | wxLC_SINGLE_SEL);
 			lstInternal->AppendColumn(_("Name"), wxLIST_FORMAT_LEFT, INTNAME_LISTCOL_WIDTH * 2);
 			lstInternal->AppendColumn(_("Value"), wxLIST_FORMAT_LEFT, INTNAME_LISTCOL_WIDTH * 4);
-			szrAll->Add(lstInternal, border);
+			szrAll->Add(lstInternal, fborder);
 
 			lstInternal->SetFont(font);
 		}
@@ -318,12 +322,16 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 
 	chkSkipDlg = NULL;
 	if (show_flags & INTNAME_SHOW_SKIP_DIALOG) {
-		// 以降スキップ
+		// 「以降スキップ」チェックボックス
 		sz.Set(200, 2);
 		szrAll->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, sz, wxLI_HORIZONTAL), border);
 		chkSkipDlg = new wxCheckBox(this, IDC_CHK_SKIP_DLG, _("Skip the confirmation after this."));
 		chkSkipDlg->SetValue(gConfig.IsSkipImportDialog());
 		szrAll->Add(chkSkipDlg, border);
+	}
+
+	if ((show_flags & INTNAME_SHOW_PROPERTY) == 0) {
+		szrAll->AddStretchSpacer();
 	}
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);

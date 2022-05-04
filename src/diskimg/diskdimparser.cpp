@@ -75,7 +75,7 @@ int DiskDIMParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskDIMParser::Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskDIMParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 
@@ -125,12 +125,30 @@ int DiskDIMParser::Check(DiskParser &dp, wxInputStream &istream, const wxArraySt
 
 	// ディスクテンプレートから探す
 	DiskParam dummy;
-	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, 1, dummy.GetTrackNumberBase(), dummy.GetSectorNumberBase(), 0
-		, dummy.GetSingles(), dummy.GetParticularTracks());
-	if (param) {
-		disk_params.Add(param);
+
+	if (disk_hints != NULL) {
+		// パラメータヒントあり
+
+		// 優先順位の高い候補
+		for(size_t i=0; i<disk_hints->Count(); i++) {
+			int kind = disk_hints->Item(i).GetKind();
+			if (kind != header.type) {
+				continue;
+			}
+			wxString hint = disk_hints->Item(i).GetHint();
+			const DiskParam *param = gDiskTemplates.Find(hint);
+			if (param) {
+				int disk_size_hint = param->CalcDiskSize();
+				if (stream_size == disk_size_hint) {
+					// ファイルサイズが一致
+					disk_params.Add(param);
+				}
+			}
+		}
 	}
+
+	// その他に同じパラメータの候補を追加
+	gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size, disk_params, disk_params.Count() > 0);
 
 	// 候補がないとき手動設定
 	if (disk_params.Count() == 0) {

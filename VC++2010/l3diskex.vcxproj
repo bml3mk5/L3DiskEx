@@ -57,6 +57,7 @@
     <ClCompile Include="..\src\basicfmt\basicdiritem_l31s.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_l32d.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_losa.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_m68fdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_magical.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_mdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_msdos.cpp" />
@@ -69,6 +70,7 @@
     <ClCompile Include="..\src\basicfmt\basicdiritem_prodos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_sdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_tfdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_trsdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_x1hu.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem_xdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basicerror.cpp" />
@@ -94,6 +96,7 @@
     <ClCompile Include="..\src\basicfmt\basictype_hu68k.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_l31s.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_l32d.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_m68fdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_magical.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_mdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_msdos.cpp" />
@@ -108,6 +111,7 @@
     <ClCompile Include="..\src\basicfmt\basictype_sdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_smc.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_tfdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_trsdos.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_x1hu.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_xdos.cpp" />
     <ClCompile Include="..\src\charcodes.cpp" />
@@ -121,11 +125,13 @@
     <ClCompile Include="..\src\diskimg\diskd88parser.cpp" />
     <ClCompile Include="..\src\diskimg\diskd88writer.cpp" />
     <ClCompile Include="..\src\diskimg\diskdimparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskdmkparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskdskparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskfdiparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskg64parser.cpp" />
     <ClCompile Include="..\src\diskimg\diskhfeparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskimdparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskjv3parser.cpp" />
     <ClCompile Include="..\src\diskimg\diskparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskplainparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskplainwriter.cpp" />
@@ -185,6 +191,7 @@
     <ClInclude Include="..\src\basicfmt\basicdiritem_l31s.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_l32d.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_losa.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_m68fdos.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_magical.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_mdos.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_msdos.h" />
@@ -197,6 +204,7 @@
     <ClInclude Include="..\src\basicfmt\basicdiritem_prodos.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_sdos.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_tfdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_trsdos.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_x1hu.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem_xdos.h" />
     <ClInclude Include="..\src\basicfmt\basicerror.h" />
@@ -222,6 +230,7 @@
     <ClInclude Include="..\src\basicfmt\basictype_hu68k.h" />
     <ClInclude Include="..\src\basicfmt\basictype_l31s.h" />
     <ClInclude Include="..\src\basicfmt\basictype_l32d.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_m68fdos.h" />
     <ClInclude Include="..\src\basicfmt\basictype_magical.h" />
     <ClInclude Include="..\src\basicfmt\basictype_mdos.h" />
     <ClInclude Include="..\src\basicfmt\basictype_msdos.h" />
@@ -236,6 +245,7 @@
     <ClInclude Include="..\src\basicfmt\basictype_sdos.h" />
     <ClInclude Include="..\src\basicfmt\basictype_smc.h" />
     <ClInclude Include="..\src\basicfmt\basictype_tfdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_trsdos.h" />
     <ClInclude Include="..\src\basicfmt\basictype_x1hu.h" />
     <ClInclude Include="..\src\basicfmt\basictype_xdos.h" />
     <ClInclude Include="..\src\charcodes.h" />
@@ -249,11 +259,13 @@
     <ClInclude Include="..\src\diskimg\diskd88parser.h" />
     <ClInclude Include="..\src\diskimg\diskd88writer.h" />
     <ClInclude Include="..\src\diskimg\diskdimparser.h" />
+    <ClInclude Include="..\src\diskimg\diskdmkparser.h" />
     <ClInclude Include="..\src\diskimg\diskdskparser.h" />
     <ClInclude Include="..\src\diskimg\diskfdiparser.h" />
     <ClInclude Include="..\src\diskimg\diskg64parser.h" />
     <ClInclude Include="..\src\diskimg\diskhfeparser.h" />
     <ClInclude Include="..\src\diskimg\diskimdparser.h" />
+    <ClInclude Include="..\src\diskimg\diskjv3parser.h" />
     <ClInclude Include="..\src\diskimg\diskparser.h" />
     <ClInclude Include="..\src\diskimg\diskplainparser.h" />
     <ClInclude Include="..\src\diskimg\diskplainwriter.h" />

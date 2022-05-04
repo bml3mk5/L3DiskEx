@@ -74,7 +74,7 @@ int DiskFDIParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskFDIParser::Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskFDIParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 
@@ -113,7 +113,7 @@ int DiskFDIParser::Check(DiskParser &dp, wxInputStream &istream, const wxArraySt
 	// ディスクテンプレートから探す
 	DiskParam dummy;
 	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, 1, dummy.GetTrackNumberBase(), dummy.GetSectorNumberBase(), 0
+		, 1, dummy.GetTrackNumberBaseOnDisk(), dummy.GetSectorNumberBaseOnDisk(), 0
 		, dummy.GetSingles(), dummy.GetParticularTracks());
 	if (param) {
 		disk_params.Add(param);

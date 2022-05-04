@@ -3,7 +3,7 @@
 #
 CC=g++
 
-APPLICATION_VERSION=0.5.3
+APPLICATION_VERSION=0.6.0
 
 CDEFS=
 DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
@@ -103,6 +103,8 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basictype_prodos.o \
 	$(SRCBASICFMTDIR)/basictype_c1541.o \
 	$(SRCBASICFMTDIR)/basictype_amiga.o \
+	$(SRCBASICFMTDIR)/basictype_m68fdos.o \
+	$(SRCBASICFMTDIR)/basictype_trsdos.o \
 	$(SRCBASICFMTDIR)/basicfat.o \
 	$(SRCBASICFMTDIR)/basicdiritem_fat8.o \
 	$(SRCBASICFMTDIR)/basicdiritem_fm.o \
@@ -134,6 +136,8 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basicdiritem_prodos.o \
 	$(SRCBASICFMTDIR)/basicdiritem_c1541.o \
 	$(SRCBASICFMTDIR)/basicdiritem_amiga.o \
+	$(SRCBASICFMTDIR)/basicdiritem_m68fdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_trsdos.o \
 	$(SRCBASICFMTDIR)/basicdiritem.o \
 	$(SRCBASICFMTDIR)/basicdir.o \
 	$(SRCBASICFMTDIR)/basicfmt.o \
@@ -152,6 +156,8 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCDISKIMGDIR)/disk2mgparser.o \
 	$(SRCDISKIMGDIR)/diskadcparser.o \
 	$(SRCDISKIMGDIR)/diskhfeparser.o \
+	$(SRCDISKIMGDIR)/diskdmkparser.o \
+	$(SRCDISKIMGDIR)/diskjv3parser.o \
 	$(SRCDISKIMGDIR)/diskparser.o \
 	$(SRCDISKIMGDIR)/diskd88writer.o \
 	$(SRCDISKIMGDIR)/diskplainwriter.o \

@@ -472,6 +472,29 @@ wxString DiskBasicDirItem::GetFileNameStr() const
 	ConvCharsToString(name, nl, dst);
 
 	if (el > 0) {
+		dst += wxString((char)basic->GetExtensionPreCode());	// '.'
+		ConvCharsToString(ext, el, dst);
+	}
+
+	return dst;
+}
+
+/// ファイル名を返す 名前 + "." + 拡張子 エクスポート時
+/// @return ファイル名
+wxString DiskBasicDirItem::GetFileNameStrForExport() const
+{
+	wxUint8 name[FILENAME_BUFSIZE], ext[FILEEXT_BUFSIZE];
+	size_t nl, el;
+	nl = sizeof(name);
+	el = sizeof(ext);
+
+	GetNativeFileName(name, nl, ext, el);
+
+	wxString dst;
+
+	ConvCharsToString(name, nl, dst);
+
+	if (el > 0) {
 		dst += wxT(".");
 		ConvCharsToString(ext, el, dst);
 	}
@@ -533,7 +556,7 @@ void DiskBasicDirItem::GetFileName(wxUint8 *filename, size_t length) const
 	if (el > 0 && (nl + el + 1) < length) {
 		// 拡張子ありの場合"."を追加
 		// ただし、バッファを超える場合は拡張子を追加しない
-		filename[nl] = '.';
+		filename[nl] = basic->GetExtensionPreCode();
 		nl++;
 		memcpy(&filename[nl], ext, el);
 	}
@@ -802,7 +825,7 @@ wxString DiskBasicDirItem::RemakeFileNameOnlyStr(const wxString &filepath) const
 	newname = fn.GetName().Left(nl);
 	if (el > 0) {
 		if (!fn.GetExt().IsEmpty()) {
-			newname += wxT(".");
+			newname += wxString((char)basic->GetExtensionPreCode()); // wxT(".");
 			newname += fn.GetExt().Left(el);
 		}
 	}
@@ -1075,7 +1098,7 @@ bool DiskBasicDirItem::ToNativeFileName(const wxString &filename, wxUint8 *name,
 	if (ext != NULL && elen > 0) {
 		GetFileExtPos(elen);
 	}
-	SplitFileName(tmp, sizeof(tmp), tmplen, name, nlen, nl, ext, elen, el);
+	SplitFileName(tmp, sizeof(tmp), tmplen, name, nlen, nl, ext, elen, el, basic->GetExtensionPreCode());
 	nlen = nl;
 	elen = el;
 
@@ -1100,7 +1123,7 @@ void DiskBasicDirItem::MemoryCopy(const wxUint8 *src, size_t ssize, size_t slen,
 	dlen = slen;
 }
 
-/// 文字列をバッファにコピー "."で拡張子とを分ける
+/// 文字列をバッファにコピー spchr(通常".")で拡張子とを分ける
 /// @param [in]   src     ファイル名
 /// @param [in]   ssize   ファイル名サイズ
 /// @param [in]   slen    ファイル名長さ
@@ -1110,11 +1133,12 @@ void DiskBasicDirItem::MemoryCopy(const wxUint8 *src, size_t ssize, size_t slen,
 /// @param [out]  dext    出力先拡張子バッファ
 /// @param [in]   desize  上記拡張子バッファサイズ
 /// @param [out]  delen   上記拡張子長さ
-void DiskBasicDirItem::SplitFileName(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 *dname, size_t dnsize, size_t &dnlen, wxUint8 *dext, size_t desize, size_t &delen)
+/// @param [in]   spchr   分割に使用する文字
+void DiskBasicDirItem::SplitFileName(const wxUint8 *src, size_t ssize, size_t slen, wxUint8 *dname, size_t dnsize, size_t &dnlen, wxUint8 *dext, size_t desize, size_t &delen, wxUint8 spchr)
 {
-	// .で分割する
-	int pos = mem_rchr(src, slen, '.');
-	// 拡張子サイズありで"."があれば分割してそれぞれのバッファに入れる
+	// spchrで分割する
+	int pos = mem_rchr(src, slen, spchr);
+	// 拡張子サイズありでspchrがあれば分割してそれぞれのバッファに入れる
 	if (desize > 0 && pos >= 0) {
 		MemoryCopy(src, ssize, pos, dname, dnsize, dnlen);
 		pos++;
@@ -1679,7 +1703,7 @@ bool DiskBasicDirItem::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &e
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItem::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItem::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 }
 

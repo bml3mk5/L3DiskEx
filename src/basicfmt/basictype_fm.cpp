@@ -73,7 +73,7 @@ bool DiskBasicTypeFM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 		sector->Fill(0);
 		wxCharBuffer id = basic->GetVariousStringParam(wxT("IDString")).To8BitData();
 		if (id.length() > 0) {
-			sector->Copy(id.data(), id.length());
+			sector->Copy(id.data(), (int)id.length());
 		}
 	}
 

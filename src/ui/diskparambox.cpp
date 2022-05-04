@@ -650,8 +650,8 @@ void DiskParamBox::SetParamToControl(const DiskParam *item)
 	comSecSize->SetValue(wxString::Format(wxT("%d"), item->GetSectorSize()));
 	txtSecIntl->SetValue(wxString::Format(wxT("%d"), item->GetInterleave()));
 	comNumbSec->SetSelection(item->GetNumberingSector());
-	txtFirstTrack->SetValue(wxString::Format(wxT("%d"), item->GetTrackNumberBase()));
-	txtFirstSector->SetValue(wxString::Format(wxT("%d"), item->GetSectorNumberBase()));
+	txtFirstTrack->SetValue(wxString::Format(wxT("%d"), item->GetTrackNumberBaseOnDisk()));
+	txtFirstSector->SetValue(wxString::Format(wxT("%d"), item->GetSectorNumberBaseOnDisk()));
 
 	txtDiskSize->SetValue(wxNumberFormatter::ToString((long)item->CalcDiskSize()));
 

@@ -314,6 +314,9 @@ public:
 	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int &track_num, int &side_num, int *div_num = NULL, int *div_nums = NULL);
 	/// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す
 	DiskD88Sector	*GetSectorFromSectorPos(int sector_pos, int *div_num = NULL, int *div_nums = NULL);
+
+	/// 開始セクタ番号を返す
+	int				GetSectorNumberBase() const;
 	//@}
 	/// @name キャラクターコード
 	//@{

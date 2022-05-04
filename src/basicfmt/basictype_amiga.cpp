@@ -551,13 +551,13 @@ wxUint32 DiskBasicTypeAmiga::GetEmptyGroupNumberM()
 		case 0:
 			// 外側へ検索
 			sta_trk = basic->GetManagedTrackNumber();
-			end_trk = basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBase();
+			end_trk = basic->GetTracksPerSideOnBasic() + basic->GetTrackNumberBaseOnDisk();
 			ndir = 1;
 			break;
 		case 1:
 			// 内側へ検索
 			sta_trk = basic->GetManagedTrackNumber() - 1;
-			end_trk = basic->GetTrackNumberBase() - 1;
+			end_trk = basic->GetTrackNumberBaseOnDisk() - 1;
 			ndir = -1;
 			break;
 		}

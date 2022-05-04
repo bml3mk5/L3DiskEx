@@ -1522,6 +1522,7 @@ bool DiskBasicDirItemProDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskB
 	return true;
 }
 
+#if 0
 /// ダイアログ入力後のファイル名チェック
 bool DiskBasicDirItemProDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
 {
@@ -1534,7 +1535,7 @@ bool DiskBasicDirItemProDOS::ValidateFileName(const wxWindow *parent, const wxSt
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItemProDOS::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItemProDOS::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 //	int type4 = attr.GetUserData(0);
 //	int version = attr.GetUserData(1);
@@ -1545,6 +1546,7 @@ void DiskBasicDirItemProDOS::SetAttr(DiskBasicDirItemAttr &attr)
 //		SetVersion(version);
 //	}
 }
+#endif
 
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemProDOS::SetInternalDataInAttrDialog(KeyValArray &vals)

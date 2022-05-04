@@ -67,20 +67,20 @@ public:
 /// @sa DiskBasicBitMLMap
 class BitMLBuffer
 {
-private:
+protected:
 	wxUint8 *m_buffer;
 	size_t	 m_size;
 public:
 	BitMLBuffer();
 	BitMLBuffer(wxUint8 *buffer, size_t size);
-	~BitMLBuffer() {}
+	virtual ~BitMLBuffer() {}
 
 	/// @brief 指定位置のビットを変更する
-	void Modify(wxUint32 num, bool val);
+	virtual void Modify(wxUint32 num, bool val);
 	/// @brief 指定位置のビットがセットされているか
-	bool IsSet(wxUint32 num) const;
+	virtual bool IsSet(wxUint32 num) const;
 	/// @brief 指定位置のビット位置を計算
-	static void GetPos(wxUint32 num, wxUint32 &pos, wxUint32 &bit);
+	virtual void GetPos(wxUint32 num, wxUint32 &pos, wxUint32 &bit) const;
 	/// @brief バッファを返す
 	wxUint8 *GetBuffer() { return m_buffer; }
 	/// @brief サイズ(ビット数)を返す

@@ -1036,7 +1036,7 @@ bool DiskBasicDirItemVFAT::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 }
 
 /// その他の属性値を設定する
-void DiskBasicDirItemVFAT::SetAttr(DiskBasicDirItemAttr &attr)
+void DiskBasicDirItemVFAT::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 }
 

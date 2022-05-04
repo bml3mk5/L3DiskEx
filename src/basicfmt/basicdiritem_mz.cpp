@@ -554,7 +554,7 @@ bool DiskBasicDirItemMZ::IsSameFileName(const DiskBasicDirItem *src, bool icase)
 }
 
 /// データ内部にチェインデータが必要か
-bool DiskBasicDirItemMZ::NeedChainInData()
+bool DiskBasicDirItemMZ::NeedChainInData() const
 {
 	return (GetFileAttr().MatchType(FILE_TYPE_ASCII_MASK, FILE_TYPE_ASCII_MASK));
 }

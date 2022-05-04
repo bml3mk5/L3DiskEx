@@ -23,6 +23,7 @@ class DiskResult;
 class DiskParam;
 class DiskParamPtrs;
 class FileParamFormat;
+class DiskTypeHints;
 
 /// ディスクパーサー
 class DiskParser
@@ -38,7 +39,7 @@ private:
 	int SelectPerser(const wxString &type, const DiskParam *disk_param, short mod_flags, bool &support);
 	int Parse(const wxString &file_format, const DiskParam &param_hint, short mod_flags);
 	/// ファイルの解析方法を選択
-	int SelectChecker(const wxString &type, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags, bool &support);
+	int SelectChecker(const wxString &type, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags, bool &support);
 	int Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags);
 
 public:

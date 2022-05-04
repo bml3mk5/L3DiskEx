@@ -1,5 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <DiskTypes version="3.0">
+	<DiskType name="1S-35-10-1-256">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>35</TracksPerSide>
+		<SectorsPerTrack>10</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x00</Density>
+		<Interleave>1</Interleave>
+		<SingleDensity track="ALL" size="256" />
+		<SectorNumberBase>0</SectorNumberBase>
+		<DiskBasicTypes>
+			<Type>TRSD23-1S</Type>
+		</DiskBasicTypes>
+		<DensityName>1S</DensityName>
+		<Description>[TRS-80 model I]</Description>
+	</DiskType>
+	<DiskType name="1S-35-10-2-256">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>35</TracksPerSide>
+		<SectorsPerTrack>10</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x00</Density>
+		<Interleave>2</Interleave>
+		<SingleDensity track="ALL" size="256" />
+		<SectorNumberBase>0</SectorNumberBase>
+		<DiskBasicTypes>
+			<Type>TRSD23-1S</Type>
+		</DiskBasicTypes>
+		<DensityName>1S</DensityName>
+		<Description>[TRS-80 model I]</Description>
+	</DiskType>
 	<DiskType name="1Sx2-40-16-1">
 		<Reversible>true</Reversible>
 		<SidesPerDisk>2</SidesPerDisk>
@@ -179,6 +209,20 @@
 		<DensityName>1D</DensityName>
 		<DensityName lang="ja">1D</DensityName>
 	</DiskType>
+	<DiskType name="1D-40-8-4-TR">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<SectorSize>512</SectorSize>
+		<ParticularTrack track="0" side="0" sectors="18" size="256" />
+		<Density>0x00</Density>
+		<Interleave>4</Interleave>
+		<DiskBasicTypes>
+			<Type>CPMTRS-1D-512-4</Type>
+		</DiskBasicTypes>
+		<DensityName>1D</DensityName>
+		<Description>[TRS-80 model III]</Description>
+	</DiskType>
 	<DiskType name="1D-40-10-1">
 		<SidesPerDisk>1</SidesPerDisk>
 		<TracksPerSide>40</TracksPerSide>
@@ -234,9 +278,25 @@
 		<DiskBasicTypes>
 			<Type>OS9-1D-18</Type>
 			<Type>FLEX-1D-18</Type>
+			<Type>TRSD13-1D</Type>
+			<Type>CPMTRS-1D-256-2</Type>
 		</DiskBasicTypes>
 		<DensityName>1D</DensityName>
-		<DensityName lang="ja">1D</DensityName>
+		<Description>[TRS-80 model III]</Description>
+	</DiskType>
+	<DiskType name="1D-40-18-6">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x00</Density>
+		<Interleave>6</Interleave>
+		<DiskBasicTypes>
+			<Type>TRSD13-1D</Type>
+			<Type>CPMTRS-1D-256-2</Type>
+		</DiskBasicTypes>
+		<DensityName>1D</DensityName>
+		<Description>[TRS-80 model III]</Description>
 	</DiskType>
 	<DiskType name="2D-35-10-2-FL">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -742,6 +802,7 @@
 		<DiskBasicTypes>
 			<Type>OS9-2D-18</Type>
 			<Type>OS9-1D-18</Type>
+			<Type>CPMTRS-2D-256-2</Type>
 		</DiskBasicTypes>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
@@ -1144,6 +1205,23 @@
 		<Description></Description>
 		<Description lang="ja"></Description>
 	</DiskType>
+	<DiskType name="1HS-80-10-1">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>10</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<SingleDensity track="ALL" side="ALL" />
+		<DiskBasicTypes>
+			<Type>CPM-1HS</Type>
+			<Type>CPM-1HS-6</Type>
+		</DiskBasicTypes>
+		<DensityName>8inch1S</DensityName>
+		<DensityName lang="ja">8インチ1S</DensityName>
+		<Description></Description>
+		<Description lang="ja"></Description>
+	</DiskType>
 	<DiskType name="2HS-77-26-1">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>77</TracksPerSide>
@@ -1199,6 +1277,7 @@
 			<Type>MZHU-2HD</Type>
 			<Type>MZHU-2HD-INV</Type>
 			<Type>OS9-2HD</Type>
+			<Type>M68KDOS-2HD</Type>
 			<Type>CPM88-2HD</Type>
 			<Type>CPM68-2HD</Type>
 			<Type>CPM98-2HD</Type>
@@ -1237,6 +1316,7 @@
 		<Interleave>2</Interleave>
 		<SingleDensity track="0" side="0" />
 		<DiskBasicTypes>
+			<Type>M68KDOS-2HD</Type>
 			<Type>CPM88-2HD</Type>
 			<Type>CPM68-2HD</Type>
 			<Type>CPM98-2HD</Type>
@@ -1353,11 +1433,13 @@
 		<Description>[PC-9801 DOS/Human68k]</Description>
 		<Description lang="ja">[PC-9801 DOS/Human68k]</Description>
 	</DiskType>
-	<DiskType name="2HD-77-9-1">
+	<DiskType name="2HD-77-9-1-9SC">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>77</TracksPerSide>
 		<SectorsPerTrack>9</SectorsPerTrack>
+		<SectorNumberBase>10</SectorNumberBase>
 		<SectorSize>1024</SectorSize>
+		<ParticularSector track="0" side="0" sector="10" size="1024" id_r="1" />
 		<Density>0x20</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
@@ -1365,6 +1447,8 @@
 		</DiskBasicTypes>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
+		<Description>, SectorBase10 [9SCFMT]</Description>
+		<Description lang="ja"> セクタ基準10 [9SCFMT]</Description>
 	</DiskType>
 	<DiskType name="2HD-80-9-1">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1375,10 +1459,26 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>HU68K-2HDE</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+	</DiskType>
+	<DiskType name="2HD-80-9-1-9SC">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<SectorNumberBase>10</SectorNumberBase>
+		<SectorSize>1024</SectorSize>
+		<ParticularSector track="0" side="0" sector="10" size="1024" id_r="1" />
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
 			<Type>HU68K-9SC2</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
+		<Description>, SectorBase10 [9SCFMT]</Description>
+		<Description lang="ja"> セクタ基準10 [9SCFMT]</Description>
 	</DiskType>
 	<DiskType name="2HD-80-18-1">
 		<SidesPerDisk>2</SidesPerDisk>

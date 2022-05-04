@@ -52,6 +52,7 @@ public:
 		ERR_FILEEXT_EMPTY,
 		ERR_END_ADDR_TOO_SMALL,
 		ERR_PATH_TOO_DEEP,
+		ERR_NO_FOUND_TRACK,
 
 		ERRV_START,
 		// 引数あり（要フォーマット）のメッセージはこれ以降に設定

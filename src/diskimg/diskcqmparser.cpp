@@ -165,7 +165,7 @@ size_t DiskCQMParser::ExpandData(wxInputStream &istream, wxOutputStream &ostream
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskCQMParser::Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskCQMParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 
@@ -211,7 +211,7 @@ int DiskCQMParser::Check(DiskParser &dp, wxInputStream &istream, const wxArraySt
 	// ディスクテンプレートから探す
 	DiskParam dummy;
 	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, interleave, dummy.GetTrackNumberBase(), dummy.GetSectorNumberBase(), 0
+		, interleave, dummy.GetTrackNumberBaseOnDisk(), dummy.GetSectorNumberBaseOnDisk(), 0
 		, dummy.GetSingles(), dummy.GetParticularTracks());
 	if (param) {
 		disk_params.Add(param);

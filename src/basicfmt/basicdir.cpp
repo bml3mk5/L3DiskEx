@@ -34,6 +34,8 @@
 #include "basicdiritem_prodos.h"
 #include "basicdiritem_c1541.h"
 #include "basicdiritem_amiga.h"
+#include "basicdiritem_m68fdos.h"
+#include "basicdiritem_trsdos.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../charcodes.h"
@@ -158,6 +160,15 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 	case FORMAT_TYPE_AMIGA:
 		item = new DiskBasicDirItemAmiga(basic);
 		break;
+	case FORMAT_TYPE_M68FDOS:
+		item = new DiskBasicDirItemM68FDOS(basic);
+		break;
+	case FORMAT_TYPE_TRSD23:
+		item = new DiskBasicDirItemTRSD23(basic);
+		break;
+	case FORMAT_TYPE_TRSD13:
+		item = new DiskBasicDirItemTRSD13(basic);
+		break;
 	default:
 		wxFAIL_MSG(wxT("Unknown type is defined in basic_type.xml."));
 //		item = new DiskBasicDirItem(basic);
@@ -272,6 +283,15 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *n_sector, int n_pos, wxUi
 		break;
 	case FORMAT_TYPE_AMIGA:
 		item = new DiskBasicDirItemAmiga(basic, n_sector, n_pos, n_data);
+		break;
+	case FORMAT_TYPE_M68FDOS:
+		item = new DiskBasicDirItemM68FDOS(basic, n_sector, n_pos, n_data);
+		break;
+	case FORMAT_TYPE_TRSD23:
+		item = new DiskBasicDirItemTRSD23(basic, n_sector, n_pos, n_data);
+		break;
+	case FORMAT_TYPE_TRSD13:
+		item = new DiskBasicDirItemTRSD13(basic, n_sector, n_pos, n_data);
 		break;
 	default:
 		wxFAIL_MSG(wxT("Unknown type is defined in basic_type.xml."));
@@ -388,6 +408,15 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int n_num, const DiskBasicGroupItem *n_g
 		break;
 	case FORMAT_TYPE_AMIGA:
 		item = new DiskBasicDirItemAmiga(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
+		break;
+	case FORMAT_TYPE_M68FDOS:
+		item = new DiskBasicDirItemM68FDOS(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
+		break;
+	case FORMAT_TYPE_TRSD23:
+		item = new DiskBasicDirItemTRSD23(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
+		break;
+	case FORMAT_TYPE_TRSD13:
+		item = new DiskBasicDirItemTRSD13(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
 		break;
 	default:
 		wxFAIL_MSG(wxT("Unknown type is defined in basic_type.xml."));

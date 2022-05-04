@@ -52,6 +52,14 @@
 		<Description>Apple Disk Copy 4 format file</Description>
 		<Description lang="ja">Apple Disk Copy 4 形式ファイル</Description>
 	</FileFormatType>
+	<FileFormatType name="dmk">
+		<Description>TRS-80 DMK format file</Description>
+		<Description lang="ja">TRS-80 DMK形式ファイル</Description>
+	</FileFormatType>
+	<FileFormatType name="jv3">
+		<Description>TRS-80 JV3 format file</Description>
+		<Description lang="ja">TRS-80 JV3形式ファイル</Description>
+	</FileFormatType>
 	<FileFormatType name="hfe">
 		<Description>HxC HFE format file</Description>
 		<Description lang="ja">HxC HFE形式ファイル</Description>
@@ -128,8 +136,17 @@
 		<Description>D64 file</Description>
 	</FileType>
 	<FileType ext="dim">
-		<Format type="difcdim" />
+		<Format type="difcdim">
+			<DiskTypeHint>2HD-77-8-1</DiskTypeHint>
+			<DiskTypeHint kind="1">2HD-80-9-1-9SC</DiskTypeHint>
+			<DiskTypeHint kind="1">2HD-77-9-1-9SC</DiskTypeHint>
+			<DiskTypeHint kind="3">2HD-80-9-1</DiskTypeHint>
+		</Format>
 		<Description>DIM file</Description>
+	</FileType>
+	<FileType ext="dmk">
+		<Format type="dmk" />
+		<Description>DMK file</Description>
 	</FileType>
 	<FileType ext="do">
 		<Format type="adc" />
@@ -145,6 +162,8 @@
 		<Format type="cqmimg" />
 		<Format type="dskstr" />
 		<Format type="adc" />
+		<Format type="dmk" />
+		<Format type="jv3" />
 		<Format type="plain">
 			<DiskTypeHint>2DD-80-9-1</DiskTypeHint>
 			<DiskTypeHint>1DD-80-9-1</DiskTypeHint>
@@ -201,6 +220,16 @@
 			<DiskTypeHint>2HD-80-18-1</DiskTypeHint>
 		</Format>
 		<Description>IMG file</Description>
+	</FileType>
+	<FileType ext="jv1">
+		<Format type="plain">
+			<DiskTypeHint>1S-35-10-1-256</DiskTypeHint>
+		</Format>
+		<Description>JV1 file</Description>
+	</FileType>
+	<FileType ext="jv3">
+		<Format type="jv3" />
+		<Description>JV3 file</Description>
 	</FileType>
 	<FileType ext="po">
 		<Format type="adc" />

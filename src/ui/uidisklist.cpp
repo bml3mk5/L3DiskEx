@@ -567,23 +567,29 @@ bool L3DiskList::ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *
 	// BASICモードのときはディスクを解析
 	if (frame->GetSelectedMode() == 0) {
 		// トラックが存在するか
+		bool valid = false;
 		bool found = newdisk->ExistTrack(newsidenum);
 		if (found) {
 			// ディスクをDISK BASICとして解析
-			if (newbasic->ParseDisk(newdisk, newsidenum, newparam, false) != 0) {
-				newbasic->ShowErrorMessage();
-			}
+			valid = (newbasic->ParseDisk(newdisk, newsidenum, newparam, false) == 0);
 		} else {
 			// トラックがない
-			DiskResult result;
-			result.SetWarn(DiskResult::ERR_NO_FOUND_TRACK);
-			ResultInfo::ShowMessage(result.GetValid(), result.GetMessages());
-			newbasic->Clear();
+//			DiskResult result;
+//			result.SetWarn(DiskResult::ERR_NO_FOUND_TRACK);
+//			ResultInfo::ShowMessage(result.GetValid(), result.GetMessages());
+//			newbasic->Clear();
+			newbasic->GetErrinfo().SetWarn(DiskBasicError::ERR_NO_FOUND_TRACK);
 		}
 
 		// ルートディレクトリをセット
-		newbasic->AssignRootDirectory();
-//		if (!valid) return true;
+		if (valid) {
+			valid = newbasic->AssignRootDirectory();
+		}
+
+		// エラーメッセージ
+		if (!valid) {
+			newbasic->ShowErrorMessage();
+		}
 	}
 
 	// 片面のみ使用するOSで表裏面それぞれの使用が可能な場合

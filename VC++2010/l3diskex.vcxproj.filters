@@ -413,8 +413,26 @@
     <ClCompile Include="..\src\basicfmt\basictype_amiga.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskdmkparser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\diskimg\diskjv3parser.cpp">
+      <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\diskimg\diskhfeparser.cpp">
       <Filter>Source Files\diskimg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_m68fdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_m68fdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_trsdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_trsdos.cpp">
+      <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -799,8 +817,26 @@
     <ClInclude Include="..\src\basicfmt\basicdiritem_amiga.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskdmkparser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\diskimg\diskjv3parser.h">
+      <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\diskimg\diskhfeparser.h">
       <Filter>Header Files\diskimg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_m68fdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_m68fdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_trsdos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_trsdos.h">
+      <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -492,6 +492,7 @@ int DiskD88Parser::Check(wxInputStream &istream)
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < (size_t)header_size_min) {
 		// too short
+		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
 		return -1;
 	}
 
@@ -513,6 +514,9 @@ int DiskD88Parser::Check(wxInputStream &istream)
 	if (all_zero == DISKD88_MAX_TRACKS) {
 		// 全て0
 		valid = 0;
+	}
+	if (valid < 0) {
+		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 	}
 	return valid;
 }

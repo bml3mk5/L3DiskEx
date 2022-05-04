@@ -22,8 +22,6 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("No disk exists."),
 	//	ERR_NO_TRACK,
 	wxTRANSLATE("No track exists."),
-	//	ERR_NO_FOUND_TRACK,
-	wxTRANSLATE("No track found. Run \"Initialize\" to create tracks."),
 	//	ERR_REPLACE,
 	wxTRANSLATE("Couldn't replace a part of sector."),
 	//	ERR_FILE_ONLY_1S,

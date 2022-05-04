@@ -591,7 +591,7 @@ void DiskBasicDirItemMZFDOS::SetUnknownData()
 }
 
 /// データ内部にチェインデータが必要か
-bool DiskBasicDirItemMZFDOS::NeedChainInData()
+bool DiskBasicDirItemMZFDOS::NeedChainInData() const
 {
 	return true;
 }

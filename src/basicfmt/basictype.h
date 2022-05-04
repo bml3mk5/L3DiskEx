@@ -253,6 +253,10 @@ public:
 	/// @retval -1 : 現グループでアサイン終了。次のグループから継続
 	/// @retval -2 : 強制的にアサイン終了する
 	virtual int		FinishAssigningDirectory(int &pos, int &size, int &size_remain) const { return 0; }
+	/// @brief ディレクトリアサインでセクタ毎に位置を調整する
+	/// @param[in] pos ディレクトリの位置
+	/// @return 調整後のディレクトリの位置
+	virtual int     AdjustPositionAssigningDirectory(int pos) { return pos; }
 	/// @brief ルートディレクトリの開始位置を得る
 	void			GetStartNumOnRootDirectory(int &track_num, int &side_num, int &sector_num);
 	/// @brief ルートディレクトリの終了位置を得る

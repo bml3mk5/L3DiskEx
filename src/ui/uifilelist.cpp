@@ -1498,7 +1498,7 @@ int L3DiskFileList::ExportDataFiles(DiskBasicDirItems *dir_items, const wxString
 		}
 		DiskBasicDirItem *item = valid_items.Item(n);
 
-		wxString native_name = item->GetFileNameStr();
+		wxString native_name = item->GetFileNameStrForExport();
 		// エクスポートする前の処理（ファイル名を変更するか）
 		if (!item->PreExportDataFile(native_name)) {
 			sts = -1;

@@ -19,6 +19,8 @@
 #include "diskg64parser.h"
 #include "disk2mgparser.h"
 #include "diskadcparser.h"
+#include "diskdmkparser.h"
+#include "diskjv3parser.h"
 #include "diskhfeparser.h"
 #include "../diskd88.h"
 #include "fileparam.h"
@@ -219,6 +221,18 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 		DiskADCParser ps(file, mod_flags, result);
 		rc = ps.Parse(*stream, disk_param);
 		support = true;
+	} else if (type == wxT("dmk")) {
+		// TRS-80 DMK 形式
+		DiskDmkParser ps(file, mod_flags, result);
+		if (ps.Check(*stream) >= 0) {
+			rc = ps.Parse(*stream);
+		}
+		support = true;
+	} else if (type == wxT("jv3")) {
+		// TRS-80 JV3 形式
+		DiskJV3Parser ps(file, mod_flags, result);
+		rc = ps.Parse(*stream);
+		support = true;
 	} else if (type == wxT("hfe")) {
 		// HxC HFE 形式
 		DiskHfeParser ps(file, mod_flags, result);
@@ -244,7 +258,7 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 /// @retval  1 候補がないので改めてディスク種類を選択してもらう
 /// @retval  0 候補あり正常
 /// @retval -1 エラー終了
-int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags, bool &support)
+int DiskParser::SelectChecker(const wxString &type, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags, bool &support)
 {
 	int rc = -1;
 	if (type == wxT("d88")) {
@@ -306,6 +320,16 @@ int DiskParser::SelectChecker(const wxString &type, const wxArrayString *disk_hi
 		// Apple Disk Copy 4 形式
 		DiskADCParser ps(file, mod_flags, result);
 		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		support = true;
+	} else if (type == wxT("dmk")) {
+		// TRS-80 DMK 形式
+		DiskDmkParser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
+		support = true;
+	} else if (type == wxT("jv3")) {
+		// TRS-80 JV3 形式
+		DiskJV3Parser ps(file, mod_flags, result);
+		rc = ps.Check(*stream);
 		support = true;
 	} else if (type == wxT("hfe")) {
 		// HxC HFE 形式

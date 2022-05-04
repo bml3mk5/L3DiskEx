@@ -171,6 +171,7 @@ private:
 	wxUint8 fillcode_on_dir;			///< フォーマット時にディレクトリ領域を埋めるコード
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
 	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxUint8 extension_pre_code;			///< ファイル名と拡張子の間に付けるコード('.')
 	ValidNameRule valid_file_name;		///< ファイル名に設定できるルール
 	ValidNameRule valid_volume_name;	///< ボリューム名に設定できるルール
 	bool compare_case_insense;			///< ファイル名比較時に大文字小文字区別しないか
@@ -227,6 +228,8 @@ public:
 	wxUint8				GetDeleteCode() const		{ return delete_code; }
 	/// @brief テキストの終端コード
 	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// @brief ファイル名と拡張子の間に付けるコード('.')
+	wxUint8				GetExtensionPreCode() const	{ return extension_pre_code; }
 	/// @brief ファイル名に設定できるルール
 	const ValidNameRule& GetValidFileName() const	{ return valid_file_name; }
 	/// @brief ボリューム名に設定できるルール
@@ -288,6 +291,8 @@ public:
 	void			SetDeleteCode(wxUint8 val)		{ delete_code = val; }
 	/// @brief テキストの終端コード
 	void			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// @brief ファイル名と拡張子の間に付けるコード('.')
+	void			SetExtensionPreCode(wxUint8 val) 	{ extension_pre_code = val; }
 	/// @brief ファイル名に設定できるルール
 	void			SetValidFileName(const ValidNameRule &str)	{ valid_file_name = str; }
 	/// @brief ボリューム名に設定できるルール
@@ -333,6 +338,7 @@ private:
 	int sides_on_basic;					///< BASICが使用するサイド数
 	int sectors_on_basic;				///< BASICで使用するセクタ数/トラック
 	NumSectorsParams sectors_on_basic_list;		///< BASICで使用するセクタ数/トラック
+	int sector_number_base;				///< BASICで使用するセクタ番号基準
 	int tracks_on_basic;				///< BASICで使用するトラック数/サイド
 	int managed_track_number;			///< ファイル管理エリア
 	int groups_per_track;				///< トラック当たりのグループ数
@@ -370,6 +376,7 @@ private:
 	wxUint8 delete_code;				///< ファイル削除時にセットするコード
 	wxUint8 media_id;					///< メディアID
 	wxUint8 text_terminate_code;		///< テキストの終端コード
+	wxUint8 extension_pre_code;			///< ファイル名と拡張子の間に付けるコード('.')
 	ValidNameRule valid_file_name;		///< ファイル名に設定できるルール
 	ValidNameRule valid_volume_name;	///< ボリューム名に設定できるルール
 	bool compare_case_insense;			///< ファイル名比較時に大文字小文字区別しないか
@@ -410,6 +417,8 @@ public:
 	int					GetSidesPerDiskOnBasic() const	{ return sides_on_basic; }
 	/// @brief BASICで使用するセクタ数/トラック
 	int					GetSectorsPerTrackOnBasic() const	{ return sectors_on_basic; }
+	/// @brief BASICで使用するセクタ番号基準
+	int					GetSectorNumberBaseOnBasic() const { return sector_number_base; }
 	/// @brief BASICで使用するトラック数/サイド
 	int					GetTracksPerSideOnBasic() const	{ return tracks_on_basic; }
 	/// @brief ファイル管理エリアのあるトラック番号
@@ -490,6 +499,8 @@ public:
 	wxUint8				GetMediaId() const			{ return media_id; }
 	/// @brief テキストの終端コード
 	wxUint8				GetTextTerminateCode() const	{ return text_terminate_code; }
+	/// @brief ファイル名と拡張子の間に付けるコード('.')
+	wxUint8				GetExtensionPreCode() const	{ return extension_pre_code; }
 	/// @brief ファイル名に設定できるルール
 	const ValidNameRule& GetValidFileName() const	{ return valid_file_name; }
 	/// @brief ボリューム名に設定できるルール
@@ -535,6 +546,8 @@ public:
 	void			SetSidesPerDiskOnBasic(int val)		{ sides_on_basic = val; }
 	/// @brief BASICで使用するセクタ数/トラック
 	void			SetSectorsPerTrackOnBasic(int val)		{ sectors_on_basic = val; }
+	/// @brief BASICで使用するセクタ番号基準
+	void			SetSectorNumberBaseOnBasic(int val)		{ sector_number_base = val; }
 	/// @brief BASICで使用するトラック数/サイド
 	void			SetTracksPerSideOnBasic(int val)		{ tracks_on_basic = val; }
 	/// @brief ファイル管理エリアのあるトラック番号
@@ -611,6 +624,8 @@ public:
 	void			SetMediaId(wxUint8 val)			{ media_id = val; }
 	/// @brief テキストの終端コード
 	void 			SetTextTerminateCode(wxUint8 val)	{ text_terminate_code = val; }
+	/// @brief ファイル名と拡張子の間に付けるコード('.')
+	void			SetExtensionPreCode(wxUint8 val) 	{ extension_pre_code = val; }
 	/// @brief ファイル名に設定できるルール
 	void			SetValidFileName(const ValidNameRule &str)	{ valid_file_name = str; }
 	/// @brief ボリューム名に設定できるルール

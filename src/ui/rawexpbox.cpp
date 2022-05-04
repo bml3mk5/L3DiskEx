@@ -98,7 +98,7 @@ bool RawExpBox::ValidateParam()
 	for(int i=0; i<2; i++) {
 		wxString smsg = (i == 0 ? _("Start") : _("End"));
 		int trk = GetTrackNumber(i);
-		int min_trk = disk->GetTrackNumberBase();
+		int min_trk = disk->GetTrackNumberBaseOnDisk();
 		int max_trk = disk->GetTracksPerSide() + min_trk;
 		if (trk < min_trk || trk >= max_trk) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("track"));
@@ -114,7 +114,7 @@ bool RawExpBox::ValidateParam()
 		}
 		int sec = GetSectorNumber(i);
 		DiskD88Sector *sector = disk->GetSector(trk, sid, sec);
-		if (sector == NULL || sec < disk->GetSectorNumberBase()) {
+		if (sector == NULL || sec < disk->GetSectorNumberBaseOnDisk()) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("sector"));
 			valid = false;
 			break;

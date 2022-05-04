@@ -256,7 +256,7 @@ public:
 	virtual void	ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst) const;
 
 	/// @brief その他の属性値を設定する
-	virtual void	SetAttr(DiskBasicDirItemAttr &attr);
+	virtual void	SetOptionalAttr(DiskBasicDirItemAttr &attr);
 
 	/// @name プロパティダイアログ用
 	//@{

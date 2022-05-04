@@ -44,12 +44,42 @@ WX_DECLARE_OBJARRAY(FileFormat, FileFormats);
 
 //////////////////////////////////////////////////////////////////////
 
+/// @brief ディスク解析で用いるヒント
+class DiskTypeHint
+{
+private:
+	wxString m_hint;
+	int      m_kind;
+
+public:
+	DiskTypeHint();
+	DiskTypeHint(const wxString &hint);
+	DiskTypeHint(const wxString &hint, int kind);
+	~DiskTypeHint() {}
+
+	/// @brief セット
+	void Set(const wxString &hint, int kind);
+	/// @brief ヒントを得る
+	const wxString &GetHint() const { return m_hint; }
+	/// @brief タイプを得る
+	int GetKind() const { return m_kind; }
+};
+
+//////////////////////////////////////////////////////////////////////
+
+/// @class DiskTypeHints
+///
+/// @brief DiskTypeHint のリスト
+WX_DECLARE_OBJARRAY(DiskTypeHint, DiskTypeHints);
+
+//////////////////////////////////////////////////////////////////////
+
 /// @brief ファイル形式パラメータ (FileType.Formatエレメント)
 class FileParamFormat
 {
 private:
 	wxString		m_type;		///< ファイル種類("d88","plain",...)
-	wxArrayString	m_hints;	///< ディスク解析で用いるヒントのリスト
+	DiskTypeHints	m_hints;	///< ディスク解析で用いるヒントのリスト
 
 public:
 	FileParamFormat();
@@ -57,13 +87,13 @@ public:
 	~FileParamFormat() {}
 
 	/// @brief ヒントを追加
-	void AddHint(const wxString &val);
+	void AddHint(const wxString &val, int kind = 0);
 	/// @brief ファイル種類を設定
 	void SetType(const wxString &val) { m_type = val; }
 	/// @brief ファイル種類を返す
 	const wxString &GetType() const { return m_type; }
 	/// @brief ヒントを返す
-	const wxArrayString &GetHints() const { return m_hints; }
+	const DiskTypeHints &GetHints() const { return m_hints; }
 };
 
 //////////////////////////////////////////////////////////////////////

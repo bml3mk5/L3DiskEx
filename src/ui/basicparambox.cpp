@@ -9,6 +9,7 @@
 #include <wx/choice.h>
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
+#include <wx/listctrl.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/numformatter.h>
@@ -27,6 +28,7 @@ END_EVENT_TABLE()
 
 BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, DiskBasic *basic, int show_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+	, VolumeCtrl()
 {
 	this->basic = basic;
 	this->show_flags = show_flags;
@@ -243,56 +245,22 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	DiskBasicIdentifiedData idata;
 	type->GetIdentifiedData(idata);
 
-	lblVolName = new wxStaticText(this, wxID_ANY, _("Volume Name"));
-	szrAll->Add(lblVolName, flags);
-	txtVolName = new wxTextCtrl(this, IDC_TEXT_VOLNAME, idata.GetVolumeName());
-	szrAll->Add(txtVolName, flags);
-
-	lblVolNum = new wxStaticText(this, wxID_ANY, _("Volume Number"));
-	szrAll->Add(lblVolNum, flags);
-	txtVolNum = new wxTextCtrl(this, IDC_TEXT_VOLNUM);
-	szrAll->Add(txtVolNum, flags);
-
-	lblVolDate = new wxStaticText(this, wxID_ANY, _("Volume Date"));
-	szrAll->Add(lblVolDate, flags);
-	txtVolDate = new wxTextCtrl(this, IDC_TEXT_VOLDATE, idata.GetVolumeDate());
-	szrAll->Add(txtVolDate, flags);
+	wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL);
+	szrAll->Add(gszr, flags);
 
 	const DiskBasicFormat *fmt = basic->GetFormatType();
-	bool enable = fmt->HasVolumeName();
-	lblVolName->Enable(enable);
-	txtVolName->Enable(enable);
-	if (enable) {
-		size_t max_length = idata.GetVolumeNameMaxLength();
-		if (max_length == 0) max_length = basic->GetValidVolumeName().GetMaxLength();
-		if (max_length == 0) max_length = 64;
-		txtVolName->SetMaxLength(max_length);
-		txtVolName->SetValidator(IntNameValidator(max_length, _("volume name"), basic->GetValidVolumeName()));
-	}
-	enable = fmt->HasVolumeNumber();
-	lblVolNum->Enable(enable);
-	txtVolNum->Enable(enable);
-	if (enable) {
-		if (idata.IsVolumeNumberHexa()) {
-			txtVolNum->SetValue(wxString::Format(wxT("0x%x"), idata.GetVolumeNumber()));
-		} else {
-			txtVolNum->SetValue(wxString::Format(wxT("%d"), idata.GetVolumeNumber()));
-		}
-//		txtVolName->SetValidator(AddressValidator());
-	}
-	enable = fmt->HasVolumeDate();
-	lblVolDate->Enable(enable);
-	txtVolDate->Enable(enable);
+	SetVolumeName(idata.GetVolumeName());
+	EnableVolumeName(fmt->HasVolumeName(), idata.GetVolumeNameMaxLength(), basic->GetValidVolumeName());
+	SetVolumeNumber(idata.GetVolumeNumber(), idata.IsVolumeNumberHexa());
+	EnableVolumeNumber(fmt->HasVolumeNumber());
+	SetVolumeDate(idata.GetVolumeDate());
+	EnableVolumeDate(fmt->HasVolumeDate());
 
 	int btn_flgs = wxOK | wxCANCEL;
 	wxSizer *szrButtons = CreateButtonSizer(btn_flgs);
 	szrAll->Add(szrButtons, flags);
 
 	SetSizerAndFit(szrAll);
-
-	txtVolName->SetInsertionPoint(0);
-	txtVolNum->SetInsertionPoint(0);
-	txtVolDate->SetInsertionPoint(0);
 }
 
 int BasicParamBox::ShowModal()
@@ -348,22 +316,4 @@ const DiskBasicParam *BasicParamBox::GetBasicParam() const
 	match = params.Item(num);
 
 	return match;
-}
-
-/// ボリューム名を返す
-wxString BasicParamBox::GetVolumeName() const
-{
-	return txtVolName ? txtVolName->GetValue() : wxT("");
-}
-
-/// ボリューム番号を返す
-int BasicParamBox::GetVolumeNumber() const
-{
-	return Utils::ToInt(txtVolNum ? txtVolNum->GetValue() : wxT("0"));
-}
-
-/// ボリューム日付を返す
-wxString BasicParamBox::GetVolumeDate() const
-{
-	return txtVolDate ? txtVolDate->GetValue() : wxT("");
 }

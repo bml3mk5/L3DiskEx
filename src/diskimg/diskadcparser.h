@@ -22,6 +22,7 @@ class DiskParam;
 class DiskParamPtrs;
 class DiskResult;
 class FileParam;
+class DiskTypeHints;
 
 /// Apple Disk Copyディスクパーサー
 class DiskADCParser : public DiskPlainParser
@@ -34,7 +35,7 @@ public:
 	~DiskADCParser();
 
 	/// チェック
-	int Check(DiskParser &dp, wxInputStream &istream, const wxArrayString *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+	int Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
 	int Parse(wxInputStream &istream, const DiskParam *disk_param);
 };
 

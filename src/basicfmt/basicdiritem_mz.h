@@ -175,7 +175,7 @@ public:
 	virtual void	ClearData();
 
 	/// @brief データをチェインする必要があるか（非連続データか）
-	bool	NeedChainInData();
+	bool	NeedChainInData() const;
 	/// @brief データをエクスポートする前に必要な処理
 	virtual bool	PreExportDataFile(wxString &filename);
 	/// @brief インポート時のダイアログを出す前にファイルパスから内部ファイル名を生成する

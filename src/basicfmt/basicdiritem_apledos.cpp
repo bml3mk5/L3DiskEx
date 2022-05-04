@@ -138,7 +138,7 @@ void DiskBasicDirItemAppleDOSChain::GetTrackAndSector(int idx, int &track, int &
 			apledos_chain_t *item = chains.Item(i);
 			track = item->list[idx].track;
 			sector = item->list[idx].sector;
-			track += basic->GetTrackNumberBase();
+			track += basic->GetTrackNumberBaseOnDisk();
 			sector += basic->GetSectorNumberBase();
 			break;
 		}
@@ -152,7 +152,7 @@ void DiskBasicDirItemAppleDOSChain::SetTrackAndSector(int idx, int track, int se
 	for(size_t i=0; i<chains.Count(); i++) {
 		if (idx < max_idx) {
 			apledos_chain_t *item = chains.Item(i);
-			track -= basic->GetTrackNumberBase();
+			track -= basic->GetTrackNumberBaseOnDisk();
 			sector -= basic->GetSectorNumberBase();
 			item->list[idx].track = (wxUint8)track;
 			item->list[idx].sector = (wxUint8)sector;
@@ -218,7 +218,7 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, 
 			wxUint8 *buf = sector->GetSectorBuffer();
 			chain.Add((apledos_chain_t *)buf);
 			apledos_ptr_t *p = (apledos_ptr_t *)buf;
-			grp = type->GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBase(), p->next_sector + basic->GetSectorNumberBase());
+			grp = type->GetSectorPosFromNumS(p->next_track + basic->GetTrackNumberBaseOnDisk(), p->next_sector + basic->GetSectorNumberBase());
 		}
 	}
 
@@ -544,14 +544,14 @@ void DiskBasicDirItemAppleDOS::SetStartGroup(int fileunit_num, wxUint32 val, int
 	int track_num = 0;
 	int sector_num = 0;
 	type->GetNumFromSectorPosS(val, track_num, sector_num);
-	m_data.Data()->track = track_num - basic->GetTrackNumberBase();
+	m_data.Data()->track = track_num - basic->GetTrackNumberBaseOnDisk();
 	m_data.Data()->sector = sector_num - basic->GetSectorNumberBase();
 }
 
 /// 最初のグループ番号を返す
 wxUint32 DiskBasicDirItemAppleDOS::GetStartGroup(int fileunit_num) const
 {
-	wxUint32 val = (wxUint32)type->GetSectorPosFromNumS(m_data.Data()->track + basic->GetTrackNumberBase(), m_data.Data()->sector + basic->GetSectorNumberBase());
+	wxUint32 val = (wxUint32)type->GetSectorPosFromNumS(m_data.Data()->track + basic->GetTrackNumberBaseOnDisk(), m_data.Data()->sector + basic->GetSectorNumberBase());
 	return val;
 }
 

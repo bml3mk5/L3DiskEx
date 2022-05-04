@@ -223,7 +223,7 @@ void DiskBasicSectorPosTrans::Create(DiskBasic *basic)
 		int num_of_tracks = 0;
 		int prev_num_of_sectors = 0;
 		int total_sectors = 0;
-		int trk = basic->GetTrackNumberBase();
+		int trk = basic->GetTrackNumberBaseOnDisk();
 		int trks = basic->GetTracksPerSideOnBasic() + trk;
 		for(; trk < trks; trk++) {
 			for(int sid = 0; sid < basic->GetSidesPerDiskOnBasic(); sid++) {
@@ -531,7 +531,8 @@ bool DiskBasicType::CalcGroupsOnRootDirectory(int start_sector, int end_sector, 
 {
 	group_items.Empty();
 	size_t dir_size = 0;
-	for(int sec_pos = start_sector - 1; sec_pos <= end_sector - 1; sec_pos++) {
+	int sector_base = basic->GetSectorNumberBase();
+	for(int sec_pos = start_sector - sector_base; sec_pos <= end_sector - sector_base; sec_pos++) {
 		int trk_num = 0;
 		int sid_num = 0;
 		int sec_num = 1;
@@ -681,6 +682,7 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 			}
 
 			pos -= size;
+			pos = AdjustPositionAssigningDirectory(pos);
 		}
 	}
 
@@ -793,6 +795,7 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 			}
 
 			pos -= size;
+			pos = AdjustPositionAssigningDirectory(pos);
 		}
 	}
 	delete nitem;
@@ -893,6 +896,7 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 			}
 
 			pos -= size;
+			pos = AdjustPositionAssigningDirectory(pos);
 		}
 	}
 
@@ -1005,6 +1009,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 			}
 
 			pos -= size;
+			pos = AdjustPositionAssigningDirectory(pos);
 		}
 	}
 
@@ -1304,8 +1309,8 @@ void DiskBasicType::GetNumFromSectorPos(int sector_pos, int &track_num, int &sid
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
-	track_num += basic->GetTrackNumberBase();
-	sector_num += basic->GetSectorNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBaseOnDisk();
 
 	if (div_num)  *div_num = 0;
 	if (div_nums) *div_nums = 1;
@@ -1333,8 +1338,8 @@ void DiskBasicType::GetNumFromSectorPosS(int sector_pos, int &track_num, int &se
 		sector_num = (sector_pos % (sectors_per_track * sides_per_disk));
 	}
 
-	track_num += basic->GetTrackNumberBase();
-	sector_num += basic->GetSectorNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBaseOnDisk();
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からトラック、セクタの各番号を得る
@@ -1353,8 +1358,8 @@ void DiskBasicType::GetNumFromSectorPosT(int sector_pos, int &track_num, int &se
 
 	sector_num = (sector_pos % sectors_per_track);
 
-	track_num += basic->GetTrackNumberBase();
-	sector_num += basic->GetSectorNumberBase();
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBaseOnDisk();
 }
 
 /// トラック、サイド、セクタの各番号からセクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)を得る
@@ -1376,8 +1381,8 @@ int  DiskBasicType::GetSectorPosFromNum(int track_num, int side_num, int sector_
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
-	track_num -= basic->GetTrackNumberBase();
-	sector_num -= basic->GetSectorNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
 
 	if (selected_side >= 0) {
 		// 1S
@@ -1408,8 +1413,8 @@ int  DiskBasicType::GetSectorPosFromNumS(int track_num, int sector_num)
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
-	track_num -= basic->GetTrackNumberBase();
-	sector_num -= basic->GetSectorNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
 
 	if (selected_side >= 0) {
 		// 1S
@@ -1434,8 +1439,8 @@ int  DiskBasicType::GetSectorPosFromNumT(int track_num, int sector_num)
 	int sectors_per_track = basic->GetSectorsPerTrackOnBasic();
 	int sector_pos;
 
-	track_num -= basic->GetTrackNumberBase();
-	sector_num -= basic->GetSectorNumberBase();
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
 
 	sector_pos = track_num * sectors_per_track + sector_num;
 

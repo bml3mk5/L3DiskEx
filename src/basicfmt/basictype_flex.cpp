@@ -121,10 +121,13 @@ double DiskBasicTypeFLEX::CheckFat(bool is_formatting)
 /// @retval <0.0      エラーあり
 double DiskBasicTypeFLEX::ParseParamOnDisk(bool is_formatting)
 {
-	if (is_formatting) return 0;
+	if (is_formatting) return 1.0;
 
 	if (!flex_sir) {
 		DiskD88Sector *sector = basic->GetSectorFromSectorPos(2);
+		if (!sector) {
+			return -1.0;
+		}
 		flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer(SecBufOfs(2 + 1));
 		flex_sir = flex;
 	}
