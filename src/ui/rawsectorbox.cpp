@@ -21,7 +21,7 @@ BEGIN_EVENT_TABLE(RawSectorBox, wxDialog)
 	EVT_BUTTON(wxID_OK, RawSectorBox::OnOK)
 END_EVENT_TABLE()
 
-RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int hide_flags)
+RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int hide_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -29,6 +29,7 @@ RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	wxSize size;
 	long style = 0;
 	wxTextValidator validate(wxFILTER_EMPTY | wxFILTER_DIGITS);
+	wxTextValidator anvalidate(wxFILTER_EMPTY | wxFILTER_ALPHANUMERIC);
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -70,6 +71,13 @@ RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &capt
 
 		szrAll->Add(hbox, flags);
 	}
+
+	hbox = new wxBoxSizer(wxHORIZONTAL);
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("Status (Hex)")), flags);
+	txtStatus = new wxTextCtrl(this, IDC_TEXT_STATUS, wxString::Format(wxT("%x"), status), wxDefaultPosition, size, style, anvalidate);
+	hbox->Add(txtStatus, flags);
+
+	szrAll->Add(hbox, flags);
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);
@@ -131,4 +139,10 @@ bool RawSectorBox::GetDeletedMark()
 bool RawSectorBox::GetSingleDensity()
 {
 	return chkDensity->GetValue();
+}
+int RawSectorBox::GetStatus()
+{
+	long val = 0;
+	txtStatus->GetValue().ToLong(&val, 16);
+	return (int)val;
 }

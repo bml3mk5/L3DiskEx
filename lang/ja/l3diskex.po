@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: l3diskex\n"
-"POT-Creation-Date: 2022-04-18 21:16+0900\n"
-"PO-Revision-Date: 2022-04-18 21:16+0900\n"
+"POT-Creation-Date: 2022-11-07 23:28+0900\n"
+"PO-Revision-Date: 2022-11-07 23:29+0900\n"
 "Last-Translator: Sasaji <s-sasaji@ddo.jp>\n"
 "Language-Team: \n"
 "Language: Japanese\n"
@@ -24,47 +24,47 @@ msgstr "CharCodes::Mapsの名前が重複しています : "
 msgid "Duplicate name in CharCodes::Choices : "
 msgstr "CharCodes::Choicesの名前が重複しています : "
 
-#: src/diskd88.cpp:1401 src/diskd88.cpp:1413
+#: src/diskd88.cpp:1417 src/diskd88.cpp:1429
 msgid "(no name)"
 msgstr "(名前なし)"
 
-#: src/diskparam.cpp:850 src/ui/rawexpbox.cpp:104
+#: src/diskparam.cpp:865 src/ui/rawexpbox.cpp:104
 msgid "track"
 msgstr "トラック"
 
-#: src/diskparam.cpp:850
+#: src/diskparam.cpp:865
 msgid "tracks"
 msgstr "トラック"
 
-#: src/diskparam.cpp:853 src/ui/rawexpbox.cpp:111
+#: src/diskparam.cpp:868 src/ui/rawexpbox.cpp:111
 msgid "side"
 msgstr "サイド"
 
-#: src/diskparam.cpp:853
+#: src/diskparam.cpp:868
 msgid "sides"
 msgstr "サイド"
 
-#: src/diskparam.cpp:857 src/diskparam.cpp:860
+#: src/diskparam.cpp:872 src/diskparam.cpp:875
 msgid "sectors"
 msgstr "セクタ"
 
-#: src/diskparam.cpp:860 src/ui/rawexpbox.cpp:118
+#: src/diskparam.cpp:875 src/ui/rawexpbox.cpp:118
 msgid "sector"
 msgstr "セクタ"
 
-#: src/diskparam.cpp:864
+#: src/diskparam.cpp:879
 msgid "bytes/sector"
 msgstr "バイト/セクタ"
 
-#: src/diskparam.cpp:866
+#: src/diskparam.cpp:881
 msgid "Interleave:"
 msgstr "セクタ間隔:"
 
-#: src/diskparam.cpp:996
+#: src/diskparam.cpp:1011
 msgid "Duplicate type name in DiskType : "
 msgstr "DiskTypeのタイプ名が重複しています : "
 
-#: src/diskparam.cpp:1077
+#: src/diskparam.cpp:1092
 msgid "Cannot set \"ALL\" on tracks attribute in ParticularTrack element."
 msgstr "ParticularTrackエレメントのtracks属性に\"ALL\"を指定できません。"
 
@@ -238,8 +238,8 @@ msgstr "終了(&X)"
 msgid "&Export..."
 msgstr "エクスポート(&E)..."
 
-#: src/main.cpp:597 src/ui/uifilelist.cpp:629 src/ui/uirawdisk.cpp:546
-#: src/ui/uirawdisk.cpp:1702
+#: src/main.cpp:597 src/ui/uifilelist.cpp:629 src/ui/uirawdisk.cpp:547
+#: src/ui/uirawdisk.cpp:1704
 msgid "&Import..."
 msgstr "インポート(&I)..."
 
@@ -263,7 +263,7 @@ msgstr "ペースト(&P)..."
 msgid "Make Directory(&F)..."
 msgstr "ディレクトリを作成(&F)..."
 
-#: src/main.cpp:607 src/ui/uirawdisk.cpp:562 src/ui/uirawdisk.cpp:1718
+#: src/main.cpp:607 src/ui/uirawdisk.cpp:563 src/ui/uirawdisk.cpp:1720
 msgid "&Property"
 msgstr "プロパティ(&P)"
 
@@ -1181,37 +1181,37 @@ msgstr "ファイル'%ls'はすでに削除されています。"
 msgid "File '%ls' already exists."
 msgstr "ファイル'%ls'はすでに存在します。"
 
-#: src/basicfmt/basicfmt.cpp:510
+#: src/basicfmt/basicfmt.cpp:514
 #, c-format
 msgid " [Free:%sbytes(%sgroups)]"
 msgstr " [空き:%sバイト(%sグループ)]"
 
-#: src/basicfmt/basicparam.cpp:595
+#: src/basicfmt/basicparam.cpp:597
 msgid "Unknown format type in DiskBasicType : "
 msgstr "DiskBasicTypeのフォーマットタイプが不明です : "
 
-#: src/basicfmt/basicparam.cpp:772
+#: src/basicfmt/basicparam.cpp:776
 msgid "Duplicate type name in DiskBasicType : "
 msgstr "DiskBasicTypeのタイプ名が重複しています : "
 
-#: src/basicfmt/basicparam.cpp:944
+#: src/basicfmt/basicparam.cpp:948
 msgid "Out of range in InvalidateCharacters::Code"
 msgstr "InvalidateCharacters::Codeが範囲外です。"
 
-#: src/basicfmt/basicparam.cpp:945 src/basicfmt/basicparam.cpp:962
+#: src/basicfmt/basicparam.cpp:949 src/basicfmt/basicparam.cpp:966
 #, c-format
 msgid "(line #%d)"
 msgstr ""
 
-#: src/basicfmt/basicparam.cpp:961
+#: src/basicfmt/basicparam.cpp:965
 msgid "Out of range in InvalidateCharacters::CodeRange"
 msgstr "InvalidateCharacters::CodeRangeが範囲外です。"
 
-#: src/basicfmt/basicparam.cpp:1171
+#: src/basicfmt/basicparam.cpp:1175
 msgid "Duplicate type number in DiskBasicFormat : "
 msgstr "DiskBasicFormatのタイプ番号が重複しています : "
 
-#: src/basicfmt/basicparam.cpp:1221
+#: src/basicfmt/basicparam.cpp:1225
 msgid "Duplicate type name in DiskBasicCategory : "
 msgstr "DiskBasicCategoryのタイプ名が重複しています : "
 
@@ -1424,11 +1424,11 @@ msgstr "[ディスク%d] トラックが多すぎます。%d以降のトラッ�
 msgid "[Disk%d] Data type %s is unsupported."
 msgstr "[ディスク%d] データ種類 %s は対応していません。"
 
-#: src/diskimg/fileparam.cpp:247
+#: src/diskimg/fileparam.cpp:282
 msgid "Supported files"
 msgstr "サポートファイル"
 
-#: src/diskimg/fileparam.cpp:268
+#: src/diskimg/fileparam.cpp:303
 msgid "All files"
 msgstr "すべてのファイル"
 
@@ -1652,7 +1652,7 @@ msgid "Data Size"
 msgstr "データサイズ"
 
 #: src/ui/diskparambox.cpp:187 src/ui/rawparambox.cpp:134
-#: src/ui/rawsectorbox.cpp:58
+#: src/ui/rawsectorbox.cpp:59
 msgid "Single Density"
 msgstr "単密度"
 
@@ -1943,11 +1943,11 @@ msgstr "アドレスに不正な記述が含まれています。"
 msgid "Sector"
 msgstr "セクタ"
 
-#: src/ui/rawexpbox.cpp:64 src/ui/uirawdisk.cpp:541 src/ui/uirawdisk.cpp:1698
+#: src/ui/rawexpbox.cpp:64 src/ui/uirawdisk.cpp:542 src/ui/uirawdisk.cpp:1700
 msgid "Invert datas."
 msgstr "データを反転する。"
 
-#: src/ui/rawexpbox.cpp:67 src/ui/uirawdisk.cpp:542
+#: src/ui/rawexpbox.cpp:67 src/ui/uirawdisk.cpp:543
 msgid "Descend side number order."
 msgstr "サイド番号を降順にする。"
 
@@ -1997,13 +1997,17 @@ msgstr "倍密度"
 msgid "Density"
 msgstr "密度"
 
-#: src/ui/rawsectorbox.cpp:54
+#: src/ui/rawsectorbox.cpp:55
 msgid "Deleted Mark"
 msgstr "削除マーク"
 
-#: src/ui/rawsectorbox.cpp:67
+#: src/ui/rawsectorbox.cpp:68
 msgid "Number Of Sector"
 msgstr "セクタ数"
+
+#: src/ui/rawsectorbox.cpp:76
+msgid "Status (Hex)"
+msgstr "ステータス(Hex)"
 
 #: src/ui/rawtrackbox.cpp:22
 msgid "Track Information"
@@ -2175,8 +2179,8 @@ msgid "Export a file"
 msgstr "ファイルをエクスポート"
 
 #: src/ui/uifilelist.cpp:1361 src/ui/uifilelist.cpp:1718
-#: src/ui/uirawdisk.cpp:1002 src/ui/uirawdisk.cpp:1104
-#: src/ui/uirawdisk.cpp:2143 src/ui/uirawdisk.cpp:2208
+#: src/ui/uirawdisk.cpp:1003 src/ui/uirawdisk.cpp:1105
+#: src/ui/uirawdisk.cpp:2145 src/ui/uirawdisk.cpp:2210
 msgid "All files (*.*)|*.*"
 msgstr "すべてのファイル(*.*)|*.*"
 
@@ -2334,142 +2338,146 @@ msgstr "削除"
 msgid "SingleDensity"
 msgstr "単密度"
 
-#: src/ui/uirawdisk.cpp:543 src/ui/uirawdisk.cpp:1699
+#: src/ui/uirawdisk.cpp:45
+msgid "Status"
+msgstr "ステータス"
+
+#: src/ui/uirawdisk.cpp:544 src/ui/uirawdisk.cpp:1701
 msgid "Behavior When In/Out"
 msgstr "入出力時の振る舞い"
 
-#: src/ui/uirawdisk.cpp:545
+#: src/ui/uirawdisk.cpp:546
 msgid "&Export Track..."
 msgstr "トラックをエクスポート(&E)..."
 
-#: src/ui/uirawdisk.cpp:548
+#: src/ui/uirawdisk.cpp:549
 msgid "Modify All H On This Disk"
 msgstr "このディスクのHを一括変更"
 
-#: src/ui/uirawdisk.cpp:549
+#: src/ui/uirawdisk.cpp:550
 msgid "Modify All N On This Disk"
 msgstr "このディスクのNを一括変更"
 
-#: src/ui/uirawdisk.cpp:550
+#: src/ui/uirawdisk.cpp:551
 msgid "Modify All Density On This Disk"
 msgstr "このディスクの密度を一括変更"
 
-#: src/ui/uirawdisk.cpp:552 src/ui/uirawdisk.cpp:1704
+#: src/ui/uirawdisk.cpp:553 src/ui/uirawdisk.cpp:1706
 msgid "Modify All C On This Track"
 msgstr "このトラックのCを一括変更"
 
-#: src/ui/uirawdisk.cpp:553 src/ui/uirawdisk.cpp:1705
+#: src/ui/uirawdisk.cpp:554 src/ui/uirawdisk.cpp:1707
 msgid "Modify All H On This Track"
 msgstr "このトラックのHを一括変更"
 
-#: src/ui/uirawdisk.cpp:554 src/ui/uirawdisk.cpp:1706
+#: src/ui/uirawdisk.cpp:555 src/ui/uirawdisk.cpp:1708
 msgid "Modify All N On This Track"
 msgstr "このトラックのNを一括変更"
 
-#: src/ui/uirawdisk.cpp:555 src/ui/uirawdisk.cpp:1707
+#: src/ui/uirawdisk.cpp:556 src/ui/uirawdisk.cpp:1709
 msgid "Modify All Density On This Track"
 msgstr "このトラックの密度を一括変更"
 
-#: src/ui/uirawdisk.cpp:556 src/ui/uirawdisk.cpp:1708
+#: src/ui/uirawdisk.cpp:557 src/ui/uirawdisk.cpp:1710
 msgid "Modify All Num Of Sectors On This Track"
 msgstr "このトラックのセクタ数を一括変更"
 
-#: src/ui/uirawdisk.cpp:557 src/ui/uirawdisk.cpp:1709
+#: src/ui/uirawdisk.cpp:558 src/ui/uirawdisk.cpp:1711
 msgid "Modify All Sector Size On This Track"
 msgstr "このトラックのセクタサイズを一括変更"
 
-#: src/ui/uirawdisk.cpp:559
+#: src/ui/uirawdisk.cpp:560
 msgid "Append New Track"
 msgstr "新規トラックを追加"
 
-#: src/ui/uirawdisk.cpp:560
+#: src/ui/uirawdisk.cpp:561
 msgid "Delete All Tracks Below Current Track"
 msgstr "現在のトラック以下を一括削除"
 
-#: src/ui/uirawdisk.cpp:984
+#: src/ui/uirawdisk.cpp:985
 msgid "Export data from track"
 msgstr "トラックからデータをエクスポート"
 
-#: src/ui/uirawdisk.cpp:1098
+#: src/ui/uirawdisk.cpp:1099
 msgid "Import data to track"
 msgstr "トラックへデータをインポート"
 
-#: src/ui/uirawdisk.cpp:1126
+#: src/ui/uirawdisk.cpp:1127
 msgid "Import data to the disk"
 msgstr "ディスクへデータをインポート"
 
-#: src/ui/uirawdisk.cpp:1389
+#: src/ui/uirawdisk.cpp:1390
 msgid "Do you really want to delete tracks?"
 msgstr "本当にトラックを削除していいですか？"
 
-#: src/ui/uirawdisk.cpp:1390
+#: src/ui/uirawdisk.cpp:1391
 msgid "Delete Tracks"
 msgstr "トラック削除"
 
-#: src/ui/uirawdisk.cpp:1701
+#: src/ui/uirawdisk.cpp:1703
 msgid "&Export Sector..."
 msgstr "セクタをエクスポート(&E)..."
 
-#: src/ui/uirawdisk.cpp:1711
+#: src/ui/uirawdisk.cpp:1713
 msgid "Append New Sector"
 msgstr "新規セクタを追加"
 
-#: src/ui/uirawdisk.cpp:1712
+#: src/ui/uirawdisk.cpp:1714
 msgid "Delete Current Sector"
 msgstr "現在のセクタを削除"
 
-#: src/ui/uirawdisk.cpp:1714
+#: src/ui/uirawdisk.cpp:1716
 msgid "Delete Sectors More Than Current Sector Number"
 msgstr "現在のセクタ番号以上のセクタを一括削除"
 
-#: src/ui/uirawdisk.cpp:1716
+#: src/ui/uirawdisk.cpp:1718
 msgid "Edit Current Sector"
 msgstr "現在のセクタを編集"
 
-#: src/ui/uirawdisk.cpp:2140
+#: src/ui/uirawdisk.cpp:2142
 msgid "Export data from sector"
 msgstr "セクタからデータをエクスポート"
 
-#: src/ui/uirawdisk.cpp:2156
+#: src/ui/uirawdisk.cpp:2158
 msgid "Export each datas from selected sector"
 msgstr "選択したセクタから各データをエクスポート"
 
-#: src/ui/uirawdisk.cpp:2205
+#: src/ui/uirawdisk.cpp:2207
 msgid "Import data to sector"
 msgstr "セクタへデータをインポート"
 
-#: src/ui/uirawdisk.cpp:2232
+#: src/ui/uirawdisk.cpp:2234
 msgid "Sector Information"
 msgstr "セクタ情報"
 
-#: src/ui/uirawdisk.cpp:2244
+#: src/ui/uirawdisk.cpp:2246
 #, c-format
 msgid "Need expand the buffer size to %d bytes. Are you sure to do it?"
 msgstr ""
 "バッファサイズを%dバイトに拡張する必要があります。それを行ってもよろしいです"
 "か？"
 
-#: src/ui/uirawdisk.cpp:2245
+#: src/ui/uirawdisk.cpp:2247
 msgid "Expand Sector Size"
 msgstr "セクタサイズを拡張"
 
-#: src/ui/uirawdisk.cpp:2391
+#: src/ui/uirawdisk.cpp:2394
 msgid "Add Sector"
 msgstr "セクタを追加"
 
-#: src/ui/uirawdisk.cpp:2420
+#: src/ui/uirawdisk.cpp:2424
 msgid "Do you really want to delete current sector?"
 msgstr "本当に現在のセクタを削除していいですか？"
 
-#: src/ui/uirawdisk.cpp:2421
+#: src/ui/uirawdisk.cpp:2425
 msgid "Delete Sector"
 msgstr "セクタを削除"
 
-#: src/ui/uirawdisk.cpp:2507
+#: src/ui/uirawdisk.cpp:2511
 msgid "Do you really want to delete sectors?"
 msgstr "本当にセクタを削除していいですか？"
 
-#: src/ui/uirawdisk.cpp:2508
+#: src/ui/uirawdisk.cpp:2512
 msgid "Delete Sectors"
 msgstr "セクタを削除"
 

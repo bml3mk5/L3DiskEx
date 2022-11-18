@@ -97,7 +97,7 @@ private:
 
 public:
 	DiskD88Sector(int n_num, d88_sector_header_t *n_header, wxUint8 *n_data);
-	DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density = false);
+	DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density = false, int status = 0);
 	~DiskD88Sector();
 
 	/// セクタのデータを置き換える
@@ -141,6 +141,10 @@ public:
 	wxUint16 GetSectorsPerTrack() const;
 	/// セクタ数を設定
 	void	SetSectorsPerTrack(wxUint16 val);
+	/// セクタのステータスを返す
+	wxUint8 GetSectorStatus() const;
+	/// セクタのステータスを設定
+	void    SetSectorStatus(wxUint8 val);
 
 	/// ヘッダを返す
 	d88_sector_header_t	*GetHeader() { return header; }
@@ -217,7 +221,7 @@ public:
 	/// トラック内のセクタデータを置き換える
 	int		Replace(DiskD88Track *src_track); 
 	/// トラックに新規セクタを追加する
-	int		AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity);
+	int		AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity, int status);
 	/// トラック内の指定位置のセクタを削除する
 	int		DeleteSectorByIndex(int pos);
 	/// トラック内の指定セクタを削除する

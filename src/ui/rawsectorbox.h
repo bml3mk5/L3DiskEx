@@ -37,8 +37,10 @@ private:
 
 	wxTextCtrl *txtSecNums;
 
+	wxTextCtrl *txtStatus;
+
 public:
-	RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int hide_flags = 0);
+	RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int hide_flags = 0);
 
 	enum {
 		IDC_TEXT_ID_C = 1,
@@ -48,6 +50,7 @@ public:
 		IDC_CHK_DELETED,
 		IDC_CHK_DENSITY,
 		IDC_TEXT_SECNUMS,
+		IDC_TEXT_STATUS,
 	};
 
 	/// @name functions
@@ -66,6 +69,7 @@ public:
 	int GetSectorNums();
 	bool GetDeletedMark();
 	bool GetSingleDensity();
+	int GetStatus();
 
 
 	wxDECLARE_EVENT_TABLE();

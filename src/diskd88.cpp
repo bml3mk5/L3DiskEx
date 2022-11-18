@@ -87,7 +87,7 @@ DiskD88Sector::DiskD88Sector(int n_num, d88_sector_header_t *n_header, wxUint8 *
 }
 
 /// 新規作成用
-DiskD88Sector::DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density)
+DiskD88Sector::DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density, int status)
 {
 	num = sector_number;
 	header = new d88_sector_header_t;
@@ -100,6 +100,7 @@ DiskD88Sector::DiskD88Sector(int track_number, int side_number, int sector_numbe
 	header->size = (wxUint16)sector_size;
 	header->secnums = (wxUint16)number_of_sector;
 	header->density = (single_density ? 0x40 : 0);
+	header->status = (status & 0xff);
 
 	data = new wxUint8[header->size];
 	memset(data, 0, header->size);
@@ -381,6 +382,20 @@ void DiskD88Sector::SetSectorsPerTrack(wxUint16 val)
 	}
 }
 
+/// セクタのステータスを返す
+wxUint8 DiskD88Sector::GetSectorStatus() const
+{
+	return (header ? header->status : 0);
+}
+
+/// セクタのステータスを設定
+void DiskD88Sector::SetSectorStatus(wxUint8 val)
+{
+	if (header) {
+		header->status = val;
+	}
+}
+
 /// ID Cを返す
 wxUint8	DiskD88Sector::GetIDC() const
 {
@@ -559,14 +574,15 @@ int DiskD88Track::Replace(DiskD88Track *src_track)
 /// @param [in] secnum   新規セクタのセクタ番号(ID R)
 /// @param [in] secsize  新規セクタのセクタサイズ(128,256,512,1024,2048)
 /// @param [in] sdensity 新規セクタが単密度か
+/// @param [in] sdensity 新規セクタのステータス(通常0)
 /// @return 0 正常
-int DiskD88Track::AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity)
+int DiskD88Track::AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity, int status)
 {
 	int rc = 0;
 
 	// 新規セクタ
 	DiskD88Sector *new_sector = new DiskD88Sector(
-		trknum, sidnum, secnum, secsize, 1, sdensity
+		trknum, sidnum, secnum, secsize, 1, sdensity, status
 	);
 	// 追加
 	Add(new_sector);

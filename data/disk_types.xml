@@ -576,6 +576,7 @@
 			<Type>FP-2D</Type>
 			<Type>CPM88-2D</Type>
 			<Type>CPMX1-2D</Type>
+			<Type>CPMEP-2D</Type>
 		</DiskBasicTypes>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
@@ -852,6 +853,7 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type p="major">SMC-1DD</Type>
+			<Type>X1HU-1DD</Type>
 		</DiskBasicTypes>
 		<DensityName>1DD</DensityName>
 		<DensityName lang="ja">1DD</DensityName>

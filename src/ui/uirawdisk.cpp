@@ -42,6 +42,7 @@ const struct st_list_columns gL3DiskRawSectorColumnDefs[] = {
 	{ "Single",		wxTRANSLATE("SingleDensity"),	false,	36,	wxALIGN_CENTER,	false },
 	{ "Sectors",	wxTRANSLATE("NumOfSectors"),	false,	72,	wxALIGN_RIGHT,	false },
 	{ "Size",		wxTRANSLATE("Size"),			false,	72,	wxALIGN_RIGHT,	false },
+	{ "Status",		wxTRANSLATE("Status"),			false,	40,	wxALIGN_CENTER,	false },
 	{ NULL,			NULL,							false,	 0,	wxALIGN_LEFT,	false }
 };
 
@@ -1547,6 +1548,7 @@ void L3DiskRawSectorListCtrl::SetListData(DiskD88Sector *sector, int row, L3RawS
 	values[SECTORCOL_SINGLE].Set(row, sector->IsSingleDensity() ? wxT("*") : wxEmptyString);
 	values[SECTORCOL_SECTORS].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorsPerTrack()));
 	values[SECTORCOL_SIZE].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorBufferSize()));
+	values[SECTORCOL_STATUS].Set(row, wxString::Format(wxT("%x"), (int)sector->GetSectorStatus()));
 }
 
 /// リストにデータを挿入
@@ -2232,7 +2234,7 @@ bool L3DiskRawSector::ShowSectorAttr()
 	RawSectorBox dlg(this, wxID_ANY, _("Sector Information")
 		, sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetIDN()
 		, sector->GetSectorsPerTrack()
-		, sector->IsDeleted(), sector->IsSingleDensity()
+		, sector->IsDeleted(), sector->IsSingleDensity(), sector->GetSectorStatus()
 	);
 
 	int rc = dlg.ShowModal();
@@ -2261,6 +2263,7 @@ bool L3DiskRawSector::ShowSectorAttr()
 	sector->SetSectorsPerTrack((wxUint16)dlg.GetSectorNums());
 	sector->SetDeletedMark(dlg.GetDeletedMark());
 	sector->SetSingleDensity(dlg.GetSingleDensity());
+	sector->SetSectorStatus(dlg.GetStatus());
 
 	if (rc == wxYES) {
 		parent->RefreshAllData();
@@ -2391,7 +2394,7 @@ void L3DiskRawSector::ShowAppendSectorDialog()
 	RawSectorBox dlg(this, wxID_ANY, _("Add Sector")
 		, sector->GetIDC(), sector->GetIDH(), new_sec_num, sector->GetIDN()
 		, 1
-		, sector->IsDeleted(), sector->IsSingleDensity()
+		, sector->IsDeleted(), sector->IsSingleDensity(), sector->GetSectorStatus()
 		, SECTORBOX_HIDE_SECTOR_NUMS
 	);
 	int rc = dlg.ShowModal();
@@ -2401,7 +2404,8 @@ void L3DiskRawSector::ShowAppendSectorDialog()
 			dlg.GetIdH(),
 			dlg.GetIdR(),
 			DiskD88Sector::ConvIDNToSecSize(dlg.GetIdN()),
-			sector->IsSingleDensity()
+			sector->IsSingleDensity(),
+			dlg.GetStatus()
 		);
 
 		// 画面更新
