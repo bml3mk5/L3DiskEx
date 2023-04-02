@@ -26,16 +26,19 @@ SectorParam::SectorParam()
 	track_num = -1;
 	side_num = -1;
 	sector_num = -1;
+	sector_size = -1;
 }
 /// 番号を保持
-/// @param [in] n_track_num  トラック番号
-/// @param [in] n_side_num   サイド番号
-/// @param [in] n_sector_num セクタ番号
-SectorParam::SectorParam(int n_track_num, int n_side_num, int n_sector_num)
+/// @param [in] n_track_num   トラック番号
+/// @param [in] n_side_num    サイド番号
+/// @param [in] n_sector_num  セクタ番号
+/// @param [in] n_sector_size セクタサイズ
+SectorParam::SectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size)
 {
 	track_num = n_track_num;
 	side_num = n_side_num;
 	sector_num = n_sector_num;
+	sector_size = n_sector_size;
 }
 /// 比較
 bool SectorParam::operator==(const SectorParam &dst) const
@@ -43,6 +46,32 @@ bool SectorParam::operator==(const SectorParam &dst) const
 	return (track_num == dst.track_num
 		 && side_num == dst.side_num
 		 && sector_num == dst.sector_num
+		 && sector_size == dst.sector_size
+	);
+}
+#if 0
+/// 指定したトラック、サイドが特殊なトラック（単密度など）か
+/// @param [in] n_track_num トラック
+/// @param [in] n_side_num  サイド
+bool SectorParam::Match(int n_track_num, int n_side_num) const
+{
+	return (track_num < 0
+		|| (track_num == n_track_num
+		&& (side_num < 0 || side_num == n_side_num)));
+}
+#endif
+/// 指定したトラック、サイドが特殊なセクタ（単密度など）か
+/// @param [in] n_track_num   トラック番号
+/// @param [in] n_side_num    サイド番号
+/// @param [in] n_sector_num  セクタ番号
+/// @param [in] n_sector_size セクタサイズ
+/// @note セクタサイズが<0の時、条件から除外する
+bool SectorParam::Match(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size) const
+{
+	return ((track_num < 0 || (track_num == n_track_num))
+		&& (side_num < 0 || (side_num == n_side_num))
+		&& (sector_num < 0 || (sector_num == n_sector_num))
+		&& (sector_size < 0 || n_sector_size < 0 || (sector_size == n_sector_size))
 	);
 }
 
@@ -55,7 +84,6 @@ TrackParam::TrackParam()
 {
 	num_of_tracks = 1;
 	sectors_per_track = -1;
-	sector_size = 128;
 	memset(id, 0, sizeof(id));
 }
 /// 特殊なトラックやセクタを登録
@@ -66,11 +94,10 @@ TrackParam::TrackParam()
 /// @param [in] n_sectors_per_track セクタ数(特殊トラック指定時のみ)
 /// @param [in] n_sector_size       セクタサイズ
 TrackParam::TrackParam(int n_track_num, int n_side_num, int n_sector_num, int n_num_of_tracks, int n_sectors_per_track, int n_sector_size)
-	: SectorParam(n_track_num, n_side_num, n_sector_num)
+	: SectorParam(n_track_num, n_side_num, n_sector_num, n_sector_size)
 {
 	num_of_tracks = n_num_of_tracks;
 	sectors_per_track = n_sectors_per_track;
-	sector_size = n_sector_size;
 	memset(id, 0, sizeof(id));
 }
 /// 比較
@@ -83,15 +110,6 @@ bool TrackParam::operator==(const TrackParam &dst) const
 		 && (sectors_per_track < 0 || dst.sectors_per_track < 0 || sectors_per_track == dst.sectors_per_track)
 		 && sector_size == dst.sector_size
 	);
-}
-/// 指定したトラック、サイドが特殊なトラック（単密度など）か
-/// @param [in] n_track_num トラック
-/// @param [in] n_side_num  サイド
-bool TrackParam::Match(int n_track_num, int n_side_num) const
-{
-	return (track_num < 0
-		|| (track_num == n_track_num
-		&& (side_num < 0 || side_num == n_side_num)));
 }
 /// IDをセット
 void TrackParam::SetID(int idx, wxUint8 val)
@@ -152,6 +170,23 @@ bool DiskParticular::FindExclude(int n_track_num, int n_side_num) const
 	return (match != NULL);
 }
 
+/// 同じセクタのものをまとめる
+/// @param [in] sectors     セクタ数
+/// @param [in,out] arr     リスト
+void DiskParticular::UniqueSectors(int sectors, DiskParticulars &arr)
+{
+	int count = (int)arr.Count();
+	if (count <= 1) return;
+
+	// 全セクタが同じパラメータ(単密度)であればまとめる
+	if (sectors == count) {
+		DiskParticulars newarr;
+		DiskParticular *sd = &arr.Item(0);
+		newarr.Add(DiskParticular(sd->GetTrackNumber(), sd->GetSideNumber(), -1, sd->GetNumberOfTracks(), sd->GetSectorsPerTrack(), sd->GetSectorSize()));
+		arr = newarr;
+	}
+}
+
 /// 同じトラックやサイドのものをまとめる
 /// @param [in] tracks      トラック数
 /// @param [in] sides       サイド数
@@ -171,7 +206,12 @@ void DiskParticular::UniqueTracks(int tracks, int sides, bool both_sides, DiskPa
 	bool all_sides = true;
 	for(size_t idx = 1; idx <= count; idx++) {
 		DiskParticular *sd = idx < count ? &arr.Item(idx) : NULL;
-		if (sd == NULL || prev_sd->GetTrackNumber() != sd->GetTrackNumber()) {
+		if (prev_sd->GetSectorNumber() >= 0) {
+			// セクタ番号が入っているもの
+			newarr.Add(*prev_sd);
+			all_sides = false;
+			side_count = 0;
+		} else if (sd == NULL || prev_sd->GetTrackNumber() != sd->GetTrackNumber()) {
 			if (side_count >= sides || both_sides) {
 				newarr.Add(DiskParticular(prev_sd->GetTrackNumber(), -1, -1, prev_sd->GetNumberOfTracks(), prev_sd->GetSectorsPerTrack(), prev_sd->GetSectorSize()));
 			} else {
@@ -700,7 +740,7 @@ bool DiskParam::FindSingleDensity(int track_num, int side_num, int *sectors_per_
 	bool match = false;
 	for(size_t i=0; i<singles.Count(); i++) {
 		const DiskParticular *sd = &singles.Item(i);
-		if (sd->Match(track_num, side_num)) {
+		if (sd->Match(track_num, side_num, -1, -1)) {
 			match = true;
 			if (sectors_per_track && sd->GetSectorsPerTrack() > 0) {
 				*sectors_per_track = sd->GetSectorsPerTrack();
@@ -708,6 +748,24 @@ bool DiskParam::FindSingleDensity(int track_num, int side_num, int *sectors_per_
 			if (sector_size && sd->GetSectorSize() > 0) {
 				*sector_size = sd->GetSectorSize();
 			}
+			break;
+		}
+	}
+	return match;
+}
+/// 指定したトラック、サイド、セクタが単密度か
+/// @param [in]  track_num         トラック番号
+/// @param [in]  side_num          サイド番号
+/// @param [in]  sector_num        セクタ番号
+/// @param [in]  sector_size       セクタサイズ
+/// @return true/false
+bool DiskParam::FindSingleDensity(int track_num, int side_num, int sector_num, int sector_size) const
+{
+	bool match = false;
+	for(size_t i=0; i<singles.Count(); i++) {
+		const DiskParticular *sd = &singles.Item(i);
+		if (sd->Match(track_num, side_num, sector_num, sector_size)) {
+			match = true;
 			break;
 		}
 	}
@@ -1063,6 +1121,10 @@ bool DiskTemplates::LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, 
 	if (!str.IsEmpty() && str.Upper() != wxT("ALL")) {
 		s.SetSideNumber(Utils::ToInt(str));
 	}
+	str = node->GetAttribute("sector");
+	if (!str.IsEmpty() && str.Upper() != wxT("ALL")) {
+		s.SetSectorNumber(Utils::ToInt(str));
+	}
 	str = node->GetAttribute("sectors");
 	if (!str.IsEmpty() && str.Upper() != wxT("ALL")) {
 		s.SetSectorsPerTrack(Utils::ToInt(str));
@@ -1070,6 +1132,9 @@ bool DiskTemplates::LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, 
 	str = node->GetAttribute("size");
 	if (!str.IsEmpty()) {
 		s.SetSectorSize(Utils::ToInt(str));
+	} else {
+		// default size
+		s.SetSectorSize(128);
 	}
 	return true;
 }

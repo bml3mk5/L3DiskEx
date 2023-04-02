@@ -89,7 +89,7 @@ wxUint32 DiskBasicTypeFATBase::CalcManagedStartGroup()
 /// 使用可能なディスクサイズを得る(MS-DOS用)
 void DiskBasicTypeFATBase::GetUsableDiskSize(int &disk_size, int &group_size) const
 {
-	group_size = basic->GetFatEndGroup() - 2;
+	group_size = basic->GetFatEndGroup() - 1;
 	disk_size = group_size * basic->GetSectorSize() * basic->GetSectorsPerGroup();
 }
 

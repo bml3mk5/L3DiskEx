@@ -30,13 +30,18 @@ protected:
 	int track_num;
 	int side_num;
 	int sector_num;
+	int sector_size;
 
 public:
 	SectorParam();
-	SectorParam(int n_track_num, int n_side_num, int n_sector_num);
+	SectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size);
 	virtual ~SectorParam() {}
 	/// @brief 一致するか
 	bool operator==(const SectorParam &dst) const;
+//	/// @brief 特殊なトラックか
+//	bool Match(int n_track_num, int n_side_num) const;
+	/// @brief 特殊なセクタか
+	bool Match(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size) const;
 
 	/// @brief トラック番号を設定
 	void SetTrackNumber(int val) { track_num = val; }
@@ -59,12 +64,8 @@ public:
 class TrackParam : public SectorParam
 {
 protected:
-//	int track_num;
-//	int side_num;
-//	int sector_num;
 	int num_of_tracks;
 	int sectors_per_track;
-	int sector_size;
 	wxUint8 id[4];	///< セクタのID C,H,R,N
 
 public:
@@ -74,8 +75,6 @@ public:
 
 	/// @brief 一致するか
 	bool operator==(const TrackParam &dst) const;
-	/// @brief 特殊なトラックか
-	bool Match(int n_track_num, int n_side_num) const;
 
 	/// @brief トラックの数を設定
 	void SetNumberOfTracks(int val) { num_of_tracks = val; }
@@ -120,6 +119,8 @@ public:
 	void AddExclude(const TrackParam &n_param);
 	/// @brief 除外するトラックを探す
 	bool FindExclude(int n_track_num, int n_side_num) const;
+	/// @brief 同じセクタのものをまとめる
+	static void UniqueSectors(int sectors, DiskParticulars &arr);
 	/// @brief 同じトラックやサイドのものをまとめる
 	static void UniqueTracks(int tracks, int sides, bool both_sides, DiskParticulars &arr);
 };
@@ -329,6 +330,8 @@ public:
 	bool MatchNear(int num, int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size, int n_interleave, int n_numbering_sector, const DiskParticulars &n_singles, bool &last);
 	/// @brief 指定したトラック、サイドが単密度か
 	bool FindSingleDensity(int track_num, int side_num, int *sectors_per_track = NULL, int *sector_size = NULL) const;
+	/// @brief 指定したトラック、サイド、セクタが単密度か
+	bool FindSingleDensity(int track_num, int side_num, int sector_num, int sector_size) const;
 	/// @brief 単密度を持っているか
 	int  HasSingleDensity(int *sectors_per_track = NULL, int *sector_size = NULL) const;
 	/// @brief ディスクサイズを計算する（ベタディスク用）

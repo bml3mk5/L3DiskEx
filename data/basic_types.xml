@@ -993,6 +993,43 @@
 		<OEMName type="string">CDOS II</OEMName>
 		<Description>CDOS II (2D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="CDOS2-2DD" type="32" category="CDOS2">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>3</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xf9</MediaID>
+		<SubDirGroupSize>0</SubDirGroupSize>
+		<IgnoreParameter type="bool">true</IgnoreParameter>
+		<IPLCompareString type="string">CDOS II</IPLCompareString>
+		<JumpBoot type="string">\xc9</JumpBoot>
+		<OEMName type="string">CDOS II</OEMName>
+		<Description>CDOS II (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="CDOS2-2HD" type="32" category="CDOS2">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>208</DirEntryCount>
+		<ValidDensityType>0</ValidDensityType>
+		<MediaID>0xfe</MediaID>
+		<SubDirGroupSize>0</SubDirGroupSize>
+		<IgnoreParameter type="bool">true</IgnoreParameter>
+		<IPLCompareString type="string">CDOS II</IPLCompareString>
+		<JumpBoot type="string">\xc9</JumpBoot>
+		<OEMName type="string">CDOS II</OEMName>
+		<Description>CDOS II (2HD)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="LOSA-2D" type="31" category="LOSA">
 		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>

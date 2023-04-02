@@ -624,19 +624,7 @@ L3DiskFileList::L3DiskFileList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	Layout();
 
 	// popup menu
-	menuPopup = new wxMenu;
-	menuPopup->Append(IDM_EXPORT_FILE, _("&Export..."));
-	menuPopup->Append(IDM_IMPORT_FILE, _("&Import..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_DELETE_FILE, _("&Delete..."));
-	menuPopup->Append(IDM_RENAME_FILE, _("Rena&me"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_COPY_FILE, _("&Copy"));
-	menuPopup->Append(IDM_PASTE_FILE, _("&Paste..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_MAKE_DIRECTORY, _("Make Directory(&F)..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_PROPERTY, _("P&roperty"));
+	MakePopupMenu();
 
 	// popup on list column header
 	menuColumnPopup = NULL;
@@ -995,6 +983,24 @@ void L3DiskFileList::OnListColumnDetail(wxCommandEvent& WXUNUSED(event))
 }
 
 ////////////////////////////////////////
+
+/// ポップアップメニュー作成
+void L3DiskFileList::MakePopupMenu()
+{
+	menuPopup = new wxMenu;
+	menuPopup->Append(IDM_EXPORT_FILE, _("&Export..."));
+	menuPopup->Append(IDM_IMPORT_FILE, _("&Import..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_DELETE_FILE, _("&Delete..."));
+	menuPopup->Append(IDM_RENAME_FILE, _("Rena&me"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_COPY_FILE, _("&Copy"));
+	menuPopup->Append(IDM_PASTE_FILE, _("&Paste..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_MAKE_DIRECTORY, _("Make Directory(&F)..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_PROPERTY, _("P&roperty"));
+}
 
 /// ポップアップメニュー表示
 void L3DiskFileList::ShowPopupMenu()
@@ -2597,6 +2603,11 @@ void L3DiskFileList::ShowMakeDirectoryDialog()
 {
 	if (!basic) return;
 
+	if (!basic->IsWritableIntoDisk()) {
+		basic->ShowErrorMessage();
+		return;
+	}
+
 	DiskD88Disk *disk = basic->GetDisk();
 	if (!disk) return;
 
@@ -2690,6 +2701,11 @@ bool L3DiskFileList::CanUseBasicDisk() const
 bool L3DiskFileList::IsAssignedBasicDisk() const
 {
 	return basic? basic->IsAssigned() : false;
+}
+/// BASICディスク＆フォーマットできるか
+bool L3DiskFileList::IsFormattableBasicDisk() const
+{
+	return basic? basic->IsFormattable() : false;
 }
 /// BASICディスク＆フォーマットされているか
 bool L3DiskFileList::IsFormattedBasicDisk() const

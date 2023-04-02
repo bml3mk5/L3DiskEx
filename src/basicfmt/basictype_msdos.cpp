@@ -339,6 +339,7 @@ bool DiskBasicTypeMSDOS::ModifyOrMakeVolumeLabel(const wxString &filename)
 		} else {
 			item->SetEndMark(next_item);
 		}
+		item->ClearData();
 		item->SetFileAttr(FORMAT_TYPE_UNKNOWN, FILE_TYPE_VOLUME_MASK, 0);
 	}
 	item->SetFileNameStr(filename);

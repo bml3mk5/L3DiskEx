@@ -316,6 +316,8 @@ public:
 
 	/// @name ウィンドウ操作
 	//@{
+	/// メニューの作成
+	void MakeMenu();
 #ifndef USE_MENU_OPEN
 	/// メニューのファイル項目を更新
 	void UpdateMenuFile();
@@ -462,10 +464,14 @@ public:
 	void InitializeDisk();
 	/// ディスクをDISK BASIC用に論理フォーマット
 	void FormatDisk();
+	/// DISK BASIC用に論理フォーマットできるか
+	bool IsFormattableDisk();
 	/// ドロップされたファイルを開く
 	void OpenDroppedFile(const wxString &path);
 	/// BASIC情報ダイアログ
 	void ShowBasicAttr();
+	/// DISK BASICが使用できるか
+	bool CanUseBasicDisk();
 
 	/// ディレクトリをアサイン
 	bool AssignDirectory(DiskD88Disk *disk, int side_num, DiskBasicDirItem *dir_item);

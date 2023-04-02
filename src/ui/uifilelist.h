@@ -286,6 +286,8 @@ public:
 	void OnListColumnDetail(wxCommandEvent& event);
 	//@}
 
+	/// ポップアップメニュー作成
+	void MakePopupMenu();
 	/// ポップアップメニュー表示
 	void ShowPopupMenu();
 	/// リストカラムのポップアップメニュー表示
@@ -401,6 +403,8 @@ public:
 	bool CanUseBasicDisk() const;
 	/// BASICディスクを解析したか
 	bool IsAssignedBasicDisk() const;
+	/// BASICディスク＆フォーマットできるか
+	bool IsFormattableBasicDisk() const;
 	/// BASICディスク＆フォーマットされているか
 	bool IsFormattedBasicDisk() const;
 	/// ファイルの書き込み可能か

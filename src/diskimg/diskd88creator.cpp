@@ -33,10 +33,9 @@ DiskD88Creator::~DiskD88Creator()
 /// @param[in] sector_number     セクタ番号
 /// @param[in] sector_size       セクタサイズ
 /// @param[in] sectors_per_track セクタ数
-/// @param[in] single_density    単密度か？
 /// @param[in,out] track         トラック
 /// @return 作成したセクタのサイズ（ヘッダ含む）
-wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, bool single_density, DiskD88Track *track)
+wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, DiskD88Track *track)
 {
 	// 特殊なセクタにするか
 	const wxUint8 *sector_id = NULL;
@@ -45,6 +44,8 @@ wxUint32 DiskD88Creator::CreateSector(int track_number, int side_number, int sec
 			sector_number = sector_id[2];
 		}
 	}
+	// 単密度にするか
+	bool single_density = param->FindSingleDensity(track_number, side_number, sector_number, sector_size);
 
 	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sectors_per_track, single_density);
 	track->Add(sector);
@@ -70,10 +71,10 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 
 	// 特殊なトラックにするか
 	param->FindParticularTrack(track_number, side_number, sector_max, sector_size);
-	// 単密度にするか
-	bool single_density = param->FindSingleDensity(track_number, side_number, &sector_max, &sector_size);
+	// トラック全体が単密度の場合セクタ数とサイズを得る
+	param->FindSingleDensity(track_number, side_number, &sector_max, &sector_size);
 
-	// interleave
+	// interleave の並び順を計算
 //	int *sector_nums = new int[sector_max + 1];
 	wxArrayInt sector_nums;
 	if (!DiskD88Track::CalcSectorNumbersForInterleave(param->GetInterleave(), sector_max, sector_nums, param->GetSectorNumberBaseOnDisk())) {
@@ -92,7 +93,7 @@ wxUint32 DiskD88Creator::CreateTrack(int track_number, int side_number, int offs
 			// 連番にする場合
 			sector_offset = side_number * sector_max;
 		}
-		track_size += CreateSector(track_number, side_number, sector_nums[sector_pos] + sector_offset, sector_size, sector_max, single_density, track);
+		track_size += CreateSector(track_number, side_number, sector_nums[sector_pos] + sector_offset, sector_size, sector_max, track);
 	}
 
 	if (result->GetValid() >= 0) {

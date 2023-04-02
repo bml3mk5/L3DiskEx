@@ -664,6 +664,8 @@ DiskBasicDirItem *DiskBasicDir::FindFileByAttrOnRoot(int file_type, int mask, Di
 /// @return NULL: ない
 DiskBasicDirItem *DiskBasicDir::FindFileByAttr(const DiskBasicDirItem *dir_item, int file_type, int mask, DiskBasicDirItem *prev_item)
 {
+	if (!dir_item) return NULL;
+
 	DiskBasicDirItem *match_item = NULL;
 	size_t start = 0;
 	const DiskBasicDirItems *items = dir_item->GetChildren();
@@ -719,7 +721,6 @@ bool DiskBasicDir::AssignRoot(DiskBasicType *type, int start_sector, int end_sec
 /// @param [in] type        DISK BASIC 種類
 bool DiskBasicDir::AssignRoot(DiskBasicType *type)
 {
-//	return AssignRoot(type, start_sector_pos, end_sector_pos);
 	DiskBasicGroups root_groups;
 	delete root;
 	root = NewItem();

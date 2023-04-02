@@ -48,6 +48,8 @@ public:
 	/// @retval 2 :情報あり
 	virtual int GetValid() const { return valid; }
 
+	virtual void Show();
+	
 	static void ShowMessage(int level, const wxArrayString &msgs);
 	static int  ShowErrWarnMessage(int code, const wxArrayString &msgs);
 };

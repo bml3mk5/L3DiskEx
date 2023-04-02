@@ -626,7 +626,8 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1));
+				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
+				, -1);
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -743,7 +744,8 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1));
+				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
+				, -1);
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -838,7 +840,8 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1));
+				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
+				, -1);
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -955,7 +958,8 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1));
+				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
+				, -1);
 
 			// オフセットを足す
 			buffer += (size * div_num);

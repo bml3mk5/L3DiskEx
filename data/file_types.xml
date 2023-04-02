@@ -14,7 +14,7 @@
 	</FileFormatType>
 	<FileFormatType name="fdi">
 		<Description>Anex98 FDI format file</Description>
-		<Description lang="ja">Anex98 FDI形式ファイル</Description>
+		<Description lang="ja">Anex86 FDI形式ファイル</Description>
 	</FileFormatType>
 	<FileFormatType name="cqmimg">
 		<Description>CopyQM IMG format file</Description>

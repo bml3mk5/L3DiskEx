@@ -559,99 +559,7 @@ L3DiskFrame::L3DiskFrame(const wxString& title, const wxSize& size)
 #endif
 
 	// menu
-	menuFile = new wxMenu;
-	menuData = new wxMenu;
-	menuMode = new wxMenu;
-	menuView = new wxMenu;
-	menuHelp = new wxMenu;
-	wxMenu *sm;
-
-	// file menu
-	menuFile->Append( IDM_NEW_FILE, _("&New...") );
-	menuFile->Append( IDM_OPEN_FILE, _("&Open...") );
-	menuFile->AppendSeparator();
-	menuFile->Append( IDM_CLOSE_FILE, _("&Close") );
-	menuFile->Append( IDM_SAVEAS_FILE, _("Save &As...") );
-	menuFile->Append( IDM_SAVE_DISK, _("Save A Disk...") );
-	menuFile->AppendSeparator();
-		sm = new wxMenu();
-		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
-		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
-	menuFile->AppendSubMenu(sm, _("Add D&isk") );
-	menuFile->AppendSeparator();
-	menuFile->Append( IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
-	menuFile->AppendSeparator();
-	menuFile->Append( IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
-	menuFile->Append( IDM_RENAME_DISK, _("&Rename Disk") );
-	menuFile->AppendSeparator();
-	menuFile->Append( IDM_INITIALIZE_DISK, _("I&nitialize...") );
-	menuFile->Append( IDM_FORMAT_DISK, _("&Format For BASIC...") );
-	menuFile->AppendSeparator();
-		menuRecentFiles = new wxMenu();
-		UpdateMenuRecentFiles();
-	menuFile->AppendSubMenu(menuRecentFiles, _("&Reccent Files") );
-	menuFile->AppendSeparator();
-	menuFile->Append( wxID_EXIT, _("E&xit") );
-	// data menu
-	menuData->Append( IDM_EXPORT_DATA, _("&Export...") );
-	menuData->Append( IDM_IMPORT_DATA, _("&Import...") );
-	menuData->AppendSeparator();
-	menuData->Append( IDM_DELETE_DATA, _("&Delete...") );
-	menuData->Append( IDM_RENAME_DATA_ON_DISK, _("Rena&me File") );
-	menuData->AppendSeparator();
-	menuData->Append(IDM_COPY_DATA, _("&Copy"));
-	menuData->Append(IDM_PASTE_DATA, _("&Paste..."));
-	menuData->AppendSeparator();
-	menuData->Append( IDM_MAKE_DIRECTORY_ON_DISK, _("Make Directory(&F)...") );
-	menuData->AppendSeparator();
-	menuData->Append( IDM_PROPERTY_DATA, _("&Property") );
-	// mode menu
-	menuMode->AppendRadioItem( IDM_BASIC_MODE, _("BASIC Mode") );
-	menuMode->AppendRadioItem( IDM_RAWDISK_MODE, _("Raw Disk Mode") );
-	menuMode->AppendSeparator();
-		sm = new wxMenu();
-		const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("main"));
-		if (choice) {
-			for(size_t i=0; i<choice->Count(); i++) {
-				const CharCodeMap *map = choice->Item(i);
-				sm->AppendRadioItem( IDM_CHAR_0 + (int)i, map->GetDescription() );
-			}
-		}
-	menuMode->AppendSubMenu(sm, _("&Charactor Code") );
-	menuMode->AppendSeparator();
-		sm = new wxMenu();
-		sm->AppendCheckItem( IDM_TRIM_DATA, _("Trim unused data when save the disk image.") );
-		sm->AppendCheckItem( IDM_SHOW_DELFILE, _("Show deleted and hidden files on the file list.") );
-	menuMode->AppendSubMenu(sm, _("Quick &Settings") );
-	menuMode->AppendSeparator();
-	menuMode->Append( IDM_CONFIGURE, _("C&onfigure...") );
-	// view menu
-	menuView->AppendCheckItem( IDM_WINDOW_BINDUMP, _("&Dump Window") );
-	menuView->AppendCheckItem( IDM_WINDOW_FATAREA, _("&Availability Window") );
-	menuView->AppendSeparator();
-	menuView->Append( IDM_FILELIST_COLUMN, _("Columns of File &List...") );
-	menuView->AppendSeparator();
-	menuView->Append( IDM_CHANGE_FONT, _("&Font...") );
-#if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
-	// view system menu on mac os x
-	menuView->AppendSeparator();
-#endif
-	// help menu
-	menuHelp->Append( wxID_ABOUT, _("&About...") );
-
-	// menu bar
-	wxMenuBar *menuBar = new wxMenuBar;
-	menuBar->Append( menuFile, _("&File") );
-	menuBar->Append( menuData, _("&Data") );
-	menuBar->Append( menuMode, _("&Mode") );
-	menuBar->Append( menuView, _("&View") );
-#if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
-	// window system menu on mac os x
-	menuBar->Append( new wxMenu(), _("&Window") );
-#endif
-	menuBar->Append( menuHelp, _("&Help") );
-
-	SetMenuBar( menuBar );
+	MakeMenu();
 
 	// status bar
 	RecreateStatusbar();
@@ -1069,6 +977,104 @@ void L3DiskFrame::OnTimerStatusCounter(wxTimerEvent& event)
 // ウィンドウ操作
 //
 
+/// メニューの作成
+void L3DiskFrame::MakeMenu()
+{
+	menuFile = new wxMenu;
+	menuData = new wxMenu;
+	menuMode = new wxMenu;
+	menuView = new wxMenu;
+	menuHelp = new wxMenu;
+	wxMenu *sm;
+
+	// file menu
+	menuFile->Append( IDM_NEW_FILE, _("&New...") );
+	menuFile->Append( IDM_OPEN_FILE, _("&Open...") );
+	menuFile->AppendSeparator();
+	menuFile->Append( IDM_CLOSE_FILE, _("&Close") );
+	menuFile->Append( IDM_SAVEAS_FILE, _("Save &As...") );
+	menuFile->Append( IDM_SAVE_DISK, _("Save A Disk...") );
+	menuFile->AppendSeparator();
+		sm = new wxMenu();
+		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
+		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
+	menuFile->AppendSubMenu(sm, _("Add D&isk") );
+	menuFile->AppendSeparator();
+	menuFile->Append( IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
+	menuFile->AppendSeparator();
+	menuFile->Append( IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
+	menuFile->Append( IDM_RENAME_DISK, _("&Rename Disk") );
+	menuFile->AppendSeparator();
+	menuFile->Append( IDM_INITIALIZE_DISK, _("I&nitialize...") );
+	menuFile->Append( IDM_FORMAT_DISK, _("&Format For BASIC...") );
+	menuFile->AppendSeparator();
+		menuRecentFiles = new wxMenu();
+		UpdateMenuRecentFiles();
+	menuFile->AppendSubMenu(menuRecentFiles, _("&Reccent Files") );
+	menuFile->AppendSeparator();
+	menuFile->Append( wxID_EXIT, _("E&xit") );
+	// data menu
+	menuData->Append( IDM_EXPORT_DATA, _("&Export...") );
+	menuData->Append( IDM_IMPORT_DATA, _("&Import...") );
+	menuData->AppendSeparator();
+	menuData->Append( IDM_DELETE_DATA, _("&Delete...") );
+	menuData->Append( IDM_RENAME_DATA_ON_DISK, _("Rena&me File") );
+	menuData->AppendSeparator();
+	menuData->Append(IDM_COPY_DATA, _("&Copy"));
+	menuData->Append(IDM_PASTE_DATA, _("&Paste..."));
+	menuData->AppendSeparator();
+	menuData->Append( IDM_MAKE_DIRECTORY_ON_DISK, _("Make Directory(&F)...") );
+	menuData->AppendSeparator();
+	menuData->Append( IDM_PROPERTY_DATA, _("&Property") );
+	// mode menu
+	menuMode->AppendRadioItem( IDM_BASIC_MODE, _("BASIC Mode") );
+	menuMode->AppendRadioItem( IDM_RAWDISK_MODE, _("Raw Disk Mode") );
+	menuMode->AppendSeparator();
+		sm = new wxMenu();
+		const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("main"));
+		if (choice) {
+			for(size_t i=0; i<choice->Count(); i++) {
+				const CharCodeMap *map = choice->Item(i);
+				sm->AppendRadioItem( IDM_CHAR_0 + (int)i, map->GetDescription() );
+			}
+		}
+	menuMode->AppendSubMenu(sm, _("&Charactor Code") );
+	menuMode->AppendSeparator();
+		sm = new wxMenu();
+		sm->AppendCheckItem( IDM_TRIM_DATA, _("Trim unused data when save the disk image.") );
+		sm->AppendCheckItem( IDM_SHOW_DELFILE, _("Show deleted and hidden files on the file list.") );
+	menuMode->AppendSubMenu(sm, _("Quick &Settings") );
+	menuMode->AppendSeparator();
+	menuMode->Append( IDM_CONFIGURE, _("C&onfigure...") );
+	// view menu
+	menuView->AppendCheckItem( IDM_WINDOW_BINDUMP, _("&Dump Window") );
+	menuView->AppendCheckItem( IDM_WINDOW_FATAREA, _("&Availability Window") );
+	menuView->AppendSeparator();
+	menuView->Append( IDM_FILELIST_COLUMN, _("Columns of File &List...") );
+	menuView->AppendSeparator();
+	menuView->Append( IDM_CHANGE_FONT, _("&Font...") );
+#if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
+	// view system menu on mac os x
+	menuView->AppendSeparator();
+#endif
+	// help menu
+	menuHelp->Append( wxID_ABOUT, _("&About...") );
+
+	// menu bar
+	wxMenuBar *menuBar = new wxMenuBar;
+	menuBar->Append( menuFile, _("&File") );
+	menuBar->Append( menuData, _("&Data") );
+	menuBar->Append( menuMode, _("&Mode") );
+	menuBar->Append( menuView, _("&View") );
+#if defined(__WXOSX__) && wxCHECK_VERSION(3,1,2)
+	// window system menu on mac os x
+	menuBar->Append( new wxMenu(), _("&Window") );
+#endif
+	menuBar->Append( menuHelp, _("&Help") );
+
+	SetMenuBar( menuBar );
+}
+
 /// ファイルメニューの更新
 void L3DiskFrame::UpdateMenuFile()
 {
@@ -1165,6 +1171,7 @@ void L3DiskFrame::UpdateMenuDiskList(L3DiskList *list)
 	menuFile->Enable(IDM_DELETE_DISK_FROM_FILE, opened);
 	menuFile->Enable(IDM_RENAME_DISK, opened);
 	menuFile->Enable(IDM_INITIALIZE_DISK, opened);
+	menuFile->Enable(IDM_FORMAT_DISK, opened && IsFormattableDisk());
 }
 
 /// ツールバーのディスク項目を更新
@@ -2205,6 +2212,16 @@ void L3DiskFrame::FormatDisk()
 	}
 }
 
+/// DISK BASIC用に論理フォーマットできるか
+bool L3DiskFrame::IsFormattableDisk()
+{
+	L3DiskFileList *list = GetFileListPanel();
+	if (list) {
+		return list->IsFormattableBasicDisk();
+	}
+	return false;
+}
+
 /// BASIC情報ダイアログ
 void L3DiskFrame::ShowBasicAttr()
 {
@@ -2213,6 +2230,16 @@ void L3DiskFrame::ShowBasicAttr()
 		list->ShowBasicAttr();
 		return;
 	}
+}
+
+/// DISK BASICが使用できるか
+bool L3DiskFrame::CanUseBasicDisk()
+{
+	L3DiskFileList *list = GetFileListPanel();
+	if (list) {
+		return list->CanUseBasicDisk();
+	}
+	return false;
 }
 
 /// ディレクトリをアサイン

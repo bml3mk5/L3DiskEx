@@ -104,7 +104,7 @@ bool DiskDmkParser::FindDataMark(wxInputStream &istream, int sector_size, bool d
 	int pos;
 	int den = double_density ? 1 : 0;
 
-	for(pos = 0; pos < (sizeof(buf) - 4); pos++) {
+	for(pos = 0; pos < (int)(sizeof(buf) - 4); pos++) {
 		for(int i = 0; amarks[den][i].id != NULL ; i++) {
 			if (memcmp(&buf[pos], amarks[den][i].id, 4) == 0) {
 				found = true;

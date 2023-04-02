@@ -1,7 +1,7 @@
 
 # L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2022 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2023 All Rights Reserved.
 
 ==============================================================================
 

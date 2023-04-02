@@ -167,7 +167,9 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 		comBasic->Append(param->GetBasicDescription());
 		pos++;
 	}
-	comBasic->SetSelection(cur_num);
+	if (comBasic->GetCount() > 0) {
+		comBasic->SetSelection(cur_num);
+	}
 
 	if (show_flags & SHOW_ATTR_CONTROLS) {
 		wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL);

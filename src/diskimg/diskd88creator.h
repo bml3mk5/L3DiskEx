@@ -29,7 +29,7 @@ private:
 	DiskResult *result;
 
 	/// セクタデータの作成
-	wxUint32 CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, bool single_density, DiskD88Track *track);
+	wxUint32 CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, DiskD88Track *track);
 	/// ディスクデータの作成
 	wxUint32 CreateDisk(int disk_number, short mod_flags);
 

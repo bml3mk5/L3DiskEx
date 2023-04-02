@@ -32,6 +32,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("Couldn't create the disk specified interleave."),
 	//	ERR_TOO_LARGE,
 	wxTRANSLATE("The file is too large."),
+	//	ERR_WRITE_PROTECTED,
+	wxTRANSLATE("Write protected."),
 	//	ERR_UNSUPPORTED,
 	wxTRANSLATE("Unsupported file."),
 

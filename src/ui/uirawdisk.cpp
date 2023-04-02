@@ -285,6 +285,18 @@ void L3DiskRawPanel::SetListFont(const wxFont &font)
 	rpanel->Refresh();
 }
 
+/// 次のサイドへ
+void L3DiskRawPanel::IncreaseSide()
+{
+	lpanel->IncreaseSide();
+}
+
+/// 前のサイドへ
+void L3DiskRawPanel::DecreaseSide()
+{
+	lpanel->DecreaseSide();
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 //
@@ -537,30 +549,7 @@ L3DiskRawTrack::L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentw
 	SetFont(font);
 
 	// popup menu
-	menuPopup = new wxMenu;
-	wxMenu *sm = new wxMenu;
-		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
-		sm->AppendCheckItem(IDM_REVERSE_SIDE, _("Descend side number order."));
-	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_EXPORT_TRACK, _("&Export Track..."));
-	menuPopup->Append(IDM_IMPORT_TRACK, _("&Import..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_MODIFY_ID_H_DISK, _("Modify All H On This Disk"));
-	menuPopup->Append(IDM_MODIFY_ID_N_DISK, _("Modify All N On This Disk"));
-	menuPopup->Append(IDM_MODIFY_DENSITY_DISK, _("Modify All Density On This Disk"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_MODIFY_ID_C_TRACK, _("Modify All C On This Track"));
-	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
-	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
-	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
-	menuPopup->Append(IDM_MODIFY_SECTORS_TRACK, _("Modify All Num Of Sectors On This Track"));
-	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_APPEND_TRACK, _("Append New Track"));
-	menuPopup->Append(IDM_DELETE_TRACKS_BELOW, _("Delete All Tracks Below Current Track"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_PROPERTY_TRACK, _("&Property"));
+	MakePopupMenu();
 }
 
 L3DiskRawTrack::~L3DiskRawTrack()
@@ -809,6 +798,35 @@ void L3DiskRawTrack::ClearTracks()
 
 	// セクタリストクリア
 	parent->ClearSectorListData();
+}
+
+/// トラックリスト上のポップアップメニュー作成
+void L3DiskRawTrack::MakePopupMenu()
+{
+	menuPopup = new wxMenu;
+	wxMenu *sm = new wxMenu;
+		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
+		sm->AppendCheckItem(IDM_REVERSE_SIDE, _("Descend side number order."));
+	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_EXPORT_TRACK, _("&Export Track..."));
+	menuPopup->Append(IDM_IMPORT_TRACK, _("&Import..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_MODIFY_ID_H_DISK, _("Modify All H On This Disk"));
+	menuPopup->Append(IDM_MODIFY_ID_N_DISK, _("Modify All N On This Disk"));
+	menuPopup->Append(IDM_MODIFY_DENSITY_DISK, _("Modify All Density On This Disk"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_MODIFY_ID_C_TRACK, _("Modify All C On This Track"));
+	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
+	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
+	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
+	menuPopup->Append(IDM_MODIFY_SECTORS_TRACK, _("Modify All Num Of Sectors On This Track"));
+	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_APPEND_TRACK, _("Append New Track"));
+	menuPopup->Append(IDM_DELETE_TRACKS_BELOW, _("Delete All Tracks Below Current Track"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_PROPERTY_TRACK, _("&Property"));
 }
 
 /// トラックリスト上のポップアップメニュー表示
@@ -1468,6 +1486,36 @@ bool L3DiskRawTrack::GetFirstAndLastSectorNumOnTrack(const DiskD88Track *track, 
 	return true;
 }
 
+/// 次のサイドへ
+void L3DiskRawTrack::IncreaseSide()
+{
+	if (!disk) return;
+
+	int row = GetListSelectedRow();
+	if (row < 0) return;
+
+	row++;
+	if (row >= GetItemCount()) return;
+
+	SelectListRow(row);
+
+	SelectData();
+}
+
+/// 前のサイドへ
+void L3DiskRawTrack::DecreaseSide()
+{
+	if (!disk) return;
+
+	int row = GetListSelectedRow();
+	if (row <= 0) return;
+	row--;
+
+	SelectListRow(row);
+
+	SelectData();
+}
+
 //////////////////////////////////////////////////////////////////////
 //
 //
@@ -1695,29 +1743,7 @@ L3DiskRawSector::L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *paren
 	SetFont(font);
 
 	// popup menu
-	menuPopup = new wxMenu;
-	wxMenu *sm = new wxMenu;
-		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
-	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_EXPORT_FILE, _("&Export Sector..."));
-	menuPopup->Append(IDM_IMPORT_FILE, _("&Import..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_MODIFY_ID_C_TRACK, _("Modify All C On This Track"));
-	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
-	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
-	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
-	menuPopup->Append(IDM_MODIFY_SECTORS_TRACK, _("Modify All Num Of Sectors On This Track"));
-	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_APPEND_SECTOR, _("Append New Sector"));
-	menuPopup->Append(IDM_DELETE_SECTOR, _("Delete Current Sector"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_DELETE_SECTORS_BELOW, _("Delete Sectors More Than Current Sector Number"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_EDIT_SECTOR, _("Edit Current Sector"));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_PROPERTY_SECTOR, _("&Property"));
+	MakePopupMenu();
 
 	initialized = true;
 }
@@ -1865,10 +1891,46 @@ void L3DiskRawSector::OnChar(wxKeyEvent& event)
 		// Ctrl + V クリップボードからペースト
 		PasteFromClipboard();
 		break;
+	case WXK_LEFT:
+		// Allow <- 前のレコードへ
+		parent->DecreaseSide();
+		break;
+	case WXK_RIGHT:
+		// Allow -> 次のレコードへ
+		parent->IncreaseSide();
+		break;
 	default:
 		event.Skip();
 		break;
 	}
+}
+
+/// ポップアップメニュー作成
+void L3DiskRawSector::MakePopupMenu()
+{
+	menuPopup = new wxMenu;
+	wxMenu *sm = new wxMenu;
+		sm->AppendCheckItem(IDM_INVERT_DATA,  _("Invert datas."));
+	menuPopup->AppendSubMenu(sm, _("Behavior When In/Out"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_EXPORT_FILE, _("&Export Sector..."));
+	menuPopup->Append(IDM_IMPORT_FILE, _("&Import..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_MODIFY_ID_C_TRACK, _("Modify All C On This Track"));
+	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
+	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
+	menuPopup->Append(IDM_MODIFY_DENSITY_TRACK, _("Modify All Density On This Track"));
+	menuPopup->Append(IDM_MODIFY_SECTORS_TRACK, _("Modify All Num Of Sectors On This Track"));
+	menuPopup->Append(IDM_MODIFY_SIZE_TRACK, _("Modify All Sector Size On This Track"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_APPEND_SECTOR, _("Append New Sector"));
+	menuPopup->Append(IDM_DELETE_SECTOR, _("Delete Current Sector"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_DELETE_SECTORS_BELOW, _("Delete Sectors More Than Current Sector Number"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_EDIT_SECTOR, _("Edit Current Sector"));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_PROPERTY_SECTOR, _("&Property"));
 }
 
 /// ポップアップメニュー表示
@@ -1893,6 +1955,7 @@ void L3DiskRawSector::ShowPopupMenu()
 	menuPopup->Enable(IDM_EXPORT_FILE, opened);
 	menuPopup->Enable(IDM_DELETE_SECTOR, opened && (cnt == 1));
 	menuPopup->Enable(IDM_DELETE_SECTORS_BELOW, opened && (cnt == 1));
+	menuPopup->Enable(IDM_EDIT_SECTOR, opened && (cnt == 1));
 	menuPopup->Enable(IDM_PROPERTY_SECTOR, opened && (cnt == 1));
 
 	PopupMenu(menuPopup);

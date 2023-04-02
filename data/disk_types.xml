@@ -972,12 +972,30 @@
 			<Type>MSDOS-2DD</Type>
 			<Type>PCPM-1DD-9-512</Type>
 			<Type>PCPM-2DD-9-512</Type>
+			<Type>CDOS2-2DD</Type>
 			<Type>FALCOM-2DD-M</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>[MSX / MS-DOS]</Description>
 		<Description lang="ja">[MSX / MS-DOS]</Description>
+	</DiskType>
+	<DiskType name="2DD-80-9-1-C2">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<SectorSize>512</SectorSize>
+		<Density>0x10</Density>
+		<Interleave>1</Interleave>
+		<ParticularTrack track="0" side="0" sectors="10" size="512" />
+		<ParticularSector track="0" side="0" sector="10" size="256" id_r="1" />
+		<DiskBasicTypes>
+			<Type>CDOS2-2DD</Type>
+		</DiskBasicTypes>
+		<DensityName>2DD</DensityName>
+		<DensityName lang="ja">2DD</DensityName>
+		<Description>, Track0 and side0 is 10sectors [CDOS II]</Description>
+		<Description lang="ja">トラック0,サイド0は10セクタ [CDOS II]</Description>
 	</DiskType>
 	<DiskType name="2DD-80-10-1-MA">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1429,6 +1447,7 @@
 		<DiskBasicTypes>
 			<Type p="major">HU68K-2HD</Type>
 			<Type p="major">MSD98-2HD</Type>
+			<Type>CDOS2-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
@@ -1451,6 +1470,47 @@
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, SectorBase10 [9SCFMT]</Description>
 		<Description lang="ja"> セクタ基準10 [9SCFMT]</Description>
+	</DiskType>
+	<DiskType name="2HD-80-8-1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<SectorSize>1024</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>CDOS2-2HD</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+	</DiskType>
+	<DiskType name="2HD-80-8-1-C2">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<SectorSize>1024</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<SingleDensity track="0" side="0" sector="1" size="128" />
+		<SingleDensity track="0" side="0" sector="2" size="128" />
+		<ParticularTrack track="0" side="0" sectors="10" size="1024" />
+		<ParticularSector track="0" side="0" sector="1" size="128" id_r="1" />
+		<ParticularSector track="0" side="0" sector="2" size="128" id_r="2" />
+		<ParticularSector track="0" side="0" sector="3" size="1024" id_r="1" />
+		<ParticularSector track="0" side="0" sector="4" size="1024" id_r="2" />
+		<ParticularSector track="0" side="0" sector="5" size="1024" id_r="3" />
+		<ParticularSector track="0" side="0" sector="6" size="1024" id_r="4" />
+		<ParticularSector track="0" side="0" sector="7" size="1024" id_r="5" />
+		<ParticularSector track="0" side="0" sector="8" size="1024" id_r="6" />
+		<ParticularSector track="0" side="0" sector="9" size="1024" id_r="7" />
+		<ParticularSector track="0" side="0" sector="10" size="1024" id_r="8" />
+		<DiskBasicTypes>
+			<Type>CDOS2-2HD</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+		<Description>, Track0 and side0 is a particular [CDOS II]</Description>
+		<Description lang="ja">トラック0,サイド0は特殊 [CDOS II]</Description>
 	</DiskType>
 	<DiskType name="2HD-80-9-1">
 		<SidesPerDisk>2</SidesPerDisk>

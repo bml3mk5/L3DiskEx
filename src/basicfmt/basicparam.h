@@ -367,6 +367,7 @@ private:
 	int dir_start_pos_on_group;			///< ディレクトリのグループ毎の開始位置
 	int group_width;					///< グループ幅（バイト）
 	int groups_per_dir_entry;			///< １ディレクトリエントリで指定できるグループ数
+	int valid_density_type;				///< 有効な密度 0:倍密度 1:単密度
 	SectorInterleave sector_skew;		///< ソフトウェアセクタスキュー(セクタ間隔)
 	L3Attributes special_attrs;			///< 特別な属性
 	L3Attributes attrs_by_extension;	///< 拡張子と属性の関係
@@ -477,6 +478,8 @@ public:
 	int					GetGroupWidth() const		{ return group_width; }
 	/// @brief １ディレクトリエントリで指定できるグループ数 
 	int					GetGroupsPerDirEntry() const	{ return groups_per_dir_entry; }
+	/// @brief 有効な密度
+	int					GetValidDensityType() const	{ return valid_density_type; }
 	/// @brief ソフトウェアセクタスキュー(セクタ間隔)
 	int					GetSectorSkew() const		{ return sector_skew.Get(); }
 	/// @brief ソフトウェアセクタスキュー(セクタ間隔) 固有のマップ
@@ -588,6 +591,8 @@ public:
 	void			SetGroupWidth(int val)			{ group_width = val; }
 	/// @brief １ディレクトリエントリで指定できるグループ数 
 	void			SetGroupsPerDirEntry(int val)	{ groups_per_dir_entry = val; }
+	/// @brief 有効な密度
+	void 			SetValidDensityType(int val)	{ valid_density_type = val; }
 	/// @brief ソフトウェアセクタスキュー(セクタ間隔)
 	void			SetSectorSkew(int val)			{ sector_skew.Set(val); }
 	/// @brief ソフトウェアセクタスキュー(セクタ間隔)

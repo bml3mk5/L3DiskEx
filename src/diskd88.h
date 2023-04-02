@@ -124,7 +124,7 @@ public:
 	/// 削除マークの設定
 	void	SetDeletedMark(bool val);
 	/// 同じセクタか
-	bool	IsSameSector(int sector_number, bool deleted_mark = false);
+	bool	IsSameSector(int sector_number, int density, bool deleted_mark = false);
 	/// セクタサイズを返す
 	int		GetSectorSize() const;
 	/// セクタサイズを設定
@@ -268,7 +268,7 @@ public:
 	/// セクタ数を返す
 	int		GetSectorsPerTrack() const;
 	/// 指定セクタ番号のセクタを返す
-	DiskD88Sector  *GetSector(int sector_number);
+	DiskD88Sector  *GetSector(int sector_number, int density = -1);
 	/// 指定位置のセクタを返す
 	DiskD88Sector  *GetSectorByIndex(int pos);
 
@@ -385,7 +385,7 @@ public:
 	/// 指定オフセット値からトラックを返す
 	DiskD88Track  *GetTrackByOffset(wxUint32 offset);
 	/// 指定セクタを返す
-	DiskD88Sector *GetSector(int track_number, int side_number, int sector_number);
+	DiskD88Sector *GetSector(int track_number, int side_number, int sector_number, int density = -1);
 	/// ディスクの中でもっともらしいパラメータを設定
 	const DiskParam *CalcMajorNumber();
 

@@ -144,11 +144,11 @@ void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, 
 
 	if (show_flags & INTNAME_SHOW_ATTR) {
 		// 開始アドレス、終了アドレス、実行アドレス
-		int rows;
+//		int rows;
 		if (item->HasAddress()) {
 			bool has_exec_addr = item->HasExecuteAddress();
 
-			rows = 2 + (has_exec_addr ? 1 : 0);
+//			rows = 2 + (has_exec_addr ? 1 : 0);
 
 			szrG = new wxFlexGridSizer(2, 4, 4);
 

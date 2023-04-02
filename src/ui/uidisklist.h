@@ -186,6 +186,8 @@ public:
 
 	/// @name functions
 	//@{
+	/// ポップアップメニュー作成
+	void MakePopupMenu();
 	/// ポップアップメニュー表示
 	void ShowPopupMenu();
 

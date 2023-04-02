@@ -157,6 +157,11 @@ public:
 	/// インポート・エクスポート時にサイド番号を降順で行うか
 	void ReverseSide(bool val) { reverse_side = val; }
 
+	/// 次のサイドへ
+	void IncreaseSide();
+	/// 前のサイドへ
+	void DecreaseSide();
+
 	wxDECLARE_EVENT_TABLE();
 	wxDECLARE_NO_COPY_CLASS(L3DiskRawPanel);
 };
@@ -299,6 +304,8 @@ public:
 	/// トラックリストをクリア
 	void ClearTracks();
 
+	/// トラックリスト上のポップアップメニュー作成
+	void MakePopupMenu();
 	/// トラックリスト上のポップアップメニュー表示
 	void ShowPopupMenu();
 
@@ -343,6 +350,11 @@ public:
 	bool GetFirstSectorOnTrack(DiskD88Track **track, DiskD88Sector **sector);
 	/// トラックの開始セクタ番号と終了セクタ番号を得る
 	bool GetFirstAndLastSectorNumOnTrack(const DiskD88Track *track, int &start_sector, int &end_sector);
+
+	/// 次のサイドへ
+	void IncreaseSide();
+	/// 前のサイドへ
+	void DecreaseSide();
 
 	enum {
 		IDM_MENU_CHECK = 1,
@@ -501,6 +513,8 @@ public:
 	void OnChar(wxKeyEvent& event);
 	//@}
 
+	/// ポップアップメニュー作成
+	void MakePopupMenu();
 	/// ポップアップメニュー表示
 	void ShowPopupMenu();
 

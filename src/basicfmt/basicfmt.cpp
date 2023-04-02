@@ -1437,6 +1437,7 @@ bool DiskBasic::IsFormattable()
 	bool enable = (type != NULL);
 	if (!enable) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_FORMAT);
+		return enable;
 	}
 	enable = type->SupportFormatting();
 	if (!enable) {
@@ -1576,6 +1577,10 @@ bool DiskBasic::CanMakeDirectory() const
 /// @return 1:同じ名前がある -1:その他エラー
 int DiskBasic::MakeDirectory(const wxString &filename, bool ignore_datetime, DiskBasicDirItem **nitem)
 {
+	if (!IsWritableIntoDisk()) {
+		return -1;
+	}
+
 	if (!CanMakeDirectory()) {
 		errinfo.SetError(DiskBasicError::ERR_CANNOT_MAKE_DIRECTORY);
 		return -1;
@@ -1832,7 +1837,10 @@ DiskD88Sector *DiskBasic::GetSectorFromSectorPos(int sector_pos, int &track_num,
 	// セクタ番号からトラック番号、サイド番号、セクタ番号を計算
 	type->GetNumFromSectorPos(sector_pos, track_num, side_num, sector_num, div_num, div_nums);
 
-	return disk->GetSector(track_num, side_num, sector_num);
+	// 密度で検索を絞る -1:条件から除外 0:倍密度のみ 1:単密度のみ
+	int density = GetValidDensityType();
+
+	return disk->GetSector(track_num, side_num, sector_num, density);
 }
 
 /// セクタ位置(トラック0,サイド0,セクタ1を0とした通し番号)からセクタを返す

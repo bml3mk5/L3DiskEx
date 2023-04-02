@@ -184,26 +184,7 @@ L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
     SetSize(parentwindow->GetClientSize());
 
 	// popup menu
-	menuPopup = new wxMenu;
-	wxMenu *sm = new wxMenu();
-	menuPopup->Append( IDM_SAVE_DISK, _("&Save Disk...") );
-	menuPopup->AppendSeparator();
-		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
-		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
-	menuPopup->AppendSubMenu(sm, _("&Add Disk") );
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
-	menuPopup->Append(IDM_RENAME_DISK, _("&Rename Disk") );
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_DELETE_DIRECTORY, _("De&lete Directory...") );
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_INITIALIZE_DISK, _("I&nitialize..."));
-	menuPopup->Append(IDM_FORMAT_DISK, _("F&ormat For BASIC..."));
-	menuPopup->AppendSeparator();
-	menuPopup->Append(IDM_PROPERTY_DISK, _("Disk &Information..."));
-	menuPopup->Append(IDM_PROPERTY_BASIC, _("&BASIC Information..."));
+	MakePopupMenu();
 
 	// key
 	Bind(wxEVT_CHAR, &L3DiskList::OnChar, this);
@@ -271,6 +252,7 @@ void L3DiskList::OnEditingDone(L3DiskListEvent& event)
 	if (frame->GetDiskD88().SetDiskName(cd->GetDiskNumber(), event.GetLabel())) {
 		SetItemText(item, frame->GetDiskD88().GetDiskName(cd->GetDiskNumber()));
 	}
+	event.Veto();
 #endif
 }
 
@@ -368,6 +350,31 @@ void L3DiskList::OnChar(wxKeyEvent& event)
 	}
 }
 
+/// ポップアップメニュー作成
+void L3DiskList::MakePopupMenu()
+{
+	menuPopup = new wxMenu;
+	wxMenu *sm = new wxMenu();
+	menuPopup->Append( IDM_SAVE_DISK, _("&Save Disk...") );
+	menuPopup->AppendSeparator();
+		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
+		sm->Append( IDM_ADD_DISK_FROM_FILE, _("From &File...") );
+	menuPopup->AppendSubMenu(sm, _("&Add Disk") );
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_REPLACE_DISK_FROM_FILE, _("R&eplace Disk Data...") );
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_DELETE_DISK_FROM_FILE, _("&Delete Disk...") );
+	menuPopup->Append(IDM_RENAME_DISK, _("&Rename Disk") );
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_DELETE_DIRECTORY, _("De&lete Directory...") );
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_INITIALIZE_DISK, _("I&nitialize..."));
+	menuPopup->Append(IDM_FORMAT_DISK, _("F&ormat For BASIC..."));
+	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_PROPERTY_DISK, _("Disk &Information..."));
+	menuPopup->Append(IDM_PROPERTY_BASIC, _("&BASIC Information..."));
+}
+
 /// ポップアップメニュー表示
 void L3DiskList::ShowPopupMenu()
 {
@@ -387,10 +394,10 @@ void L3DiskList::ShowPopupMenu()
 	menuPopup->Enable(IDM_INITIALIZE_DISK, opened);
 	menuPopup->Enable(IDM_PROPERTY_DISK, opened);
 
-	L3DiskFileList *list = frame->GetFileListPanel();
-	opened = (opened && disk_selecting && (list != NULL) && list->CanUseBasicDisk());
-	menuPopup->Enable(IDM_FORMAT_DISK, opened);
-	menuPopup->Enable(IDM_PROPERTY_BASIC, opened);
+//	L3DiskFileList *list = frame->GetFileListPanel();
+	opened = (opened && disk_selecting);
+	menuPopup->Enable(IDM_FORMAT_DISK, opened && frame->IsFormattableDisk());
+	menuPopup->Enable(IDM_PROPERTY_BASIC, opened && frame->CanUseBasicDisk());
 
 	opened = (opened && cd->GetTypeNumber() == CD_TYPENUM_NODE_DIR);
 	menuPopup->Enable(IDM_DELETE_DIRECTORY, opened);
@@ -1057,6 +1064,13 @@ void L3DiskList::RefreshDirectoryName(const L3DiskListItem &node, int disk_numbe
 bool L3DiskList::InitializeDisk()
 {
 	if (!selected_disk) return false;
+	if (selected_disk->IsWriteProtected()) {
+		DiskResult err;
+		err.SetError(DiskResult::ERR_WRITE_PROTECTED);
+		err.Show();
+		return false;
+	}
+
 	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
 
 	int ans = wxYES;

@@ -106,6 +106,12 @@ const wxArrayString &ResultInfo::GetMessages(int maxrow)
 }
 
 /// 結果ダイアログを表示
+void ResultInfo::Show()
+{
+	ShowMessage(GetValid(), GetMessages());
+}
+
+/// 結果ダイアログを表示
 /// @param[in] level 0:正常 -1:エラー時 1:警告時
 /// @param[in] msgs メッセージ配列
 void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)

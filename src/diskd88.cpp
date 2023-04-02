@@ -328,9 +328,15 @@ void DiskD88Sector::SetDeletedMark(bool val)
 	}
 }
 /// 同じセクタか
-bool DiskD88Sector::IsSameSector(int sector_number, bool deleted_mark)
+/// @param[in] sector_number セクタ番号
+/// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
+/// @param[in] deleted_mark  削除マーク
+/// @return セクタ or NULL
+bool DiskD88Sector::IsSameSector(int sector_number, int density, bool deleted_mark)
 {
-	return (sector_number == num && deleted_mark == IsDeleted());
+	return (sector_number == num
+		&& (density < 0 || (density == (IsSingleDensity() ? 1 : 0)))
+		&& deleted_mark == IsDeleted());
 }
 
 /// セクタサイズ
@@ -760,13 +766,16 @@ int DiskD88Track::GetSectorsPerTrack() const
 }
 
 /// 指定セクタ番号のセクタを返す
-DiskD88Sector *DiskD88Track::GetSector(int sector_number)
+/// @param[in] sector_number セクタ番号
+/// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
+/// @return セクタ or NULL
+DiskD88Sector *DiskD88Track::GetSector(int sector_number, int density)
 {
 	DiskD88Sector *sector = NULL;
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
 			DiskD88Sector *s = sectors->Item(pos);
-			if (s->IsSameSector(sector_number)) {
+			if (s->IsSameSector(sector_number, density)) {
 				sector = s;
 				break;
 			}
@@ -1503,12 +1512,13 @@ DiskD88Track *DiskD88Disk::GetTrackByOffset(wxUint32 offset)
 /// @param[in] track_number  トラック番号（シリンダ）
 /// @param[in] side_number   サイド番号（ヘッド）
 /// @param[in] sector_number セクタ番号（レコード）
+/// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
 /// @return セクタ
-DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sector_number)
+DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sector_number, int density)
 {
 	DiskD88Track *trk = GetTrack(track_number, side_number);
 	if (!trk) return NULL;
-	return trk->GetSector(sector_number);
+	return trk->GetSector(sector_number, density);
 }
 
 /// ディスクの中でもっともらしいパラメータを設定
@@ -1572,10 +1582,20 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 				}
 			}
 			// 単密度か？
-			DiskD88Sector *s = t->GetSector(1);
-			if (s && s->IsSingleDensity()) {
-				DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), -1, 1, s->GetSectorsPerTrack(), s->GetSectorSize());
-				singles.Add(sd);
+			DiskD88Sectors *sectors = t->GetSectors();
+			if (sectors) {
+				DiskParticulars sis;
+				for(size_t si = 0; si < sectors->Count(); si++) {
+					DiskD88Sector *s = sectors->Item(si);
+					if (s && s->IsSingleDensity()) {
+						DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), s->GetSectorNumber(), 1, s->GetSectorsPerTrack(), s->GetSectorSize());
+						sis.Add(sd);
+					}
+				}
+				DiskParticular::UniqueSectors(t->GetSectorsPerTrack(), sis);
+				for(size_t si = 0; si < sis.Count(); si++) {
+					singles.Add(sis.Item(si));
+				}
 			}
 		}
 	}

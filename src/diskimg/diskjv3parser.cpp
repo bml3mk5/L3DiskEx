@@ -207,11 +207,48 @@ int DiskJV3Parser::Check(wxInputStream &istream)
 		}
 		// ディスクサイズを計算
 		wxUint32 data_size = 0;
+		int err_zero = 0;
+		int err_trks = 0;
+		int err_secs = 0;
 		for(int i=0; i<2901; i++) {
 			if (header.ids[i].track_number == JV3_FREE || header.ids[i].sector_number == JV3_FREE) {
 				continue;
 			}
+			// 全て０か
+			if (header.ids[i].track_number == 0 && header.ids[i].sector_number == 0 && header.ids[i].flags == 0) {
+				err_zero++;
+			}
+			// トラック番号が連続しているか
+			if (i > 0) {
+				if (!(header.ids[i-1].track_number == header.ids[i].track_number || header.ids[i-1].track_number + 1 == header.ids[i].track_number)) {
+					err_trks++;
+				}
+			}
+			// トラック番号は80以内か
+			if (header.ids[i].track_number > 80) {
+				err_trks++;
+			}
+			// セクタ番号は32以内か
+			if (header.ids[i].sector_number > 32) {
+				err_secs++;
+			}
 			data_size += (128 << jv3_size_map[header.ids[i].flags & JV3_SIZE]);
+		}
+
+		if (err_zero >= 40) {
+			// ゼロパディングなのでJV3形式ではない
+			result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+			return result->GetValid();
+		}
+		if (err_trks >= 20) {
+			// トラック番号がJV3形式ではない
+			result->SetError(DiskResult::ERRV_ID_TRACK, 0);
+			return result->GetValid();
+		}
+		if (err_secs >= 20) {
+			// セクタ番号がJV3形式ではない
+			result->SetError(DiskResult::ERRV_ID_SECTOR, 0);
+			return result->GetValid();
 		}
 
 		wxFileOffset file_offset = istream.SeekI(data_size, wxFromCurrent);
