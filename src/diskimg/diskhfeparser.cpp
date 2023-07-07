@@ -252,19 +252,26 @@ FormatMFMParser::FormatMFMParser(DiskD88Disk *n_disk, int n_track_number, int n_
  clk   1 0 0 1  0 0 0 0  \n
        10010010 01010100 -> 9245 \n
  rev   01001001 00101010 -> 492A \n
+
+ @par SYNC code
+ 00 ->  0 0 0 0  0 0 0 0 \n
+ clk   1 1 1 1  1 1 1 1  \n
+       10101010 10101010 \n
+ rev   01010101 01010101 -> 5555 \n
 */
-/// @return GAPフィールドあり
+/// @return GAP and SYNCフィールドあり
 bool FormatMFMParser::AdjustGap()
 {
 	bool found = false;
 	int maxlen = data_len;
-	wxUint8 buf[4];
+	wxUint8 buf[6];
 	int pos = 0;
+	// search GAP field
 	for(; pos<maxlen; pos++) {
 		memcpy(buf, &data[pos], 3);
 		int cnt = 0;
 		for(; cnt<8; cnt++) {
-			if (buf[0] == 0x49 && buf[1] == 0x2a) {
+			if (memcmp(buf, "\x49\x2a", 2) == 0) {
 				found = true;
 				break;
 			}
@@ -279,16 +286,43 @@ bool FormatMFMParser::AdjustGap()
 	}
 	if (!found) {
 		data_len = 0;
+		return found;
+	}
+	// search the terminate of SYNC field
+	found =false;
+	pos = 0;
+	for(; pos<maxlen; pos++) {
+		memcpy(buf, &data[pos], 4);
+		int cnt = 0;
+		for(; cnt<8; cnt++) {
+			if (memcmp(buf, "\x55\x55\x25", 3) == 0
+			 || memcmp(buf, "\x55\x55\xa5", 3) == 0) {
+				found = true;
+				break;
+			}
+
+			// bit shift left
+			ShiftBits(buf, 4, 1);
+		}
+		if (found) {
+			if (cnt >= 4) {
+				cnt -= 4;
+			} else {
+				pos--;
+				cnt += 4;
+			}
+			if (pos >= 0) {
+				data_len = ShiftBits(data, data_len, pos * 8 + cnt);
+			}
+			break;
+		}
+	}
+	if (!found) {
+		data_len = 0;
 	}
 	return found;
 }
 /** データの解析(MFM)
-
-@par SYNC code
- 00 ->  0 0 0 0  0 0 0 0 \n
- clk   1 1 1 1  1 1 1 1  \n
-       10101010 10101010 \n
- rev   01010101 01010101 -> 5555 \n
 
 @par PRE AM
  A1 ->  1 0 1 0  0 0 0 1 \n
@@ -417,19 +451,26 @@ FormatFMParser::FormatFMParser(DiskD88Disk *n_disk, int n_track_number, int n_si
  clk   01  01   01  01   01  01   01  01   \n
        01010101 01010101 01010101 01010101 -> 55555555 \n
  rev   10101010 10101010 10101010 10101010 -> AAAAAAAA \n
+
+ @par SYNC code
+ 00 ->   00  00   00  00   00  00   00  00 \n
+ clk   01  01   01  01   01  01   01  01   \n
+       01000100 01000100 01000100 01000100 \n
+ rev   00100010 00100010 00100010 00100010 -> 22222222 \n
 */
-/// @return GAPフィールドあり
+/// @return GAP and SYNCフィールドあり
 bool FormatFMParser::AdjustGap()
 {
 	bool found = false;
 	int maxlen = data_len;
-	wxUint8 buf[6];
+	wxUint8 buf[8];
 	int pos = 0;
+	// search GAP field
 	for(; pos<maxlen; pos++) {
 		memcpy(buf, &data[pos], 5);
 		int cnt = 0;
 		for(; cnt<8; cnt++) {
-			if (buf[0] == 0xaa && buf[1] == 0xaa && buf[2] == 0xaa && buf[3] == 0xaa) {
+			if (memcmp(buf, "\xaa\xaa\xaa\xaa", 4) == 0) {
 				found = true;
 				break;
 			}
@@ -444,16 +485,45 @@ bool FormatFMParser::AdjustGap()
 	}
 	if (!found) {
 		data_len = 0;
+		return found;
+	}
+	// search the terminate of SYNC field
+	found =false;
+	pos = 0;
+	for(; pos<maxlen; pos++) {
+		if (pos == 0xb3) {
+			int nn=0;
+		}
+		memcpy(buf, &data[pos], 6);
+		int cnt = 0;
+		for(; cnt<8; cnt++) {
+			if (memcmp(buf, "\x22\x22\x22\x22\xa2", 5) == 0) {
+				found = true;
+				break;
+			}
+
+			// bit shift left
+			ShiftBits(buf, 6, 1);
+		}
+		if (found) {
+			if (cnt >= 4) {
+				cnt -= 4;
+			} else {
+				pos--;
+				cnt += 4;
+			}
+			if (pos >= 0) {
+				data_len = ShiftBits(data, data_len, pos * 8 + cnt);
+			}
+			break;
+		}
+	}
+	if (!found) {
+		data_len = 0;
 	}
 	return found;
 }
 /** データの解析(FM)
-
-@par SYNC code
- 00 ->   00  00   00  00   00  00   00  00 \n
- clk   01  01   01  01   01  01   01  01   \n
-       01000100 01000100 01000100 01000100 \n
- rev   00100010 00100010 00100010 00100010 -> 22222222 \n
 
 @par INDEX mark
  FC ->   01  01   01  01   01  01   00  00 \n

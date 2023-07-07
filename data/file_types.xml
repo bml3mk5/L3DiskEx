@@ -13,7 +13,7 @@
 		<Description lang="ja">CPC DSK形式ファイル</Description>
 	</FileFormatType>
 	<FileFormatType name="fdi">
-		<Description>Anex98 FDI format file</Description>
+		<Description>Anex86 FDI format file</Description>
 		<Description lang="ja">Anex86 FDI形式ファイル</Description>
 	</FileFormatType>
 	<FileFormatType name="cqmimg">
