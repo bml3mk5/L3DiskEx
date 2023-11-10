@@ -1542,6 +1542,21 @@
 		<Description>, SectorBase10 [9SCFMT]</Description>
 		<Description lang="ja"> セクタ基準10 [9SCFMT]</Description>
 	</DiskType>
+	<DiskType name="2HD-80-15-1">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>15</SectorsPerTrack>
+		<SectorSize>512</SectorSize>
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type p="major">MSDOS-2HC</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+		<Description>[PC-AT DOS]</Description>
+		<Description lang="ja">[PC-AT DOS]</Description>
+	</DiskType>
 	<DiskType name="2HD-80-18-1">
 		<SidesPerDisk>2</SidesPerDisk>
 		<TracksPerSide>80</TracksPerSide>
