@@ -1093,6 +1093,20 @@
 		<OEMName type="string">FAT12</OEMName>
 		<Description>MS-DOS for PC-9801 (2HD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="MSDOS-2HC" type="3" category="MSDOS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>7</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>224</DirEntryCount>
+		<MediaID>0xf9</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS for PC-AT (2HC)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="MSDOS-2HD" type="3" category="MSDOS">
 		<SectorsPerGroup>1</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
