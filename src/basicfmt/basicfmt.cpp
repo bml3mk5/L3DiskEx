@@ -682,6 +682,8 @@ void DiskBasic::ClearParseAndAssign()
 {
 	parsed = false;
 	assigned = false;
+	dir->ReleaseRoot(type);
+	dir->SetCurrentAsRoot();
 }
 
 /// ロードできるか

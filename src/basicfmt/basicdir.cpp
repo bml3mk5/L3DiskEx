@@ -736,6 +736,15 @@ bool DiskBasicDir::AssignRoot(DiskBasicType *type)
 	return valid;
 }
 
+/// ルートディレクトリをリリース
+/// @param [in] type        DISK BASIC 種類
+bool DiskBasicDir::ReleaseRoot(DiskBasicType *type)
+{
+	delete root;
+	root = NULL;
+	return true;
+}
+
 /// ディレクトリのチェック
 /// @param [in] type        DISK BASIC 種類
 /// @param [in] group_items グループのリスト

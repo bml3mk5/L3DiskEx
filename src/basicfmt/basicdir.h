@@ -104,6 +104,8 @@ public:
 	bool		AssignRoot(DiskBasicType *type, int start_sector, int end_sector);
 	/// @brief ルートディレクトリをアサイン
 	bool		AssignRoot(DiskBasicType *type);
+	/// @brief ルートディレクトリをリリース
+	bool		ReleaseRoot(DiskBasicType *type);
 	/// @brief ディレクトリのチェック
 	double		Check(DiskBasicType *type, DiskBasicGroups &group_items);
 	/// @brief ディレクトリをアサイン

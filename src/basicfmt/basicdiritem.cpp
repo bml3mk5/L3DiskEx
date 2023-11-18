@@ -125,9 +125,11 @@ DiskBasicDirItem::~DiskBasicDirItem()
 		for(size_t i=0; i<m_children->Count(); i++) {
 			DiskBasicDirItem *child = m_children->Item(i);
 			delete child;
+			child = NULL;
 		}
 		m_children->Clear();
 		delete m_children;
+		m_children = NULL;
 	}
 }
 
