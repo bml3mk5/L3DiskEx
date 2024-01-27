@@ -1,0 +1,7 @@
+*.bat                   text eol=crlf
+*.pbxproj               text eol=lf
+*.plist                 text eol=lf
+*.props                 text eol=crlf
+*.sh                    text eol=lf
+*.vcxproj               text eol=crlf
+*.vcxproj.filters       text eol=crlf

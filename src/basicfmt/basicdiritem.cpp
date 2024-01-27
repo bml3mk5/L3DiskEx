@@ -1227,6 +1227,13 @@ int DiskBasicDirItem::GetFileSize() const
 	return (int)m_groups.GetSize();
 }
 
+/// ディレクトリサイズをセット
+/// @param [in] val サイズ
+void DiskBasicDirItem::SetDirectorySize(int val)
+{
+	SetFileSize(val);
+}
+
 /// 指定ディレクトリのすべてのグループを取得
 /// @param [out] group_items グループリスト
 void DiskBasicDirItem::GetAllGroups(DiskBasicGroups &group_items)

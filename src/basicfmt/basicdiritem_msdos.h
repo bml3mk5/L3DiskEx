@@ -118,6 +118,8 @@ public:
 	virtual void	SetFileSize(int val);
 	/// @brief ファイルサイズを返す
 	virtual int		GetFileSize() const;
+	/// @brief ディレクトリサイズをセット
+	virtual void	SetDirectorySize(int val);
 	/// @brief ファイルサイズとグループ数を計算する
 	virtual void	CalcFileUnitSize(int fileunit_num);
 

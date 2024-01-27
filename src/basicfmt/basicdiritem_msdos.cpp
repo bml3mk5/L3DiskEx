@@ -338,6 +338,13 @@ int DiskBasicDirItemMSDOS::GetFileSize() const
 	return wxUINT32_SWAP_ON_BE(val);
 }
 
+/// ディレクトリサイズをセット
+/// MS-DOSでは常に0をセットする
+void DiskBasicDirItemMSDOS::SetDirectorySize(int val)
+{
+	SetFileSize(0);
+}
+
 /// ファイルサイズとグループ数を計算する
 void DiskBasicDirItemMSDOS::CalcFileUnitSize(int fileunit_num)
 {

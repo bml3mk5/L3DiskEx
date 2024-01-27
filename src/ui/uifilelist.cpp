@@ -1989,13 +1989,13 @@ int L3DiskFileList::ShowIntNameBoxAndCheckSameFile(DiskBasicDirItem *temp_item, 
 				bool ignore_datetime = gConfig.DoesIgnoreDateTime();
 				DiskBasicDirItem::enDateTime ignore_type = temp_item->CanIgnoreDateTime();
 				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_CREATE) != 0)) {
-					date_time.SetCreateDateTime(temp_item->GetFileCreateDateTime());
+					temp_item->SetFileCreateDateTime(date_time.GetCreateDateTime());
 				}
 				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_MODIFY) != 0)) {
-					date_time.SetModifyDateTime(temp_item->GetFileModifyDateTime());
+					temp_item->SetFileModifyDateTime(date_time.GetModifyDateTime());
 				}
 				if (!(ignore_datetime && (ignore_type & DiskBasicDirItem::DATETIME_ACCESS) != 0)) {
-					date_time.SetAccessDateTime(temp_item->GetFileAccessDateTime());
+					temp_item->SetFileAccessDateTime(date_time.GetAccessDateTime());
 				}
 			}
 			ans = wxYES;

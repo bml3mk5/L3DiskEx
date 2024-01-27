@@ -267,8 +267,8 @@ void DiskBasicTypeMSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 {
 	if (group_items.Count() <= 0) return;
 
-	// ファイルサイズをクリア
-	item->SetFileSize(0);
+//	// ファイルサイズをクリア
+//	item->SetFileSize(0);
 
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);

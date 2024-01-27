@@ -1690,8 +1690,8 @@ int DiskBasic::MakeDirectory(const wxString &filename, bool ignore_datetime, Dis
 	// セクタに書き込む
 	rc = type->InitializeSectorsAsDirectory(group_items, file_size, sizeremain, errinfo);
 
-	// ファイルサイズ
-	item->SetFileSize(file_size);
+	// ディレクトリサイズ
+	item->SetDirectorySize(file_size);
 
 	if (rc < 0) {
 		// エラーの場合は消す
@@ -1738,11 +1738,11 @@ bool DiskBasic::ExpandDirectory(DiskBasicDirItem *dir_item)
 		return false;
 	}
 
-	// ファイルサイズを設定
-	dir_item->SetFileSize(file_size);
+	// ディレクトリサイズを設定
+	dir_item->SetDirectorySize(file_size);
 	DiskBasicDirItem *cur_item = dir->FindName(wxT("."), IsCompareCaseInsense(), NULL, NULL);
 	if (cur_item) {
-		cur_item->SetFileSize(file_size);
+		cur_item->SetDirectorySize(file_size);
 	}
 
 	// ディレクトリ拡張後の個別処理

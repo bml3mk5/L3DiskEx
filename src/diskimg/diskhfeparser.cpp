@@ -491,9 +491,9 @@ bool FormatFMParser::AdjustGap()
 	found =false;
 	pos = 0;
 	for(; pos<maxlen; pos++) {
-		if (pos == 0xb3) {
-			int nn=0;
-		}
+//		if (pos == 0xb3) {
+//			int nn=0;
+//		}
 		memcpy(buf, &data[pos], 6);
 		int cnt = 0;
 		for(; cnt<8; cnt++) {
