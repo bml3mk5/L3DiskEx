@@ -1,4 +1,4 @@
-# ![](blob/master/src/res/l3diskex.png) L3 Disk Explorer
+# ![](src/res/l3diskex.png) L3 Disk Explorer
 
 #### Copyright(C) Sasaji 2015-2024 All Rights Reserved.
 
@@ -6,7 +6,7 @@
 
 ### L3ディスクエクスプローラは、レトロPC用に作成されたフロッピーディスクイメージ内部のファイルにアクセスするためのアプリケーションです。
 
-![l3diskex_scr050](assets/99339286/f9ee5c86-0251-47a7-ae3f-1c9b6c1e149a)
+![l3diskex_scr050](../../assets/99339286/f9ee5c86-0251-47a7-ae3f-1c9b6c1e149a)
 
 ### [ダウンロード](https://github.com/bml3mk5/L3DiskEx/releases)
 
