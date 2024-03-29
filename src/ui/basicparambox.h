@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICPARAMBOX_H_
-#define _BASICPARAMBOX_H_
+#ifndef BASICPARAMBOX_H
+#define BASICPARAMBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
@@ -22,7 +22,7 @@ class wxStaticText;
 class wxListView;
 class DiskBasic;
 class DiskBasicParam;
-class DiskD88Disk;
+class DiskImageDisk;
 
 /// BASIC情報ボックス
 class BasicParamBox : public wxDialog, public VolumeCtrl
@@ -36,7 +36,7 @@ private:
 	int selected_basic;
 
 public:
-	BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, DiskBasic *basic, int show_flags);
+	BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskImageDisk *disk, DiskBasic *basic, int show_flags);
 
 	enum {
 		IDC_TEXT_BASIC = 1,
@@ -64,5 +64,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _BASICPARAMBOX_H_ */
+#endif /* BASICPARAMBOX_H */
 

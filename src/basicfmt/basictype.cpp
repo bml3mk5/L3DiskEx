@@ -227,7 +227,7 @@ void DiskBasicSectorPosTrans::Create(DiskBasic *basic)
 		int trks = basic->GetTracksPerSideOnBasic() + trk;
 		for(; trk < trks; trk++) {
 			for(int sid = 0; sid < basic->GetSidesPerDiskOnBasic(); sid++) {
-				DiskD88Track *track = basic->GetTrack(trk, sid);
+				DiskImageTrack *track = basic->GetTrack(trk, sid);
 				if (!track) {
 					// Why?
 					continue;
@@ -463,7 +463,7 @@ void DiskBasicType::GetStartNumOnFat(int &track_num, int &side_num, int &sector_
 {
 	int sec_pos = basic->GetFatStartSector() - 1;
 	int sec_fat = basic->GetSectorsPerFat();
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	if (sec_pos >= 0 && sec_fat > 0) {
 		if (basic->GetFatSideNumber() >= 0) sec_pos += basic->GetFatSideNumber() * basic->GetSectorsPerTrackOnBasic();
 		track = basic->GetManagedTrack(sec_pos, &side_num, &sector_num);
@@ -486,7 +486,7 @@ void DiskBasicType::GetEndNumOnFat(int &track_num, int &side_num, int &sector_nu
 	int sec_sta = basic->GetFatStartSector() - 1;
 	int sec_pos = sec_sta + basic->GetSectorsPerFat() * basic->GetNumberOfFats() - 1;
 	int sec_fat = basic->GetSectorsPerFat();
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	if (sec_sta >= 0 && sec_fat > 0) {
 		if (basic->GetFatSideNumber() >= 0) sec_pos += basic->GetFatSideNumber() * basic->GetSectorsPerTrackOnBasic();
 		track = basic->GetManagedTrack(sec_pos, &side_num, &sector_num);
@@ -538,7 +538,7 @@ bool DiskBasicType::CalcGroupsOnRootDirectory(int start_sector, int end_sector, 
 		int sec_num = 1;
 		int div_num = 0;
 		int div_nums = 1;
-		DiskD88Sector *sector = basic->GetManagedSector(sec_pos, &trk_num, &sid_num, &sec_num, &div_num, &div_nums);
+		DiskImageSector *sector = basic->GetManagedSector(sec_pos, &trk_num, &sid_num, &sec_num, &div_num, &div_nums);
 		if (!sector) continue;
 		group_items.Add(sec_pos, 0, trk_num, sid_num, sec_num, sec_num, div_num, div_nums);
 		dir_size += (sector->GetSectorSize() / div_nums);
@@ -603,7 +603,7 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 		int sid_num = gitem->side;
 		int div_num = gitem->div_num;	// 分割番号
 		int div_nums = gitem->div_nums;	// 分割数
-		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
 			break;
@@ -611,7 +611,7 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
 		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1; sec_num++) {
-			DiskD88Sector *sector = track->GetSector(sec_num);
+			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
 				valid = false;
@@ -721,7 +721,7 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 		int sid_num = gitem->side;
 		int div_num = gitem->div_num;	// 分割番号
 		int div_nums = gitem->div_nums;	// 分割数
-		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
 			break;
@@ -729,7 +729,7 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
 		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && valid && !last && finish >= -1; sec_num++) {
-			DiskD88Sector *sector = track->GetSector(sec_num);
+			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
 				valid = false;
@@ -824,14 +824,14 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 		int sid_num = gitem->side;
 		int div_num = gitem->div_num;	// 分割番号
 		int div_nums = gitem->div_nums;	// 分割数
-		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			continue;
 		}
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
 		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1; sec_num++) {
-			DiskD88Sector *sector = track->GetSector(sec_num);
+			DiskImageSector *sector = track->GetSector(sec_num);
 			if (!sector) continue;
 
 			wxUint8 *buffer = sector->GetSectorBuffer();
@@ -929,7 +929,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 		int sid_num = gitem->side;
 		int div_num = gitem->div_num;	// 分割番号
 		int div_nums = gitem->div_nums;	// 分割数
-		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			// トラックがない！
 			errinfo.SetError(DiskBasicError::ERRV_NO_TRACK, grp_num, trk_num, sid_num);
@@ -940,7 +940,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
 		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1 && rc >= 0; sec_num++) {
-			DiskD88Sector *sector = basic->GetSector(trk_num, sid_num, sec_num);
+			DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 			if (!sector) {
 				// セクタがない！
 				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, grp_num, trk_num, sid_num, sec_num);
@@ -1028,7 +1028,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 /// @param [out] sector_num セクタ番号
 void DiskBasicType::GetStartNumOnRootDirectory(int &track_num, int &side_num, int &sector_num)
 {
-	DiskD88Track *track = basic->GetManagedTrack(basic->GetDirStartSector() - basic->GetSectorNumberBase(), &side_num, &sector_num);
+	DiskImageTrack *track = basic->GetManagedTrack(basic->GetDirStartSector() - basic->GetSectorNumberBase(), &side_num, &sector_num);
 	if (track) {
 		track_num = track->GetTrackNumber();
 	}
@@ -1040,7 +1040,7 @@ void DiskBasicType::GetStartNumOnRootDirectory(int &track_num, int &side_num, in
 /// @param [out] sector_num セクタ番号
 void DiskBasicType::GetEndNumOnRootDirectory(int &track_num, int &side_num, int &sector_num)
 {
-	DiskD88Track *track = basic->GetManagedTrack(basic->GetDirEndSector() - basic->GetSectorNumberBase(), &side_num, &sector_num);
+	DiskImageTrack *track = basic->GetManagedTrack(basic->GetDirEndSector() - basic->GetSectorNumberBase(), &side_num, &sector_num);
 	if (track) {
 		track_num = track->GetTrackNumber();
 	}
@@ -1497,7 +1497,7 @@ DiskBasicDirItem *DiskBasicType::GetEmptyDirectoryItem(DiskBasicDirItem *WXUNUSE
 /// セクタデータを指定コードで埋める 全トラック＆セクタで呼ばれる
 /// @param [in] track  トラック
 /// @param [in] sector セクタ
-void DiskBasicType::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicType::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -1539,29 +1539,32 @@ int DiskBasicType::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStrea
 /// @return >=0 : 処理したサイズ  -1:比較不一致  -2:セクタがおかしい  
 int DiskBasicType::AccessFile(int fileunit_num, DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size, int sector_num, int sector_end)
 {
+	int modified_size = sector_size;
 	if (remain_size <= sector_size) {
 		// ファイルの最終セクタ
-		sector_size = CalcDataSizeOnLastSector(item, istream, ostream, sector_buffer, sector_size, remain_size);
+		modified_size = CalcDataSizeOnLastSector(item, istream, ostream, sector_buffer, sector_size, remain_size);
 	}
-	if (sector_size < 0) {
+	if (modified_size < 0) {
 		// セクタなし
 		return -2;
 	}
 
-	if (ostream) {
-		// 書き出し
-		temp.SetData(sector_buffer, sector_size, basic->IsDataInverted());
-		ostream->Write(temp.GetData(), temp.GetSize());
-	}
-	if (istream) {
-		// 読み込んで比較
-		temp.SetSize(sector_size);
-		istream->Read(temp.GetData(), temp.GetSize());
-		temp.InvertData(basic->IsDataInverted());
-
-		if (memcmp(temp.GetData(), sector_buffer, temp.GetSize()) != 0) {
-			// データが異なる
-			return -1;
+	if (modified_size > 0) {
+		if (ostream) {
+			// 書き出し
+			temp.SetData(sector_buffer, modified_size, basic->IsDataInverted());
+			ostream->Write(temp.GetData(), temp.GetSize());
+		}
+		if (istream) {
+			// 読み込んで比較
+			temp.SetSize(modified_size);
+			istream->Read(temp.GetData(), temp.GetSize());
+			temp.InvertData(basic->IsDataInverted());
+	
+			if (memcmp(temp.GetData(), sector_buffer, temp.GetSize()) != 0) {
+				// データが異なる
+				return -1;
+			}
 		}
 	}
 	return sector_size;

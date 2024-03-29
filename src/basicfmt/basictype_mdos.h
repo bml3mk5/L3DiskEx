@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MDOS_H_
-#define _BASICTYPE_MDOS_H_
+#ifndef BASICTYPE_MDOS_H
+#define BASICTYPE_MDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -85,4 +85,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MDOS_H_ */
+#endif /* BASICTYPE_MDOS_H */

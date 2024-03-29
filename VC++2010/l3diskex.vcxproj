@@ -35,9 +35,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\src\l3diskex.rc" />
+    <ResourceCompile Include="..\src\res\l3diskex.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\basicfmt\basiccategory.cpp" />
     <ClCompile Include="..\src\basicfmt\basiccommon.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdir.cpp" />
     <ClCompile Include="..\src\basicfmt\basicdiritem.cpp" />
@@ -77,6 +78,7 @@
     <ClCompile Include="..\src\basicfmt\basicfat.cpp" />
     <ClCompile Include="..\src\basicfmt\basicfmt.cpp" />
     <ClCompile Include="..\src\basicfmt\basicparam.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictemplate.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_amiga.cpp" />
     <ClCompile Include="..\src\basicfmt\basictype_apledos.cpp" />
@@ -117,11 +119,10 @@
     <ClCompile Include="..\src\charcodes.cpp" />
     <ClCompile Include="..\src\common.cpp" />
     <ClCompile Include="..\src\config.cpp" />
-    <ClCompile Include="..\src\diskd88.cpp" />
     <ClCompile Include="..\src\diskimg\disk2mgparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskadcparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskcqmparser.cpp" />
-    <ClCompile Include="..\src\diskimg\diskd88creator.cpp" />
+    <ClCompile Include="..\src\diskimg\diskd88.cpp" />
     <ClCompile Include="..\src\diskimg\diskd88parser.cpp" />
     <ClCompile Include="..\src\diskimg\diskd88writer.cpp" />
     <ClCompile Include="..\src\diskimg\diskdimparser.cpp" />
@@ -130,8 +131,11 @@
     <ClCompile Include="..\src\diskimg\diskfdiparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskg64parser.cpp" />
     <ClCompile Include="..\src\diskimg\diskhfeparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskimage.cpp" />
+    <ClCompile Include="..\src\diskimg\diskimagecreator.cpp" />
     <ClCompile Include="..\src\diskimg\diskimdparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskjv3parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskparam.cpp" />
     <ClCompile Include="..\src\diskimg\diskparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskplainparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskplainwriter.cpp" />
@@ -141,9 +145,9 @@
     <ClCompile Include="..\src\diskimg\diskvfdparser.cpp" />
     <ClCompile Include="..\src\diskimg\diskwriter.cpp" />
     <ClCompile Include="..\src\diskimg\fileparam.cpp" />
-    <ClCompile Include="..\src\diskparam.cpp" />
     <ClCompile Include="..\src\logging.cpp" />
     <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\parambase.cpp" />
     <ClCompile Include="..\src\result.cpp" />
     <ClCompile Include="..\src\ui\basicparambox.cpp" />
     <ClCompile Include="..\src\ui\basicselbox.cpp" />
@@ -154,6 +158,7 @@
     <ClCompile Include="..\src\ui\fontminibox.cpp" />
     <ClCompile Include="..\src\ui\intnamebox.cpp" />
     <ClCompile Include="..\src\ui\intnamevalid.cpp" />
+    <ClCompile Include="..\src\ui\mymenu.cpp" />
     <ClCompile Include="..\src\ui\rawexpbox.cpp" />
     <ClCompile Include="..\src\ui\rawparambox.cpp" />
     <ClCompile Include="..\src\ui\rawsectorbox.cpp" />
@@ -167,11 +172,14 @@
     <ClCompile Include="..\src\ui\uidisklist.cpp" />
     <ClCompile Include="..\src\ui\uifatarea.cpp" />
     <ClCompile Include="..\src\ui\uifilelist.cpp" />
+    <ClCompile Include="..\src\ui\uimainframe.cpp" />
+    <ClCompile Include="..\src\ui\uimainprocess.cpp" />
     <ClCompile Include="..\src\ui\uirawdisk.cpp" />
     <ClCompile Include="..\src\ui\uirpanel.cpp" />
     <ClCompile Include="..\src\utils.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\src\basicfmt\basiccategory.h" />
     <ClInclude Include="..\src\basicfmt\basiccommon.h" />
     <ClInclude Include="..\src\basicfmt\basicdir.h" />
     <ClInclude Include="..\src\basicfmt\basicdiritem.h" />
@@ -211,6 +219,7 @@
     <ClInclude Include="..\src\basicfmt\basicfat.h" />
     <ClInclude Include="..\src\basicfmt\basicfmt.h" />
     <ClInclude Include="..\src\basicfmt\basicparam.h" />
+    <ClInclude Include="..\src\basicfmt\basictemplate.h" />
     <ClInclude Include="..\src\basicfmt\basictype.h" />
     <ClInclude Include="..\src\basicfmt\basictype_amiga.h" />
     <ClInclude Include="..\src\basicfmt\basictype_apledos.h" />
@@ -251,11 +260,10 @@
     <ClInclude Include="..\src\charcodes.h" />
     <ClInclude Include="..\src\common.h" />
     <ClInclude Include="..\src\config.h" />
-    <ClInclude Include="..\src\diskd88.h" />
     <ClInclude Include="..\src\diskimg\disk2mgparser.h" />
     <ClInclude Include="..\src\diskimg\diskadcparser.h" />
     <ClInclude Include="..\src\diskimg\diskcqmparser.h" />
-    <ClInclude Include="..\src\diskimg\diskd88creator.h" />
+    <ClInclude Include="..\src\diskimg\diskd88.h" />
     <ClInclude Include="..\src\diskimg\diskd88parser.h" />
     <ClInclude Include="..\src\diskimg\diskd88writer.h" />
     <ClInclude Include="..\src\diskimg\diskdimparser.h" />
@@ -264,8 +272,11 @@
     <ClInclude Include="..\src\diskimg\diskfdiparser.h" />
     <ClInclude Include="..\src\diskimg\diskg64parser.h" />
     <ClInclude Include="..\src\diskimg\diskhfeparser.h" />
+    <ClInclude Include="..\src\diskimg\diskimage.h" />
+    <ClInclude Include="..\src\diskimg\diskimagecreator.h" />
     <ClInclude Include="..\src\diskimg\diskimdparser.h" />
     <ClInclude Include="..\src\diskimg\diskjv3parser.h" />
+    <ClInclude Include="..\src\diskimg\diskparam.h" />
     <ClInclude Include="..\src\diskimg\diskparser.h" />
     <ClInclude Include="..\src\diskimg\diskplainparser.h" />
     <ClInclude Include="..\src\diskimg\diskplainwriter.h" />
@@ -275,9 +286,9 @@
     <ClInclude Include="..\src\diskimg\diskvfdparser.h" />
     <ClInclude Include="..\src\diskimg\diskwriter.h" />
     <ClInclude Include="..\src\diskimg\fileparam.h" />
-    <ClInclude Include="..\src\diskparam.h" />
     <ClInclude Include="..\src\logging.h" />
     <ClInclude Include="..\src\main.h" />
+    <ClInclude Include="..\src\parambase.h" />
     <ClInclude Include="..\src\result.h" />
     <ClInclude Include="..\src\ui\basicparambox.h" />
     <ClInclude Include="..\src\ui\basicselbox.h" />
@@ -288,6 +299,7 @@
     <ClInclude Include="..\src\ui\fontminibox.h" />
     <ClInclude Include="..\src\ui\intnamebox.h" />
     <ClInclude Include="..\src\ui\intnamevalid.h" />
+    <ClInclude Include="..\src\ui\mymenu.h" />
     <ClInclude Include="..\src\ui\rawexpbox.h" />
     <ClInclude Include="..\src\ui\rawparambox.h" />
     <ClInclude Include="..\src\ui\rawsectorbox.h" />
@@ -302,15 +314,15 @@
     <ClInclude Include="..\src\ui\uidisklist.h" />
     <ClInclude Include="..\src\ui\uifatarea.h" />
     <ClInclude Include="..\src\ui\uifilelist.h" />
+    <ClInclude Include="..\src\ui\uimainframe.h" />
+    <ClInclude Include="..\src\ui\uimainprocess.h" />
     <ClInclude Include="..\src\ui\uirawdisk.h" />
     <ClInclude Include="..\src\ui\uirpanel.h" />
     <ClInclude Include="..\src\utils.h" />
     <ClInclude Include="..\src\version.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\data\basic_types.xml">
-      <SubType>Designer</SubType>
-    </None>
+    <None Include="..\data\basic_types.xml" />
     <None Include="..\data\char_codes.xml" />
     <None Include="..\data\disk_types.xml" />
     <None Include="..\data\file_types.xml" />
@@ -338,11 +350,13 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -361,47 +375,49 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="l3diskex.props" />
+    <Import Project="wxwidgets.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -418,11 +434,13 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -438,11 +456,13 @@
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
     <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -460,6 +480,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -486,6 +507,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -512,6 +534,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -538,6 +561,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -568,6 +592,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -598,6 +623,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -628,6 +654,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
@@ -658,6 +685,7 @@
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <PostBuildEvent>
       <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>

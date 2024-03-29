@@ -5,16 +5,16 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKJV3_PARSER_H_
-#define _DISKJV3_PARSER_H_
+#ifndef DISKJV3_PARSER_H
+#define DISKJV3_PARSER_H
 
 #include "../common.h"
 
 class wxInputStream;
 class wxArrayString;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskParser;
 class DiskParam;
 class DiskParamPtrs;
@@ -25,17 +25,17 @@ class FileParam;
 class DiskJV3Parser
 {
 private:
-	DiskD88File	*file;
-	short		mod_flags;
-	DiskResult	*result;
+	DiskImageFile	*p_file;
+	short			 m_mod_flags;
+	DiskResult		*p_result;
 
 	/// セクタデータの作成
-	wxUint32 ParseSector(wxInputStream &istream, int track_number, int side_number, int sector_number, int sector_size, int sector_nums, bool single_density, DiskD88Track *track);
+	wxUint32 ParseSector(wxInputStream &istream, int track_number, int side_number, int sector_number, int sector_size, int sector_nums, bool single_density, DiskImageTrack *track);
 	/// ディスクの解析
 	wxUint32 ParseDisk(wxInputStream &istream);
 
 public:
-	DiskJV3Parser(DiskD88File *file, short mod_flags, DiskResult *result);
+	DiskJV3Parser(DiskImageFile *file, short mod_flags, DiskResult *result);
 	~DiskJV3Parser();
 
 	/// チェック
@@ -43,4 +43,4 @@ public:
 	int Parse(wxInputStream &istream);
 };
 
-#endif /* _DISKJV3_PARSER_H_ */
+#endif /* DISKJV3_PARSER_H */

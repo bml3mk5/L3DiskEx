@@ -5,16 +5,17 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKHFE_PARSER_H_
-#define _DISKHFE_PARSER_H_
+#ifndef DISKHFE_PARSER_H
+#define DISKHFE_PARSER_H
 
 #include "../common.h"
+#include "diskparser.h"
 
 
 class wxInputStream;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskResult;
 class FileParamFormat;
 
@@ -24,8 +25,8 @@ class FileParamFormat;
 class RunLengthLimitedParser
 {
 protected:
-	DiskD88Disk *disk;
-	DiskD88Track *track;
+	DiskImageDisk  *disk;
+	DiskImageTrack *track;
 	wxUint32 track_size;
 	wxUint8 *data;
 	int data_len;
@@ -50,14 +51,14 @@ protected:
 
 public:
 	RunLengthLimitedParser();
-	RunLengthLimitedParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
+	RunLengthLimitedParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
 	virtual ~RunLengthLimitedParser();
 
 	virtual wxUint32 Parse();
 
 	virtual int GetDecodeUnit() const = 0;
 
-	DiskD88Track *GetTrack() { return track; }
+	DiskImageTrack *GetTrack() { return track; }
 	int GetSectorNums() const { return sector_nums; }
 
 	/// バッファをシフト
@@ -78,7 +79,7 @@ private:
 
 public:
 	FormatMFMParser();
-	FormatMFMParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
+	FormatMFMParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
 	int GetDecodeUnit() const { return 2; }
 };
 
@@ -94,31 +95,29 @@ private:
 
 public:
 	FormatFMParser();
-	FormatFMParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
+	FormatFMParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result);
 	int GetDecodeUnit() const { return 4; }
 };
 
 /// HxC HFEディスクパーサー
-class DiskHfeParser
+class DiskHfeParser : public DiskImageParser
 {
 private:
-	DiskD88File	*file;
-	short mod_flags;
-	DiskResult	*result;
-
 	/// トラックデータの作成
-	wxUint32 ParseTracks(wxInputStream &istream, int track_number, int sides, int file_offset, int track_size, wxUint8 encoding[2], int &d88_offset_pos, wxUint32 d88_offset, DiskD88Disk *disk);
+	wxUint32 ParseTracks(wxInputStream &istream, int track_number, int sides, int file_offset, int track_size, wxUint8 encoding[2], int &d88_offset_pos, wxUint32 d88_offset, DiskImageDisk *disk);
 	/// ディスクの解析
 	wxUint32 ParseDisk(wxInputStream &istream);
 
+	int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+
 public:
-	DiskHfeParser(DiskD88File *file, short mod_flags, DiskResult *result);
+	DiskHfeParser(DiskImageFile *file, short mod_flags, DiskResult *result);
 	~DiskHfeParser();
 
 	/// HxC HFEファイルかどうかをチェック
 	int Check(wxInputStream &istream);
 	/// HxC HFEファイルを解析
-	int Parse(wxInputStream &istream);
+	int Parse(wxInputStream &istream, const DiskParam *disk_param = NULL);
 };
 
-#endif /* _DISKHFE_PARSER_H_ */
+#endif /* DISKHFE_PARSER_H */

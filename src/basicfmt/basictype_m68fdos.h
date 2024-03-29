@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_M68_FDOS_H_
-#define _BASICTYPE_M68_FDOS_H_
+#ifndef BASICTYPE_M68_FDOS_H
+#define BASICTYPE_M68_FDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -120,4 +120,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_M68_FDOS_H_ */
+#endif /* BASICTYPE_M68_FDOS_H */

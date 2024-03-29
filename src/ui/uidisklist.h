@@ -5,11 +5,12 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _UIDISKLIST_H_
-#define _UIDISKLIST_H_
+#ifndef UIDISKLIST_H
+#define UIDISKLIST_H
 
 #include "uicommon.h"
 #include <wx/string.h>
+
 
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
 #include "uicdtreectrl.h"
@@ -18,16 +19,19 @@
 #endif
 
 
-class L3DiskFrame;
-class DiskD88File;
-class DiskD88Disks;
-class DiskD88Disk;
+class wxCustomDataObject;
+class wxFileDataObject;
+class MyMenu;
+class UiDiskFrame;
+class DiskImageFile;
+class DiskImageDisks;
+class DiskImageDisk;
 class DiskBasic;
 class DiskBasicParam;
 class DiskBasicDirItem;
 class DiskBasicDirItems;
 
-enum L3DiskPositionDataNum {
+enum UiDiskPositionDataNum {
 	CD_DISKNUM_ROOT = -1,
 	CD_TYPENUM_NODE = -1,
 	CD_TYPENUM_NODE_AB = -2,
@@ -39,9 +43,9 @@ enum L3DiskPositionDataNum {
 
 /// ディスク情報に紐づける属性
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
-class L3DiskPositionData : public wxClientData
+class UiDiskPositionData : public wxClientData
 #else
-class L3DiskPositionData : public wxTreeItemData
+class UiDiskPositionData : public wxTreeItemData
 #endif
 {
 private:
@@ -53,8 +57,8 @@ private:
 	bool shown;
 	DiskBasicDirItem *ditem;
 public:
-	L3DiskPositionData(int n_disknum, int n_typenum, int n_sidenum, int n_pos, bool n_editable, DiskBasicDirItem *n_ditem = NULL);
-	~L3DiskPositionData();
+	UiDiskPositionData(int n_disknum, int n_typenum, int n_sidenum, int n_pos, bool n_editable, DiskBasicDirItem *n_ditem = NULL);
+	~UiDiskPositionData();
 
 	int  GetDiskNumber() const { return disknum; }
 	int  GetTypeNumber() const { return typenum; }
@@ -74,12 +78,12 @@ public:
 
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
 /// ディスク１枚部分のツリーアイテムの挙動を設定する
-class L3DiskTreeStoreModel : public wxDataViewTreeStore
+class UiDiskTreeStoreModel : public wxDataViewTreeStore
 {
 private:
-	L3DiskFrame *frame;
+	UiDiskFrame *frame;
 public:
-	L3DiskTreeStoreModel(L3DiskFrame *parentframe);
+	UiDiskTreeStoreModel(UiDiskFrame *parentframe);
 
 	/// ディスク名編集できるか
 	virtual bool IsEnabled(const wxDataViewItem &item, unsigned int col) const;
@@ -87,15 +91,23 @@ public:
 	virtual bool SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col);
 };
 
-#define L3DiskListItem  wxDataViewItem
-#define L3DiskListEvent wxDataViewEvent
-#define L3DiskTreeIdVal	unsigned int
+#define UiDiskListItem  wxDataViewItem
+#define UiDiskListEvent wxDataViewEvent
+#define UiDiskTreeIdVal	unsigned int
+#define UiDiskListItems wxDataViewItemArray
+
+#define UiDiskListItem_IsOk(itm) itm.IsOk()
+#define UiDiskListItem_Unset(itm) itm = UiDiskListItem()
 
 #else
 
-#define L3DiskListItem  wxTreeItemId
-#define L3DiskListEvent wxTreeEvent
-#define L3DiskTreeIdVal	wxTreeItemIdValue
+#define UiDiskListItem  wxTreeItemId
+#define UiDiskListEvent wxTreeEvent
+#define UiDiskTreeIdVal	wxTreeItemIdValue
+#define UiDiskListItems wxArrayTreeItemIds
+
+#define UiDiskListItem_IsOk(itm) itm.IsOk()
+#define UiDiskListItem_Unset(itm) itm.Unset()
 
 #endif
 
@@ -103,43 +115,47 @@ public:
 
 /// ツリーコントロール
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
-class L3DiskTreeCtrl: public L3CDTreeCtrl
+class UiDiskTreeCtrl: public MyCDTreeCtrl
 #else
-class L3DiskTreeCtrl: public L3CTreeCtrl
+class UiDiskTreeCtrl: public MyCTreeCtrl
 #endif
 {
 public:
-	L3DiskTreeCtrl(wxWindow *parentwindow, wxWindowID id);
+	UiDiskTreeCtrl(wxWindow *parentwindow, wxWindowID id);
 };
 
 //////////////////////////////////////////////////////////////////////
 
 /// 左Panel ディスク情報
-class L3DiskList: public L3DiskTreeCtrl
+class UiDiskList: public UiDiskTreeCtrl
 {
 private:
-	wxWindow *parent;
-	L3DiskFrame *frame;
+	wxWindow		*parent;
+	UiDiskFrame		*frame;
 
-	wxMenu *menuPopup;
+	MyMenu			*menuPopup;
 
-	DiskD88Disk *selected_disk;
-	bool disk_selecting;
+	DiskImageDisk	*m_selected_disk;
+	bool			 m_disk_selecting;
 
-	bool initialized;
+	bool			 m_initialized;
 
-	L3DiskListItem root_node;
+	UiDiskListItem	 m_root_node;
+
+	UiDiskListItem	 m_dragging_node;
 
 	/// ディレクトリを更新
-	void RefreshDirectorySub(DiskD88Disk *disk, const L3DiskListItem &node, L3DiskPositionData *cd, DiskBasicDirItem *dir_item);
+	void RefreshDirectorySub(DiskImageDisk *disk, const UiDiskListItem &node, UiDiskPositionData *cd, DiskBasicDirItem *dir_item);
 	/// 選択位置のディスクイメージ
-	L3DiskListItem SetSelectedItemAtDiskImage();
+	UiDiskListItem SetSelectedItemAtDiskImage();
 	/// サブキャプション
 	void SubCaption(int type, int side_number, wxString &caption) const;
+	/// ファイルリスト作成（DnD, クリップボード用）
+	bool CreateFileObject(const UiDiskListItem &sel_node, wxString &tmp_dir_name, const wxString &start_msg, const wxString &end_msg, wxFileDataObject &file_object);
 
 public:
-	L3DiskList(L3DiskFrame *parentframe, wxWindow *parent);
-	~L3DiskList();
+	UiDiskList(UiDiskFrame *parentframe, wxWindow *parent);
+	~UiDiskList();
 
 	enum SetDataOnItemNodeFlags {
 		NODE_SELECTED = 0,
@@ -148,16 +164,22 @@ public:
 
 	/// @name event procedures
 	//@{
+	/// コピー選択
+	void OnCopyFile(wxCommandEvent& event);
+	/// ペースト選択
+	void OnPasteFile(wxCommandEvent& event);
+	/// ツリー上でドラッグ開始
+	void OnBeginDrag(UiDiskListEvent& event);
 	/// 右クリック選択
-	void OnContextMenu(L3DiskListEvent& event);
+	void OnContextMenu(UiDiskListEvent& event);
 	/// ツリーアイテム選択
-	void OnSelectionChanged(L3DiskListEvent& event);
+	void OnSelectionChanged(UiDiskListEvent& event);
 	/// アイテム展開
-	void OnItemExpanding(L3DiskListEvent& event);
+	void OnItemExpanding(UiDiskListEvent& event);
 	/// アイテム編集開始
-	void OnStartEditing(L3DiskListEvent& event);
+	void OnStartEditing(UiDiskListEvent& event);
 	/// アイテム編集終了
-	void OnEditingDone(L3DiskListEvent& event);
+	void OnEditingDone(UiDiskListEvent& event);
 	/// ディスクを保存選択
 	void OnSaveDisk(wxCommandEvent& event);
 	/// ディスクを新規に追加選択
@@ -199,15 +221,15 @@ public:
 	/// 再選択
 	void ReSelect(const DiskBasicParam *newparam = NULL);
 	/// ツリーを選択
-	void ChangeSelection(L3DiskListItem &node, const DiskBasicParam *newparam = NULL);
+	void ChangeSelection(UiDiskListItem &node, const DiskBasicParam *newparam = NULL);
 	/// ディスクを指定して選択状態にする
 	void ChangeSelection(int disk_number, int side_number);
 	/// ツリーを展開
-	void ExpandItemNode(L3DiskListItem &node);
+	void ExpandItemNode(UiDiskListItem &node);
 	/// 指定ノードにデータを設定する
-	void SetDataOnItemNode(const L3DiskListItem &node, SetDataOnItemNodeFlags flag, const DiskBasicParam *newparam = NULL);
+	void SetDataOnItemNode(const UiDiskListItem &node, SetDataOnItemNodeFlags flag, const DiskBasicParam *newparam = NULL);
 	/// DISK BASICをアタッチ＆解析
-	bool ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *cd, DiskD88Disk *newdisk, int newsidenum, const DiskBasicParam *newparam = NULL);
+	bool ParseDiskBasic(const UiDiskListItem &node, UiDiskPositionData *cd, DiskImageDisk *newdisk, int newsidenum, const DiskBasicParam *newparam = NULL);
 	/// 選択しているディスクの子供を削除
 	void DeleteChildrenOnSelectedDisk();
 	/// 選択しているディスクのルートを初期化＆再選択
@@ -219,41 +241,41 @@ public:
 	/// ファイル名をリストにセット
 	void SetFileName(const wxString &filename);
 //	/// ファイル名をリストにセット
-//	void SetFileName(const wxString &filename, L3DiskNameStrings &disknames);
+//	void SetFileName(const wxString &filename, UiDiskNameStrings &disknames);
 	/// リストをクリア
 	void ClearFileName();
 	/// ファイルパスをリストにセット
 	void SetFilePath(const wxString &filename);
 
 	/// ディレクトリアイテムと一致するノードをさがす
-	L3DiskListItem FindNodeByDirItem(const L3DiskListItem &node, int disk_number, DiskBasicDirItem *tag_item, int depth = 0);
+	UiDiskListItem FindNodeByDirItem(const UiDiskListItem &node, int disk_number, DiskBasicDirItem *tag_item, int depth = 0);
 	/// ディスク番号と一致するノードをさがす
-	L3DiskListItem FindNodeByDiskNumber(const L3DiskListItem &node, int disk_number, int depth = 0);
+	UiDiskListItem FindNodeByDiskNumber(const UiDiskListItem &node, int disk_number, int depth = 0);
 	/// ディスク番号＆サイド番号と一致するノードをさがす
-	L3DiskListItem FindNodeByDiskAndSideNumber(const L3DiskListItem &node, int disk_number, int side_number, int depth = 0);
+	UiDiskListItem FindNodeByDiskAndSideNumber(const UiDiskListItem &node, int disk_number, int side_number, int depth = 0);
 
 	/// ルートディレクトリを更新
-	void RefreshRootDirectoryNode(DiskD88Disk *disk, int side_number);
+	void RefreshRootDirectoryNode(DiskImageDisk *disk, int side_number);
 	/// ルートディレクトリを更新
-	void RefreshRootDirectoryNode(DiskD88Disk *disk, const L3DiskListItem &node);
+	void RefreshRootDirectoryNode(DiskImageDisk *disk, const UiDiskListItem &node);
 	/// ディレクトリを更新
-	void RefreshDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	void RefreshDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item);
 	/// 全てのディレクトリを更新
-	void RefreshAllDirectoryNodes(DiskD88Disk *disk, int side_number);
+	void RefreshAllDirectoryNodes(DiskImageDisk *disk, int side_number, DiskBasicDirItem *dir_item);
 	/// ディレクトリを選択
-	void SelectDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	void SelectDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item);
 	/// ディレクトリノードを削除
-	void DeleteDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item);
+	void DeleteDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item);
 	/// ディレクトリノードを一括削除
-	void DeleteDirectoryNodes(DiskD88Disk *disk, DiskBasicDirItems &dir_items);
+	void DeleteDirectoryNodes(DiskImageDisk *disk, DiskBasicDirItems &dir_items);
 //	/// ディレクトリを追加
-//	L3DiskListItem AppendDirectory(DiskBasicDirItem *dir_item);
+//	UiDiskListItem AppendDirectory(DiskBasicDirItem *dir_item);
 	/// ディレクトリを追加
-	L3DiskListItem AppendDirectory(const L3DiskListItem &parent, DiskBasicDirItem *dir_item);
+	UiDiskListItem AppendDirectory(const UiDiskListItem &parent, DiskBasicDirItem *dir_item);
 	/// ツリービューのディレクトリ名を再設定（キャラクターコードを変更した時）
-	void RefreshDirectoryName(DiskD88Disk *disk);
+	void RefreshDirectoryName(DiskImageDisk *disk);
 	/// ツリービューのディレクトリ名を再設定
-	void RefreshDirectoryName(const L3DiskListItem &node, int disk_number, int depth = 0);
+	void RefreshDirectoryName(const UiDiskListItem &node, int disk_number, int depth = 0);
 
 	/// ディスクの初期化
 	bool InitializeDisk();
@@ -276,6 +298,17 @@ public:
 	void ChangeCharCode(const wxString &name);
 	/// フォントをセット
 	void SetListFont(const wxFont &font);
+
+	/// ファイルリストをドラッグ
+	bool DragDataSource(const UiDiskListItem &sel_node);
+	/// 指定したフォルダにエクスポート
+	int  ExportDataFiles(const UiDiskListItems &selected_items, const wxString &data_dir, const wxString &attr_dir, const wxString &start_msg, const wxString &end_msg, wxFileDataObject *file_object = NULL);
+	/// ファイルをドロップ
+	bool DropDataFiles(wxWindow *base, int x, int y, const wxArrayString &paths, bool dir_included);
+	/// クリップボードへコピー
+	bool CopyToClipboard();
+	/// クリップボードからペースト
+	bool PasteFromClipboard();
 	//@}
 
 	/// @name properties
@@ -304,6 +337,8 @@ public:
 		IDM_DELETE_DIRECTORY,
 		IDM_INITIALIZE_DISK,
 		IDM_FORMAT_DISK,
+		IDM_COPY_FILE,
+		IDM_PASTE_FILE,
 		IDM_PROPERTY_DISK,
 		IDM_PROPERTY_BASIC,
 	};
@@ -311,5 +346,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _UIDISKLIST_H_ */
+#endif /* UIDISKLIST_H */
 

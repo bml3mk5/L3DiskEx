@@ -5,26 +5,28 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_H_
-#define _BASICDIRITEM_H_
+#ifndef BASICDIRITEM_H
+#define BASICDIRITEM_H
 
 #include "../common.h"
 #include "basiccommon.h"
 #include <wx/string.h>
 #include <wx/dynarray.h>
-#include "../diskd88.h"
 
 
 class wxWindow;
 class wxControl;
 class wxBoxSizer;
 class wxSizerFlags;
-//class wxChoice;
+class wxArrayString;
 class wxInputStream;
+class DiskImageSector;
+class SectorParam;
 class DiskBasic;
 class DiskBasicType;
 class DiskBasicFileName;
 class DiskBasicError;
+class DiskBasicGroupItem;
 class IntNameBox;
 
 class DiskBasicDirItem;
@@ -172,7 +174,7 @@ protected:
 	int			m_position;			///< セクタ内の位置（バイト）
 	int			m_flags;			///< フラグ bit0:使用しているか bit1:リストに表示するか bit2:ツリーに表示するか
 	DiskBasicGroups m_groups;		///< 占有グループ
-	DiskD88Sector *m_sector;		///< ディレクトリのあるセクタ
+	DiskImageSector *m_sector;		///< ディレクトリのあるセクタ
 	int			m_external_attr;	///< ディレクトリエントリ内に持たない属性を保持する(機種依存)
 
 	DiskBasicDirItem();
@@ -258,15 +260,15 @@ public:
 	/// @brief ディレクトリアイテムを作成 DATAは内部で確保
 	DiskBasicDirItem(DiskBasic *basic);
 	/// @brief ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
-	DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItem(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	/// @brief ディレクトリアイテムを作成 DATAはディスクイメージをアサイン
-	DiskBasicDirItem(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItem(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 	virtual ~DiskBasicDirItem();
 
 	/// @name 初期設定
 	//@{
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
 	//@}
 
 	/// @name ディレクトリツリー
@@ -452,9 +454,9 @@ public:
 	/// @brief チェイン用のセクタをクリア(機種依存)
 	virtual void	ClearChainSector(const DiskBasicDirItem *pitem = NULL) {}
 	/// @brief チェイン用のセクタをセット(機種依存)
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
 	/// @brief チェイン用のセクタをセット(機種依存)
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint32 num, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint32 num, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
 	/// @brief チェイン用のセクタをセット(機種依存)
 	virtual void	SetChainSector(wxUint32 num, int pos, wxUint8 *data, const DiskBasicDirItem *pitem = NULL) {}
 	/// @brief チェイン用のセクタにグループ番号をセット(機種依存)
@@ -675,7 +677,7 @@ public:
 	/// @name その他
 	//@{
 	/// @brief アイテムを含むセクタを設定
-	void			SetSector(DiskD88Sector	*val) { m_sector = val; }
+	void			SetSector(DiskImageSector	*val) { m_sector = val; }
 	/// @brief アイテムの属するセクタを変更済みにする
 	virtual void	SetModify();
 	/// @brief DISK BASICを返す
@@ -841,11 +843,11 @@ public:
 	/// @brief 初期化
 	void Clear();
 	/// @brief アイテムの位置情報をセット
-	bool Set(DiskBasic *basic, DiskD88Sector *sector, int position, directory_t *item_data, size_t item_size, const SectorParam *next);
+	bool Set(DiskBasic *basic, DiskImageSector *sector, int position, directory_t *item_data, size_t item_size, const SectorParam *next);
 	/// @brief コピー
 	void CopyTo(directory_t *dst_item);
 	/// @brief コピー
 	void CopyFrom(const directory_t *src_item);
 };
 
-#endif /* _BASICDIRITEM_H_ */
+#endif /* BASICDIRITEM_H */

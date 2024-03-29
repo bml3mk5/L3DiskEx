@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MAGICAL_H_
-#define _BASICTYPE_MAGICAL_H_
+#ifndef BASICTYPE_MAGICAL_H
+#define BASICTYPE_MAGICAL_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -75,4 +75,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MAGICAL_H_ */
+#endif /* BASICTYPE_MAGICAL_H */

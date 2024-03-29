@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_TFDOS_H_
-#define _BASICTYPE_TFDOS_H_
+#ifndef BASICTYPE_TFDOS_H
+#define BASICTYPE_TFDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -102,4 +102,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_TFDOS_H_ */
+#endif /* BASICTYPE_TFDOS_H */

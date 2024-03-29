@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_APLEDOS_H_
-#define _BASICTYPE_APLEDOS_H_
+#ifndef BASICTYPE_APLEDOS_H
+#define BASICTYPE_APLEDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -178,4 +178,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_APLEDOS_H_ */
+#endif /* BASICTYPE_APLEDOS_H */

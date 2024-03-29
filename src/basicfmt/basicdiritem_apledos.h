@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_APLEDOS_H_
-#define _BASICDIRITEM_APLEDOS_H_
+#ifndef BASICDIRITEM_APLEDOS_H
+#define BASICDIRITEM_APLEDOS_H
 
 #include "basicdiritem.h"
 
@@ -162,11 +162,11 @@ private:
 
 public:
 	DiskBasicDirItemAppleDOS(DiskBasic *basic);
-	DiskBasicDirItemAppleDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemAppleDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -201,7 +201,7 @@ public:
 	/// @brief チェイン用のセクタをクリア(機種依存)
 	virtual void	ClearChainSector(const DiskBasicDirItem *pitem = NULL);
 	/// @brief チェイン用のセクタをセット(機種依存)
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint32 gnum, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint32 gnum, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 	/// @brief チェイン用のセクタにグループ番号をセット(機種依存)
 	virtual void	AddChainGroupNumber(int idx, wxUint32 val);
 
@@ -261,4 +261,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_APLEDOS_H_ */
+#endif /* BASICDIRITEM_APLEDOS_H */

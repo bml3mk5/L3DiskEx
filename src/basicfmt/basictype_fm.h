@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FM_H_
-#define _BASICTYPE_FM_H_
+#ifndef BASICTYPE_FM_H
+#define BASICTYPE_FM_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -53,4 +53,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_FM_H_ */
+#endif /* BASICTYPE_FM_H */

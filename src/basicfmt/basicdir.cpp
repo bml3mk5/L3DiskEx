@@ -38,6 +38,7 @@
 #include "basicdiritem_trsdos.h"
 #include "basicfmt.h"
 #include "basictype.h"
+#include "../diskimg/diskimage.h"
 #include "../charcodes.h"
 
 
@@ -183,7 +184,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 /// @param [in]  n_sector  セクタ
 /// @param [in]  n_pos     セクタ内の位置
 /// @param [in]  n_data    セクタ内のバッファ
-DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *n_sector, int n_pos, wxUint8 *n_data)
+DiskBasicDirItem *DiskBasicDir::NewItem(DiskImageSector *n_sector, int n_pos, wxUint8 *n_data)
 {
 	DiskBasicDirItem *item = NULL;
 
@@ -308,7 +309,7 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskD88Sector *n_sector, int n_pos, wxUi
 /// @param [in]  n_data    セクタ内のバッファ
 /// @param [in]  n_next    次のセクタ
 /// @param [out] n_unuse   未使用か
-DiskBasicDirItem *DiskBasicDir::NewItem(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_pos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItem *DiskBasicDir::NewItem(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_pos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 {
 	DiskBasicDirItem *item = NULL;
 
@@ -434,9 +435,8 @@ DiskBasicDirItem *DiskBasicDir::GetRootItem() const
 DiskBasicDirItems *DiskBasicDir::GetRootItems(DiskBasicDirItem **dir_item)
 {
 	DiskBasicDirItem *item = GetRootItem();
-	if (!item) return NULL;
 	if (dir_item) *dir_item = item;
-	return item->GetChildren();
+	return GetChildren(item);
 }
 /// カレントディレクトリのアイテムを返す
 DiskBasicDirItem *DiskBasicDir::GetCurrentItem() const
@@ -447,27 +447,44 @@ DiskBasicDirItem *DiskBasicDir::GetCurrentItem() const
 DiskBasicDirItems *DiskBasicDir::GetCurrentItems(DiskBasicDirItem **dir_item)
 {
 	DiskBasicDirItem *item = GetCurrentItem();
-	if (!item) return NULL;
 	if (dir_item) *dir_item = item;
-	return item->GetChildren();
+	return GetChildren(item);
 }
-/// カレントディレクトリの全ディレクトリアイテムをクリア
-void DiskBasicDir::EmptyCurrent()
+/// ディレクトリ内の子供一覧を返す
+DiskBasicDirItems *DiskBasicDir::GetChildren(DiskBasicDirItem *dir_item)
 {
-	DiskBasicDirItem *item = GetCurrentItem();
-	if (item) item->EmptyChildren();
+	if (!dir_item) return NULL;
+	return dir_item->GetChildren();
 }
+
+/// カレントディレクトリの全ディレクトリアイテムをクリア
+void DiskBasicDir::EmptyChildrenInCurrent()
+{
+	EmptyChildren(GetCurrentItem());
+}
+/// ディレクトリの全ディレクトリアイテムをクリア
+void DiskBasicDir::EmptyChildren(DiskBasicDirItem *dir_item)
+{
+	if (dir_item) dir_item->EmptyChildren();
+}
+
 /// ルートをカレントにする
 void DiskBasicDir::SetCurrentAsRoot()
 {
 	current_item = root;
 }
+
 /// 親ディレクトリのアイテムを返す
-DiskBasicDirItem *DiskBasicDir::GetParentItem() const
+DiskBasicDirItem *DiskBasicDir::GetParentItemOnCurrent() const
+{
+	return GetParentItem(GetCurrentItem());
+}
+/// 親ディレクトリのアイテムを返す
+DiskBasicDirItem *DiskBasicDir::GetParentItem(const DiskBasicDirItem *dir_item) const
 {
 	DiskBasicDirItem *item = NULL;
-	if (current_item) {
-		item = current_item->GetParent();
+	if (dir_item) {
+		item = dir_item->GetParent();
 	}
 	return item;
 }
@@ -499,15 +516,25 @@ DiskBasicDirItem *DiskBasicDir::GetEmptyItemOnRoot(DiskBasicDirItem *pitem, Disk
 }
 
 /// 未使用のディレクトリアイテムを返す
-/// @param [in,out] parent    ディレクトリ
-/// @param [in,out] items     ディレクトリアイテム一覧
+/// @param [in,out] dir_item  ディレクトリ
 /// @param [in,out] pitem     ファイル名、属性を持っている仮ディレクトリアイテム
 /// @param [out]    next_item 未使用アイテムの次位置にあるアイテム
 /// @return NULL:空きなし
-DiskBasicDirItem *DiskBasicDir::GetEmptyItem(DiskBasicDirItem *parent, DiskBasicDirItems *items, DiskBasicDirItem *pitem, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::GetEmptyItem(DiskBasicDirItem *dir_item, DiskBasicDirItem *pitem, DiskBasicDirItem **next_item)
+{
+	return GetEmptyItem(dir_item, GetChildren(dir_item), pitem, next_item);
+}
+
+/// 未使用のディレクトリアイテムを返す
+/// @param [in,out] dir_item  ディレクトリ
+/// @param [in,out] children  dir_item内のディレクトリアイテム一覧
+/// @param [in,out] pitem     ファイル名、属性を持っている仮ディレクトリアイテム
+/// @param [out]    next_item 未使用アイテムの次位置にあるアイテム
+/// @return NULL:空きなし
+DiskBasicDirItem *DiskBasicDir::GetEmptyItem(DiskBasicDirItem *dir_item, DiskBasicDirItems *children, DiskBasicDirItem *pitem, DiskBasicDirItem **next_item)
 {
 	DiskBasicType *type = basic->GetType();
-	return type->GetEmptyDirectoryItem(parent, items, pitem, next_item);
+	return type->GetEmptyDirectoryItem(dir_item, children, pitem, next_item);
 }
 
 /// 現在のディレクトリ内に同じファイル名が既に存在するか
@@ -516,7 +543,7 @@ DiskBasicDirItem *DiskBasicDir::GetEmptyItem(DiskBasicDirItem *parent, DiskBasic
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFileOnCurrent(const DiskBasicFileName &filename, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	return FindFile(GetCurrentItem(), filename, icase, exclude_item, next_item);
 }
@@ -558,7 +585,7 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindFileOnCurrent(const DiskBasicDirItem *target_item, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	return FindFile(GetCurrentItem(), target_item, icase, exclude_item, next_item);
 }
@@ -600,7 +627,7 @@ DiskBasicDirItem *DiskBasicDir::FindFile(const DiskBasicDirItem *dir_item, const
 /// @param [in]  exclude_item 検索対象から除くアイテム
 /// @param [out] next_item    一致したアイテムの次位置にあるアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindName(const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
+DiskBasicDirItem *DiskBasicDir::FindNameOnCurrent(const wxString &name, bool icase, DiskBasicDirItem *exclude_item, DiskBasicDirItem **next_item)
 {
 	return FindName(GetCurrentItem(), name, icase, exclude_item, next_item);
 }
@@ -641,7 +668,7 @@ DiskBasicDirItem *DiskBasicDir::FindName(const DiskBasicDirItem *dir_item, const
 /// @param [in]  mask      検索対象外にするビットマスク
 /// @param [in]  prev_item 前回一致したアイテム
 /// @return NULL: ない
-DiskBasicDirItem *DiskBasicDir::FindFileByAttr(int file_type, int mask, DiskBasicDirItem *prev_item)
+DiskBasicDirItem *DiskBasicDir::FindFileByAttrOnCurrent(int file_type, int mask, DiskBasicDirItem *prev_item)
 {
 	return FindFileByAttr(GetCurrentItem(), file_type, mask, prev_item);
 }
@@ -797,6 +824,29 @@ bool DiskBasicDir::Assign(DiskBasicDirItem *dir_item)
 	return valid;
 }
 
+/// ディレクトリエリアを読み直す
+bool DiskBasicDir::Reassign(DiskBasicType *type, DiskBasicDirItem *dir_item)
+{
+	bool valid = true;
+
+	// 子ディレクトリアイテムを削除
+	EmptyChildren(dir_item);
+	// 再アサイン
+	if (GetParentItem(dir_item) != NULL) {
+		valid = Assign(type, dir_item);
+	} else {
+		valid = AssignRoot(type, basic->GetDirStartSector(), basic->GetDirEndSector());
+	}
+	return valid;
+}
+
+/// ディレクトリエリアを読み直す
+bool DiskBasicDir::Reassign(DiskBasicDirItem *dir_item)
+{
+	DiskBasicType *type = basic->GetType();
+	return Reassign(type, dir_item);
+}
+
 /// ルートディレクトリを初期化
 void DiskBasicDir::ClearRoot()
 {
@@ -810,7 +860,7 @@ void DiskBasicDir::ClearRoot()
 void DiskBasicDir::Fill(int start_sector, int end_sector, wxUint8 code)
 {
 	for(int sec_pos = start_sector; sec_pos <= end_sector; sec_pos++) {
-		DiskD88Sector *sector = basic->GetManagedSector(sec_pos - 1);
+		DiskImageSector *sector = basic->GetManagedSector(sec_pos - 1);
 		if (!sector) {
 			break;
 		}
@@ -858,28 +908,23 @@ bool DiskBasicDir::Change(DiskBasicDirItem * &dst_item)
 }
 
 /// ディレクトリの拡張ができるか
-bool DiskBasicDir::CanExpand()
+/// @param [in] dir_item ディレクトリ
+bool DiskBasicDir::CanExpand(const DiskBasicDirItem *dir_item)
 {
 	DiskBasicType *type = basic->GetType();
-	return GetParentItem() != NULL ? type->CanExpandDirectory() : type->CanExpandRootDirectory();
+	return GetParentItem(dir_item) != NULL ? type->CanExpandDirectory() : type->CanExpandRootDirectory();
 }
 
 /// ディレクトリを拡張する
-bool DiskBasicDir::Expand()
+/// @param [in,out] dir_item ディレクトリ
+bool DiskBasicDir::Expand(DiskBasicDirItem *dir_item)
 {
-	DiskBasicType *type = basic->GetType();
-
 	bool valid = false;
-	if (current_item != NULL) {
-		valid = basic->ExpandDirectory(current_item);
+	if (dir_item != NULL) {
+		valid = basic->ExpandDirectory(dir_item);
 		if (valid) {
 			// ディレクトリエリアを読み直す
-			EmptyCurrent();
-			if (GetParentItem() != NULL) {
-				Assign(type, current_item);
-			} else {
-				AssignRoot(type, basic->GetDirStartSector(), basic->GetDirEndSector());
-			}
+			valid = Reassign(dir_item);
 		}
 	}
 	return valid;

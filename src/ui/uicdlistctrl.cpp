@@ -6,6 +6,7 @@
 ///
 
 #include "uicdlistctrl.h"
+#include <wx/menu.h>
 #include "../config.h"
 #include "uicommon.h"
 
@@ -14,18 +15,18 @@
 //
 //
 //
-L3CDListValue::L3CDListValue()
+MyCDListValue::MyCDListValue()
 {
 	row = 0;
 	icon = -1;
 }
-void L3CDListValue::Set(long n_row, int n_icon, const wxString &n_value)
+void MyCDListValue::Set(long n_row, int n_icon, const wxString &n_value)
 {
 	row = (int)n_row;
 	icon = n_icon;
 	value = n_value;
 }
-void L3CDListValue::Set(long n_row, const wxString &n_value)
+void MyCDListValue::Set(long n_row, const wxString &n_value)
 {
 	row = (int)n_row;
 	value = n_value;
@@ -35,12 +36,12 @@ void L3CDListValue::Set(long n_row, const wxString &n_value)
 //
 // リストのカラム情報
 //
-L3CDListColumn::L3CDListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
+MyCDListColumn::MyCDListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
 {
 	Set(n_idx, n_info, n_width);
 }
 
-void L3CDListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
+void MyCDListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
 {
 	idx = n_idx;
 	col = n_idx;
@@ -50,17 +51,17 @@ void L3CDListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_
 	label = wxGetTranslation(n_info->label);
 }
 
-bool L3CDListColumn::HaveIcon() const
+bool MyCDListColumn::HaveIcon() const
 {
 	return info->have_icon;
 }
 
-wxAlignment L3CDListColumn::GetAlign() const
+wxAlignment MyCDListColumn::GetAlign() const
 {
 	return info->align;
 }
 
-bool L3CDListColumn::IsSortable() const
+bool MyCDListColumn::IsSortable() const
 {
 	return info->sortable;
 }
@@ -78,7 +79,7 @@ bool L3CDListColumn::IsSortable() const
 /// @param [in] model       モデル
 /// @param [in] pos         位置
 /// @param [in] size        サイズ
-L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id,
+MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID id,
 	const struct st_list_columns *columns,
 	Config *ini,
 	long style,
@@ -98,7 +99,7 @@ L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowI
 	for(int idx=0; columns[idx].name != NULL; idx++) {
 		const struct st_list_columns *c = &columns[idx];
 		int w =	ini ? ini->GetListColumnWidth(idx) : -1;
-		m_columns.Add(new L3CDListColumn(idx, c, w >= 0 ? w : c->width));
+		m_columns.Add(new MyCDListColumn(idx, c, w >= 0 ? w : c->width));
 	}
 
 	// カラム位置の設定
@@ -119,7 +120,7 @@ L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowI
 	InsertListColumns();
 #if 0
 	// カラム位置を振り直し
-	L3CDListColumns arr;
+	MyCDListColumns arr;
 	for(int idx = 0; idx < column_count; idx++) {
 		arr.Add(m_columns[idx]);
 	}
@@ -127,7 +128,7 @@ L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowI
 	int n_col = 0;
 	// 表示するカラムの順番を設定
 	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		L3CDListColumn *column = arr.Item(idx);
+		MyCDListColumn *column = arr.Item(idx);
 		if (column->GetColumn() >= 0) {
 			column->SetColumn(n_col);
 			column->Shown(true);
@@ -139,7 +140,7 @@ L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowI
 	}
 	// 表示しないカラムの順番を設定
 	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		L3CDListColumn *column = arr.Item(idx);
+		MyCDListColumn *column = arr.Item(idx);
 		if (column->GetColumn() < 0) {
 			column->SetColumn(n_col);
 			column->Shown(false);
@@ -157,16 +158,16 @@ L3CDListCtrl::L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowI
 
 	// カラムを入れ替えた
 	// REORDERED event is implemented in wxWidgets 3.1.1 or higher
-	Bind(wxEVT_DATAVIEW_COLUMN_REORDERED , &L3CDListCtrl::OnColumnReordered, this);
+	Bind(wxEVT_DATAVIEW_COLUMN_REORDERED , &MyCDListCtrl::OnColumnReordered, this);
 	// ソートした
-	Bind(wxEVT_DATAVIEW_COLUMN_SORTED, &L3CDListCtrl::OnColumnSorted, this);
+	Bind(wxEVT_DATAVIEW_COLUMN_SORTED, &MyCDListCtrl::OnColumnSorted, this);
 }
-L3CDListCtrl::~L3CDListCtrl()
+MyCDListCtrl::~MyCDListCtrl()
 {
 	// カラム幅を取得
 	for(int col = 0; col < (int)GetColumnCount(); col++) {
 		wxDataViewColumn *c = GetColumn(col);
-		L3CDListColumn *column = FindColumn(c, NULL);
+		MyCDListColumn *column = FindColumn(c, NULL);
 		if (column) {
 			column->SetWidth(GetListColumnWidth(col));
 		}
@@ -188,7 +189,7 @@ L3CDListCtrl::~L3CDListCtrl()
 }
 
 /// アイコンを設定
-void L3CDListCtrl::AssignListIcons(const char ***icons)
+void MyCDListCtrl::AssignListIcons(const char ***icons)
 {
 	for(size_t idx=0; icons[idx] != NULL; idx++) {
 		m_icons.Add(new wxIcon(icons[idx]));
@@ -197,10 +198,10 @@ void L3CDListCtrl::AssignListIcons(const char ***icons)
 
 #if 0
 /// カラム幅を変えた
-void L3CDListCtrl::OnColumnEndDrag(L3CDListEvent& event)
+void MyCDListCtrl::OnColumnEndDrag(MyCDListEvent& event)
 {
 	int col = event.GetColumn();
-	L3DiskFileListColumn *column = FindColumn(col, NULL);
+	UiDiskFileListColumn *column = FindColumn(col, NULL);
 	if (column) {
 		column->SetWidth(GetColumnWidth(col));
 	}
@@ -209,28 +210,28 @@ void L3CDListCtrl::OnColumnEndDrag(L3CDListEvent& event)
 
 /// カラムを入れ替え
 /// @note implemented in wxWidgets 3.1.1 or higher
-void L3CDListCtrl::OnColumnReordered(L3CDListEvent& event)
+void MyCDListCtrl::OnColumnReordered(MyCDListEvent& event)
 {
 //	int col = 1;
 }
 
 /// カラムをソート
-void L3CDListCtrl::OnColumnSorted(L3CDListEvent& event)
+void MyCDListCtrl::OnColumnSorted(MyCDListEvent& event)
 {
 	int col = event.GetColumn();
-	L3CDListColumn *column = FindColumn(col, NULL);
+	MyCDListColumn *column = FindColumn(col, NULL);
 	if (column) {
 	}
 }
 
 /// リストにカラムを設定する
-void L3CDListCtrl::InsertListColumns()
+void MyCDListCtrl::InsertListColumns()
 {
 	// カラム位置の設定
 	int column_count = (int)m_columns.Count();
 
 	// カラム位置を振り直し
-	L3CDListColumns arr;
+	MyCDListColumns arr;
 	for(int idx = 0; idx < column_count; idx++) {
 		arr.Add(m_columns[idx]);
 	}
@@ -238,7 +239,7 @@ void L3CDListCtrl::InsertListColumns()
 	int n_col = 0;
 	// 表示するカラムの順番を設定
 	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		L3CDListColumn *column = arr.Item(idx);
+		MyCDListColumn *column = arr.Item(idx);
 		if (column->GetColumn() >= 0) {
 			column->SetColumn(n_col);
 			if (n_col == 0) {
@@ -249,7 +250,7 @@ void L3CDListCtrl::InsertListColumns()
 	}
 	// 表示しないカラムの順番を設定
 	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		L3CDListColumn *column = arr.Item(idx);
+		MyCDListColumn *column = arr.Item(idx);
 		if (column->GetColumn() < 0) {
 			column->SetColumn(~n_col);
 			n_col++;
@@ -264,26 +265,27 @@ void L3CDListCtrl::InsertListColumns()
 }
 
 /// カラムを削除
-void L3CDListCtrl::DeleteAllListColumns()
+void MyCDListCtrl::DeleteAllListColumns()
 {
-	int count = (int)GetColumnCount();
-	for(int col = count - 1; col >= 0; col--) {
-		wxDataViewColumn *column = GetColumn((unsigned int)col);
-		DeleteColumn(column);
-	}
+//	int count = (int)GetColumnCount();
+//	for(int col = count - 1; col >= 0; col--) {
+//		wxDataViewColumn *column = GetColumn((unsigned int)col);
+//		DeleteColumn(column);
+//	}
+	ClearColumns();
 }
 
 /// 初期 カラムを設定
-void L3CDListCtrl::InsertListColumn(int col)
+void MyCDListCtrl::InsertListColumn(int col)
 {
-	L3CDListColumn *c = FindColumn(col, NULL, true);
+	MyCDListColumn *c = FindColumn(col, NULL, true);
 	if (!c) return;
 
 	InsertListColumn(col, c->GetIndex(), c);
 }
 
 /// カラムを挿入
-void L3CDListCtrl::InsertListColumn(int col, int idx, L3CDListColumn *c)
+void MyCDListCtrl::InsertListColumn(int col, int idx, MyCDListColumn *c)
 {
 	wxDataViewColumn *item_id;
 	int flags = wxDATAVIEW_COL_RESIZABLE | wxDATAVIEW_COL_REORDERABLE;
@@ -298,25 +300,25 @@ void L3CDListCtrl::InsertListColumn(int col, int idx, L3CDListColumn *c)
 }
 
 /// カラムの幅
-int L3CDListCtrl::GetListColumnWidth(int col) const
+int MyCDListCtrl::GetListColumnWidth(int col) const
 {
 	return GetColumn(col)->GetWidth();
 }
 
 /// カラムを削除
-void L3CDListCtrl::DeleteListColumn(int col)
+void MyCDListCtrl::DeleteListColumn(int col)
 {
 	DeleteColumn(GetColumn(col));
 }
 
 /// データを挿入
-void L3CDListCtrl::InsertListItem(long row, L3CDListValue *values, size_t count, wxUIntPtr data)
+void MyCDListCtrl::InsertListItem(long row, MyCDListValue *values, size_t count, wxUIntPtr data)
 {
 	wxVector<wxVariant> nvalues;
 
 	for(int col = 0; col < (int)m_columns.Count(); col++) {
 		int idx = -1;
-		L3CDListColumn *c = FindColumn(col, &idx, true);
+		MyCDListColumn *c = FindColumn(col, &idx, true);
 		if (c != NULL && idx >= 0) {
 			if (c->HaveIcon()) {
 				int icon = values[idx].GetImage();
@@ -333,12 +335,12 @@ void L3CDListCtrl::InsertListItem(long row, L3CDListValue *values, size_t count,
 }
 
 /// データを更新
-void L3CDListCtrl::UpdateListItem(long row, L3CDListValue *values, size_t count, wxUIntPtr data)
+void MyCDListCtrl::UpdateListItem(long row, MyCDListValue *values, size_t count, wxUIntPtr data)
 {
 	for(int col = 0; col < (int)m_columns.Count(); col++) {
 		int idx = -1;
 		wxVariant value;
-		L3CDListColumn *c = FindColumn(col, &idx, true);
+		MyCDListColumn *c = FindColumn(col, &idx, true);
 		if (c != NULL && idx >= 0) {
 			if (c->HaveIcon()) {
 				int icon = values[idx].GetImage();
@@ -353,7 +355,7 @@ void L3CDListCtrl::UpdateListItem(long row, L3CDListValue *values, size_t count,
 
 #if 0
 /// ディレクトリアイテムの位置を返す
-int L3CDListCtrl::GetDirItemPos(const L3CDListItem &item) const
+int MyCDListCtrl::GetDirItemPos(const MyCDListItem &item) const
 {
 	return (int)GetListItemData(item);
 }
@@ -363,7 +365,7 @@ int L3CDListCtrl::GetDirItemPos(const L3CDListItem &item) const
 /// @param [in] item リストアイテム
 /// @param [in] idx  カラムの位置
 /// @param [in] text ファイル名
-void L3CDListCtrl::SetListText(const L3CDListItem &item, int idx, const wxString &text)
+void MyCDListCtrl::SetListText(const MyCDListItem &item, int idx, const wxString &text)
 {
 	int row = ItemToRow(item);
 	int col = GetColumnPosition(m_columns[idx]->GetId());
@@ -384,12 +386,12 @@ void L3CDListCtrl::SetListText(const L3CDListItem &item, int idx, const wxString
 
 /// 選択している行の位置を返す
 /// @return 複数行選択している場合 wxNOT_FOUND
-int L3CDListCtrl::GetListSelectedRow() const
+int MyCDListCtrl::GetListSelectedRow() const
 {
 	return GetSelectedRow();
 }
 /// アイテム位置を返す
-int L3CDListCtrl::GetListSelectedNum() const
+int MyCDListCtrl::GetListSelectedNum() const
 {
 	int row = wxNOT_FOUND;
 	wxDataViewItem item = GetSelection();
@@ -399,77 +401,77 @@ int L3CDListCtrl::GetListSelectedNum() const
 	return row;
 }
 /// 選択している行数
-int L3CDListCtrl::GetListSelectedItemCount() const
+int MyCDListCtrl::GetListSelectedItemCount() const
 {
 	return GetSelectedItemsCount();
 }
 /// 選択行を得る
-L3CDListItem L3CDListCtrl::GetListSelection() const
+MyCDListItem MyCDListCtrl::GetListSelection() const
 {
 	return GetSelection();
 }
 
 /// 選択している行アイテムを得る
-int L3CDListCtrl::GetListSelections(L3CDListItems &arr) const
+int MyCDListCtrl::GetListSelections(MyCDListItems &arr) const
 {
 	return GetSelections(arr);
 }
 /// 全行を選択
-void L3CDListCtrl::SelectAllListItem()
+void MyCDListCtrl::SelectAllListItem()
 {
 	SelectAll();
 }
 /// 行アイテムを選択
-void L3CDListCtrl::SelectListItem(const L3CDListItem &item)
+void MyCDListCtrl::SelectListItem(const MyCDListItem &item)
 {
 	Select(item);
 }
 /// 行を選択
-void L3CDListCtrl::SelectListRow(int row)
+void MyCDListCtrl::SelectListRow(int row)
 {
 	SelectRow((unsigned int)row);
 }
 /// 全て非選択にする
-void L3CDListCtrl::UnselectAllListItem()
+void MyCDListCtrl::UnselectAllListItem()
 {
 	UnselectAll();
 }
 /// 非選択にする
-void L3CDListCtrl::UnselectListItem(const L3CDListItem &item)
+void MyCDListCtrl::UnselectListItem(const MyCDListItem &item)
 {
 	Unselect(item);
 }
 /// 指定した行が選択しているか
-int L3CDListCtrl::GetListSelected(int row) const
+int MyCDListCtrl::GetListSelected(int row) const
 {
 	return m_selecting.Item((size_t)row);
 }
 /// 指定した行が選択しているか
-void L3CDListCtrl::SetListSelected(int row, int val)
+void MyCDListCtrl::SetListSelected(int row, int val)
 {
 	m_selecting.Item((size_t)row) = val;
 }
 /// フォーカスしている行アイテムを得る
-L3CDListItem L3CDListCtrl::GetListFocusedItem() const
+MyCDListItem MyCDListCtrl::GetListFocusedItem() const
 {
 	// TODO: not implemented
 	return wxDataViewItem();
 }
 /// 行アイテムをフォーカス
-void L3CDListCtrl::FocusListItem(const L3CDListItem &item)
+void MyCDListCtrl::FocusListItem(const MyCDListItem &item)
 {
 	// TODO: not implemented
 }
 
 /// アイテムを編集
-void L3CDListCtrl::EditListItem(const L3CDListItem &item)
+void MyCDListCtrl::EditListItem(const MyCDListItem &item)
 {
 	wxDataViewColumn *column = GetColumn(0);
 	EditItem(item, column);
 }
 
 /// リストを削除
-bool L3CDListCtrl::DeleteAllListItems()
+bool MyCDListCtrl::DeleteAllListItems()
 {
 	DeleteAllItems();
 	m_selecting.Empty();
@@ -477,35 +479,35 @@ bool L3CDListCtrl::DeleteAllListItems()
 }
 
 /// アイテムの固有データを返す
-wxUIntPtr L3CDListCtrl::GetListItemData(const L3CDListItem &item) const
+wxUIntPtr MyCDListCtrl::GetListItemData(const MyCDListItem &item) const
 {
 	return GetItemData(item);
 }
 
 /// アイテムの固有データを返す
-wxUIntPtr L3CDListCtrl::GetListItemDataByRow(long row) const
+wxUIntPtr MyCDListCtrl::GetListItemDataByRow(long row) const
 {
 	wxDataViewItem item = RowToItem((int)row);
 	return GetItemData(item);
 }
 
 /// カラムヘッダのタイトルを返す
-const wxString &L3CDListCtrl::GetColumnText(int idx) const
+const wxString &MyCDListCtrl::GetColumnText(int idx) const
 {
 	return m_columns[idx]->GetText();
 }
 
 /// カラム表示中か
-bool L3CDListCtrl::ColumnIsShown(int idx) const
+bool MyCDListCtrl::ColumnIsShown(int idx) const
 {
 	return (m_columns[idx]->GetColumn() >= 0);
 }
 
 /// カラムの表示を変更
 /// @return true:リスト更新が必要
-bool L3CDListCtrl::ShowColumn(int idx, bool show)
+bool MyCDListCtrl::ShowColumn(int idx, bool show)
 {
-	L3CDListColumn *c = m_columns[idx];
+	MyCDListColumn *c = m_columns[idx];
 	int col = c->GetColumn();
 	bool nshow = (col >= 0);
 	if (nshow && !show) {
@@ -544,9 +546,9 @@ bool L3CDListCtrl::ShowColumn(int idx, bool show)
 }
 
 /// 表示位置のカラム情報を返す
-L3CDListColumn *L3CDListCtrl::FindColumn(int col, int *n_idx, bool all) const
+MyCDListColumn *MyCDListCtrl::FindColumn(int col, int *n_idx, bool all) const
 {
-	L3CDListColumn *match = NULL;
+	MyCDListColumn *match = NULL;
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
 		if (m_columns[idx]->GetColumn() == col && (all || (m_columns[idx]->GetColumn() >= 0))) {
 			match = m_columns[idx];
@@ -558,9 +560,9 @@ L3CDListColumn *L3CDListCtrl::FindColumn(int col, int *n_idx, bool all) const
 }
 
 /// 表示位置のカラム情報を返す
-L3CDListColumn *L3CDListCtrl::FindColumn(wxDataViewColumn *col, int *n_idx, bool all) const
+MyCDListColumn *MyCDListCtrl::FindColumn(wxDataViewColumn *col, int *n_idx, bool all) const
 {
-	L3CDListColumn *match = NULL;
+	MyCDListColumn *match = NULL;
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
 		if (m_columns[idx]->GetId() == col && (all || (m_columns[idx]->GetColumn() >= 0))) {
 			match = m_columns[idx];
@@ -571,30 +573,37 @@ L3CDListColumn *L3CDListCtrl::FindColumn(wxDataViewColumn *col, int *n_idx, bool
 	return match;
 }
 
+#if 0
 /// カラム用のポップアップメニューを作成する
-void L3CDListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id)
+void MyCDListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id)
 {
 	// メニューアイテムを削除
 	if (menu) delete menu;
 	menu = new wxMenu;
 
+	// 現在表示しているカラムの順序でカラム番号を再設定
 	ReorderColumns();
 
-	// 表示中のカラム
-	int cols = (int)GetColumnCount();
-	for(int col = 0; col < cols; col++) {
-		int idx = -1;
-		wxDataViewColumn *dcol = GetColumn(col);
-		L3CDListColumn *column = FindColumn(dcol, &idx);
-		if (column) {
-			wxMenuItem *mitem = menu->AppendCheckItem(menu_id + idx, column->GetText());
-			mitem->Check(true);
-			mitem->Enable(idx != 0);
+	// 表示しているカラムのソート
+	MyCDListColumns arr;
+	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
+		if (m_columns[idx]->GetColumn() >= 0) {
+			arr.Add(m_columns[idx]);
 		}
+	}
+	arr.Sort(SortByColumn);
+
+	// 表示しているカラム
+	for(int col = 0; col < (int)arr.Count(); col++) {
+		MyCDListColumn *column = arr[col];
+		int idx = column->GetIndex();
+		wxMenuItem *mitem = menu->AppendCheckItem(menu_id + idx, column->GetText());
+		mitem->Check(true);
+		mitem->Enable(idx != 0);
 	}
 	// 非表示のカラム
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-		L3CDListColumn *column = m_columns[idx];
+		MyCDListColumn *column = m_columns[idx];
 		if (column->GetColumn() < 0) {
 			wxMenuItem *mitem = menu->AppendCheckItem(menu_id + idx, column->GetText());
 			mitem->Check(false);
@@ -604,21 +613,22 @@ void L3CDListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_de
 	menu->AppendSeparator();
 	menu->Append(menu_detail_id, _("Detail..."));
 }
+#endif
 
-/// カラムの表示位置を返す
-void L3CDListCtrl::GetListColumnsByCurrentOrder(L3CDListColumns &items) const
+/// カラムの表示位置を返す 表示中のカラムを優先
+void MyCDListCtrl::GetListColumnsByCurrentOrder(MyCDListColumns &items) const
 {
 	// 表示中のカラム
 	for(int col = 0; col < (int)m_columns.Count(); col++) {
 		int idx = -1;
-		L3CDListColumn *column = FindColumn(col, &idx);
+		MyCDListColumn *column = FindColumn(col, &idx);
 		if (column) {
 			items.Add(column);
 		}
 	}
 	// 非表示のカラム
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-		L3CDListColumn *column = m_columns[idx];
+		MyCDListColumn *column = m_columns[idx];
 		if (column->GetColumn() < 0) {
 			items.Add(column);
 		}
@@ -627,21 +637,27 @@ void L3CDListCtrl::GetListColumnsByCurrentOrder(L3CDListColumns &items) const
 
 /// カラム入れ替えダイアログを表示
 /// @return true: submitted  false: canceled
-bool L3CDListCtrl::ShowListColumnRearrangeBox()
+bool MyCDListCtrl::ShowListColumnRearrangeBox()
 {
-	L3CDListColumns items;
+	// 現在表示しているカラムの順序でカラム番号を再設定
+	ReorderColumns();
+
+	// カラムの表示位置を返す 表示中のカラムを優先
+	MyCDListColumns items;
 	GetListColumnsByCurrentOrder(items);
+
 	wxArrayInt order;
 	wxArrayString labels;
 	for(int i=0; i<(int)items.Count(); i++) {
 		order.Add((items[i]->GetColumn() >= 0 ? i : ~i));
 		labels.Add(items[i]->GetText());
 	}
-	L3CDListRearrangeBox dlg(this, order, labels);
+
+	MyCDListRearrangeBox dlg(this, order, labels);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) return false;
 
-	// カラムを作り直す
+	// カラム表示、非表示を更新
 	order = dlg.GetOrder();
 	for(int i=0; i<(int)order.Count(); i++) {
 		int ord = order[i];
@@ -659,7 +675,7 @@ bool L3CDListCtrl::ShowListColumnRearrangeBox()
 }
 
 /// カラム番号ソート用
-int L3CDListCtrl::SortByColumn(L3CDListColumn **i1, L3CDListColumn **i2)
+int MyCDListCtrl::SortByColumn(MyCDListColumn **i1, MyCDListColumn **i2)
 {
 	int n = (*i1)->GetColumn() - (*i2)->GetColumn();
 	if (n == 0) n = (*i1)->GetIndex() - (*i2)->GetIndex();
@@ -672,30 +688,38 @@ int L3CDListCtrl::SortByColumn(L3CDListColumn **i1, L3CDListColumn **i2)
 #endif
 
 /// 現在のカラム位置を再取得
-void L3CDListCtrl::ReorderColumns()
+void MyCDListCtrl::ReorderColumns()
 {
-#if 0 //  defined(__WXMSW__)
-	wxWindowList *list = &GetChildren();
-	wxWindowListNode *node = list->GetFirst();
-	HWND hHeader = NULL;
-	while(node) {
-		wxObject *obj = (wxObject *)node->GetData();
-		wxClassInfo *info = obj->GetClassInfo();
-		wxString name = info->GetClassName();
-		if (name == wxT("wxControl")) {
-			hHeader = ((wxWindow *)obj)->GetHandle();
+	// 現在表示しているカラムの順序でカラム番号を再設定
+	int cols = (int)GetColumnCount();
+	for(int col = 0; col < cols; col++) {
+		wxDataViewColumn *datacol = GetColumn(col);
+		int idx = GetColumnPosition(datacol);
+		MyCDListColumn *column = FindColumn(datacol, NULL);
+		if (column) {
+			column->SetColumn(idx);
 		}
-
-		node = node->GetNext();
 	}
+}
 
-	if (hHeader) {
-		int cnt = Header_GetItemCount(hHeader);
-		int arr[20];
+/// 指定した座標に行アイテムがあるか
+bool MyCDListCtrl::HasItemAtPoint(int x, int y) const
+{
+	wxPoint pt(x, y);
+	MyCDListItem item;
+	wxDataViewColumn* column;
+	HitTest(pt, item, column);
+	return item.IsOk();
+}
 
-		Header_GetOrderArray(hHeader, cnt, &arr);
-	}
-#endif
+/// 指定した座標にある行アイテムを返す
+MyCDListItem MyCDListCtrl::GetItemAtPoint(int x, int y) const
+{
+	wxPoint pt(x, y);
+	MyCDListItem item;
+	wxDataViewColumn* column;
+	HitTest(pt, item, column);
+	return item;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -703,7 +727,7 @@ void L3CDListCtrl::ReorderColumns()
 //
 //
 //
-L3CDListRearrangeBox::L3CDListRearrangeBox(L3CDListCtrl *parent, const wxArrayInt &order, const wxArrayString &items)
+MyCDListRearrangeBox::MyCDListRearrangeBox(MyCDListCtrl *parent, const wxArrayInt &order, const wxArrayString &items)
 	: wxRearrangeDialog(parent, _("Configure the columns shown:"), _("Arrange Column Order"), order, items) 
 {
 }

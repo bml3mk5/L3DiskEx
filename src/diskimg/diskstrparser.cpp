@@ -7,7 +7,7 @@
 
 #include "diskstrparser.h"
 #include <wx/mstream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -33,6 +33,14 @@ typedef struct st_str_track_header {
 	wxUint16 dat2;
 	wxUint8  reserved[4];
 } str_track_header_t;
+
+/// セクタID
+typedef	struct st_str_sector_id {
+		wxUint8 c;
+		wxUint8 h;
+		wxUint8 r;
+		wxUint8 n;
+} str_sector_id_t;
 #pragma pack()
 
 //
@@ -57,12 +65,10 @@ void Expand2FIFOBuffer::Clear()
 //
 //
 //
-DiskSTRParser::DiskSTRParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskSTRParser::DiskSTRParser(DiskImageFile *file, short mod_flags, DiskResult *result)
+	: DiskImageParser(file, mod_flags, result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
-	this->compress_type = 0;
+	m_compress_type = 0;
 }
 
 DiskSTRParser::~DiskSTRParser()
@@ -80,10 +86,10 @@ DiskSTRParser::~DiskSTRParser()
 /// @param [in] single_density  単密度か
 /// @param [in,out] track       トラック
 /// @return ヘッダ込みのセクタサイズ
-wxUint32 DiskSTRParser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskD88Track *track)
+wxUint32 DiskSTRParser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskImageTrack *track)
 {
 	// セクタ作成
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, false);
 	track->Add(sector);
 
 	wxUint8 *buffer = sector->GetSectorBuffer();
@@ -95,7 +101,7 @@ wxUint32 DiskSTRParser::ParseSector(wxInputStream &istream, int disk_number, int
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + sector_size;
+	return (wxUint32)sector->GetSize();
 }
 
 /// トラックデータの作成
@@ -105,7 +111,7 @@ wxUint32 DiskSTRParser::ParseSector(wxInputStream &istream, int disk_number, int
 /// @param [in] offset          オフセット位置
 /// @param [in,out] disk        ディスク
 /// @return -1:エラー or 終り >0:トラックサイズ
-int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offset_pos, wxUint32 offset, DiskImageDisk *disk)
 {
 	str_track_header_t h_track;
 
@@ -127,7 +133,7 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 
 	int sectors_per_track = h_track.secs;
 	if (sectors_per_track <= 0) {
-		result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
+		p_result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
 		return -1;
 	}
 
@@ -140,7 +146,7 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 	wxUint8 attr[256];
 	memset(attr, 0, sizeof(attr));
 
-	d88_sector_id_t id[256];
+	str_sector_id_t id[256];
 
 	{
 		wxMemoryInputStream iestream(oestream);
@@ -152,7 +158,7 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 			// 4バイト境界
 			len = iestream.Read(&attr[sec], 4).LastRead();
 			if (len < 4) {
-				result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
+				p_result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
 				return -1;
 			}
 		}
@@ -162,15 +168,15 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 
 		for(int sec = 0; sec < sectors_per_track; sec++) {
 			// C H R N
-			len = iestream.Read(&id[sec], sizeof(d88_sector_id_t)).LastRead();
-			if (len < sizeof(d88_sector_id_t)) {
-				result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
+			len = iestream.Read(&id[sec], sizeof(str_sector_id_t)).LastRead();
+			if (len < sizeof(str_sector_id_t)) {
+				p_result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
 				return -1;
 			}
 
 			int sector_size = (128 << id[sec].n);
 			if (id[sec].n > 5) {
-				result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, id[sec].c, id[sec].h, id[sec].r, id[sec].n, sector_size);
+				p_result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, id[sec].c, id[sec].h, id[sec].r, id[sec].n, sector_size);
 				return -1;
 			}
 //#ifdef _DEBUG
@@ -191,17 +197,17 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 	// 圧縮データを展開つづき
 	rc = ExpandNext(istream, oestream, oelimit);
 
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	wxUint32 d88_track_size = 0;
 	{
 		wxMemoryInputStream iestream(oestream);
 		iestream.SeekI(wxUINT16_SWAP_ON_LE(h_track.offd));
 
 		// トラックの作成
-		track = new DiskD88Track(disk, id[0].c, id[0].h, offset_pos, 1);
+		track = disk->NewImageTrack(id[0].c, id[0].h, offset_pos, 1);
 		disk->SetMaxTrackNumber(id[0].c);
 
-		for(int pos = 0; pos < sectors_per_track && result->GetValid() >= 0; pos++) {
+		for(int pos = 0; pos < sectors_per_track && p_result->GetValid() >= 0; pos++) {
 			int sector_size = (128 << id[pos].n);
 			d88_track_size += ParseSector(iestream, disk_number, id[pos].c, id[pos].h, sectors_per_track, id[pos].r, sector_size, (attr[pos] & 0x40) == 0, track);
 		}
@@ -211,12 +217,12 @@ int DiskSTRParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 	// 入力データの位置を補正
 	AdjustIStream(istream);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// トラックサイズ設定
 		track->SetSize(d88_track_size);
 		// サイド番号は各セクタのID Hに合わせる
@@ -247,10 +253,10 @@ int DiskSTRParser::ParseDisk(wxInputStream &istream, int disk_number)
 	}
 
 	// ディスク作成
-	DiskD88Disk *disk = new DiskD88Disk(file, disk_number);
+	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);
 
 	// トラック解析
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
 	for(int pos = 0; pos < 204; pos++) {
 		int offset = ParseTrack(istream, disk_number, d88_offset_pos, d88_offset, disk);
@@ -260,19 +266,19 @@ int DiskSTRParser::ParseDisk(wxInputStream &istream, int disk_number)
 		d88_offset += offset;
 
 		d88_offset_pos++;
-		if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-			result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, disk_number, d88_offset);
+		if (d88_offset_pos >= disk->GetCreatableTracks()) {
+			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, disk_number, d88_offset);
 		}
 	}
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
 			disk->SetDensity(disk_param->GetParamDensity());
 		}
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
@@ -331,11 +337,11 @@ int DiskSTRParser::ParseHeader(wxInputStream &istream, int disk_number)
 /// @param[in,out] istream 元データ
 void DiskSTRParser::AdjustIStream(wxInputStream &istream)
 {
-	if ((compress_type & 2) != 0) {
+	if ((m_compress_type & 2) != 0) {
 		// 2次圧縮の場合、入力データを読み過ぎている場合があるので位置を補正する
 		int match = -1;
 		for(int i=0; i<8; i++) {
-			if (estream.GetEStreamPos(i) < estream.GetReadPos() && estream.GetReadPos() <= estream.GetEStreamPos(i+1)) {
+			if (m_estream.GetEStreamPos(i) < m_estream.GetReadPos() && m_estream.GetReadPos() <= m_estream.GetEStreamPos(i+1)) {
 				match = i;
 				break;
 			}
@@ -345,7 +351,7 @@ void DiskSTRParser::AdjustIStream(wxInputStream &istream)
 //			int ii = (int)estream.GetIStreamPos(match + 1);
 //			myLog.SetInfo("Adjust:%d(%x)", ii, ii);
 //#endif
-			istream.SeekI(estream.GetIStreamPos(match + 1));
+			istream.SeekI(m_estream.GetIStreamPos(match + 1));
 		}
 	}
 }
@@ -363,20 +369,20 @@ int DiskSTRParser::ExpandFirst(wxInputStream &istream, wxOutputStream &ostream, 
 	}
 
 	// 最初のデータ
-	compress_type = 0;
+	m_compress_type = 0;
 //	size_t pos = istream.TellI();
 	char ch = istream.Peek();
 	if (ch == 0x08 || ch == 0x0c) {
-		compress_type = 1;
+		m_compress_type = 1;
 	} else if (ch == -1) {
-		compress_type = 2;
+		m_compress_type = 2;
 	}
 
-	estream.Clear();
-	if (compress_type == 2) {
+	m_estream.Clear();
+	if (m_compress_type == 2) {
 		// 2次圧縮データを展開
 		Expand2(istream, ostream, olimit, true);
-	} else if (compress_type == 1) {
+	} else if (m_compress_type == 1) {
 		// 1次圧縮データを展開
 		Expand1(istream, ostream, olimit);
 	} else {
@@ -392,10 +398,10 @@ int DiskSTRParser::ExpandFirst(wxInputStream &istream, wxOutputStream &ostream, 
 /// @param[in]  olimit  出力バッファサイズ
 int DiskSTRParser::ExpandNext(wxInputStream &istream, wxOutputStream &ostream, size_t olimit)
 {
-	if (compress_type & 2) {
+	if (m_compress_type & 2) {
 		// 2次圧縮データを展開
 		Expand2(istream, ostream, olimit);
-	} else if (compress_type & 1) {
+	} else if (m_compress_type & 1) {
 		// 1次圧縮データとみなす
 		Expand1(istream, ostream, olimit);
 	} else {
@@ -417,13 +423,13 @@ void DiskSTRParser::Expand2(wxInputStream &istream, wxOutputStream &ostream, siz
 		Expand2Element(istream);
 		if (first) {
 			// 1次圧縮しているか
-			int ch = estream.PeekByte();
+			int ch = m_estream.PeekByte();
 			if (ch == 0x08 || ch == 0x0c) {
-				compress_type |= 1;
+				m_compress_type |= 1;
 			}
 			first = false;
 		}
-		if (compress_type & 1) {
+		if (m_compress_type & 1) {
 			// 1次圧縮データを展開
 			cont = Expand1Element(ostream, olimit);
 		} else {
@@ -450,8 +456,8 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 	if (ch == wxEOF) return;
 
 	size_t ipos = istream.TellI();
-	estream.SetIStreamPos(0, ipos);
-	estream.SetEStreamPos(0, estream.GetWritePos());
+	m_estream.SetIStreamPos(0, ipos);
+	m_estream.SetEStreamPos(0, m_estream.GetWritePos());
 
 	int cmd = (ch & 0xff);
 
@@ -459,11 +465,11 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 	for(int i=0; i<8; i++) {
 		if (cmd & 1) {
 			ibuf_len++;
-			estream.SetLastPos(ipos + ibuf_len);
+			m_estream.SetLastPos(ipos + ibuf_len);
 		} else {
 			ibuf_len += 2;
 		}
-		estream.SetIStreamPos(i+1, ipos + ibuf_len);
+		m_estream.SetIStreamPos(i+1, ipos + ibuf_len);
 		cmd >>= 1;
 	}
 
@@ -475,8 +481,8 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 	for(int i=0; i<8; i++) {
 		if (cmd & 1) {
 			// そのまま出力
-			estream.AppendByte(ibuf[ibuf_len++]);
-			estream.SetEStreamPos(i+1, estream.GetWritePos());
+			m_estream.AppendByte(ibuf[ibuf_len++]);
+			m_estream.SetEStreamPos(i+1, m_estream.GetWritePos());
 		} else {
 			int d1 = ibuf[ibuf_len++];
 			int d2 = ibuf[ibuf_len++];
@@ -486,7 +492,7 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 			idx += 18;
 
 			// コピー元となるデータ位置を計算
-			int elen = (int)estream.GetWritePos();
+			int elen = (int)m_estream.GetWritePos();
 			if (elen >= 0x2000) {
 				idx += (elen & ~0xfff) - 0x1000;
 			} else if (elen < idx) {
@@ -501,7 +507,7 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 				}
 
 				// 元データを取得
-				wxUint8 *bp = (wxUint8 *)estream.GetData() + idx;
+				wxUint8 *bp = (wxUint8 *)m_estream.GetData() + idx;
 				int blen = (idx + len > elen ? elen - idx : len);
 				memcpy(buf, bp, blen);
 				int bpos = blen;
@@ -520,14 +526,14 @@ void DiskSTRParser::Expand2Element(wxInputStream &istream)
 				}
 				int plen = (len + idx);
 				if (plen > 0) {
-					wxUint8 *bp = (wxUint8 *)estream.GetData();
+					wxUint8 *bp = (wxUint8 *)m_estream.GetData();
 					memcpy(&buf[nlen], bp, plen);
 				}
 			}
 
 			// 展開データに追記
-			estream.AppendData(buf, len);
-			estream.SetEStreamPos(i+1, estream.GetWritePos());
+			m_estream.AppendData(buf, len);
+			m_estream.SetEStreamPos(i+1, m_estream.GetWritePos());
 		}
 		cmd >>= 1;
 	}
@@ -541,20 +547,20 @@ void DiskSTRParser::Expand1(wxInputStream &istream, wxOutputStream &ostream, siz
 {
 	wxUint8 buf[16];
 
-	bool cont = (estream.Remain() == 0);
+	bool cont = (m_estream.Remain() == 0);
 	do {
 		if (cont) {
 			size_t len = istream.Read(buf, sizeof(buf)).LastRead();
 			if (len > 0) {
-				estream.AppendData(buf, len);
+				m_estream.AppendData(buf, len);
 			}
 		}
 		cont = Expand1Element(ostream, olimit);
 	} while (cont);
 
-	if (estream.Remain() > 0) {
-		istream.SeekI(-(wxFileOffset)estream.Remain(), wxFromCurrent);
-		estream.SetWritePos(estream.GetReadPos());
+	if (m_estream.Remain() > 0) {
+		istream.SeekI(-(wxFileOffset)m_estream.Remain(), wxFromCurrent);
+		m_estream.SetWritePos(m_estream.GetReadPos());
 	}
 }
 
@@ -571,7 +577,7 @@ bool DiskSTRParser::Expand1Element(wxOutputStream &ostream, size_t olimit)
 
 	do {
 		// 先頭文字チェック
-		int ch = estream.PeekByte();
+		int ch = m_estream.PeekByte();
 		if (ch == -1) {
 			break;
 		}
@@ -581,20 +587,20 @@ bool DiskSTRParser::Expand1Element(wxOutputStream &ostream, size_t olimit)
 		} else {
 			siz = 1;
 		}
-		if (estream.Remain() < (siz + 1)) {
+		if (m_estream.Remain() < (siz + 1)) {
 			break;
 		}
 
 		// 展開
-		ch = estream.GetByte();
+		ch = m_estream.GetByte();
 		siz = (ch & 0xff);
 		if (ch < 0x80) {
 			if (siz == 0) siz = 0x80;
-			siz = estream.GetData(buf, siz);
+			siz = m_estream.GetData(buf, siz);
 			osize += ostream.Write(buf, siz).LastWrite();
 		} else {
 			siz = (ch & 0x7f);
-			ch = estream.GetByte();
+			ch = m_estream.GetByte();
 			if (siz == 0) siz = 0x80;
 			memset(buf, ch, siz);
 			osize += ostream.Write(buf, siz).LastWrite();
@@ -639,7 +645,7 @@ bool DiskSTRParser::Expand0Element(wxOutputStream &ostream, size_t olimit)
 	while(osize < olimit) {
 		siz = (osize + sizeof(buf) < olimit ? sizeof(buf) : olimit - osize);
 
-		siz = estream.GetData(buf, siz);
+		siz = m_estream.GetData(buf, siz);
 		if (siz == 0) {
 			break;
 		}
@@ -648,12 +654,16 @@ bool DiskSTRParser::Expand0Element(wxOutputStream &ostream, size_t olimit)
 	return (osize < olimit);
 }
 
+int DiskSTRParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
+}
+
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskSTRParser::Check(DiskParser &dp, wxInputStream &istream)
+int DiskSTRParser::Check(wxInputStream &istream)
 {
 	istream.SeekI(0);
 
@@ -666,10 +676,11 @@ int DiskSTRParser::Check(DiskParser &dp, wxInputStream &istream)
 
 /// ファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskSTRParser::Parse(wxInputStream &istream)
+int DiskSTRParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	istream.SeekI(0);
 
@@ -678,5 +689,5 @@ int DiskSTRParser::Parse(wxInputStream &istream)
 			break;
 		}
 	}
-	return result->GetValid();
+	return p_result->GetValid();
 }

@@ -85,7 +85,7 @@ double DiskBasicTypeSDOS::CheckFat(bool is_formatting)
 	double valid_ratio = -1.0;
 
 	// 最初のセクタにある文字列で判断
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		wxCharBuffer id = basic->GetVariousStringParam(wxT("IPLCompareString")).To8BitData();
 		if (id.length() > 0) {
@@ -241,7 +241,7 @@ int DiskBasicTypeSDOS::GetStartSectorFromGroup(wxUint32 group_num)
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeSDOS::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeSDOS::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }

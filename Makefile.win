@@ -1,5 +1,5 @@
 #
-# for Windows + MSYS2 + MinGW
+# for Windows + MSYS2 + MinGW64
 #
 CC=g++
 
@@ -10,11 +10,10 @@ DBG_CDEFS=-D_DEBUG -D_DEBUG_LOG
 #ARCH=-m32
 #ARCH=-m64
 
-WXDIR=/D/Devel/sources/wxWidgets-3.1.3
+WXDIR=/D/Devel/sources/wxWidgets-3.2.4
 WXCONFIG_SH=wx-config
-# WXCONFIG_ST=wx-config
-WXCONFIG_ST=$(WXDIR)/build_release_static_unicode_x64/wx-config
-WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode_x64/wx-config
+WXCONFIG_ST=$(WXDIR)/build_release_static_unicode_mingw64/wx-config
+WXCONFIG_DBG=$(WXDIR)/build_debug_static_unicode_mingw64/wx-config
 
 SH_INCLUDES=$(shell $(WXCONFIG_SH) --cppflags)
 ST_INCLUDES=$(shell $(WXCONFIG_ST) --cppflags)
@@ -44,6 +43,7 @@ SRCDIR=src
 SRCBASICFMTDIR=$(SRCDIR)/basicfmt
 SRCDISKIMGDIR=$(SRCDIR)/diskimg
 SRCUIDIR=$(SRCDIR)/ui
+SRCRESDIR=$(SRCDIR)/res
 
 LANGDIR=lang
 SRCLANG=$(LANGDIR)/
@@ -53,14 +53,15 @@ SRCDATA=$(DATADIR)/
 
 OBJS=	$(SRCDIR)/utils.o \
 	$(SRCDIR)/common.o \
-	$(SRCDIR)/diskd88.o \
-	$(SRCDIR)/diskparam.o \
 	$(SRCDIR)/charcodes.o \
 	$(SRCDIR)/config.o \
 	$(SRCDIR)/logging.o \
+	$(SRCDIR)/parambase.o \
 	$(SRCDIR)/result.o \
+	$(SRCBASICFMTDIR)/basiccategory.o \
 	$(SRCBASICFMTDIR)/basiccommon.o \
 	$(SRCBASICFMTDIR)/basicparam.o \
+	$(SRCBASICFMTDIR)/basictemplate.o \
 	$(SRCBASICFMTDIR)/basicerror.o \
 	$(SRCBASICFMTDIR)/basictype.o \
 	$(SRCBASICFMTDIR)/basictype_fat_base.o \
@@ -135,7 +136,10 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basicdiritem.o \
 	$(SRCBASICFMTDIR)/basicdir.o \
 	$(SRCBASICFMTDIR)/basicfmt.o \
-	$(SRCDISKIMGDIR)/diskd88creator.o \
+	$(SRCDISKIMGDIR)/diskparam.o \
+	$(SRCDISKIMGDIR)/diskimage.o \
+	$(SRCDISKIMGDIR)/diskd88.o \
+	$(SRCDISKIMGDIR)/diskimagecreator.o \
 	$(SRCDISKIMGDIR)/diskplainparser.o \
 	$(SRCDISKIMGDIR)/diskd88parser.o \
 	$(SRCDISKIMGDIR)/diskdskparser.o \
@@ -179,12 +183,15 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/uidiskattr.o \
 	$(SRCUIDIR)/uidisklist.o \
 	$(SRCUIDIR)/uifilelist.o \
+	$(SRCUIDIR)/uimainframe.o \
+	$(SRCUIDIR)/uimainprocess.o \
 	$(SRCUIDIR)/uirawdisk.o \
 	$(SRCUIDIR)/uifatarea.o \
 	$(SRCUIDIR)/uirpanel.o \
+	$(SRCUIDIR)/mymenu.o \
 	$(SRCDIR)/main.o
 
-RESOBJS=$(SRCDIR)/l3diskex.res
+RESOBJS=$(SRCRESDIR)/l3diskex.res
 
 EXE =$(BUILDDIR)/$(EXEFILE)
 SH_EXE=$(SH_BUILDDIR)/$(EXEFILE)
@@ -279,24 +286,28 @@ mk_builddir:
 	mkdir -p $(BUILDDIR)/$(SRCBASICFMTDIR)
 	mkdir -p $(BUILDDIR)/$(SRCDISKIMGDIR)
 	mkdir -p $(BUILDDIR)/$(SRCUIDIR)
+	mkdir -p $(BUILDDIR)/$(SRCRESDIR)
 
 mk_sh_builddir:
 	mkdir -p $(SH_BUILDDIR)/$(SRCDIR)
 	mkdir -p $(SH_BUILDDIR)/$(SRCBASICFMTDIR)
 	mkdir -p $(SH_BUILDDIR)/$(SRCDISKIMGDIR)
 	mkdir -p $(SH_BUILDDIR)/$(SRCUIDIR)
+	mkdir -p $(SH_BUILDDIR)/$(SRCRESDIR)
 
 mk_st_builddir:
 	mkdir -p $(ST_BUILDDIR)/$(SRCDIR)
 	mkdir -p $(ST_BUILDDIR)/$(SRCBASICFMTDIR)
 	mkdir -p $(ST_BUILDDIR)/$(SRCDISKIMGDIR)
 	mkdir -p $(ST_BUILDDIR)/$(SRCUIDIR)
+	mkdir -p $(ST_BUILDDIR)/$(SRCRESDIR)
 
 mk_dbg_builddir:
 	mkdir -p $(DBG_BUILDDIR)/$(SRCDIR)
 	mkdir -p $(DBG_BUILDDIR)/$(SRCBASICFMTDIR)
 	mkdir -p $(DBG_BUILDDIR)/$(SRCDISKIMGDIR)
 	mkdir -p $(DBG_BUILDDIR)/$(SRCUIDIR)
+	mkdir -p $(DBG_BUILDDIR)/$(SRCRESDIR)
 
 clean: sh_clean
 

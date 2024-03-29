@@ -213,7 +213,7 @@ bool DiskBasicTypeCDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	//
 	// IPL
 	//
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		wxUint8 *buf = sector->GetSectorBuffer();

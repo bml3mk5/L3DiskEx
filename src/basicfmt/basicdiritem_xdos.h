@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_XDOS_H_
-#define _BASICDIRITEM_XDOS_H_
+#ifndef BASICDIRITEM_XDOS_H
+#define BASICDIRITEM_XDOS_H
 
 #include "basicdiritem.h"
 
@@ -45,7 +45,7 @@ class DiskBasicDirItemXDOSChain
 {
 private:
 	DiskBasic		*basic;
-	DiskD88Sector	*sector;
+	DiskImageSector	*sector;
 	xdos_chain_t	*chain;
 	bool			chain_ownmake;
 public:
@@ -58,7 +58,7 @@ public:
 	void Dup(const DiskBasicDirItemXDOSChain &src);
 #endif
 	/// @brief ポインタをセット
-	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, xdos_chain_t *n_chain);
+	void Set(DiskBasic *n_basic, DiskImageSector *n_sector, xdos_chain_t *n_chain);
 	/// @brief メモリ確保
 	void Alloc();
 	/// @brief クリア
@@ -89,13 +89,15 @@ class DiskBasicDirItemXDOSBase : public DiskBasicDirItem
 protected:
 	DiskBasicDirItemXDOSBase() : DiskBasicDirItem() {}
 	DiskBasicDirItemXDOSBase(const DiskBasicDirItemXDOSBase &src) : DiskBasicDirItem(src) {}
-	DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit);
+	DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit);
 
 	/// @brief チェイン情報
 	DiskBasicDirItemXDOSChain chain;
 
 	/// @brief ディレクトリエントリを確保
 	virtual bool	AllocateItem() { return true; }
+	/// @brief ディレクトリエントリを確保
+	virtual bool	AllocateItem(const SectorParam *next) { return true; }
 
 	/// @brief チェイン情報を設定
 	virtual void	AttachChain(wxUint32 group_num);
@@ -105,11 +107,11 @@ protected:
 
 public:
 	DiskBasicDirItemXDOSBase(DiskBasic *basic);
-	DiskBasicDirItemXDOSBase(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemXDOSBase(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 //	/// @brief アイテムへのポインタを設定
-//	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+//	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
@@ -127,7 +129,7 @@ public:
 	/// @brief 最終セクタのサイズを計算してファイルサイズを返す
 	virtual int		RecalcFileSize(DiskBasicGroups &group_items, int occupied_size);
 	/// @brief チェイン用のセクタをセット
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 	/// @brief チェイン用のセクタにグループ番号をセット(機種依存)
 	virtual void	AddChainGroupNumber(int idx, wxUint32 val);
 
@@ -160,7 +162,7 @@ class DiskBasicDirItemXDOS : public DiskBasicDirItemXDOSBase
 protected:
 	DiskBasicDirItemXDOS() : DiskBasicDirItemXDOSBase() {}
 	DiskBasicDirItemXDOS(const DiskBasicDirItemXDOS &src) : DiskBasicDirItemXDOSBase(src) {}
-	DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit);
+	DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit);
 
 	/// @brief ディレクトリデータ
 	DiskBasicDirData<directory_xdos_t> m_data;
@@ -206,11 +208,11 @@ protected:
 
 public:
 	DiskBasicDirItemXDOS(DiskBasic *basic);
-	DiskBasicDirItemXDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemXDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -297,4 +299,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_XDOS_H_ */
+#endif /* BASICDIRITEM_XDOS_H */

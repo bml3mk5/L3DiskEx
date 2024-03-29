@@ -1,4 +1,4 @@
-#include "version.h"
+#include "../version.h"
 
 // Version Information resources
 1 VERSIONINFO
@@ -13,10 +13,10 @@ FILEFLAGS       0x00000000
         {
             VALUE "FileVersion", APPLICATION_VERSION
             VALUE "ProductVersion", APPLICATION_VERSION ""PLATFORM""
-            VALUE "FileDescription", "L3DiskExplorer"
+            VALUE "FileDescription", APPLICATION_FULLNAME
             VALUE "LegalCopyright", APP_COPYRIGHT
             VALUE "OriginalFilename", "l3diskex.exe"
-            VALUE "ProductName", "L3DiskExplorer"
+            VALUE "ProductName", APPLICATION_FULLNAME
             VALUE "InternalName", "l3diskex"
         }
     }
@@ -26,8 +26,8 @@ FILEFLAGS       0x00000000
     }
 }
 
-l3diskex ICON "res/l3diskex.ico"
+l3diskex ICON "l3diskex.ico"
 
-zz_fd_5inch ICON "res/fd_5inch.ico"
+zz_fd_5inch ICON "fd_5inch.ico"
 
 #include "wx/msw/wx.rc"

@@ -5,17 +5,18 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKD88_PARSER_H_
-#define _DISKD88_PARSER_H_
+#ifndef DISKD88_PARSER_H
+#define DISKD88_PARSER_H
 
 #include "../common.h"
 #include <wx/dynarray.h>
+#include "diskparser.h"
 
 
 class wxInputStream;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskResult;
 class FileParam;
 
@@ -49,25 +50,24 @@ public:
 WX_DECLARE_OBJARRAY(DiskD88ParseOffset, DiskD88ParseOffsets);
 
 /// D88ディスクパーサー
-class DiskD88Parser
+class DiskD88Parser : public DiskImageParser
 {
 private:
-	DiskD88File		*file;
-	short			mod_flags;
-	DiskResult		*result;
-
 	void	 PreParseSectors(wxInputStream &istream, int disk_number, int &track_number, int &side_number, int &sector_nums, int &sector_size);
-	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskD88Track *track);
-	wxUint32 ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskD88Disk *disk);
+	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskImageTrack *track);
+	wxUint32 ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskImageDisk *disk);
 	wxUint32 ParseDisk(wxInputStream &istream, size_t start_pos, int disk_number);
 
+	int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+
 public:
-	DiskD88Parser(DiskD88File *file, short mod_flags, DiskResult *result);
+	DiskD88Parser(DiskImageFile *file, short mod_flags, DiskResult *result);
 	~DiskD88Parser();
 
 	/// チェック
 	int Check(wxInputStream &istream);
-	int Parse(wxInputStream &istream);
+	/// 解析
+	int Parse(wxInputStream &istream, const DiskParam *disk_param = NULL);
 };
 
-#endif /* _DISKD88_PARSER_H_ */
+#endif /* DISKD88_PARSER_H */

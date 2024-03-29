@@ -232,7 +232,7 @@ wxUint32 DiskBasicTypeMZ::GetNextGroupNumber(wxUint32 num, int sector_pos)
 {
 	int trk_num, sid_num, sec_num;
 	basic->CalcNumFromSectorPosForGroup(sector_pos, trk_num, sid_num, sec_num);
-	DiskD88Sector *sector = basic->GetDisk()->GetSector(trk_num, sid_num, sec_num);
+	DiskImageSector *sector = basic->GetDisk()->GetSector(trk_num, sid_num, sec_num);
 	if (!sector) return 0;
 	wxUint16 next_sec = *(wxUint16 *)(&sector->GetSectorBuffer()[sector->GetSectorSize()-2]);
 	next_sec = basic->InvertAndOrderUint16(next_sec);	// invert
@@ -307,7 +307,7 @@ int DiskBasicTypeMZ::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item
 	if (is_brd) {
 		// BRD ランダムアクセス
 		// マップ領域を確保
-		DiskD88Sector *sector = basic->GetSectorFromGroup(group_start);
+		DiskImageSector *sector = basic->GetSectorFromGroup(group_start);
 		if (!sector) {
 			// セクタ無い？！
 			rc = -1;
@@ -469,7 +469,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	// ボリューム番号、カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskD88Sector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
@@ -510,7 +510,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// IPL
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		wxUint8 *buf = sector->GetSectorBuffer();
@@ -656,7 +656,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 	if (!item || !item->GetFileAttr().IsDirectory()) return;
 
 	// ディレクトリの場合は、下位にあるボリューム名も変更する
-	DiskD88Sector *sector = basic->GetSectorFromGroup(item->GetStartGroup(0));
+	DiskImageSector *sector = basic->GetSectorFromGroup(item->GetStartGroup(0));
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);

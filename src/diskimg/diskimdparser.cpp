@@ -7,7 +7,7 @@
 
 #include "diskimdparser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -27,11 +27,11 @@ typedef struct st_imd_track_header {
 //
 //
 //
-DiskIMDParser::DiskIMDParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskIMDParser::DiskIMDParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskIMDParser::~DiskIMDParser()
@@ -49,17 +49,17 @@ DiskIMDParser::~DiskIMDParser()
 /// @param [in] single_density  単密度か
 /// @param [in,out] track       トラック
 /// @return ヘッダ込みのセクタサイズ
-wxUint32 DiskIMDParser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskD88Track *track)
+wxUint32 DiskIMDParser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskImageTrack *track)
 {
 	wxUint8 h_sector;
 	size_t len = istream.Read(&h_sector, sizeof(h_sector)).LastRead();
 	if (len != sizeof(h_sector)) {
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 		return 0;
 	}
 
 	// セクタ作成
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, false);
 	track->Add(sector);
 
 	wxUint8 *buffer = sector->GetSectorBuffer();
@@ -97,7 +97,7 @@ wxUint32 DiskIMDParser::ParseSector(wxInputStream &istream, int disk_number, int
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + sector_size;
+	return (wxUint32)sector->GetSize();
 }
 
 /// トラックデータの作成
@@ -107,7 +107,7 @@ wxUint32 DiskIMDParser::ParseSector(wxInputStream &istream, int disk_number, int
 /// @param [in] offset          オフセット位置
 /// @param [in,out] disk        ディスク
 /// @return -1:エラー or 終り >0:トラックサイズ
-int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offset_pos, wxUint32 offset, DiskImageDisk *disk)
 {
 	imd_track_header_t h_track;
 	int sector_size = 0;
@@ -118,16 +118,16 @@ int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 		return -1;
 	}
 	if (h_track.mode > 5) {
-		result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
+		p_result->SetError(DiskResult::ERRV_DISK_HEADER, disk_number);
 		return -1;
 	}
 	if ((h_track.head_num_n_flg & 0xf) > 1) {
-		result->SetError(DiskResult::ERRV_ID_SIDE, disk_number
+		p_result->SetError(DiskResult::ERRV_ID_SIDE, disk_number
 			,h_track.track_num, h_track.track_num, (h_track.head_num_n_flg & 0xf), 1);
 		return -1;
 	}
 	if (h_track.sector_size_n > 6) {
-		result->SetError(DiskResult::ERRV_SECTOR_SIZE_HEADER, disk_number, h_track.sector_size_n);
+		p_result->SetError(DiskResult::ERRV_SECTOR_SIZE_HEADER, disk_number, h_track.sector_size_n);
 		return -1;
 	}
 	sector_size = 128 << (h_track.sector_size_n);
@@ -140,14 +140,14 @@ int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 		// read sector map
 		len = istream.Read(sector_map, h_track.num_of_sectors).LastRead();
 		if (len != h_track.num_of_sectors) {
-			result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+			p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 			return -1;
 		}
 		if (h_track.head_num_n_flg & 0x80) {
 			// read cylinder map
 			len = istream.Read(track_map, h_track.num_of_sectors).LastRead();
 			if (len != h_track.num_of_sectors) {
-				result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+				p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 				return -1;
 			}
 		} else {
@@ -157,7 +157,7 @@ int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 			// read head map
 			len = istream.Read(head_map, h_track.num_of_sectors).LastRead();
 			if (len != h_track.num_of_sectors) {
-				result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+				p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 				return -1;
 			}
 		} else {
@@ -165,25 +165,25 @@ int DiskIMDParser::ParseTrack(wxInputStream &istream, int disk_number, int offse
 		}
 	}
 	if (sector_size * h_track.num_of_sectors > 32768) {
-		result->SetError(DiskResult::ERRV_DISK_TOO_LARGE, disk_number);
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_LARGE, disk_number);
 		return -1;
 	}
 
 	// トラックの作成
-	DiskD88Track *track = new DiskD88Track(disk, h_track.track_num, (h_track.head_num_n_flg & 0xf), offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(h_track.track_num, (h_track.head_num_n_flg & 0xf), offset_pos, 1);
 	disk->SetMaxTrackNumber(h_track.track_num);
 
 	wxUint32 d88_track_size = 0;
-	for(int pos = 0; pos < h_track.num_of_sectors && result->GetValid() >= 0; pos++) {
+	for(int pos = 0; pos < h_track.num_of_sectors && p_result->GetValid() >= 0; pos++) {
 		d88_track_size += ParseSector(istream, disk_number, track_map[pos], head_map[pos], h_track.num_of_sectors, sector_map[pos], sector_size, h_track.mode <= 2, track);
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// トラックサイズ設定
 		track->SetSize(d88_track_size);
 		// サイド番号は各セクタのID Hに合わせる
@@ -218,11 +218,12 @@ int DiskIMDParser::ParseDisk(wxInputStream &istream, int disk_number)
 	}
 
 	// ディスク作成
-	DiskD88Disk *disk = new DiskD88Disk(file, disk_number);
+	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);
 
 	// トラック解析
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
+	int limit_offset_pos = disk->GetCreatableTracks();
 	for(int pos = 0; pos < 204; pos++) {
 		int offset = ParseTrack(istream, disk_number, d88_offset_pos, d88_offset, disk);
 		if (offset == -1) {
@@ -231,19 +232,19 @@ int DiskIMDParser::ParseDisk(wxInputStream &istream, int disk_number)
 		d88_offset += offset;
 
 		d88_offset_pos++;
-		if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-			result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, disk_number, d88_offset);
+		if (d88_offset_pos >= limit_offset_pos) {
+			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, disk_number, d88_offset);
 		}
 	}
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
 			disk->SetDensity(disk_param->GetParamDensity());
 		}
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
@@ -251,12 +252,16 @@ int DiskIMDParser::ParseDisk(wxInputStream &istream, int disk_number)
 	return 0;
 }
 
+int DiskIMDParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
+}
+
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskIMDParser::Check(DiskParser &dp, wxInputStream &istream)
+int DiskIMDParser::Check(wxInputStream &istream)
 {
 	istream.SeekI(0);
 
@@ -289,10 +294,11 @@ int DiskIMDParser::Check(DiskParser &dp, wxInputStream &istream)
 
 /// IMDファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskIMDParser::Parse(wxInputStream &istream)
+int DiskIMDParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	istream.SeekI(0);
 
@@ -301,5 +307,5 @@ int DiskIMDParser::Parse(wxInputStream &istream)
 			break;
 		}
 	}
-	return result->GetValid();
+	return p_result->GetValid();
 }

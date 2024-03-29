@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKREPLACEBOX_H_
-#define _DISKREPLACEBOX_H_
+#ifndef DISKREPLACEBOX_H
+#define DISKREPLACEBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
@@ -14,8 +14,8 @@
 
 
 class wxChoice;
-class DiskD88File;
-class DiskD88Disk;
+class DiskImageFile;
+class DiskImageDisk;
 
 /// ディスク置き換え確認ボックス内で使用
 class DiskReplaceNumber
@@ -41,7 +41,7 @@ private:
 	DiskReplaceNumbers numDisk;
 
 public:
-	DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskD88File &src_file, DiskD88Disk &tag_disk);
+	DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskImageFile &src_file, DiskImageDisk &tag_disk);
 
 	enum {
 		IDC_COMBO_DISK = 1,
@@ -63,5 +63,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _DISKREPLACEBOX_H_ */
+#endif /* DISKREPLACEBOX_H */
 

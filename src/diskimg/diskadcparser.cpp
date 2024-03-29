@@ -7,7 +7,7 @@
 
 #include "diskadcparser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -28,7 +28,7 @@ typedef struct st_adc_header {
 //
 //
 //
-DiskADCParser::DiskADCParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskADCParser::DiskADCParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 	: DiskPlainParser(file, mod_flags, result)
 {
 }
@@ -46,8 +46,8 @@ DiskADCParser::~DiskADCParser()
 int DiskADCParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	if (!disk_param) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 
 	istream.SeekI(0);
@@ -56,15 +56,14 @@ int DiskADCParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return p_result->GetValid();
 	}
 
 	return DiskPlainParser::Parse(istream, disk_param);
 }
 
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @param [in] disk_hints    ディスクパラメータヒント("2D"など)
 /// @param [in] disk_param    ディスクパラメータ disk_hints指定時はNullable
@@ -72,7 +71,7 @@ int DiskADCParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskADCParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskADCParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 
@@ -80,22 +79,22 @@ int DiskADCParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeH
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return p_result->GetValid();
 	}
 	// ラベル長の末尾が0かどうか
 	if ((size_t)header.label_length > sizeof(header.label) || header.label[header.label_length] != 0) {
 		// not disk
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 	// ファイルサイズが一致するか
 	wxUint32 data_size = wxUINT32_SWAP_ON_LE(header.data_size);
 	wxUint32 file_size = (wxUint32)sizeof(header) + data_size + wxUINT32_SWAP_ON_LE(header.post_size);
 	if (file_size != (wxUint32)istream.GetLength()) {
 		// not disk
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 
 	// データサイズからディスクのパラメータを算出

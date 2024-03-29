@@ -10,7 +10,7 @@
 #include <wx/sizer.h>
 #include <wx/numformatter.h>
 #include <wx/valtext.h>
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 
 
 // Attach Event
@@ -18,7 +18,7 @@ BEGIN_EVENT_TABLE(RawTrackBox, wxDialog)
 //	EVT_BUTTON(wxID_OK, RawTrackBox::OnOK)
 END_EVENT_TABLE()
 
-RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offset, DiskD88Disk *disk)
+RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offset, DiskImageDisk *disk)
 	: wxDialog(parent, id, _("Track Information"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 //	wxTextValidator validate(wxFILTER_ALPHANUMERIC);
@@ -31,7 +31,7 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 	wxStaticText *lbl;
 	wxString str;
 
-	DiskD88Track *track = disk->GetTrackByOffset(offset);
+	DiskImageTrack *track = disk->GetTrackByOffset(offset);
 	long val;
 
 	grid = new wxGridSizer(2, 4, 4);
@@ -62,7 +62,7 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 	lbl = new wxStaticText(this, wxID_ANY, str);
 	grid->Add(lbl, flagsr);
 
-	DiskD88Sectors *sectors = track ? track->GetSectors() : NULL;
+	DiskImageSectors *sectors = track ? track->GetSectors() : NULL;
 	size_t ss_count = (sectors ? sectors->Count() : 0);
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Number of Sectors :"));
@@ -73,8 +73,7 @@ RawTrackBox::RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offs
 
 	int sector_total_size = 0;
 	for(size_t i=0; i<ss_count; i++) {
-		sector_total_size += (int)sizeof(d88_sector_header_t);
-		sector_total_size += sectors->Item(i)->GetSectorBufferSize();
+		sector_total_size += sectors->Item(i)->GetSize();
 	}
 
 	lbl = new wxStaticText(this, wxID_ANY, _("Total Size of Sectors :"));

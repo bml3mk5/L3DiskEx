@@ -6,6 +6,7 @@
 ///
 
 #include "uiclistctrl.h"
+#include <wx/menu.h>
 #include <wx/imaglist.h>
 #include <wx/icon.h>
 #include "../config.h"
@@ -16,18 +17,18 @@
 //
 //
 //
-L3CListValue::L3CListValue() : wxListItem()
+MyCListValue::MyCListValue() : wxListItem()
 {
 	SetMask(wxLIST_MASK_TEXT);
 }
-void L3CListValue::Set(long n_row, int n_icon, const wxString &n_value)
+void MyCListValue::Set(long n_row, int n_icon, const wxString &n_value)
 {
 	SetId((int)n_row);
 	SetImage(n_icon);
 	SetText(n_value);
 	SetMask(wxLIST_MASK_IMAGE | wxLIST_MASK_TEXT);
 }
-void L3CListValue::Set(long n_row, const wxString &n_value)
+void MyCListValue::Set(long n_row, const wxString &n_value)
 {
 	SetId((int)n_row);
 	SetText(n_value);
@@ -37,12 +38,12 @@ void L3CListValue::Set(long n_row, const wxString &n_value)
 //
 // リストのカラム情報
 //
-L3CListColumn::L3CListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
+MyCListColumn::MyCListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
 {
 	Set(n_idx, n_info, n_width);
 }
 
-void L3CListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
+void MyCListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
 {
 	idx = n_idx;
 	col = n_idx;
@@ -52,17 +53,17 @@ void L3CListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_w
 	label = wxGetTranslation(n_info->label);
 }
 
-bool L3CListColumn::HaveIcon() const
+bool MyCListColumn::HaveIcon() const
 {
 	return info->have_icon;
 }
 
-wxListColumnFormat L3CListColumn::GetAlign() const
+wxListColumnFormat MyCListColumn::GetAlign() const
 {
 	return (info->align == wxALIGN_RIGHT ? wxLIST_FORMAT_RIGHT : (info->align == wxALIGN_CENTER ? wxLIST_FORMAT_CENTER : wxLIST_FORMAT_LEFT));
 }
 
-bool L3CListColumn::IsSortable() const
+bool MyCListColumn::IsSortable() const
 {
 	return info->sortable;
 }
@@ -72,52 +73,52 @@ bool L3CListColumn::IsSortable() const
 //
 // リストコントロール内の1行データ
 //
-L3CListRow::L3CListRow()
+MyCListRow::MyCListRow()
 {
 	m_data = 0;
 }
-L3CListRow::L3CListRow(L3CListValue *n_values, size_t n_count, wxUIntPtr n_data)
+MyCListRow::MyCListRow(MyCListValue *n_values, size_t n_count, wxUIntPtr n_data)
 {
 	Set(n_values, n_count, n_data);
 }
-L3CListRow::~L3CListRow()
+MyCListRow::~MyCListRow()
 {
 	for(size_t i=0; i<m_values.Count(); i++) {
 		delete m_values.Item(i);
 	}
 }
-void L3CListRow::Set(L3CListValue *n_values, size_t n_count, wxUIntPtr n_data)
+void MyCListRow::Set(MyCListValue *n_values, size_t n_count, wxUIntPtr n_data)
 {
 	for(size_t i=0; i<n_count; i++) {
-		L3CListValue *val = new L3CListValue(n_values[i]);
+		MyCListValue *val = new MyCListValue(n_values[i]);
 		m_values.Add(val);
 	}
 	m_data = n_data;
 }
-void L3CListRow::Replace(L3CListValue *n_values, size_t n_count, wxUIntPtr n_data)
+void MyCListRow::Replace(MyCListValue *n_values, size_t n_count, wxUIntPtr n_data)
 {
 	for(size_t i=0; i<n_count; i++) {
-		L3CListValue *val = m_values[i];
+		MyCListValue *val = m_values[i];
 		if (val) *val = n_values[i];
 	}
 	m_data = n_data;
 }
-void L3CListRow::Clear()
+void MyCListRow::Clear()
 {
 	for(size_t i=0; i<m_values.Count(); i++) {
 		delete m_values.Item(i);
 	}
 	m_values.Empty();
 }
-size_t L3CListRow::Count() const
+size_t MyCListRow::Count() const
 {
 	return m_values.Count();
 }
-L3CListValue *L3CListRow::Item(size_t idx) const
+MyCListValue *MyCListRow::Item(size_t idx) const
 {
 	return m_values.Item(idx);
 }
-int L3CListRow::GetImage() const
+int MyCListRow::GetImage() const
 {
 	int image = -1;
 	for(size_t idx=0; idx<m_values.Count(); idx++) {
@@ -129,11 +130,11 @@ int L3CListRow::GetImage() const
 	}
 	return image;
 }
-int L3CListRow::GetImage(size_t idx) const
+int MyCListRow::GetImage(size_t idx) const
 {
 	return m_values.Item(idx)->GetImage();
 }
-const wxString &L3CListRow::GetText(size_t idx) const
+const wxString &MyCListRow::GetText(size_t idx) const
 {
 	return m_values.Item(idx)->GetText();
 }
@@ -141,25 +142,25 @@ const wxString &L3CListRow::GetText(size_t idx) const
 //
 // リストコントロール内の全行データ
 //
-L3CListRows::L3CListRows() : ArrayOfL3CListRow()
+MyCListRows::MyCListRows() : ArrayOfMyCListRow()
 {
 }
-L3CListRows::~L3CListRows()
+MyCListRows::~MyCListRows()
 {
 	ClearAll();
 }
-void L3CListRows::Insert(L3CListValue *n_values, size_t n_count, wxUIntPtr n_data)
+void MyCListRows::Insert(MyCListValue *n_values, size_t n_count, wxUIntPtr n_data)
 {
-	Add(new L3CListRow(n_values, n_count, n_data));
+	Add(new MyCListRow(n_values, n_count, n_data));
 }
-void L3CListRows::Set(long row, L3CListValue *n_values, size_t n_count, wxUIntPtr n_data)
+void MyCListRows::Set(long row, MyCListValue *n_values, size_t n_count, wxUIntPtr n_data)
 {
 	if (row >= (long)Count()) return;
 
-	L3CListRow *item = Item(row);
+	MyCListRow *item = Item(row);
 	item->Replace(n_values, n_count, n_data);
 }
-void L3CListRows::ClearAll()
+void MyCListRows::ClearAll()
 {
 	for(size_t i=0; i<Count(); i++) {
 		delete Item(i);
@@ -170,7 +171,7 @@ void L3CListRows::ClearAll()
 static wxListCtrlCompare s_fnSortCallBack;
 static wxIntPtr			 s_sortData;
 
-bool L3CListRows::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
+bool MyCListRows::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
 {
 	s_fnSortCallBack = fnSortCallBack;
 	s_sortData = sortData;
@@ -179,7 +180,7 @@ bool L3CListRows::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
 
 	return true;
 }
-int L3CListRows::Compare(L3CListRow **item1, L3CListRow **item2)
+int MyCListRows::Compare(MyCListRow **item1, MyCListRow **item2)
 {
 	int i1 = (int)(*item1)->GetData();
 	int i2 = (int)(*item2)->GetData();
@@ -201,7 +202,7 @@ int L3CListRows::Compare(L3CListRow **item1, L3CListRow **item2)
 /// @param [in] style       スタイル
 /// @param [in] pos         位置
 /// @param [in] size        サイズ
-L3CListCtrl::L3CListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id,
+MyCListCtrl::MyCListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID id,
 	const struct st_list_columns *columns,
 	int icon_sort_down, int icon_sort_up,
 	Config *ini,
@@ -226,7 +227,7 @@ L3CListCtrl::L3CListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID 
 	for(int idx=0; columns[idx].name != NULL; idx++) {
 		const struct st_list_columns *c = &columns[idx];
 		int w =	ini ? ini->GetListColumnWidth(idx) : -1;
-		m_columns.Add(new L3CListColumn(idx, c, w >= 0 ? w : c->width));
+		m_columns.Add(new MyCListColumn(idx, c, w >= 0 ? w : c->width));
 		m_indexes.Add(-1);
 	}
 
@@ -246,14 +247,14 @@ L3CListCtrl::L3CListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID 
 	InsertListColumns();
 
 	// event handler
-//	Bind(wxEVT_LIST_COL_END_DRAG, &L3CListCtrl::OnColumnEndDrag, this);
+//	Bind(wxEVT_LIST_COL_END_DRAG, &MyCListCtrl::OnColumnEndDrag, this);
 
 }
-L3CListCtrl::~L3CListCtrl()
+MyCListCtrl::~MyCListCtrl()
 {
 	// カラム幅を取得
 	for(int col = 0; col < (int)GetColumnCount(); col++) {
-		L3CListColumn *column = FindColumn(col, NULL);
+		MyCListColumn *column = FindColumn(col, NULL);
 		if (column) {
 			column->SetWidth(GetListColumnWidth(col));
 		}
@@ -268,7 +269,7 @@ L3CListCtrl::~L3CListCtrl()
 		new_col[idx] = -1;
 	}
 	for(int col = 0; col < (int)order.Count(); col++) {
-		L3CListColumn *column = FindColumn(order[col], NULL);
+		MyCListColumn *column = FindColumn(order[col], NULL);
 		if (column) {
 			new_col[column->GetIndex()] = col;
 		}
@@ -291,7 +292,7 @@ L3CListCtrl::~L3CListCtrl()
 }
 
 /// アイコンを設定
-void L3CListCtrl::AssignListIcons(const char ***icons)
+void MyCListCtrl::AssignListIcons(const char ***icons)
 {
 	wxImageList *ilist = new wxImageList( 16, 16 );
 	for(size_t idx=0; icons[idx] != NULL; idx++) {
@@ -302,10 +303,10 @@ void L3CListCtrl::AssignListIcons(const char ***icons)
 
 #if 0
 /// カラム幅を変えた
-void L3CListCtrl::OnColumnEndDrag(L3CListEvent& event)
+void MyCListCtrl::OnColumnEndDrag(MyCListEvent& event)
 {
 	int col = event.GetColumn();
-	L3DiskFileListColumn *column = FindColumn(col, NULL);
+	UiDiskFileListColumn *column = FindColumn(col, NULL);
 	if (column) {
 		column->SetWidth(GetColumnWidth(col));
 	}
@@ -313,16 +314,16 @@ void L3CListCtrl::OnColumnEndDrag(L3CListEvent& event)
 #endif
 
 /// カラムをソート
-void L3CListCtrl::OnColumnSorted(L3CListEvent& event)
+void MyCListCtrl::OnColumnSorted(MyCListEvent& event)
 {
-	int col = event.GetColumn();
-	L3CListColumn *column = FindColumn(col, NULL);
-	if (column) {
-	}
+//	int col = event.GetColumn();
+//	MyCListColumn *column = FindColumn(col, NULL);
+//	if (column) {
+//	}
 }
 
 /// リストにカラムを設定する
-void L3CListCtrl::InsertListColumns()
+void MyCListCtrl::InsertListColumns()
 {
 	int column_count = (int)m_columns.Count();
 
@@ -330,14 +331,14 @@ void L3CListCtrl::InsertListColumns()
 		m_indexes[idx] = -1;
 	}
 
-	L3CListColumns arr;
+	MyCListColumns arr;
 	for(int idx = 0; idx < column_count; idx++) {
 		arr.Add(m_columns[idx]);
 	}
 	arr.Sort(&SortByColumn);
 	int n_col = 0;
 	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		L3CListColumn *column = arr.Item(idx);
+		MyCListColumn *column = arr.Item(idx);
 		if (column->GetColumn() >= 0) {
 			int n_idx = column->GetIndex();
 			column->SetColumn(n_col);
@@ -355,7 +356,7 @@ void L3CListCtrl::InsertListColumns()
 	wxArrayInt order(n_col);
 	n_col = 0;
 	for(int idx = 0; idx < column_count; idx++) {
-		L3CListColumn *column = m_columns[idx];
+		MyCListColumn *column = m_columns[idx];
 		int col = column->GetColumn();
 		if (col >= 0) {
 			order[col] = n_col;
@@ -383,16 +384,16 @@ void L3CListCtrl::InsertListColumns()
 }
 
 /// 初期 カラムを設定
-void L3CListCtrl::InsertListColumn(int col)
+void MyCListCtrl::InsertListColumn(int col)
 {
-	L3CListColumn *c = FindColumn(col, NULL);
+	MyCListColumn *c = FindColumn(col, NULL);
 	if (!c) return;
 
 	InsertListColumn(col, c->GetIndex(), c);
 }
 
 /// カラムを挿入
-void L3CListCtrl::InsertListColumn(int col, int idx, L3CListColumn *c)
+void MyCListCtrl::InsertListColumn(int col, int idx, MyCListColumn *c)
 {
 	InsertColumn(col, c->GetText(), c->GetAlign(), -1);
 	SetColumnWidth(col, c->GetWidth());
@@ -400,19 +401,19 @@ void L3CListCtrl::InsertListColumn(int col, int idx, L3CListColumn *c)
 }
 
 /// カラムの幅
-int L3CListCtrl::GetListColumnWidth(int col) const
+int MyCListCtrl::GetListColumnWidth(int col) const
 {
 	return GetColumnWidth(col);
 }
 
 /// カラムを削除
-void L3CListCtrl::DeleteListColumn(int col)
+void MyCListCtrl::DeleteListColumn(int col)
 {
 	DeleteColumn(col);
 }
 
 /// データを挿入
-void L3CListCtrl::InsertListItem(long row, L3CListValue *values, size_t count, wxUIntPtr data)
+void MyCListCtrl::InsertListItem(long row, MyCListValue *values, size_t count, wxUIntPtr data)
 {
 #ifndef USE_VIRTUAL_ON_LIST_CTRL
 	InsertItem(values[m_idOnFirstColumn]);
@@ -429,7 +430,7 @@ void L3CListCtrl::InsertListItem(long row, L3CListValue *values, size_t count, w
 }
 
 /// データを更新
-void L3CListCtrl::UpdateListItem(long row, L3CListValue *values, size_t count, wxUIntPtr data)
+void MyCListCtrl::UpdateListItem(long row, MyCListValue *values, size_t count, wxUIntPtr data)
 {
 #ifndef USE_VIRTUAL_ON_LIST_CTRL
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
@@ -446,7 +447,7 @@ void L3CListCtrl::UpdateListItem(long row, L3CListValue *values, size_t count, w
 
 #if 0
 /// ディレクトリアイテムの位置を返す
-int L3CListCtrl::GetDirItemPos(const L3CListItem &item) const
+int MyCListCtrl::GetDirItemPos(const MyCListItem &item) const
 {
 	return (int)GetListItemData(item);
 }
@@ -456,19 +457,19 @@ int L3CListCtrl::GetDirItemPos(const L3CListItem &item) const
 /// @param [in] item リストアイテム
 /// @param [in] idx  カラムの位置
 /// @param [in] text ファイル名
-void L3CListCtrl::SetListText(const L3CListItem &item, int idx, const wxString &text)
+void MyCListCtrl::SetListText(const MyCListItem &item, int idx, const wxString &text)
 {
 	SetItem(item, m_columns[idx]->GetColumn(), text);
 }
 
 /// 選択している行の位置を返す
 /// @return 複数行選択している場合 wxNOT_FOUND
-int L3CListCtrl::GetListSelectedRow() const
+int MyCListCtrl::GetListSelectedRow() const
 {
 	return (int)GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
 }
 /// アイテム位置を返す
-int L3CListCtrl::GetListSelectedNum() const
+int MyCListCtrl::GetListSelectedNum() const
 {
 	int row = GetListSelectedRow();
 	if (row != wxNOT_FOUND) {
@@ -477,17 +478,17 @@ int L3CListCtrl::GetListSelectedNum() const
 	return row;
 }
 /// 選択している行数
-int L3CListCtrl::GetListSelectedItemCount() const
+int MyCListCtrl::GetListSelectedItemCount() const
 {
 	return GetSelectedItemCount();
 }
 /// 選択行を得る
-L3CListItem L3CListCtrl::GetListSelection() const
+MyCListItem MyCListCtrl::GetListSelection() const
 {
 	return GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
 }
 /// 選択している行アイテムを得る
-int L3CListCtrl::GetListSelections(L3CListItems &arr) const
+int MyCListCtrl::GetListSelections(MyCListItems &arr) const
 {
 	long item = -1;
 	arr.Empty();
@@ -499,24 +500,24 @@ int L3CListCtrl::GetListSelections(L3CListItems &arr) const
 	return (int)arr.Count();
 }
 /// 全行を選択
-void L3CListCtrl::SelectAllListItem()
+void MyCListCtrl::SelectAllListItem()
 {
 	for(int row=0; row<GetItemCount(); row++) {
 		SetItemState((long)row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
 	}
 }
 /// 行アイテムを選択
-void L3CListCtrl::SelectListItem(const L3CListItem &item)
+void MyCListCtrl::SelectListItem(const MyCListItem &item)
 {
 	SetItemState(item, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
 }
 /// 行を選択
-void L3CListCtrl::SelectListRow(int row)
+void MyCListCtrl::SelectListRow(int row)
 {
 	SetItemState((long)row, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
 }
 /// 全て非選択にする
-void L3CListCtrl::UnselectAllListItem()
+void MyCListCtrl::UnselectAllListItem()
 {
 	long item = -1;
 	for(;;) {
@@ -526,29 +527,29 @@ void L3CListCtrl::UnselectAllListItem()
 	}
 }
 /// 非選択にする
-void L3CListCtrl::UnselectListItem(const L3CListItem &item)
+void MyCListCtrl::UnselectListItem(const MyCListItem &item)
 {
 	SetItemState(item, 0, wxLIST_STATE_SELECTED);
 }
 /// フォーカスしている行アイテムを得る
-L3CListItem L3CListCtrl::GetListFocusedItem() const
+MyCListItem MyCListCtrl::GetListFocusedItem() const
 {
 	return GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_FOCUSED);
 }
 /// 行アイテムをフォーカス
-void L3CListCtrl::FocusListItem(const L3CListItem &item)
+void MyCListCtrl::FocusListItem(const MyCListItem &item)
 {
 	SetItemState(item, wxLIST_STATE_FOCUSED, wxLIST_STATE_FOCUSED);
 }
 
 /// アイテムを編集
-void L3CListCtrl::EditListItem(const L3CListItem &item)
+void MyCListCtrl::EditListItem(const MyCListItem &item)
 {
 	EditLabel(item);
 }
 
 /// リストを削除
-bool L3CListCtrl::DeleteAllListItems()
+bool MyCListCtrl::DeleteAllListItems()
 {
 #ifndef USE_VIRTUAL_ON_LIST_CTRL
 	return DeleteAllItems();
@@ -560,7 +561,7 @@ bool L3CListCtrl::DeleteAllListItems()
 }
 
 /// アイテムの固有データを返す
-wxUIntPtr L3CListCtrl::GetListItemData(const L3CListItem &item) const
+wxUIntPtr MyCListCtrl::GetListItemData(const MyCListItem &item) const
 {
 #ifndef USE_VIRTUAL_ON_LIST_CTRL
 	return GetItemData(item);
@@ -572,26 +573,26 @@ wxUIntPtr L3CListCtrl::GetListItemData(const L3CListItem &item) const
 }
 
 /// アイテムの固有データを返す
-wxUIntPtr L3CListCtrl::GetListItemDataByRow(long row) const
+wxUIntPtr MyCListCtrl::GetListItemDataByRow(long row) const
 {
 	return GetListItemData(row);
 }
 
 /// カラムヘッダのタイトルを返す
-const wxString &L3CListCtrl::GetColumnText(int idx) const
+const wxString &MyCListCtrl::GetColumnText(int idx) const
 {
 	return m_columns[idx]->GetText();
 }
 
 /// カラム表示中か
-bool L3CListCtrl::ColumnIsShown(int idx) const
+bool MyCListCtrl::ColumnIsShown(int idx) const
 {
 	return m_columns[idx]->GetColumn() >= 0;
 }
 
 /// カラムの表示を変更
 /// @return true:リスト更新が必要
-bool L3CListCtrl::ShowColumn(int idx, bool show)
+bool MyCListCtrl::ShowColumn(int idx, bool show)
 {
 	int col = m_columns[idx]->GetColumn();
 	if (col >= 0 && !show) {
@@ -661,18 +662,9 @@ bool L3CListCtrl::ShowColumn(int idx, bool show)
 }
 
 /// 表示位置のカラム情報を返す
-L3CListColumn *L3CListCtrl::FindColumn(int col, int *n_idx) const
+MyCListColumn *MyCListCtrl::FindColumn(int col, int *n_idx) const
 {
-	L3CListColumn *match = NULL;
-#if 0
-	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-		if (m_columns[idx]->GetColumn() == col) {
-			match = m_columns[idx];
-			if (n_idx) *n_idx = idx;
-			break;
-		}
-	}
-#else
+	MyCListColumn *match = NULL;
 	if (0 <= col && col < (int)m_columns.Count()) {
 		int idx = m_indexes[col];
 		if (idx >= 0) {
@@ -680,12 +672,12 @@ L3CListColumn *L3CListCtrl::FindColumn(int col, int *n_idx) const
 			if (n_idx) *n_idx = idx;
 		}
 	}
-#endif
 	return match;
 }
 
+#if 0
 /// カラム用のポップアップメニューを作成する
-void L3CListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id)
+void MyCListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id)
 {
 	// メニューアイテムを削除
 	if (menu) delete menu;
@@ -703,7 +695,7 @@ void L3CListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_det
 	for(int col = 0; col < (int)m_columns.Count(); col++) {
 #endif
 		int idx = -1;
-		L3CListColumn *column = FindColumn(col, &idx);
+		MyCListColumn *column = FindColumn(col, &idx);
 		if (column) {
 			wxMenuItem *mitem = menu->AppendCheckItem(menu_id + idx, column->GetText());
 			mitem->Check(true);
@@ -712,7 +704,7 @@ void L3CListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_det
 	}
 	// 非表示のカラム
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-		L3CListColumn *column = m_columns[idx];
+		MyCListColumn *column = m_columns[idx];
 		if (column->GetColumn() < 0) {
 			wxMenuItem *mitem = menu->AppendCheckItem(menu_id + idx, column->GetText());
 			mitem->Check(false);
@@ -722,9 +714,10 @@ void L3CListCtrl::CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_det
 	menu->AppendSeparator();
 	menu->Append(menu_detail_id, _("Detail..."));
 }
+#endif
 
 /// カラムの表示位置を返す
-void L3CListCtrl::GetListColumnsByCurrentOrder(L3CListColumns &items) const
+void MyCListCtrl::GetListColumnsByCurrentOrder(MyCListColumns &items) const
 {
 #ifdef wxHAS_LISTCTRL_COLUMN_ORDER
 	// wxMSWでは、カラム順序を内部で管理しているので、
@@ -738,14 +731,14 @@ void L3CListCtrl::GetListColumnsByCurrentOrder(L3CListColumns &items) const
 	for(int col = 0; col < (int)m_columns.Count(); col++) {
 #endif
 		int idx = -1;
-		L3CListColumn *column = FindColumn(col, &idx);
+		MyCListColumn *column = FindColumn(col, &idx);
 		if (column) {
 			items.Add(column);
 		}
 	}
 	// 非表示のカラム
 	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-		L3CListColumn *column = m_columns[idx];
+		MyCListColumn *column = m_columns[idx];
 		if (column->GetColumn() < 0) {
 			items.Add(column);
 		}
@@ -754,9 +747,9 @@ void L3CListCtrl::GetListColumnsByCurrentOrder(L3CListColumns &items) const
 
 /// カラム入れ替えダイアログを表示
 /// @return true: submitted  false: canceled
-bool L3CListCtrl::ShowListColumnRearrangeBox()
+bool MyCListCtrl::ShowListColumnRearrangeBox()
 {
-	L3CListColumns items;
+	MyCListColumns items;
 	GetListColumnsByCurrentOrder(items);
 	wxArrayInt order;
 	wxArrayString labels;
@@ -764,7 +757,8 @@ bool L3CListCtrl::ShowListColumnRearrangeBox()
 		order.Add((items[i]->GetColumn() >= 0 ? i : ~i));
 		labels.Add(items[i]->GetText());
 	}
-	L3CListRearrangeBox dlg(this, order, labels);
+
+	MyCListRearrangeBox dlg(this, order, labels);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) return false;
 
@@ -786,7 +780,7 @@ bool L3CListCtrl::ShowListColumnRearrangeBox()
 }
 
 /// カラム番号ソート用
-int L3CListCtrl::SortByColumn(L3CListColumn **i1, L3CListColumn **i2)
+int MyCListCtrl::SortByColumn(MyCListColumn **i1, MyCListColumn **i2)
 {
 	int n1 = (*i1)->GetColumn();
 	int n2 = (*i2)->GetColumn();
@@ -800,19 +794,19 @@ int L3CListCtrl::SortByColumn(L3CListColumn **i1, L3CListColumn **i2)
 
 
 /// ソート方向を返す
-int L3CListCtrl::GetColumnSortDir(int idx) const
+int MyCListCtrl::GetColumnSortDir(int idx) const
 {
 	return m_columns[idx]->GetSortDir();
 }
 
 /// ソート方向をセット
-void L3CListCtrl::SetColumnSortDir(int idx, int dir)
+void MyCListCtrl::SetColumnSortDir(int idx, int dir)
 {
 	m_columns[idx]->SetSortDir(dir);
 }
 
 /// ソート方向を切替
-int L3CListCtrl::ToggleColumnSortDir(int idx)
+int MyCListCtrl::ToggleColumnSortDir(int idx)
 {
 	int dir = m_columns[idx]->GetSortDir();
 //	dir = (dir > 0 ? -1 : 1);
@@ -828,7 +822,7 @@ int L3CListCtrl::ToggleColumnSortDir(int idx)
 #endif
 
 /// ソート方向のアイコンを設定
-void L3CListCtrl::SetColumnSortIcon(int idx)
+void MyCListCtrl::SetColumnSortIcon(int idx)
 {
 	int dir = m_columns[idx]->GetSortDir();
 	int col = m_columns[idx]->GetColumn();
@@ -851,19 +845,19 @@ void L3CListCtrl::SetColumnSortIcon(int idx)
 //	item.SetMask(wxLIST_MASK_IMAGE);
 //	item.SetImage(dir > 0 ? m_icon_sort_up : (dir < 0 ? m_icon_sort_down : -1));
 	item.SetMask(wxLIST_MASK_TEXT);
-	item.SetText(m_columns[idx]->GetText() + (dir > 0 ? wxT("˄") : (dir < 0 ? wxT("˅") : wxT(""))));
+	item.SetText(m_columns[idx]->GetText() + (dir > 0 ? wxT(" ˄") : (dir < 0 ? wxT(" ˅") : wxT(""))));
 	SetColumn(col, item);
 #endif
 }
 
 /// ソートカラムを選択
-int L3CListCtrl::SelectColumnSortDir(int &col, int &idx, bool &match_col)
+int MyCListCtrl::SelectColumnSortDir(int &col, int &idx, bool &match_col)
 {
 	int dir = 0;
 	idx = -1;
 
 	// ソートカラムを決定
-	L3CListColumn *c = FindColumn(col, &idx);
+	MyCListColumn *c = FindColumn(col, &idx);
 	match_col = c ? c->IsSortable() : false;
 
 	if (col < 0) {
@@ -897,9 +891,42 @@ int L3CListCtrl::SelectColumnSortDir(int &col, int &idx, bool &match_col)
 	return dir;
 }
 
+/// 指定した座標に行アイテムがあるか
+bool MyCListCtrl::HasItemAtPoint(int x, int y) const
+{
+	return (GetItemAtPoint(x, y) != wxNOT_FOUND);
+}
+
+/// 指定した座標にある行アイテムを返す
+MyCListItem MyCListCtrl::GetItemAtPoint(int x, int y) const
+{
+	wxPoint pt(x, y);
+	int flags = wxLIST_HITTEST_ONITEM;
+	MyCListItem item = HitTest(pt, flags);
+#if defined(__WXOSX__) || defined(__WXGTK__)
+	if (item != wxNOT_FOUND) {
+		// なぜかY座標がずれるので補正する
+		wxRect re;
+		GetItemRect(item, re);
+		if (re.height > 0) {
+			if (re.y + re.height < pt.y) {
+				int df = ((pt.y - re.y) / re.height);
+				pt.y += (df * re.height);
+				item = HitTest(pt, flags);
+			} else if (re.y > pt.y) {
+				int df = ((re.y - pt.y) / re.height) + 1;
+				pt.y -= (df * re.height);
+				item = HitTest(pt, flags);
+			}
+		}
+	}
+#endif
+	return item;
+}
+
 #ifdef USE_VIRTUAL_ON_LIST_CTRL
 // ソート
-bool L3CListCtrl::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
+bool MyCListCtrl::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
 {
 	// ソート
 	bool sts = m_rows.SortItems(fnSortCallBack, sortData);
@@ -910,35 +937,35 @@ bool L3CListCtrl::SortItems(wxListCtrlCompare fnSortCallBack, wxIntPtr sortData)
 }
 #if 0
 /// アイテムの属性を返す
-wxListItemAttr *L3CListCtrl::OnGetItemAttr(long item) const
+wxListItemAttr *MyCListCtrl::OnGetItemAttr(long item) const
 {
 	return (wxListItemAttr *)&m_attr;
 }
 #endif
 /// アイテムのアイコンを返す
-int L3CListCtrl::OnGetItemImage(long item) const
+int MyCListCtrl::OnGetItemImage(long item) const
 {
 	if (m_rows.Count() <= (size_t)item) return -1;
 
 	return m_rows.Item(item)->GetImage();
 }
 /// アイテムのアイコンを返す
-int L3CListCtrl::OnGetItemColumnImage(long item, long column) const
+int MyCListCtrl::OnGetItemColumnImage(long item, long column) const
 {
 	if (m_rows.Count() <= (size_t)item) return -1;
 
 	int idx = -1;
-	L3CListColumn *c = FindColumn((int)column, &idx);
+	MyCListColumn *c = FindColumn((int)column, &idx);
 
 	return idx >= 0 ? m_rows.Item(item)->GetImage((size_t)idx) : -1;
 }
 /// アイテムの値を返す
-wxString L3CListCtrl::OnGetItemText(long item, long column) const
+wxString MyCListCtrl::OnGetItemText(long item, long column) const
 {
 	if (m_rows.Count() <= (size_t)item) return wxT("");
 
 	int idx = -1;
-	L3CListColumn *c = FindColumn((int)column, &idx);
+	MyCListColumn *c = FindColumn((int)column, &idx);
 
 	return idx >= 0 ? m_rows.Item(item)->GetText((size_t)idx) : wxT("");
 }
@@ -949,7 +976,13 @@ wxString L3CListCtrl::OnGetItemText(long item, long column) const
 //
 //
 //
-L3CListRearrangeBox::L3CListRearrangeBox(L3CListCtrl *parent, const wxArrayInt &order, const wxArrayString &items)
-	: wxRearrangeDialog(parent, _("Configure the columns shown:"), _("Arrange Column Order"), order, items) 
+MyCListRearrangeBox::MyCListRearrangeBox(MyCListCtrl *parent, const wxArrayInt &order, const wxArrayString &items)
+	: wxRearrangeDialog(parent, _("Configure the columns shown:"), _("Arrange Column Order"), order, items)
 {
+	wxSize sz = GetSize();
+	
+	if (sz.GetWidth() < 360) {
+		sz.SetWidth(360);
+	}
+	SetSize(sz);
 }

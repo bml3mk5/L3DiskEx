@@ -8,6 +8,7 @@
 #include "basictype_msdos.h"
 #include "basicfmt.h"
 #include "basicdir.h"
+#include "basictemplate.h"
 
 
 //
@@ -35,7 +36,7 @@ double DiskBasicTypeMSDOS::CheckFat(bool is_formatting)
 	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
 	match = bufs->MatchData8(0, basic->GetMediaId());
 	if (match != (basic->GetValidNumberOfFats() > 0 ? basic->GetValidNumberOfFats() : basic->GetNumberOfFats())) {
-		valid_ratio -= 0.8;
+		valid_ratio -= 0.5;
 	}
 
 	// 最終グループ番号を計算
@@ -67,7 +68,7 @@ double DiskBasicTypeMSDOS::ParseParamOnDisk(bool is_formatting)
 
 	wxCharBuffer ipl = basic->GetVariousStringParam(wxT("IPLCompareString")).To8BitData();
 	if (ipl.length() > 0) {
-		DiskD88Sector *sector = basic->GetSector(0, 0, 1);
+		DiskImageSector *sector = basic->GetSector(0, 0, 1);
 		if (!sector) return -1.0;
 		if (sector->Find(ipl.data(), ipl.length()) < 0) {
 			valid_ratio = 0.0;
@@ -83,7 +84,7 @@ double DiskBasicTypeMSDOS::ParseParamOnDisk(bool is_formatting)
 /// @retval 1.0>      正常
 /// @retval 0.0 - 1.0 警告あり
 /// @retval <0.0      エラーあり
-double DiskBasicTypeMSDOS::ParseMSDOSParamOnDisk(DiskD88Disk *disk, bool is_formatting)
+double DiskBasicTypeMSDOS::ParseMSDOSParamOnDisk(DiskImageDisk *disk, bool is_formatting)
 {
 	if (is_formatting) return 1.0;
 
@@ -91,7 +92,7 @@ double DiskBasicTypeMSDOS::ParseMSDOSParamOnDisk(DiskD88Disk *disk, bool is_form
 	int valids = 0;
 
 	// MS-DOS ディスク上のパラメータを読む
-	DiskD88Sector *sector = disk->GetSector(0, 0, 1);
+	DiskImageSector *sector = disk->GetSector(0, 0, 1);
 	if (!sector) return -1.0;
 	wxUint8 *datas = sector->GetSectorBuffer();
 	if (!datas) return -1.0;
@@ -123,6 +124,14 @@ double DiskBasicTypeMSDOS::ParseMSDOSParamOnDisk(DiskD88Disk *disk, bool is_form
 		valids++;
 	}
 
+	// FATエリアの先頭メディアIDが一致するか
+	DiskBasicFatArea *bufs = fat->GetDiskBasicFatArea();
+	nums++;
+	if (bufs->MatchData8(0, 0, basic->GetMediaId())) {
+		valids++;
+	}
+
+	// ディスク内のパラメータで更新する
 	if (nums == valids) {
 		basic->SetSidesPerDiskOnBasic(wxUINT16_SWAP_ON_BE(bpb->BPB_NumHeads));
 		basic->SetSectorsPerGroup(bpb->BPB_SecPerClus);
@@ -145,6 +154,22 @@ double DiskBasicTypeMSDOS::ParseMSDOSParamOnDisk(DiskD88Disk *disk, bool is_form
 			tracks_per_side = tracks_per_side / basic->GetSidesPerDiskOnBasic() / basic->GetSectorsPerTrackOnBasic();
 			basic->SetTracksPerSideOnBasic(tracks_per_side);
 		}
+	}
+
+	// さらにJmpBootとOEMNameをチェック
+	size_t len;
+	wxCharBuffer s_jmp = basic->GetVariousStringParam(wxT("JumpBoot")).To8BitData();
+	len = s_jmp.length() < sizeof(bpb->BS_JmpBoot) ? s_jmp.length() : sizeof(bpb->BS_JmpBoot);
+	nums++;
+	if (len > 0 && memcmp(bpb->BS_JmpBoot, s_jmp.data(), len) == 0) {
+		valids++;
+	}
+
+	wxCharBuffer s_oem = basic->GetVariousStringParam(wxT("OEMName")).To8BitData();
+	len = s_oem.length() < sizeof(bpb->BS_OEMName) ? s_oem.length() : sizeof(bpb->BS_OEMName);
+	nums+=5;
+	if (len > 0 && memcmp(bpb->BS_OEMName, s_oem.data(), len) == 0) {
+		valids+=5;
 	}
 
 	// 最終グループ番号を計算
@@ -179,7 +204,7 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 	const DiskBasicFormat *fmt = basic->GetFormatType();
 	if (fmt->HasVolumeName()) {
 		int dir_start = basic->GetReservedSectors() + basic->GetNumberOfFats() * basic->GetSectorsPerFat();
-		DiskD88Sector *sec = basic->GetSectorFromSectorPos(dir_start);
+		DiskImageSector *sec = basic->GetSectorFromSectorPos(dir_start);
 		DiskBasicDirItem *ditem = dir->NewItem(sec, 0, sec->GetSectorBuffer());
 
 		ditem->SetFileNamePlain(data.GetVolumeName());
@@ -196,7 +221,7 @@ bool DiskBasicTypeMSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 /// BIOS Parameter Block を作成
 bool DiskBasicTypeMSDOS::CreateBiosParameterBlock(const char *jmp, const char *name, wxUint8 **sec_buf)
 {
-	DiskD88Sector *sec = basic->GetSector(0, 0, 1);
+	DiskImageSector *sec = basic->GetSector(0, 0, 1);
 	if (!sec) return false;
 	wxUint8 *buf = sec->GetSectorBuffer();
 	if (!buf) return false;
@@ -273,7 +298,7 @@ void DiskBasicTypeMSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskD88Sector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);

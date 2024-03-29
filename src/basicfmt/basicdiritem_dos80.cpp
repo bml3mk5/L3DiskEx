@@ -10,6 +10,7 @@
 #include "basictype.h"
 #include "../config.h"
 #include "../charcodes.h"
+#include <wx/stream.h>
 #include <wx/msgdlg.h>
 
 
@@ -38,7 +39,7 @@ DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic)
 	m_data2.Alloc();
 	m_data2.Fill(0);
 }
-DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemFAT8(basic, n_sector, n_secpos, n_data)
 {
 	m_cached_type = 0;
@@ -46,14 +47,14 @@ DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, DiskD88Sector *n_
 	m_data2.Alloc();
 	m_data2.Fill(0);
 }
-DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemFAT8(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_cached_type = 0;
 	m_data.Attach(n_data);
 
 	// 2セクタ後に属性などがある
-	DiskD88Sector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, n_sector->GetSectorNumber() + 2);
+	DiskImageSector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, n_sector->GetSectorNumber() + 2);
 	if (sector_2) {
 		wxUint8 *buffer2 = sector_2->GetSectorBuffer();
 		m_data2.Attach(&buffer2[n_secpos]);
@@ -77,7 +78,7 @@ DiskBasicDirItemDOS80::~DiskBasicDirItemDOS80()
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemDOS80::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemDOS80::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -86,7 +87,7 @@ void DiskBasicDirItemDOS80::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gi
 	m_data2.Delete();
 
 	// 2セクタ後に属性などがある
-	DiskD88Sector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, m_sector->GetSectorNumber() + 2);
+	DiskImageSector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, m_sector->GetSectorNumber() + 2);
 	if (sector_2) {
 		wxUint8 *buffer2 = sector_2->GetSectorBuffer();
 		m_data2.Attach(&buffer2[n_secpos]);

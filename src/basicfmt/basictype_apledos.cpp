@@ -37,7 +37,7 @@ double DiskBasicTypeAppleDOS::CheckFat(bool is_formatting)
 	double valid_ratio = 1.0;
 
 	// VTOC area
-	DiskD88Sector *sector = basic->GetManagedSector(0);
+	DiskImageSector *sector = basic->GetManagedSector(0);
 	if (!sector) {
 		return -1.0;
 	}
@@ -67,7 +67,7 @@ double DiskBasicTypeAppleDOS::CheckFat(bool is_formatting)
 
 	// ディレクトリをチェック
 	// 通常セクタ15から1に向かう
-	int dir_cnt = 0;
+//	int dir_cnt = 0;
 	int dir_sta_lsec = basic->GetDirStartSector();
 	int dir_end_lsec = 1;
 
@@ -79,7 +79,7 @@ double DiskBasicTypeAppleDOS::CheckFat(bool is_formatting)
 		}
 
 		apledos_ptr_t *p = (apledos_ptr_t *)sector->GetSectorBuffer();
-		dir_cnt++;
+//		dir_cnt++;
 
 		if (p->next_track == 0 && p->next_sector == 0) {
 			break;
@@ -103,7 +103,7 @@ double DiskBasicTypeAppleDOS::ParseParamOnDisk(bool is_formatting)
 	if (is_formatting) return 0;
 
 	if (!apledos_vtoc) {
-		DiskD88Sector *sector = basic->GetManagedSector(0);
+		DiskImageSector *sector = basic->GetManagedSector(0);
 		apledos_vtoc_t *vtoc = (apledos_vtoc_t *)sector->GetSectorBuffer();
 		apledos_vtoc = vtoc;
 
@@ -185,7 +185,7 @@ bool DiskBasicTypeAppleDOS::CalcGroupsOnRootDirectory(int start_sector, int end_
 	int sid_num = 0;
 	int sec_num = 1;
 	// 開始セクタ
-	DiskD88Sector *sector = basic->GetManagedSector(start_sector, &trk_num, &sid_num);
+	DiskImageSector *sector = basic->GetManagedSector(start_sector, &trk_num, &sid_num);
 	while(limit >= 0) {
 		if (!sector) {
 			valid = false;
@@ -410,7 +410,7 @@ wxUint32 DiskBasicTypeAppleDOS::AllocChainSector(int idx, DiskBasicDirItem *item
 		return INVALID_GROUP_NUMBER;
 	}
 	// セクタ
-	DiskD88Sector *sector = basic->GetSectorFromGroup(gnum);
+	DiskImageSector *sector = basic->GetSectorFromGroup(gnum);
 	if (!sector) {
 		return INVALID_GROUP_NUMBER;
 	}
@@ -445,7 +445,7 @@ int DiskBasicTypeAppleDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem
 {
 //	myLog.SetDebug("DiskBasicTypeAppleDOS::AllocateGroups {");
 
-	int file_size = 0;
+//	int file_size = 0;
 	int groups = 0;
 
 	int rc = 0;
@@ -481,7 +481,7 @@ int DiskBasicTypeAppleDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem
 		item->AddChainGroupNumber(chain_idx, group_num);
 		chain_idx++;
 
-		file_size += sec_size;
+//		file_size += sec_size;
 		groups++;
 
 		remain -= sec_size;
@@ -683,7 +683,7 @@ bool DiskBasicTypeAppleDOS::IsRootDirectory(wxUint32 group_num)
 bool DiskBasicTypeAppleDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// VTOCエリア
-	DiskD88Sector *sector = basic->GetManagedSector(0);
+	DiskImageSector *sector = basic->GetManagedSector(0);
 	if (!sector) return false;
 	apledos_vtoc_t *vtoc = (apledos_vtoc_t *)sector->GetSectorBuffer();
 	if (!vtoc) return false;
@@ -781,7 +781,7 @@ bool DiskBasicTypeAppleDOS::AdditionalProcessOnDeletedFile(DiskBasicDirItem *ite
 	wxUint32 gnum = item->GetStartGroup(0);
 	while (gnum != 0) {
 		SetGroupNumber(gnum, 0);
-		DiskD88Sector *sector = basic->GetSectorFromGroup(gnum);
+		DiskImageSector *sector = basic->GetSectorFromGroup(gnum);
 		if (!sector) break;
 		apledos_chain_t *p = (apledos_chain_t *)sector->GetSectorBuffer();
 		if (!p) break;

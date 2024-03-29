@@ -45,12 +45,12 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -67,7 +67,7 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int n_num, const Di
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemFLEX::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemFLEX::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -266,7 +266,7 @@ void DiskBasicDirItemFLEX::GetUnitGroups(int fileunit_num, DiskBasicGroups &grou
 		for(int idx = 0; idx < random_file; idx++) {
 			int gnum = type->GetSectorPosFromNumS(track_num, sector_num);
 
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(gnum, &div_num);
+			DiskImageSector *sector = basic->GetSectorFromSectorPos(gnum, &div_num);
 			if (!sector) {
 				// error
 				break;
@@ -288,7 +288,7 @@ void DiskBasicDirItemFLEX::GetUnitGroups(int fileunit_num, DiskBasicGroups &grou
 	while((track_num != 0 || sector_num != 0) && limit >= 0) {
 		int gnum = type->GetSectorPosFromNumS(track_num, sector_num);
 
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(gnum, &div_num);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(gnum, &div_num);
 		if (!sector) {
 			// error
 			break;

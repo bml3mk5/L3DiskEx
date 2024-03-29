@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MDOS_H_
-#define _BASICDIRITEM_MDOS_H_
+#ifndef BASICDIRITEM_MDOS_H
+#define BASICDIRITEM_MDOS_H
 
 #include "basicdiritem.h"
 
@@ -48,11 +48,11 @@ private:
 
 public:
 	DiskBasicDirItemMDOS(DiskBasic *basic);
-	DiskBasicDirItemMDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -122,4 +122,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_MDOS_H_ */
+#endif /* BASICDIRITEM_MDOS_H */

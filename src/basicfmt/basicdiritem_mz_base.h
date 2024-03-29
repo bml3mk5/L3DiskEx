@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MZ_BASE_H_
-#define _BASICDIRITEM_MZ_BASE_H_
+#ifndef BASICDIRITEM_MZ_BASE_H
+#define BASICDIRITEM_MZ_BASE_H
 
 #include "basicdiritem.h"
 
@@ -35,8 +35,8 @@ protected:
 
 public:
 	DiskBasicDirItemMZBase(DiskBasic *basic);
-	DiskBasicDirItemMZBase(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMZBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMZBase(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMZBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief 削除
 	virtual bool	Delete();
@@ -59,4 +59,4 @@ public:
 
 };
 
-#endif /* _BASICDIRITEM_MZ_BASE_H_ */
+#endif /* BASICDIRITEM_MZ_BASE_H */

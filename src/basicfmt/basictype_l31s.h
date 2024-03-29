@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_L31S_H_
-#define _BASICTYPE_L31S_H_
+#ifndef BASICTYPE_L31S_H
+#define BASICTYPE_L31S_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -35,4 +35,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_L31S_H_ */
+#endif /* BASICTYPE_L31S_H */

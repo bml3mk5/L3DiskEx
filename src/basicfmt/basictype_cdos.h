@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_CDOS_H_
-#define _BASICTYPE_CDOS_H_
+#ifndef BASICTYPE_CDOS_H
+#define BASICTYPE_CDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -88,4 +88,4 @@ public:
 	virtual void	SetIdentifiedData(const DiskBasicIdentifiedData &data);
 };
 
-#endif /* _BASICTYPE_CDOS_H_ */
+#endif /* BASICTYPE_CDOS_H */

@@ -4,7 +4,7 @@ OS=`uname -s`
 if [ "$OS" = "Darwin" ]; then
 	DIR=./bin/macosx/Release
 	mkdir -p $DIR
-	cp -p ./Release/l3diskex.app/Contents/MacOS/$APP $DIR
+	cp -p ./Release/$APP.app/Contents/MacOS/$APP $DIR
 fi
 if [ "$OS" = "Linux" ]; then
 	MA=`uname -m`

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISK_PARSER_H_
-#define _DISK_PARSER_H_
+#ifndef DISK_PARSER_H
+#define DISK_PARSER_H
 
 #include "../common.h"
 #include <wx/string.h>
@@ -16,9 +16,9 @@
 
 class wxInputStream;
 class wxArrayString;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskResult;
 class DiskParam;
 class DiskParamPtrs;
@@ -29,11 +29,11 @@ class DiskTypeHints;
 class DiskParser
 {
 private:
-	wxFileName		 filepath;
-	wxInputStream	*stream;
-	DiskD88File		*file;
-	DiskResult		*result;
-	wxString		 image_type;
+	wxFileName		 m_filepath;
+	wxInputStream	*p_stream;
+	DiskImageFile	*p_file;
+	DiskResult		*p_result;
+	wxString		 m_image_type;
 
 	/// ファイルの解析方法を選択
 	int SelectPerser(const wxString &type, const DiskParam *disk_param, short mod_flags, bool &support);
@@ -43,7 +43,7 @@ private:
 	int Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags);
 
 public:
-	DiskParser(const wxString &filepath, wxInputStream *stream, DiskD88File *file, DiskResult &result);
+	DiskParser(const wxString &filepath, wxInputStream *stream, DiskImageFile *file, DiskResult &result);
 	~DiskParser();
 
 	/// ディスクイメージを新たに解析する
@@ -53,7 +53,30 @@ public:
 	/// ディスクイメージをチェック
 	int Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param);
 	/// ディスクイメージのタイプを返す
-	const wxString &GetImageType() const { return image_type; }
+	const wxString &GetImageType() const { return m_image_type; }
 };
 
-#endif /* _DISK_PARSER_H_ */
+/// ディスクパーサー
+class DiskImageParser
+{
+protected:
+	DiskImageFile	*p_file;
+	short			 m_mod_flags;
+	DiskResult		*p_result;
+
+	DiskImageParser() {}
+	DiskImageParser(const DiskImageParser &src) {}
+
+public:
+	DiskImageParser(DiskImageFile *file, short mod_flags, DiskResult *result);
+	virtual ~DiskImageParser();
+
+	/// チェック
+	virtual int Check(wxInputStream &istream);
+	/// チェック
+	virtual int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+	/// 解析
+	virtual int Parse(wxInputStream &istream, const DiskParam *disk_param);
+};
+
+#endif /* DISK_PARSER_H */

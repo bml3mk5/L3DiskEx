@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MSX_H_
-#define _BASICDIRITEM_MSX_H_
+#ifndef BASICDIRITEM_MSX_H
+#define BASICDIRITEM_MSX_H
 
 #include "basicdiritem_msdos.h"
 
@@ -25,8 +25,8 @@ private:
 
 public:
 	DiskBasicDirItemMSX(DiskBasic *basic);
-	DiskBasicDirItemMSX(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMSX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMSX(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMSX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	virtual wxString GetFileAttrStr() const;
@@ -43,4 +43,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_MSX_H_ */
+#endif /* BASICDIRITEM_MSX_H */

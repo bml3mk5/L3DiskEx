@@ -22,7 +22,7 @@
 #include "diskdmkparser.h"
 #include "diskjv3parser.h"
 #include "diskhfeparser.h"
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "fileparam.h"
 #include "diskresult.h"
 
@@ -32,12 +32,12 @@
 /// @param [in]     stream      上記ファイルのストリーム   
 /// @param [in,out] file        既存のディスクイメージ
 /// @param [out]    result      結果
-DiskParser::DiskParser(const wxString &filepath, wxInputStream *stream, DiskD88File *file, DiskResult &result)
+DiskParser::DiskParser(const wxString &filepath, wxInputStream *stream, DiskImageFile *file, DiskResult &result)
 {
-	this->filepath = wxFileName(filepath);
-	this->stream = stream;
-	this->file = file;
-	this->result = &result;
+	m_filepath = wxFileName(filepath);
+	p_stream = stream;
+	p_file = file;
+	p_result = &result;
 }
 
 DiskParser::~DiskParser()
@@ -49,7 +49,7 @@ DiskParser::~DiskParser()
 /// @param [in] param_hint       ディスクパラメータヒント("plain"時のみ)
 int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint)
 {
-	return Parse(file_format, param_hint, DiskD88File::MODIFY_NONE);
+	return Parse(file_format, param_hint, DiskImageFile::MODIFY_NONE);
 }
 
 /// 指定ディスクを解析してこれを既存のディスクイメージに追加する
@@ -57,13 +57,13 @@ int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint)
 /// @param [in] param_hint       ディスクパラメータヒント("plain"時のみ)
 int DiskParser::ParseAdd(const wxString &file_format, const DiskParam &param_hint)
 {
-	return Parse(file_format, param_hint, DiskD88File::MODIFY_ADD);
+	return Parse(file_format, param_hint, DiskImageFile::MODIFY_ADD);
 }
 
 /// ディスクイメージの解析
 /// @param [in] file_format ファイルの形式名("d88","plain"など)
 /// @param [in] param_hint  ディスクパラメータヒント("plain"時のみ)
-/// @param [in] mod_flags   オープン/追加 DiskD88File::Add()
+/// @param [in] mod_flags   オープン/追加 DiskImageFile::Add()
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
@@ -72,20 +72,17 @@ int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint, 
 	bool support = false;
 	int rc = -1;
 
-	image_type.Empty();
+	m_image_type.Empty();
 	if (!file_format.IsEmpty()) {
 		// ファイル形式の指定あり
-
-//		DiskParam *param = gDiskTemplates.Find(disk_type);
-
 		rc = SelectPerser(file_format, &param_hint, mod_flags, support);
 		if (rc >= 0) {
-			image_type = file_format;
+			m_image_type = file_format;
 		}
 	}
 	if (!support) {
-		result->SetError(DiskResult::ERR_UNSUPPORTED);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return p_result->GetValid();
 	}
 	return rc;
 }
@@ -96,14 +93,14 @@ int DiskParser::Parse(const wxString &file_format, const DiskParam &param_hint, 
 /// @param [out] manual_param    候補がないときのパラメータヒント
 int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
-	return Check(file_format, disk_params, manual_param, DiskD88File::MODIFY_NONE);
+	return Check(file_format, disk_params, manual_param, DiskImageFile::MODIFY_NONE);
 }
 
 /// ディスクイメージのチェック
 /// @param [in,out] file_format  ファイルの形式名("d88","plain"など)
 /// @param [out] disk_params     ディスクパラメータの候補
 /// @param [out] manual_param    候補がないときのパラメータヒント
-/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @param [in] mod_flags        オープン/追加 DiskImageFile::Add()
 /// @retval  0 正常
 /// @retval -1 エラーあり
 int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskParam &manual_param, short mod_flags)
@@ -115,13 +112,13 @@ int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskPar
 		// ファイル形式の指定がない場合
 
 		// 拡張子で判定
-		wxString ext = filepath.GetExt();
+		wxString ext = m_filepath.GetExt();
 
 		// サポートしているファイルか
-		FileParam *fitem = gFileTypes.FindExt(ext);
+		const FileParam *fitem = gFileTypes.FindExt(ext);
 		if (!fitem) {
-			result->SetError(DiskResult::ERR_UNSUPPORTED);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+			return p_result->GetValid();
 		}
 
 		// 指定形式で解析する
@@ -142,8 +139,8 @@ int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskPar
 
 	}
 	if (!support) {
-		result->SetError(DiskResult::ERR_UNSUPPORTED);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return p_result->GetValid();
 	}
 	return rc;
 }
@@ -151,7 +148,7 @@ int DiskParser::Check(wxString &file_format, DiskParamPtrs &disk_params, DiskPar
 /// ファイルの解析方法を選択
 /// @param [in] type             ファイルの形式名("d88","plain"など)
 /// @param [in] disk_param       ディスクパラメータ("plain"時のみ)
-/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @param [in] mod_flags        オープン/追加 DiskImageFile::Add()
 /// @param [out] support         サポートしているファイルか
 /// @retval  1 警告
 /// @retval  0 正常
@@ -161,87 +158,87 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 	int rc = -1;
 	if (type == wxT("d88")) {
 		// d88形式
-		DiskD88Parser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskD88Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("cpcdsk")) {
 		// CPC DSK形式
-		DiskDskParser ps(file, mod_flags, result);
-		if (ps.Check(*stream) >= 0) {
-			rc = ps.Parse(*stream);
+		DiskDskParser ps(p_file, mod_flags, p_result);
+		if (ps.Check(*p_stream) >= 0) {
+			rc = ps.Parse(*p_stream);
 		}
 		support = true;
 	} else if (type == wxT("fdi")) {
 		// FDI形式
-		DiskFDIParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		DiskFDIParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	} else if (type == wxT("cqmimg")) {
 		// CopyQM IMG形式
-		DiskCQMParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		DiskCQMParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	} else if (type == wxT("teletd0")) {
 		// Teledisk TD0形式
-		DiskTD0Parser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskTD0Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("difcdim")) {
 		// DIFC.X DIM形式
-		DiskDIMParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		DiskDIMParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	} else if (type == wxT("v98fdd")) {
 		// Virtual98 FDD形式
-		DiskVFDParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskVFDParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("imd")) {
 		// IMageDisk IMD形式
-		DiskIMDParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskIMDParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("dskstr")) {
 		// DSKSTR 形式
-		DiskSTRParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskSTRParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("g64")) {
 		// Commodore VICE emu G64 形式
-		DiskG64Parser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskG64Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("2mg")) {
 		// Apple 2MG 形式
-		Disk2MGParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		Disk2MGParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	} else if (type == wxT("adc")) {
 		// Apple Disk Copy 4 形式
-		DiskADCParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		DiskADCParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	} else if (type == wxT("dmk")) {
 		// TRS-80 DMK 形式
-		DiskDmkParser ps(file, mod_flags, result);
-		if (ps.Check(*stream) >= 0) {
-			rc = ps.Parse(*stream);
+		DiskDmkParser ps(p_file, mod_flags, p_result);
+		if (ps.Check(*p_stream) >= 0) {
+			rc = ps.Parse(*p_stream);
 		}
 		support = true;
 	} else if (type == wxT("jv3")) {
 		// TRS-80 JV3 形式
-		DiskJV3Parser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskJV3Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("hfe")) {
 		// HxC HFE 形式
-		DiskHfeParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream);
+		DiskHfeParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream);
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
-		DiskPlainParser ps(file, mod_flags, result);
-		rc = ps.Parse(*stream, disk_param);
+		DiskPlainParser ps(p_file, mod_flags, p_result);
+		rc = ps.Parse(*p_stream, disk_param);
 		support = true;
 	}
 	return rc;
@@ -253,7 +250,7 @@ int DiskParser::SelectPerser(const wxString &type, const DiskParam *disk_param, 
 /// @param [in] disk_param       ディスクパラメータ("plain"時のみ)
 /// @param [out] disk_params     ディスクパラメータの候補
 /// @param [out] manual_param    候補がないときのパラメータヒント
-/// @param [in] mod_flags        オープン/追加 DiskD88File::Add()
+/// @param [in] mod_flags        オープン/追加 DiskImageFile::Add()
 /// @param [out] support         サポートしているファイルか
 /// @retval  1 候補がないので改めてディスク種類を選択してもらう
 /// @retval  0 候補あり正常
@@ -263,84 +260,132 @@ int DiskParser::SelectChecker(const wxString &type, const DiskTypeHints *disk_hi
 	int rc = -1;
 	if (type == wxT("d88")) {
 		// d88形式
-		DiskD88Parser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskD88Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("cpcdsk")) {
 		// CPC DSK形式
-		DiskDskParser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskDskParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("fdi")) {
 		// FDI形式
-		DiskFDIParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		DiskFDIParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("cqmimg")) {
 		// CopyQM IMG形式
-		DiskCQMParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		DiskCQMParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("teletd0")) {
 		// Teledisk TD0形式
-		DiskTD0Parser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream);
+		DiskTD0Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("difcdim")) {
 		// DIFC.X DIM形式
-		DiskDIMParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		DiskDIMParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("v98fdd")) {
 		// Virtual98 FDD形式
-		DiskVFDParser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskVFDParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("imd")) {
 		// IMageDisk IMD形式
-		DiskIMDParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream);
+		DiskIMDParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("dskstr")) {
 		// DSKSTR 形式
-		DiskSTRParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream);
+		DiskSTRParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("g64")) {
 		// Commodore VICE emu G64 形式
-		DiskG64Parser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream);
+		DiskG64Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("2mg")) {
 		// Apple 2mg 形式
-		Disk2MGParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		Disk2MGParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("adc")) {
 		// Apple Disk Copy 4 形式
-		DiskADCParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		DiskADCParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	} else if (type == wxT("dmk")) {
 		// TRS-80 DMK 形式
-		DiskDmkParser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskDmkParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("jv3")) {
 		// TRS-80 JV3 形式
-		DiskJV3Parser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskJV3Parser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("hfe")) {
 		// HxC HFE 形式
-		DiskHfeParser ps(file, mod_flags, result);
-		rc = ps.Check(*stream);
+		DiskHfeParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream);
 		support = true;
 	} else if (type == wxT("plain")) {
 		// ベタ
-		DiskPlainParser ps(file, mod_flags, result);
-		rc = ps.Check(*this, *stream, disk_hints, disk_param, disk_params, manual_param);
+		DiskPlainParser ps(p_file, mod_flags, p_result);
+		rc = ps.Check(*p_stream, disk_hints, disk_param, disk_params, manual_param);
 		support = true;
 	}
 	return rc;
+}
+
+// ----------------------------------------------------------------------
+//
+//
+//
+DiskImageParser::DiskImageParser(DiskImageFile *file, short mod_flags, DiskResult *result)
+{
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
+}
+
+DiskImageParser::~DiskImageParser()
+{
+}
+
+/// ファイルイメージを解析
+/// @param [in] istream    解析対象データ
+/// @param [in] disk_param ディスクパラメータ
+/// @retval  0 正常
+/// @retval -1 エラーあり
+/// @retval  1 警告あり
+int DiskImageParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
+{
+	return p_result->GetValid();
+}
+
+/// チェック
+/// @param [in] istream       解析対象データ
+/// @retval 1 選択ダイアログ表示
+/// @retval 0 正常（候補が複数ある時はダイアログ表示）
+int DiskImageParser::Check(wxInputStream &istream)
+{
+	return p_result->GetValid();
+}
+
+/// チェック
+/// @param [in] istream       解析対象データ
+/// @param [in] disk_hints    ディスクパラメータヒント("2D"など)
+/// @param [in] disk_param    ディスクパラメータ disk_hints指定時はNullable
+/// @param [out] disk_params  ディスクパラメータの候補
+/// @param [out] manual_param 候補がないときのパラメータヒント
+/// @retval 1 選択ダイアログ表示
+/// @retval 0 正常（候補が複数ある時はダイアログ表示）
+int DiskImageParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return p_result->GetValid();
 }

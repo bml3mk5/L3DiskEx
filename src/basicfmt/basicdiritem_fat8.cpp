@@ -44,14 +44,14 @@ DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic)
 	m_end_address = -1;
 	m_exec_address = -1;
 }
-DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_start_address = -1;
 	m_end_address = -1;
 	m_exec_address = -1;
 }
-DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_start_address = -1;
@@ -180,7 +180,7 @@ int	DiskBasicDirItemFAT8::RecalcFileSize(DiskBasicGroups &group_items, int occup
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -202,7 +202,7 @@ void DiskBasicDirItemFAT8::TakeAddressesInFile()
 	}
 
 	DiskBasicGroupItem *item = &m_groups.Item(0);
-	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
 	if (!sector) return;
 
 	bool is_bigendian = basic->IsBigEndian();
@@ -220,7 +220,7 @@ void DiskBasicDirItemFAT8::TakeAddressesInFile()
 	if (remain_size >= 2) {
 		m_exec_address = (int)sector->Get16(remain_size - 2, is_bigendian);
 	} else {
-		DiskD88Sector *psector = basic->GetSector(item->track, item->side, item->sector_end - 1);
+		DiskImageSector *psector = basic->GetSector(item->track, item->side, item->sector_end - 1);
 		if (psector) {
 			if (remain_size >= 1) {
 				m_exec_address = sector->Get(0) | (int)psector->Get(psector->GetSectorSize() - 1) << 8;
@@ -256,7 +256,7 @@ int DiskBasicDirItemFAT8::ConvFileTypeFromFileName(const wxString &filename) con
 	int ftype = 0;
 	// 拡張子で属性を設定する
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		ftype = sa->GetType();
 	}
@@ -305,7 +305,7 @@ void DiskBasicDirItemFAT8::SetFileTypeForAttrDialog(int show_flags, const wxStri
 		// 外部からインポート時
 		// 拡張子で属性を設定する
 		wxFileName fn(name);
-		const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+		const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 		if (!sa) return;
 
 		int ftype = sa->GetType();
@@ -448,12 +448,12 @@ DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemFAT8(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemFAT8(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -471,7 +471,7 @@ DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int n_num, const 
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemFAT8F::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemFAT8F::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemFAT8::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 

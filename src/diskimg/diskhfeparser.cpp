@@ -6,9 +6,8 @@
 ///
 
 #include "diskhfeparser.h"
-#include "diskd88parser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "fileparam.h"
 #include "diskresult.h"
 
@@ -80,7 +79,7 @@ RunLengthLimitedParser::RunLengthLimitedParser()
 /// @param [in,out] n_data         解析対象データ
 /// @param [in]     n_data_len     データサイズ
 /// @param [in,out] n_result       解析エラー情報
-RunLengthLimitedParser::RunLengthLimitedParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
+RunLengthLimitedParser::RunLengthLimitedParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
 {
 	disk = n_disk;
 	track = NULL;
@@ -101,7 +100,7 @@ RunLengthLimitedParser::~RunLengthLimitedParser()
 /// @return D88形式でのトラックサイズ
 wxUint32 RunLengthLimitedParser::Parse()
 {
-	track = new DiskD88Track(disk, track_number, side_number, d88_offset_pos, 1);
+	track = disk->NewImageTrack(track_number, side_number, d88_offset_pos, 1);
 	track_size = 0;
 
 	while(data_len > 0) {
@@ -149,7 +148,7 @@ int RunLengthLimitedParser::SetSectorData(wxUint8 *indata, bool single, bool del
 	sector_size = (128 << sector_size);
 
 	sector_nums++;
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, 1, false);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, 1, false);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -164,7 +163,7 @@ int RunLengthLimitedParser::SetSectorData(wxUint8 *indata, bool single, bool del
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return siz;
+	return sector->GetSize();
 }
 /// データをデコード
 wxUint8 RunLengthLimitedParser::DecodeData(const wxUint8 *indata)
@@ -241,7 +240,7 @@ FormatMFMParser::FormatMFMParser()
 ///
 /// @note Bit stream order is:
 /// first <- b0 <- b1 <- b2 <- ... <- b7 <- next byte b0 <- b1 ...
-FormatMFMParser::FormatMFMParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
+FormatMFMParser::FormatMFMParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
 	: RunLengthLimitedParser(n_disk, n_track_number, n_side_number, n_d88_offset_pos, n_data, n_data_len, n_result)
 {
 }
@@ -389,7 +388,7 @@ bool FormatMFMParser::GetData()
 			found = true;
 			// Get Data
 			int siz = SetSectorData(&data[pos+10], false, false);
-			track_size += ((wxUint32)siz + sizeof(d88_sector_header_t));
+			track_size += (wxUint32)siz;
 
 			int unit = GetDecodeUnit();
 			data_len = ShiftBytes(data, data_len, pos + ((siz + 2) * unit) + 10);
@@ -399,7 +398,7 @@ bool FormatMFMParser::GetData()
 			found = true;
 			// Get Data
 			int siz = SetSectorData(&data[pos+10], false, true);
-			track_size += ((wxUint32)siz + sizeof(d88_sector_header_t));
+			track_size += (wxUint32)siz;
 
 			int unit = GetDecodeUnit();
 			data_len = ShiftBytes(data, data_len, pos + ((siz + 2) * unit) + 10);
@@ -440,7 +439,7 @@ FormatFMParser::FormatFMParser()
 ///
 /// @note Bit stream order is:
 /// first <- b0 <- b1 <- b2 <- ... <- b7 <- next byte b0 <- b1 ...
-FormatFMParser::FormatFMParser(DiskD88Disk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
+FormatFMParser::FormatFMParser(DiskImageDisk *n_disk, int n_track_number, int n_side_number, int n_d88_offset_pos, wxUint8 *n_data, int n_data_len, DiskResult *n_result)
 	: RunLengthLimitedParser(n_disk, n_track_number, n_side_number, n_d88_offset_pos, n_data, n_data_len, n_result)
 {
 }
@@ -578,7 +577,7 @@ bool FormatFMParser::GetData()
 			found = true;
 			// Get Data
 			int siz = SetSectorData(&data[pos+8], true, false);
-			track_size += ((wxUint32)siz + sizeof(d88_sector_header_t));
+			track_size += (wxUint32)siz;
 
 			int unit = GetDecodeUnit();
 			data_len = ShiftBytes(data, data_len, pos + ((siz + 2) * unit) + 8);
@@ -588,7 +587,7 @@ bool FormatFMParser::GetData()
 			found = true;
 			// Get Data
 			int siz = SetSectorData(&data[pos+8], true, true);
-			track_size += ((wxUint32)siz + sizeof(d88_sector_header_t));
+			track_size += (wxUint32)siz;
 
 			int unit = GetDecodeUnit();
 			data_len = ShiftBytes(data, data_len, pos + ((siz + 2) * unit) + 8);
@@ -617,11 +616,11 @@ wxUint8 FormatFMParser::DecodeData(const wxUint8 *indata)
 //
 // HxC HFE形式をD88形式にする
 //
-DiskHfeParser::DiskHfeParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskHfeParser::DiskHfeParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskHfeParser::~DiskHfeParser()
@@ -639,7 +638,7 @@ DiskHfeParser::~DiskHfeParser()
 /// @param [in]     d88_offset   D88オフセット
 /// @param [in,out] disk         ディスク
 /// @return D88オフセット
-wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, int sides, int file_offset, int track_size, wxUint8 encoding[2], int &d88_offset_pos, wxUint32 d88_offset, DiskD88Disk *disk)
+wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, int sides, int file_offset, int track_size, wxUint8 encoding[2], int &d88_offset_pos, wxUint32 d88_offset, DiskImageDisk *disk)
 {
 	int track_blocks = (track_size / 512);
 
@@ -654,7 +653,7 @@ wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, in
 			for(int side = 0; side < 2 && working; side++) {
 				size_t len = istream.Read(&buffers[side][block * 256], 256).LastRead();
 				if (len != 256) {
-					result->SetError(DiskResult::ERR_NO_TRACK, 0);
+					p_result->SetError(DiskResult::ERR_NO_TRACK, 0);
 					working = false;
 					break;
 				}
@@ -663,14 +662,14 @@ wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, in
 
 		for(int side = 0; side < sides; side++) {
 			wxUint32 d88_track_size = 0;
-			DiskD88Track *track = NULL;
+			DiskImageTrack *track = NULL;
 			int sector_nums = 0;
 
 			switch(encoding[side]) {
 			case ISOIBM_FM_ENCODING:
 				{
 					// parse FM
-					FormatFMParser ps(disk, track_number, side, d88_offset_pos, buffers[side], track_blocks * 256, result); 
+					FormatFMParser ps(disk, track_number, side, d88_offset_pos, buffers[side], track_blocks * 256, p_result); 
 					d88_track_size = ps.Parse();
 					track = ps.GetTrack();
 					sector_nums = ps.GetSectorNums();
@@ -679,7 +678,7 @@ wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, in
 			default:
 				{
 					// parse MFM
-					FormatMFMParser ps(disk, track_number, side, d88_offset_pos, buffers[side], track_blocks * 256, result); 
+					FormatMFMParser ps(disk, track_number, side, d88_offset_pos, buffers[side], track_blocks * 256, p_result); 
 					d88_track_size = ps.Parse();
 					track = ps.GetTrack();
 					sector_nums = ps.GetSectorNums();
@@ -687,7 +686,7 @@ wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, in
 				break;
 			}
 
-			if (result->GetValid() >= 0) {
+			if (p_result->GetValid() >= 0) {
 				// インターリーブの計算
 				track->CalcInterleave();
 				// トラックサイズ
@@ -720,19 +719,19 @@ wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, in
 /// @result サイズ
 wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file, 0);
+	DiskImageDisk *disk = p_file->NewImageDisk(0);
 
 	hfe_header_t header;
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len != sizeof(header)) {
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
 		return 0;
 	}
 
 	int tracks = header.tracks;
 	int sides = header.sides;
 
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
 
 	// track list
@@ -742,7 +741,7 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 	hfe_track_offset_list_t track_offset_list;
 	len = istream.Read(&track_offset_list, sizeof(track_offset_list)).LastRead();
 	if (len < sizeof(hfe_track_offset_t) * tracks) {
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
 		return 0;
 	}
 
@@ -760,8 +759,8 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 			, encoding
 			, d88_offset_pos, d88_offset, disk);
 
-		if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-			result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
+		if (d88_offset_pos >= disk->GetCreatableTracks()) {
+			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
 		}
 	}
 	// 最大トラック番号設定
@@ -769,7 +768,7 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
@@ -778,12 +777,17 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 		disk->SetWriteProtect(header.write_allowed == 0);
 		disk->ClearModify();
 
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
 
 	return d88_offset;
+}
+
+int DiskHfeParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
 }
 
 static const char *hfe_type_msgs[] = {
@@ -802,15 +806,15 @@ int DiskHfeParser::Check(wxInputStream &istream)
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return p_result->GetValid();
 	}
 
 	// check signature
 	if ((memcmp(header.signature, DISK_HFE_HEADER, sizeof(header.signature)) != 0
 	  && memcmp(header.signature, DISK_HFE_HEADV3, sizeof(header.signature)) != 0) || header.revision != 0) {
-		result->SetError(DiskResult::ERRV_DISK_HEADER, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_HEADER, 0);
+		return p_result->GetValid();
 	}
 
 	// format
@@ -821,8 +825,8 @@ int DiskHfeParser::Check(wxInputStream &istream)
 		} else {
 			msg = wxString(hfe_type_msgs[4]);
 		}
-		result->SetError(DiskResult::ERRV_UNSUPPORTED_TYPE, 0, msg.t_str());
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_UNSUPPORTED_TYPE, 0, msg.t_str());
+		return p_result->GetValid();
 	}
 
 	// track list
@@ -835,26 +839,27 @@ int DiskHfeParser::Check(wxInputStream &istream)
 		len = istream.Read(&track_offset, sizeof(track_offset)).LastRead();
 		if (len < sizeof(track_offset)) {
 			// too short
-			result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+			return p_result->GetValid();
 		}
 		if (wxUINT16_SWAP_ON_BE(track_offset.offset) == 0xffff) {
 			// invalid
-			result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+			return p_result->GetValid();
 		}
 	}
 
-	return result->GetValid();
+	return p_result->GetValid();
 }
 
 /// HxC HFEファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskHfeParser::Parse(wxInputStream &istream)
+int DiskHfeParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	ParseDisk(istream);
-	return result->GetValid();
+	return p_result->GetValid();
 }

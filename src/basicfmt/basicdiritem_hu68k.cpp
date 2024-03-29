@@ -20,11 +20,11 @@ DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
 }
-DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMSDOS(basic, n_sector, n_secpos, n_data)
 {
 }
-DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }
@@ -36,7 +36,7 @@ DiskBasicDirItemHU68K::DiskBasicDirItemHU68K(DiskBasic *basic, int n_num, const 
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemHU68K::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemHU68K::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemMSDOS::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 }

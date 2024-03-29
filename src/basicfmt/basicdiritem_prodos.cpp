@@ -77,7 +77,7 @@ ProDOSOneIndex::ProDOSOneIndex()
 /// セクタバッファを割当て
 void ProDOSOneIndex::AttachBuffer(DiskBasic *basic, wxUint32 group_num, int st_pos)
 {
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	int buf_idx = 0;
 	for(int i=0; i < basic->GetSectorsPerGroup() && buf_idx < 2; i++) {
 		sector = basic->GetSectorFromSectorPos(st_pos + i);
@@ -200,7 +200,7 @@ DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic)
 
 	m_dir_group_num = 0;
 }
-DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
@@ -208,7 +208,7 @@ DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, DiskD88Sector *
 
 	m_dir_group_num = 0;
 }
-DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -265,7 +265,7 @@ DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, int n_num, cons
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemProDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemProDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -705,7 +705,7 @@ void DiskBasicDirItemProDOS::GetUnitGroups(int fileunit_num, DiskBasicGroups &gr
 			next.next_block = 0;
 
 			for(int ss = 0; ss < basic->GetSectorsPerGroup(); ss++) {
-				DiskD88Sector *sector = basic->GetSectorFromSectorPos(sector_pos, track_num, side_num);
+				DiskImageSector *sector = basic->GetSectorFromSectorPos(sector_pos, track_num, side_num);
 				if (!sector) {
 					break;
 				}
@@ -760,7 +760,7 @@ int DiskBasicDirItemProDOS::RecalcFileSize(DiskBasicGroups &group_items, int occ
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -783,7 +783,7 @@ void DiskBasicDirItemProDOS::TakeAddressesInFile(DiskBasicGroups &group_items)
 	}
 
 	DiskBasicGroupItem *item = &group_items.Item(0);
-	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
 	if (!sector) return;
 #if 0
 	int t1 = GetFileType1();

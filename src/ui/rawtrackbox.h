@@ -5,15 +5,15 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _RAWTRACKBOX_H_
-#define _RAWTRACKBOX_H_
+#ifndef RAWTRACKBOX_H
+#define RAWTRACKBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
 
 
 class wxTextCtrl;
-class DiskD88Disk;
+class DiskImageDisk;
 
 /// Rawパラメータボックス
 class RawTrackBox : public wxDialog
@@ -22,7 +22,7 @@ private:
 //	wxTextCtrl *txtOffset;
 
 public:
-	RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offset, DiskD88Disk *disk);
+	RawTrackBox(wxWindow* parent, wxWindowID id, int num, wxUint32 offset, DiskImageDisk *disk);
 
 	enum {
 		IDC_TEXT_OFFSET = 1,
@@ -36,5 +36,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _RAWTRACKBOX_H_ */
+#endif /* RAWTRACKBOX_H */
 

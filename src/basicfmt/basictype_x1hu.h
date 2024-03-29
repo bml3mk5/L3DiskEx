@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_X1HU_H_
-#define _BASICTYPE_X1HU_H_
+#ifndef BASICTYPE_X1HU_H
+#define BASICTYPE_X1HU_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -96,4 +96,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_X1HU_H_ */
+#endif /* BASICTYPE_X1HU_H */

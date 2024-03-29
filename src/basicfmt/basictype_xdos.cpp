@@ -169,7 +169,7 @@ double DiskBasicTypeXDOS::CheckFat(bool is_formatting)
 	hed[0] = 1;
 	hed[1] = 0x0a; // (wxUint8)basic->GetSectorsPerTrackOnBasic();
 	hed[1] |= 0x40;
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (sector) {
 		if (sector->Find(hed, 2) < 0) {
 			return -1.0;
@@ -261,7 +261,7 @@ bool DiskBasicTypeXDOS::PrepareToSaveFile(wxInputStream &istream, int &file_size
 		return false;
 	}
 	// セクタ
-	DiskD88Sector *sector = basic->GetSectorFromGroup(gnum);
+	DiskImageSector *sector = basic->GetSectorFromGroup(gnum);
 	if (!sector) {
 		return false;
 	}
@@ -292,8 +292,8 @@ bool DiskBasicTypeXDOS::PrepareToSaveFile(wxInputStream &istream, int &file_size
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeXDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
-	int file_size = 0;
-	int groups = 0;
+//	int file_size = 0;
+//	int groups = 0;
 
 	int rc = 0;
 	int sec_size = basic->GetSectorSize();
@@ -329,8 +329,8 @@ int DiskBasicTypeXDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 			prev_trk = trk;
 			item->AddChainGroupNumber(chain_idx, group_num);
 
-			file_size += (sec_size * basic->GetSectorsPerGroup());
-			groups++;
+//			file_size += (sec_size * basic->GetSectorsPerGroup());
+//			groups++;
 
 			remain -= (sec_size * basic->GetSectorsPerGroup());
 		}
@@ -375,7 +375,7 @@ void DiskBasicTypeXDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 	const DiskBasicGroupItem *group = group_items.ItemPtr(0);
 	item->SetStartGroup(0, group->group, basic->GetSubDirGroupSize());
 
-	DiskD88Sector *sector = basic->GetSector(group->track, group->side, group->sector_start);
+	DiskImageSector *sector = basic->GetSector(group->track, group->side, group->sector_start);
 	if (!sector) return;
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -418,7 +418,7 @@ void DiskBasicTypeXDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 bool DiskBasicTypeXDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// IPL
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnDir()));
@@ -525,7 +525,7 @@ bool DiskBasicTypeXDOS::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 void DiskBasicTypeXDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
 	// タイトル名 DIRエリアの最初
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetDirStartSector() - 1);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(basic->GetDirStartSector() - 1);
 	if (sector) {
 		wxString dst;
 		basic->GetCharCodes().ConvToString(sector->GetSectorBuffer(), VOLUME_NAME_LENGTH, dst, 0);
@@ -539,7 +539,7 @@ void DiskBasicTypeXDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
 	// タイトル名 DIRエリアの最初
 	if (basic->GetFormatType()->HasVolumeName()) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetDirStartSector() - 1);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(basic->GetDirStartSector() - 1);
 		if (sector) {
 			wxUint8 dst[VOLUME_NAME_LENGTH + 1];
 			memset(dst, 0, sizeof(dst));

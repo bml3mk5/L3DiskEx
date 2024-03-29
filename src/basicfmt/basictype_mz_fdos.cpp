@@ -42,7 +42,7 @@ double DiskBasicTypeMZFDOS::CheckFat(bool is_formatting)
 	double valid_ratio = 1.0;
 
 	// FATエリア
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (!sector) {
 		return -1.0;
 	}
@@ -75,7 +75,7 @@ wxUint32 DiskBasicTypeMZFDOS::GetNextGroupNumber(wxUint32 num, int sector_pos)
 {
 	int trk_num, sid_num, sec_num;
 	basic->CalcNumFromSectorPosForGroup(sector_pos, trk_num, sid_num, sec_num);
-	DiskD88Sector *sector = basic->GetSector(trk_num, sid_num, sec_num);
+	DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 	if (!sector) return 0;
 
 	wxUint8 *b = sector->GetSectorBuffer();
@@ -100,7 +100,7 @@ bool DiskBasicTypeMZFDOS::PrepareToSaveFile(wxInputStream &istream, int &file_si
 		return false;
 	}
 	// セクタ
-	DiskD88Sector *sector = basic->GetSectorFromGroup(gnum);
+	DiskImageSector *sector = basic->GetSectorFromGroup(gnum);
 	if (!sector) {
 		return false;
 	}
@@ -172,7 +172,7 @@ int DiskBasicTypeMZFDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 	ditem->SetGroupSize(groups + 1);
 
 	// FATの空き位置を更新
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (sector) {
 		struct st_fat_mz_fdos *f = (struct st_fat_mz_fdos *)sector->GetSectorBuffer();
 		if (f) {
@@ -280,7 +280,7 @@ int DiskBasicTypeMZFDOS::AccessFile(int fileunit_num, DiskBasicDirItem *item, wx
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeMZFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	//
 	// FATエリア
@@ -435,7 +435,7 @@ void DiskBasicTypeMZFDOS::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 void DiskBasicTypeMZFDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
 	// FAT
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (!sector) {
 		return;
 	}
@@ -456,7 +456,7 @@ void DiskBasicTypeMZFDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 void DiskBasicTypeMZFDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
 	// FAT
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (!sector) {
 		return;
 	}

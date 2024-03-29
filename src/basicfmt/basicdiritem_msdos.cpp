@@ -6,6 +6,7 @@
 ///
 
 #include "basicdiritem_msdos.h"
+#include <wx/stream.h>
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../charcodes.h"
@@ -49,12 +50,12 @@ DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	// MS-DOS
@@ -78,7 +79,7 @@ DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const 
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemMSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemMSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -547,6 +548,33 @@ int DiskBasicDirItemMSDOS::ConvFileTypeFromFileName(const wxString &filename) co
 	return FILE_TYPE_ARCHIVE_MASK;
 }
 
+/// ファイルの終端コードをチェックする必要があるか
+bool DiskBasicDirItemMSDOS::NeedCheckEofCode()
+{
+	// テキストファイルかは拡張子で判断する
+	bool rc = false;
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(GetFileExtPlainStr());
+	if (sa) {
+		rc = ((sa->GetType() & FILE_TYPE_ASCII_MASK) != 0); 
+	}
+	return rc;
+}
+
+/// セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合など
+int DiskBasicDirItemMSDOS::RecalcFileSizeOnSave(wxInputStream *istream, int file_size)
+{
+	if (NeedCheckEofCode()) {
+		// ファイル終端に終端文字があるか
+		wxFileOffset curr_pos = istream->TellI();
+		istream->SeekI(-1, wxFromEnd);
+		if (istream->GetC() != basic->GetTextTerminateCode()) {
+			file_size++;
+		}
+		istream->SeekI(curr_pos);
+	}
+	return file_size;
+}
+
 //
 // ダイアログ用
 //
@@ -694,11 +722,11 @@ DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
 }
-DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMSDOS(basic, n_sector, n_secpos, n_data)
 {
 }
-DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }

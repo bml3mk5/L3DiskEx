@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_FALCOM_H_
-#define _BASICDIRITEM_FALCOM_H_
+#ifndef BASICDIRITEM_FALCOM_H
+#define BASICDIRITEM_FALCOM_H
 
 #include "basicdiritem.h"
 
@@ -34,11 +34,11 @@ private:
 
 public:
 	DiskBasicDirItemFalcom(DiskBasic *basic);
-	DiskBasicDirItemFalcom(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemFalcom(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemFalcom(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemFalcom(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -110,4 +110,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_FALCOM_H_ */
+#endif /* BASICDIRITEM_FALCOM_H */

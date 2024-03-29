@@ -5,13 +5,14 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MSDOS_H_
-#define _BASICTYPE_MSDOS_H_
+#ifndef BASICTYPE_MSDOS_H
+#define BASICTYPE_MSDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
 #include "basictype_fat12.h"
 
+class DiskImageDisk;
 
 #pragma pack(1)
 /// FAT BPB
@@ -61,7 +62,7 @@ public:
 	/// @brief ディスクから各パラメータを取得＆必要なパラメータを計算
 	virtual double	ParseParamOnDisk(bool is_formatting);
 	/// @brief ディスクからMSDOSパラメータを取得
-	double			ParseMSDOSParamOnDisk(DiskD88Disk *disk, bool is_formatting);
+	double			ParseMSDOSParamOnDisk(DiskImageDisk *disk, bool is_formatting);
 	//@}
 
 	/// @name directory
@@ -95,4 +96,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MSDOS_H_ */
+#endif /* BASICTYPE_MSDOS_H */

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_LOSA_H_
-#define _BASICDIRITEM_LOSA_H_
+#ifndef BASICDIRITEM_LOSA_H
+#define BASICDIRITEM_LOSA_H
 
 #include "basicdiritem_msdos.h"
 
@@ -32,8 +32,8 @@ protected:
 
 public:
 	DiskBasicDirItemLOSA(DiskBasic *basic);
-	DiskBasicDirItemLOSA(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemLOSA(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemLOSA(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemLOSA(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief 属性を設定
 	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -70,4 +70,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_LOSA_H_ */
+#endif /* BASICDIRITEM_LOSA_H */

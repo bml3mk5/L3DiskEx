@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_HU68K_H_
-#define _BASICDIRITEM_HU68K_H_
+#ifndef BASICDIRITEM_HU68K_H
+#define BASICDIRITEM_HU68K_H
 
 #include "basicdiritem_msdos.h"
 
@@ -30,11 +30,11 @@ protected:
 
 public:
 	DiskBasicDirItemHU68K(DiskBasic *basic);
-	DiskBasicDirItemHU68K(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemHU68K(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemHU68K(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemHU68K(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのサイズ
 	virtual size_t	GetDataSize() const;
@@ -43,4 +43,4 @@ public:
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 };
 
-#endif /* _BASICDIRITEM_HU68K_H_ */
+#endif /* BASICDIRITEM_HU68K_H */

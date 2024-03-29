@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICERROR_H_
-#define _BASICERROR_H_
+#ifndef BASICERROR_H
+#define BASICERROR_H
 
 #include "../common.h"
 #include "../result.h"
@@ -78,4 +78,4 @@ public:
 	void SetMessageV(int error_number, va_list ap);
 };
 
-#endif /* _BASICERROR_H_ */
+#endif /* BASICERROR_H */

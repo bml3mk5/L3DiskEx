@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_H_
-#define _BASICTYPE_H_
+#ifndef BASICTYPE_H
+#define BASICTYPE_H
 
 #include "../common.h"
 #include <wx/string.h>
@@ -20,6 +20,8 @@
 
 class wxInputStream;
 class wxOutputStream;
+class DiskImageSector;
+class DiskImageTrack;
 class DiskBasic;
 class DiskBasicFat;
 class DiskBasicDir;
@@ -343,7 +345,7 @@ public:
 	/// @brief フォーマットできるか
 	virtual bool	SupportFormatting() const { return true; }
 	/// @brief セクタデータを指定コードで埋める
-	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
+	virtual void	FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	/// @brief セクタデータを埋めた後の個別処理
 	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
@@ -408,4 +410,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_H_ */
+#endif /* BASICTYPE_H */

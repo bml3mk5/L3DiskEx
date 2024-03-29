@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_L32D_H_
-#define _BASICDIRITEM_L32D_H_
+#ifndef BASICDIRITEM_L32D_H
+#define BASICDIRITEM_L32D_H
 
 #include "basicdiritem_fat8.h"
 
@@ -48,11 +48,11 @@ private:
 
 public:
 	DiskBasicDirItemL32D(DiskBasic *basic);
-	DiskBasicDirItemL32D(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemL32D(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -86,4 +86,4 @@ public:
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 };
 
-#endif /* _BASICDIRITEM_L32D_H_ */
+#endif /* BASICDIRITEM_L32D_H */

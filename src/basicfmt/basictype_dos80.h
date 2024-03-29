@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_DOS80_H_
-#define _BASICTYPE_DOS80_H_
+#ifndef BASICTYPE_DOS80_H
+#define BASICTYPE_DOS80_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -47,7 +47,7 @@ public:
 	/// @name format
 	//@{
 	/// セクタデータを指定コードで埋める
-	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
+	virtual void	FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	/// セクタデータを埋めた後の個別処理
 	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
@@ -69,4 +69,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_DOS80_H_ */
+#endif /* BASICTYPE_DOS80_H */

@@ -24,7 +24,7 @@ class wxCheckBox;
 class wxListEvent;
 class wxGridSizer;
 class wxSizerFlags;
-class L3DiskFrame;
+class UiDiskProcess;
 class DiskBasic;
 class DiskBasicDirItem;
 class DiskBasicDirItemAttr;
@@ -52,7 +52,7 @@ typedef enum en_intnamebox_show_flags {
 class IntNameBox : public wxDialog
 {
 private:
-	L3DiskFrame *frame;
+	UiDiskProcess *frame;
 
 	int unique_number;
 	DiskBasic		 *basic;
@@ -95,7 +95,7 @@ private:
 	static wxStaticText *NewStaticText(wxWindow *parent, wxWindowID id, const wxString &label, const wxSize &size);
 
 public:
-	IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
+	IntNameBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
 		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, const wxString &file_name, int file_size, DiskBasicDirItemAttr *date_time, int show_flags);
 
 	enum {
@@ -120,7 +120,7 @@ public:
 
 	/// @name functions
 	//@{
-	void CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
+	void CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
 		DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, const wxString &file_name, int file_size, DiskBasicDirItemAttr *date_time, int show_flags);
 
 	int ShowModal();

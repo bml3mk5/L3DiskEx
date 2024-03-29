@@ -3,27 +3,39 @@
 
 @section diskimage ディスクイメージ操作
 
-イメージオープンダイアログ ... L3DiskFrame::ShowOpenFileDialog()
+イメージオープンダイアログ ... UiDiskFrame::ShowOpenFileDialog()
 
-イメージオープン ... L3DiskFrame::PreOpenDataFile()
+イメージオープン ... UiDiskFrame::PreOpenDataFile()
 
-イメージクローズ ... L3DiskFrame::CloseDataFile()
+イメージクローズ ... UiDiskFrame::CloseDataFile()
 
-イメージセーブダイアログ ... L3DiskFrame::ShowSaveFileDialog()
+イメージセーブダイアログ ... UiDiskFrame::ShowSaveFileDialog()
 
-ディスク1枚をセーブダイアログ ... L3DiskList::ShowSaveDiskDialog()
+ディスク1枚をセーブダイアログ ... UiDiskList::ShowSaveDiskDialog()
 
-ディスクフォーマット ... L3DiskFrame::FormatDisk()
+ディスクフォーマット ... UiDiskFrame::FormatDisk()
 
 
 @section fileimage ディスク内操作
 
-インポート ... L3DiskFrame::ImportDataToDisk()
+インポート ... UiDiskFrame::ImportDataToDisk()
 
-エクスポート ... L3DiskFrame::ExportDataFromDisk()
+エクスポート ... UiDiskFrame::ExportDataFromDisk()
 
-コピー ... L3DiskFrame::CopyDataFromDisk()
+コピー ... UiDiskFrame::CopyDataFromDisk()
 
-ペースト ... L3DiskFrame::PasteDataToDisk()
+ペースト ... UiDiskFrame::PasteDataToDisk()
+
+プロパティ ... UiDiskFrame::PropertyOnDisk() -> { Fileモード時 -> UiDiskFileList::ShowFileAttr(), Rawモード時 -> UiDiskRawPanel::ShowRawDiskAttr() }
+
+
+@section rawtrack Rawモード トラック
+
+トラック情報(プロパティ) ... UiDiskRawTrack::ShowTrackAttr()
+
+
+@section rawsector Rawモード セクタ
+
+セクタ編集 ... UiDiskRawSector::EditSector()
 
 */

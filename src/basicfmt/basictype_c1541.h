@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_C1541_H_
-#define _BASICTYPE_C1541_H_
+#ifndef BASICTYPE_C1541_H
+#define BASICTYPE_C1541_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -248,4 +248,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_C1541_H_ */
+#endif /* BASICTYPE_C1541_H */

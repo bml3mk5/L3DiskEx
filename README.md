@@ -1,4 +1,4 @@
-# ![](src/res/l3diskex.png) L3 Disk Explorer
+# ![](l3diskex_icon.png) L3 Disk Explorer
 
 #### Copyright(C) Sasaji 2015-2024 All Rights Reserved.
 
@@ -6,9 +6,11 @@
 
 ### L3ディスクエクスプローラは、レトロPC用に作成されたフロッピーディスクイメージ内部のファイルにアクセスするためのアプリケーションです。
 
-![l3diskex_scr050](../../assets/99339286/f9ee5c86-0251-47a7-ae3f-1c9b6c1e149a)
+![l3diskex screen shot](l3diskex_scrn.png)
 
 ### [ダウンロード](https://github.com/bml3mk5/L3DiskEx/releases)
+
+### [ドキュメント](../../tree/master/docs)
 
 対応している DISK BASIC / OS：
 
@@ -47,6 +49,8 @@ MDOS
 ### L3 Disk Explorer is an application in order to access to files in a floppy disk image for retro computer and operating system.
 
 ### [Downloads](https://github.com/bml3mk5/L3DiskEx/releases)
+
+### [Documents(Japanese)](../../tree/master/docs)
 
 Supported DISK BASIC / OS：
 
@@ -98,6 +102,6 @@ MDOS
 
   http://s-sasaji.ddo.jp/bml3mk5/
 
-  (Twitter: http://twitter.com/bml3mk5)
+  (X(Twitter): https://twitter.com/bml3mk5)
 
 ------------------------------------------------------------------------------

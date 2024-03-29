@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _RAWPARAMBOX_H_
-#define _RAWPARAMBOX_H_
+#ifndef RAWPARAMBOX_H
+#define RAWPARAMBOX_H
 
 #define RAWPARAMBOX_TRANS \
 _("Required information entry is empty.") \
@@ -88,5 +88,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _RAWPARAMBOX_H_ */
+#endif /* RAWPARAMBOX_H */
 

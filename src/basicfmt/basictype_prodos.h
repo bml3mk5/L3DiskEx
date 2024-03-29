@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_PRODOS_H_
-#define _BASICTYPE_PRODOS_H_
+#ifndef BASICTYPE_PRODOS_H
+#define BASICTYPE_PRODOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -26,7 +26,7 @@ public:
 	~ProDOSBitmap() {}
 
 	/// @brief ポインタをセット
-	void AddBitmap(DiskD88Sector *sector);
+	void AddBitmap(DiskImageSector *sector);
 	/// @brief 指定位置のビットを変更する
 	void Modify(wxUint32 group_num, bool use);
 	/// @brief 指定位置が空いているか
@@ -166,7 +166,7 @@ public:
 	/// @name format
 	//@{
 //	/// @brief フォーマット時セクタデータを指定コードで埋める
-//	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
+//	virtual void	FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	/// @brief フォーマット時セクタデータを埋めた後の個別処理
 	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
@@ -204,4 +204,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_PRODOS_H_ */
+#endif /* BASICTYPE_PRODOS_H */

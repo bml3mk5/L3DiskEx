@@ -11,6 +11,7 @@
 #include "basicdir.h"
 #include "basicdiritem.h"
 #include "basicdiritem_amiga.h"
+#include "basictemplate.h"
 #include "../utils.h"
 #include "../logging.h"
 
@@ -240,7 +241,7 @@ double DiskBasicTypeAmiga::ParseParamOnDisk(bool is_formatting)
 	//
 	// boot block
 	//
-	DiskD88Sector *sector = basic->GetSectorFromGroup(0);
+	DiskImageSector *sector = basic->GetSectorFromGroup(0);
 	if (!sector) {
 		return -1.0;
 	}
@@ -409,7 +410,7 @@ bool DiskBasicTypeAmiga::AssignRootDirectory(int start_sector, int end_sector, D
 	if (dir_item) {
 		int trk = 0;
 		int sid = 0;
-		DiskD88Sector *sector = basic->GetSectorFromGroup(m_root.block_num, trk, sid);
+		DiskImageSector *sector = basic->GetSectorFromGroup(m_root.block_num, trk, sid);
 		dir_item->SetDataPtr(0, NULL, sector, 0, sector->GetSectorBuffer());
 	}
 	DiskBasicDirItemAmiga::RenumberInDirectory(basic, dir_item->GetChildren());
@@ -614,7 +615,7 @@ int DiskBasicTypeAmiga::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 {
 //	myLog.SetDebug("DiskBasicTypeAmiga::AllocateGroups {");
 
-	int file_size = 0;
+//	int file_size = 0;
 	int groups = 0;
 
 	int rc = 0;
@@ -651,7 +652,7 @@ int DiskBasicTypeAmiga::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 				rc = -2;
 				break;
 			}
-			DiskD88Sector *sector = basic->GetSectorFromGroup(ex_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(ex_num);
 			if (!sector) {
 				rc = -2;
 				break;
@@ -700,7 +701,7 @@ int DiskBasicTypeAmiga::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 		SetGroupNumber(group_num, 1);
 		aitem->SetDataBlock(block_idx, group_num);
 
-		file_size += block_size;
+//		file_size += block_size;
 		groups++;
 		remain -= block_size;
 		limit--;
@@ -870,7 +871,7 @@ DiskBasicDirItem *DiskBasicTypeAmiga::GetEmptyDirectoryItem(DiskBasicDirItem *pa
 			return match_item;
 		}
 		// 実際にセクタがあるか
-		DiskD88Sector *sector = basic->GetSectorFromGroup(new_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(new_num);
 		if (!sector) {
 			return match_item;
 		}
@@ -948,7 +949,7 @@ void DiskBasicTypeAmiga::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 /// フォーマット時セクタデータを埋めた後の個別処理
 bool DiskBasicTypeAmiga::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	bool is_ffs = basic->GetVariousBoolParam(wxT(KEY_FAST_FILE_SYSTEM));
 	bool is_intr = false;	// support international

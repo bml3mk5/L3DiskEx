@@ -5,10 +5,11 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISK_PARAMETER_H_
-#define _DISK_PARAMETER_H_
+#ifndef DISK_PARAMETER_H
+#define DISK_PARAMETER_H
 
-#include "common.h"
+#include "../common.h"
+#include "../parambase.h"
 #include <wx/string.h>
 #include <wx/arrstr.h>
 #include <wx/dynarray.h>
@@ -442,7 +443,7 @@ WX_DEFINE_ARRAY(const DiskParam *, DiskParamPtrs);
 //////////////////////////////////////////////////////////////////////
 
 /// @brief ディスクパラメータのテンプレートを提供する
-class DiskTemplates
+class DiskTemplates : public TemplatesBase
 {
 private:
 	DiskParams params;
@@ -461,8 +462,6 @@ public:
 	bool LoadParticularTrack(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs);
 	/// @brief ParticularSectorエレメントをロード
 	bool LoadParticularSector(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs);
-	/// @brief DensityName/Descriptionエレメントをロード
-	bool LoadDescription(const wxXmlNode *node, const wxString &locale_name, wxString &desc, wxString &desc_locale);
 
 	/// @brief タイプ名に一致するテンプレートの番号を返す
 	int IndexOf(const wxString &n_type_name) const;
@@ -490,4 +489,4 @@ public:
 
 extern DiskTemplates gDiskTemplates;
 
-#endif /* _DISK_PARAMETER_H_ */
+#endif /* DISK_PARAMETER_H */

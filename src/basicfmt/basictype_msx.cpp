@@ -17,6 +17,15 @@ DiskBasicTypeMSX::DiskBasicTypeMSX(DiskBasic *basic, DiskBasicFat *fat, DiskBasi
 {
 }
 
+static const char *c_exclude_keywords[] = {
+	"IO      SYS",
+	"IBMDOS",
+	"MSDOS",
+	"IBM",
+	NULL
+};
+
+
 /// ディスクから各パラメータを取得＆必要なパラメータを計算
 /// @param [in] is_formatting フォーマット中か
 /// @retval 1.0       正常
@@ -28,19 +37,28 @@ double DiskBasicTypeMSX::ParseParamOnDisk(bool is_formatting)
 
 	double valid_ratio = ParseMSDOSParamOnDisk(basic->GetDisk(), is_formatting);
 	if (valid_ratio >= 0.0) {
-		DiskD88Sector *sector = basic->GetSector(0, 0, 1);
+		DiskImageSector *sector = basic->GetSector(0, 0, 1);
 		if (!sector) return -1.0;
 		wxUint8 *datas = sector->GetSectorBuffer();
 		if (!datas) return -1.0;
-		fat_bpb_t *bpb = (fat_bpb_t *)datas;
-		char oem_name[10];
-		memset(oem_name, 0, sizeof(oem_name));
-		memcpy(oem_name, bpb->BS_OEMName, sizeof(bpb->BS_OEMName));
-		if ((strstr(oem_name, "MSX") == NULL)
-		&& (sector->Find("MSXDOS",6) < 0)) {
-			valid_ratio = 0.1;
+//		fat_bpb_t *bpb = (fat_bpb_t *)datas;
+		// MSXDOSの名前があれば確実
+		if (sector->Find("MSXDOS", 6) >= 0) {
+			valid_ratio += 0.8;
+		} else if (sector->Find("MSX", 3) >= 0) {
+			valid_ratio += 0.4;
+		}
+		// 除外するキーワード
+		for(int i=0; c_exclude_keywords[i]; i++) {
+			if (sector->Find(c_exclude_keywords[i], strlen(c_exclude_keywords[i])) >= 0) {
+				valid_ratio -= 0.5;
+				break;
+			}
 		}
 	}
+	if (valid_ratio > 1.0) valid_ratio = 1.0;
+	else if (valid_ratio < -1.0) valid_ratio = -1.0;
+
 	return valid_ratio;
 }
 

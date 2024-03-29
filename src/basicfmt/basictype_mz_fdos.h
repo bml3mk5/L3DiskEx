@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MZ_FDOS_H_
-#define _BASICTYPE_MZ_FDOS_H_
+#ifndef BASICTYPE_MZ_FDOS_H
+#define BASICTYPE_MZ_FDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -94,4 +94,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MZ_FDOS_H_ */
+#endif /* BASICTYPE_MZ_FDOS_H */

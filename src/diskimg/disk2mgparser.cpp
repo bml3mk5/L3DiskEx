@@ -7,7 +7,7 @@
 
 #include "disk2mgparser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -41,7 +41,7 @@ typedef struct st_twomg_header {
 //
 //
 //
-Disk2MGParser::Disk2MGParser(DiskD88File *file, short mod_flags, DiskResult *result)
+Disk2MGParser::Disk2MGParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 	: DiskPlainParser(file, mod_flags, result)
 {
 }
@@ -59,8 +59,8 @@ Disk2MGParser::~Disk2MGParser()
 int Disk2MGParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	if (!disk_param) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 
 	istream.SeekI(0);
@@ -69,8 +69,8 @@ int Disk2MGParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return p_result->GetValid();
 	}
 
 //	// フォーマットタイプ
@@ -82,7 +82,7 @@ int Disk2MGParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 
 	int rc = DiskPlainParser::Parse(istream, disk_param);
 	if (rc >= 0) {
-		DiskD88Disk *disk = file->GetDisk(0);
+		DiskImageDisk *disk = p_file->GetDisk(0);
 		if (disk) {
 			wxUint32 flags = wxUINT32_SWAP_ON_BE(header.flags);
 
@@ -96,7 +96,6 @@ int Disk2MGParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 }
 
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @param [in] disk_hints    ディスクパラメータヒント("2D"など)
 /// @param [in] disk_param    ディスクパラメータ disk_hints指定時はNullable
@@ -104,7 +103,7 @@ int Disk2MGParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int Disk2MGParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int Disk2MGParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	istream.SeekI(0);
 
@@ -112,25 +111,25 @@ int Disk2MGParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeH
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < sizeof(header)) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return p_result->GetValid();
 	}
 	// ヘッダ文字列チェック
 	if (memcmp(header.ident, DISK_2MG_HEADER, sizeof(header.ident)) != 0) {
 		// not disk
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 	// フォーマットタイプ
 	wxUint32 format_type = wxUINT32_SWAP_ON_BE(header.format_type);
 	if (format_type == 2) {
 		// unsupported format
-		result->SetError(DiskResult::ERRV_UNSUPPORTED_TYPE, 0, wxT("NIB"));
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_UNSUPPORTED_TYPE, 0, wxT("NIB"));
+		return p_result->GetValid();
 	} else if (format_type > 2) {
 		// invalid
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 
 //	wxUint32 flags = wxUINT32_SWAP_ON_BE(header.flags);

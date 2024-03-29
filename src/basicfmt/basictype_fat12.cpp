@@ -39,6 +39,30 @@ void DiskBasicTypeFAT12::CalcDiskFreeSize(bool wrote)
 	CalcDiskFreeSizeBase(wrote, 2, 0xff8);
 }
 
+/// ファイルの最終セクタのデータサイズを求める
+/// @param [in] item          ディレクトリアイテム
+/// @param [in,out] istream   入力ストリーム ベリファイ時に使用 データ読み出し時はNULL
+/// @param [in,out] ostream   出力先         データ読み出し時に使用 ベリファイ時はNULL
+/// @param [in] sector_buffer セクタバッファ
+/// @param [in] sector_size   バッファサイズ
+/// @param [in] remain_size   残りサイズ
+/// @return 残りサイズ
+int DiskBasicTypeFAT12::CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size)
+{
+	if (istream) {
+		// ベリファイ時のみEOFが自動で付加されることがある
+		if (item->NeedCheckEofCode()) {
+			// 終端コードの1つ前までを出力
+			wxUint8 eof_code = basic->GetTextTerminateCode();
+			int len = remain_size - 1;
+			if (sector_buffer[len] == eof_code) {
+				remain_size = len;
+			}
+		}
+	}
+	return remain_size;
+}
+
 /// FAT位置をセット
 /// @param [in] num グループ番号(0...)
 /// @param [in] val 値

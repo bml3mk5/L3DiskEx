@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FAT12_H_
-#define _BASICTYPE_FAT12_H_
+#ifndef BASICTYPE_FAT12_H
+#define BASICTYPE_FAT12_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -69,9 +69,15 @@ public:
 	//@{
 	//@}
 
+	/// @name data access (read / verify)
+	//@{
+	/// @brief ファイルの最終セクタのデータサイズを求める
+	virtual int		CalcDataSizeOnLastSector(DiskBasicDirItem *item, wxInputStream *istream, wxOutputStream *ostream, const wxUint8 *sector_buffer, int sector_size, int remain_size);
+	//@}
+
 	/// @name save / write
 	//@{
 	//@}
 };
 
-#endif /* _BASICTYPE_FAT12_H_ */
+#endif /* BASICTYPE_FAT12_H */

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_XDOS_H_
-#define _BASICTYPE_XDOS_H_
+#ifndef BASICTYPE_XDOS_H
+#define BASICTYPE_XDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -116,4 +116,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_XDOS_H_ */
+#endif /* BASICTYPE_XDOS_H */

@@ -87,7 +87,7 @@ const wxUint32 gTypeConvAmiga2[] = {
 	FILETYPE_MASK_AMIGA_O_NWRITE,
 	FILETYPE_MASK_AMIGA_O_NREAD,
 	FILETYPE_MASK_AMIGA_SETUID,
-	(wxUint32)-1
+	(const wxUint32)-1
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic)
 	AllocData(NULL, NULL);
 	AllocTemp();
 }
-DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_temp_pre = NULL;
@@ -144,7 +144,7 @@ DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, DiskD88Sector *n_
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [in]  n_next     次のセクタ
 /// @param [out] n_unuse    未使用か
-DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_temp_pre = NULL;
@@ -184,7 +184,7 @@ void DiskBasicDirItemAmiga::DeleteTemp()
 }
 
 /// ディレクトリ情報をアロケート
-void DiskBasicDirItemAmiga::AllocData(DiskD88Sector *n_sector, wxUint8 *n_data)
+void DiskBasicDirItemAmiga::AllocData(DiskImageSector *n_sector, wxUint8 *n_data)
 {
 	m_data.Alloc();
 
@@ -207,7 +207,7 @@ void DiskBasicDirItemAmiga::AllocData(DiskD88Sector *n_sector, wxUint8 *n_data)
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemAmiga::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemAmiga::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -462,7 +462,7 @@ bool DiskBasicDirItemAmiga::ChainHashNumber(int idx, wxUint32 val, DiskBasicDirI
 	amiga_hash_chain_t *chain = NULL;
 	while(num >= 2 && limit >= 0) {
 		// セクタを得る
-		DiskD88Sector *sector = basic->GetSectorFromGroup(num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(num);
 		if (!sector) return false;
 		// 次のヘッダブロックがあるか
 		int offset = sector->GetSectorSize() - (int)sizeof(amiga_hash_chain_t);
@@ -588,7 +588,7 @@ bool DiskBasicDirItemAmiga::DeleteHardLink()
 	wxUint32 block_num = wxUINT32_SWAP_ON_LE(post->real_entry);
 	while (block_num >= 2) {
 		// next link
-		DiskD88Sector *sector = basic->GetSectorFromGroup(block_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(block_num);
 		int npos = sector->GetSectorSize() - (int)sizeof(amiga_header_post_t);
 		post = (amiga_header_post_t *)sector->GetSectorBuffer(npos);
 
@@ -798,7 +798,7 @@ bool DiskBasicDirItemAmiga::GetFileGroups(const wxUint32 *tables, int table_size
 			if (num == 0) {
 				break;
 			}
-			DiskD88Sector *sector = basic->GetSectorFromGroup(num, track_num, side_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(num, track_num, side_num);
 			if (!sector) {
 				break;
 			}
@@ -827,7 +827,7 @@ bool DiskBasicDirItemAmiga::GetFileGroups(const wxUint32 *tables, int table_size
 		if (exnum < 2) {
 			break;
 		}
-		DiskD88Sector *sector = basic->GetSectorFromGroup(exnum, track_num, side_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(exnum, track_num, side_num);
 		if (!sector) {
 			break;
 		}
@@ -880,7 +880,7 @@ bool DiskBasicDirItemAmiga::GetDirectoryGroups(DiskBasic *basic, wxUint32 *table
 		wxUint32 *p_prev_chain = &tables[i];
 		while (num >= 2 && limit >= 0) {
 			limit--;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(num, track_num, side_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(num, track_num, side_num);
 			if (!sector) {
 				// Why?
 				valid = false;
@@ -963,7 +963,7 @@ bool DiskBasicDirItemAmiga::InsertItemInDirectory(DiskBasic *basic, const wxUint
 
 		while (num >= 2 && limit >= 0) {
 			limit--;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(num);
 			if (!sector) {
 				// Why?
 				valid = false;
@@ -1030,10 +1030,10 @@ bool DiskBasicDirItemAmiga::DeleteItemInDirectory(DiskBasic *basic, wxUint32 *ta
 		if (num < 2) {
 			continue;
 		}
-		DiskD88Sector *prev_sector = NULL;
+		DiskImageSector *prev_sector = NULL;
 		while (num >= 2 && limit >= 0) {
 			limit--;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(num);
 			if (!sector) {
 				// Why?
 				valid = false;
@@ -1095,7 +1095,7 @@ int DiskBasicDirItemAmiga::RecalcFileSize(DiskBasicGroups &group_items, int occu
 	if (group_items.Count() == 0) return occupied_size;
 
 	// 現在のセクタ
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(group_items.Last().group);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Last().group);
 	if (!sector) {
 		return occupied_size;
 	}
@@ -1480,7 +1480,7 @@ void DiskBasicDirItemAmiga::UpdateCheckSumAll()
 	int sid = 0;
 	wxUint32 ext_block_num = GetExtension();
 	if (ext_block_num > 0) {
-		DiskD88Sector *sector = basic->GetSectorFromGroup(ext_block_num, trk, sid);
+		DiskImageSector *sector = basic->GetSectorFromGroup(ext_block_num, trk, sid);
 		aitem->SetDataPtr(0, NULL, sector, 0, sector->GetSectorBuffer());
 		aitem->UpdateCheckSum();
 		aitem->UpdateCheckSumAll();
@@ -1493,7 +1493,7 @@ void DiskBasicDirItemAmiga::UpdateCheckSumAll()
 			if (num == 0) {
 				break;
 			}
-			DiskD88Sector *sector = basic->GetSectorFromGroup(num, trk, sid);
+			DiskImageSector *sector = basic->GetSectorFromGroup(num, trk, sid);
 			aitem->SetDataPtr(0, NULL, sector, 0, sector->GetSectorBuffer());
 			aitem->UpdateCheckSum();
 		}

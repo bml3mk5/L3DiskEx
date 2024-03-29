@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<DiskBasicCategories version="1.0">
+	<DiskBasicCategory name="L3S1">
+		<Description>HITACHI LEVEL-3/S1 DISK BASIC</Description>
+		<Description lang="ja">日立 LEVEL-3/S1 DISK BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FM">
+		<Description>FUJITSU F-BASIC</Description>
+		<Description lang="ja">富士通 F-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FMR">
+		<Description>FUJITSU FMR/FM TOWNS MS-DOS</Description>
+		<Description lang="ja">富士通 FMR/FM TOWNS MS-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MSX">
+		<Description>MSX DISK BASIC / MSX-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="N88">
+		<Description>NEC PC-8801 N88-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="N66">
+		<Description>NEC PC-6601 N66-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="PC98X1">
+		<Description>NEC PC-98x1 MS-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="X1HU">
+		<Description>SHARP X1 Hu-BASIC</Description>
+		<Description lang="ja">シャープ X1 Hu-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="HU68K">
+		<Description>SHARP X68000 Human68k</Description>
+		<Description lang="ja">シャープ X68000 Human68k</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MZHU">
+		<Description>SHARP MZ Hu-BASIC</Description>
+		<Description lang="ja">シャープ MZ Hu-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MZ">
+		<Description>SHARP MZ DISK BASIC</Description>
+		<Description lang="ja">シャープ MZ DISK BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MZFDOS">
+		<Description>SHARP MZ Floppy DOS</Description>
+		<Description lang="ja">シャープ MZ Floppy DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="PA">
+		<Description>TOSHIBA PASOPIA T-BASIC</Description>
+		<Description lang="ja">東芝 パソピア T-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="J3100">
+		<Description>TOSHIBA J-3100 MS-DOS</Description>
+		<Description lang="ja">東芝 J-3100 MS-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="SMC">
+		<Description>SONY SMC-777 Sony Filer</Description>
+		<Description lang="ja">ソニー SMC-777 Sony Filer</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FP">
+		<Description>CASIO FP-1100 C82-BASIC</Description>
+		<Description lang="ja">カシオ FP-1100 C82-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FLEX">
+		<Description>FLEX</Description>
+		<Description lang="ja">FLEX</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="OS9">
+		<Description>OS-9</Description>
+		<Description lang="ja">OS-9</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="CPM">
+		<Description>CP/M</Description>
+		<Description lang="ja">CP/M</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MSDOS">
+		<Description>MS-DOS</Description>
+		<Description lang="ja">MS-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="CDOS">
+		<Description>Carry Lab. C-DOS</Description>
+		<Description lang="ja">キャリーラボ C-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="CDOS2">
+		<Description>Carry Lab. CDOS II</Description>
+		<Description lang="ja">キャリーラボ CDOS II</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TFDOS">
+		<Description>TF-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="XDOS">
+		<Description>X-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MAGICAL">
+		<Description>Magical DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FROST">
+		<Description>Frost-DOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="MDOS">
+		<Description>MDOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="APPLEDOS">
+		<Description>Apple DOS 3.3</Description>
+		<Description lang="ja">アップル DOS 3.3</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="PRODOS">
+		<Description>Apple ProDOS 8 / 16</Description>
+		<Description lang="ja">アップル ProDOS 8 / 16</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="C1541">
+		<Description>Commodore 1541 DOS (for C64)</Description>
+		<Description lang="ja">コモドール 1541 DOS (C64用)</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="AMIGA">
+		<Description>Commodore Amiga DOS</Description>
+		<Description lang="ja">コモドール Amiga DOS / AROS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="M68KDOS">
+		<Description>SORD M68 KDOS</Description>
+		<Description lang="ja">ソード M68 KDOS</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TRSD23">
+		<Description>Tandy TRSDOS 2.x</Description>
+		<Description lang="ja">タンディ TRSDOS 2.x</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TRSD13">
+		<Description>Tandy TRSDOS 1.3</Description>
+		<Description lang="ja">タンディ TRSDOS 1.3</Description>
+	</DiskBasicCategory>
+</DiskBasicCategories>

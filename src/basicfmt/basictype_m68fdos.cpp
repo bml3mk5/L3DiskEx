@@ -13,9 +13,6 @@
 #include "../logging.h"
 
 
-#pragma pack(1)
-#pragma pack()
-
 //
 //
 //
@@ -34,7 +31,7 @@ double DiskBasicTypeM68FDOS::CheckFat(bool is_formatting)
 	double valid_ratio = 1.0;
 
 	// FATエリア
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (!sector) {
 		return -1.0;
 	}
@@ -85,7 +82,7 @@ bool DiskBasicTypeM68FDOS::CalcGroupsOnRootDirectory(int start_sector, int end_s
 	int sec_pos = start_sector - 1;
 	int end_sec_pos = basic->GetFatEndGroup() * basic->GetSectorsPerGroup();
 	size_t max_dir_size = end_sec_pos * basic->GetSectorSize();
-	DiskD88Sector *sector = basic->GetManagedSector(sec_pos, &trk_num, &sid_num, &sec_num, &div_num, &div_nums);
+	DiskImageSector *sector = basic->GetManagedSector(sec_pos, &trk_num, &sid_num, &sec_num, &div_num, &div_nums);
 	if (!sector) return false;
 	while(dir_size < max_dir_size) {
 		group_items.Add(sec_pos, 0, trk_num, sid_num, sec_num, sec_num, div_num, div_nums);
@@ -135,7 +132,7 @@ void DiskBasicTypeM68FDOS::GetUsableDiskSize(int &disk_size, int &group_size) co
 /// @param [in] wrote 書込み操作を行った後か
 void DiskBasicTypeM68FDOS::CalcDiskFreeSize(bool wrote)
 {
-	int used = 0;
+//	int used = 0;
 	fat_availability.Empty();
 
 	// 使用済みかチェック
@@ -143,13 +140,13 @@ void DiskBasicTypeM68FDOS::CalcDiskFreeSize(bool wrote)
 	int fsts;
 	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup(); gnum++) {
 		if (gnum < data_start_group) {
-			used++;
+//			used++;
 			fsts = FAT_AVAIL_SYSTEM;
 		} else if (!IsUsedGroupNumber(gnum)) {
 			grps++;
 			fsts = FAT_AVAIL_FREE;
 		} else {
-			used++;
+//			used++;
 			fsts = FAT_AVAIL_USED;
 		}
 		fat_availability.Add(fsts, 0, 0);
@@ -376,7 +373,7 @@ int DiskBasicTypeM68FDOS::AccessFile(int fileunit_num, DiskBasicDirItem *item, w
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeM68FDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	//
 	// FATエリア

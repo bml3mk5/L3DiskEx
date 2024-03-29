@@ -23,11 +23,11 @@ DiskBasicDirItemLOSA::DiskBasicDirItemLOSA(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
 }
-DiskBasicDirItemLOSA::DiskBasicDirItemLOSA(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemLOSA::DiskBasicDirItemLOSA(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMSDOS(basic, n_sector, n_secpos, n_data)
 {
 }
-DiskBasicDirItemLOSA::DiskBasicDirItemLOSA(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemLOSA::DiskBasicDirItemLOSA(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }
@@ -125,7 +125,7 @@ int DiskBasicDirItemLOSA::GetExecuteAddress() const
 void DiskBasicDirItemLOSA::SetStartAddress(int val)
 {
 	char addr[6];
-	sprintf(addr, "%04X", val);
+	mysnprintf(addr, sizeof(addr), "%04X", val);
 	memcpy(m_data.Data()->losa.start_addr, addr, 4);
 }
 
@@ -133,7 +133,7 @@ void DiskBasicDirItemLOSA::SetStartAddress(int val)
 void DiskBasicDirItemLOSA::SetExecuteAddress(int val)
 {
 	char addr[6];
-	sprintf(addr, "%04X", val);
+	mysnprintf(addr, sizeof(addr), "%04X", val);
 	memcpy(m_data.Data()->losa.exec_addr, addr, 4);
 }
 

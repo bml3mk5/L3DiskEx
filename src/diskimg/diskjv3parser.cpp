@@ -7,7 +7,7 @@
 
 #include "diskjv3parser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -46,11 +46,11 @@ wxInt16 jv3_size_map[4] = { 1, 0, 3, 2 };
 //
 //
 //
-DiskJV3Parser::DiskJV3Parser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskJV3Parser::DiskJV3Parser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskJV3Parser::~DiskJV3Parser()
@@ -58,9 +58,9 @@ DiskJV3Parser::~DiskJV3Parser()
 }
 
 /// セクタデータの作成
-wxUint32 DiskJV3Parser::ParseSector(wxInputStream &istream, int track_number, int side_number, int sector_number, int sector_size, int sector_nums, bool single_density, DiskD88Track *track)
+wxUint32 DiskJV3Parser::ParseSector(wxInputStream &istream, int track_number, int side_number, int sector_number, int sector_size, int sector_nums, bool single_density, DiskImageTrack *track)
 {
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, single_density);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, single_density);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -69,13 +69,13 @@ wxUint32 DiskJV3Parser::ParseSector(wxInputStream &istream, int track_number, in
 	size_t len = istream.Read(buf, siz).LastRead();
 	if (len < (size_t)siz) {
 		// ファイルデータが足りない
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 	}
 
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + siz;
+	return (wxUint32)sector->GetSize();
 
 }
 
@@ -86,10 +86,11 @@ wxUint32 DiskJV3Parser::ParseDisk(wxInputStream &istream)
 {
 	jv3_header_t header;
 
-	DiskD88Disk *disk = new DiskD88Disk(file, 0);
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	DiskImageDisk *disk = p_file->NewImageDisk(0);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
 	int max_track_number = -1;
+	int limit_offset_pos = disk->GetCreatableTracks();
 	for(int disk_part = 0; disk_part < 2; disk_part++) {
 		size_t len = istream.Read(&header, sizeof(header)).LastRead();
 		if (len == 0) {
@@ -107,15 +108,15 @@ wxUint32 DiskJV3Parser::ParseDisk(wxInputStream &istream)
 			bool single_density = ((header.ids[i].flags & JV3_DENSITY) == 0);
 
 			// トラックが存在するか
-			DiskD88Track *track = disk->GetTrack(track_number, side_number);
+			DiskImageTrack *track = disk->GetTrack(track_number, side_number);
 			if (!track) {
 				// 新規トラック
-				track = new DiskD88Track(disk, track_number, side_number, d88_offset_pos, 1);
+				track = disk->NewImageTrack(track_number, side_number, d88_offset_pos, 1);
 				disk->Add(track);
 				d88_offset_pos++;
 
-				if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-					result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
+				if (d88_offset_pos >= limit_offset_pos) {
+					p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
 				}
 			}
 			int track_size = track->GetSize();
@@ -133,11 +134,11 @@ wxUint32 DiskJV3Parser::ParseDisk(wxInputStream &istream)
 	// 最大トラック番号設定
 	disk->SetMaxTrackNumber(max_track_number);
 
-	if (result->GetValid() >= 0) {
-		d88_offset = (int)sizeof(d88_header_t);
-		DiskD88Tracks *tracks = disk->GetTracks();
+	if (p_result->GetValid() >= 0) {
+		d88_offset = disk->GetOffsetStart();	// header size
+		DiskImageTracks *tracks = disk->GetTracks();
 		for(int pos = 0; pos < (int)tracks->Count(); pos++) {
-			DiskD88Track *track = tracks->Item(pos);
+			DiskImageTrack *track = tracks->Item(pos);
 
 			// インターリーブの計算
 			track->CalcInterleave();
@@ -157,7 +158,7 @@ wxUint32 DiskJV3Parser::ParseDisk(wxInputStream &istream)
 		disk->SetWriteProtect(header.write_protected == JV3_WPROTECT);
 		disk->ClearModify();
 
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 
 	} else {
 		delete disk;
@@ -173,12 +174,12 @@ wxUint32 DiskJV3Parser::ParseDisk(wxInputStream &istream)
 /// @retval  1 警告あり
 int DiskJV3Parser::Parse(wxInputStream &istream)
 {
-	result->Clear();
+	p_result->Clear();
 	istream.SeekI(0);
 
 	ParseDisk(istream);
 
-	return result->GetValid();
+	return p_result->GetValid();
 }
 
 /// チェック
@@ -197,13 +198,13 @@ int DiskJV3Parser::Check(wxInputStream &istream)
 		}
 		if (len < sizeof(header)) {
 			// too short
-			result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+			return p_result->GetValid();
 		}
 		// 書き込み禁止エリア
 		if (header.write_protected != JV3_WRITABLE && header.write_protected != JV3_WPROTECT) {
-			result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+			return p_result->GetValid();
 		}
 		// ディスクサイズを計算
 		wxUint32 data_size = 0;
@@ -237,25 +238,25 @@ int DiskJV3Parser::Check(wxInputStream &istream)
 
 		if (err_zero >= 40) {
 			// ゼロパディングなのでJV3形式ではない
-			result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+			return p_result->GetValid();
 		}
 		if (err_trks >= 20) {
 			// トラック番号がJV3形式ではない
-			result->SetError(DiskResult::ERRV_ID_TRACK, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_ID_TRACK, 0);
+			return p_result->GetValid();
 		}
 		if (err_secs >= 20) {
 			// セクタ番号がJV3形式ではない
-			result->SetError(DiskResult::ERRV_ID_SECTOR, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_ID_SECTOR, 0);
+			return p_result->GetValid();
 		}
 
 		wxFileOffset file_offset = istream.SeekI(data_size, wxFromCurrent);
 		if (file_offset == wxInvalidOffset || file_offset < (wxFileOffset)(sizeof(jv3_header_t) + data_size)) {
 			// ファイルサイズ足りない
-			result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-			return result->GetValid();
+			p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+			return p_result->GetValid();
 		}
 	}
 

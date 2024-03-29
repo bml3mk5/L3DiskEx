@@ -314,7 +314,7 @@ bool DiskBasicTypeTFDOS::IsRootDirectory(wxUint32 group_num)
 bool DiskBasicTypeTFDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// IPL
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert
 		st_ipl_tfdos *d_ipl = (st_ipl_tfdos *)sector->GetSectorBuffer();

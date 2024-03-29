@@ -9,6 +9,7 @@
 #define _FILE_PARAMETER_H_
 
 #include "../common.h"
+#include "../parambase.h"
 #include <wx/string.h>
 #include <wx/arrstr.h>
 #include <wx/dynarray.h>
@@ -19,14 +20,17 @@
 class FileFormat
 {
 private:
+	int				m_idx;			///< リスト内のインデックス番号
 	wxString		m_name;			///< ファイル種類("d88","plain",...)
 	wxString		m_description;	///< 説明
 
 public:
 	FileFormat();
-	FileFormat(const wxString &name, const wxString &desc);
+	FileFormat(int idx, const wxString &name, const wxString &desc);
 	~FileFormat() {}
 
+	/// @brief 番号を返す
+	int GetIndex() const { return m_idx; }
 	/// @brief ファイル種類を設定
 	void SetName(const wxString &val) { m_name = val; }
 	/// @brief ファイル種類を返す
@@ -146,17 +150,44 @@ WX_DECLARE_OBJARRAY(FileParam, FileParams);
 
 //////////////////////////////////////////////////////////////////////
 
+/// @brief ワイルドカード名保存用
+class WildCard
+{
+private:
+	wxString m_format;
+	wxString m_ext;
+	wxString m_card;
+
+
+public:
+	WildCard();
+	WildCard(const wxString n_format, const wxString n_ext, const wxString n_card);
+	~WildCard() {}
+
+	const wxString &GetFormat() const { return m_format; }
+	const wxString &GetExt() const { return m_ext; }
+	const wxString &GetCard() const { return m_card; }
+};
+
+//////////////////////////////////////////////////////////////////////
+
+/// @class WildCards
+///
+/// @brief WildCard のリスト
+WX_DECLARE_OBJARRAY(WildCard, WildCards);
+
+//////////////////////////////////////////////////////////////////////
+
 /// @brief ファイル種類
-class FileTypes
+class FileTypes : public TemplatesBase
 {
 private:
 	FileFormats formats;		///< ファイル形式
 	FileParams types;			///< ファイルパラメータ
 
 	wxString wcard_for_load;	///< ファイルダイアログ用 ワイルドカード
-	wxString wcard_for_save;	///< ファイルダイアログ用 ワイルドカード
-
-	wxArrayInt exts_for_save;
+	WildCards wcard_for_save;	///< ファイルダイアログ用 ワイルドカード
+	wxArrayInt idx_for_save;	///< 保存時のワイルドカードの順番
 
 	/// @brief ファイルダイアログ用の拡張子選択リストを作成する
 	void MakeWildcard();
@@ -166,12 +197,16 @@ public:
 	~FileTypes() {}
 
 	/// @brief XMLファイルをロード
-	bool Load(const wxString &data_path, const wxString &locale_name);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
 
 	/// @brief 拡張子をさがす
-	FileParam *FindExt(const wxString &n_ext);
+	const FileParam *FindExt(const wxString &n_ext) const;
+	/// @brief 拡張子をさがす
+	size_t IndexOfExt(const wxString &n_ext) const;
 	/// @brief ディスクイメージフォーマット形式をさがす
-	FileFormat *FindFormat(const wxString &n_name);
+	const FileFormat *FindFormat(const wxString &n_name) const;
+	/// @brief ディスクイメージフォーマット形式をさがす
+	const FileFormat *FindFormat(int idx) const;
 
 	/// @brief ファイルパラメータを返す
 	FileParam *ItemPtr(size_t index) const { return &types[index]; }
@@ -183,9 +218,13 @@ public:
 	/// @brief ファイルロード時の拡張子リスト
 	const wxString &GetWildcardForLoad() const { return wcard_for_load; }
 	/// @brief ファイルセーブ時の拡張子リスト
-	const wxString &GetWildcardForSave() const { return wcard_for_save; }
+	wxString GetWildcardForSave(const wxString &n_format, const wxString &n_ext);
 	/// @brief ファイル保存時の保存形式のフォーマットを返す
-	FileFormat *GetFilterForSave(int index);
+	const FileFormat *GetFilterForSave(int index) const;
+	/// @brief ファイル保存時の拡張子を返す
+	void GetFormatByIndexForSave(int index, wxString &format) const;
+	/// @brief ファイル保存時の拡張子を返す
+	void GetExtByIndexForSave(int index, wxString &ext) const;
 	/// @brief ファイル形式を返す
 	const FileFormats &GetFormats() const { return formats; }
 };

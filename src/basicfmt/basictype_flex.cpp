@@ -58,7 +58,7 @@ int DiskBasicTypeFLEX::LogSecSiz(int sector_size) const
 double DiskBasicTypeFLEX::CheckFat(bool is_formatting)
 {
 	// SIR area
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(2);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(2);
 	if (!sector) {
 		return -1.0;
 	}
@@ -124,7 +124,7 @@ double DiskBasicTypeFLEX::ParseParamOnDisk(bool is_formatting)
 	if (is_formatting) return 1.0;
 
 	if (!flex_sir) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(2);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(2);
 		if (!sector) {
 			return -1.0;
 		}
@@ -163,7 +163,7 @@ bool DiskBasicTypeFLEX::CalcGroupsOnRootDirectory(int start_sector, int end_sect
 	int div_num = 0;
 	int div_nums = 1;
 	// 開始セクタ
-	DiskD88Sector *sector = basic->GetManagedSector(start_sector - 1, &trk_num, &sid_num, NULL, &div_num, &div_nums);
+	DiskImageSector *sector = basic->GetManagedSector(start_sector - 1, &trk_num, &sid_num, NULL, &div_num, &div_nums);
 	while(limit >= 0) {
 		if (!sector) {
 			valid = false;
@@ -226,8 +226,8 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 	fat_availability.SetCount(basic->GetFatEndGroup() + 1, FAT_AVAIL_USED);
 
 	// SIR area
-//	DiskD88Disk *disk = basic->GetDisk();
-	DiskD88Sector *sector = NULL;
+//	DiskImageDisk *disk = basic->GetDisk();
+	DiskImageSector *sector = NULL;
 //	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer();
 
 	int track_num  = flex_sir->free_start_track;
@@ -292,7 +292,7 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 void DiskBasicTypeFLEX::SetGroupNumber(wxUint32 num, wxUint32 val)
 {
 	int div_num = 0;
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(num, &div_num);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(num, &div_num);
 	if (!sector) {
 		// why?
 		return;
@@ -328,7 +328,7 @@ wxUint32 DiskBasicTypeFLEX::GetNextGroupNumber(wxUint32 num, int sector_pos)
 /// @return INVALID_GROUP_NUMBER: 空きなし
 wxUint32 DiskBasicTypeFLEX::GetEmptyGroupNumber()
 {
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	wxUint32 group_num = INVALID_GROUP_NUMBER;
 	int sta_track_num  = flex_sir->free_start_track;
 	int sta_lsector_num = flex_sir->free_start_sector;
@@ -424,7 +424,7 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 			}
 			// セクタをクリア
 			int div_num = 0;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(group_num, &div_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(group_num, &div_num);
 			if (sector) {
 				sector->Fill(0, LogSecSiz(basic->GetSectorSize()), SecBufOfs(div_num + 1));
 			}
@@ -502,7 +502,7 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 				random_groups.Add(idx_start, idx_count, 0, 0, 0, 0, 0, basic->GetGroupsPerSector());
 			}
 			// インデックス(FSM)セクタに書き込む
-			DiskD88Sector *isector = NULL;
+			DiskImageSector *isector = NULL;
 			idx_start = item->GetStartGroup(fileunit_num);
 			size_t idx = 0;
 			bool finished = false;
@@ -538,7 +538,7 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 		wxUint32 last_group = item->GetLastGroup();
 		if (last_group != 0) {
 			int div_num = 0;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(last_group, &div_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(last_group, &div_num);
 			if (sector) {
 				flex_ptr_t *p = (flex_ptr_t *)sector->GetSectorBuffer(SecBufOfs(div_num + 1));
 				if (p) {
@@ -565,7 +565,7 @@ int DiskBasicTypeFLEX::ChainGroups(wxUint32 group_num, wxUint32 append_group_num
 {
 	// 現在のセクタに次のセクタへのポインタをセット
 	int div_num = 0;
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(group_num, &div_num);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_num, &div_num);
 	if (!sector) {
 		// why?
 		return -1;
@@ -765,7 +765,7 @@ bool DiskBasicTypeFLEX::IsRootDirectory(wxUint32 group_num)
 /// フォーマット時セクタデータを指定コードで埋める
 /// @param[in] track  トラック
 /// @param[in] sector セクタ
-void DiskBasicTypeFLEX::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeFLEX::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	for(int div_num = 0; div_num < basic->GetGroupsPerSector(); div_num++) { 
 		sector->Fill(basic->GetFillCodeOnFormat(), LogSecSiz(basic->GetSectorSize()), SecBufOfs(div_num + 1));
@@ -797,7 +797,7 @@ void DiskBasicTypeFLEX::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// SIR area
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(2);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(2);
 	if (!sector) return false;
 	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer(SecBufOfs(2 + 1));
 	if (!flex) return false;
@@ -833,12 +833,12 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 
 	int dir_sta_lsec = basic->GetDirStartSector() - 1;	// logical
 	int dir_end_lsec = basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() * basic->GetGroupsPerSector() - 1;	// logical
-	DiskD88Sector *prev_sector = NULL;
+	DiskImageSector *prev_sector = NULL;
 	int prev_lsec_pos = 0;
 	int next_track = 0;
 	int next_sector = 0;
 	for(int lsec_pos = dir_sta_lsec; lsec_pos <= dir_end_lsec; lsec_pos++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(lsec_pos);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(lsec_pos);
 		if (prev_sector) {
 			flex_ptr_t *p = (flex_ptr_t *)prev_sector->GetSectorBuffer(SecBufOfs(prev_lsec_pos + 1));
 			if (p) {
@@ -926,7 +926,7 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 {
 	directory_flex_t *d = (directory_flex_t *)item->GetData();
 
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 	flex_ptr_t *p;
 
 	int start_track_num = d->start_track;
@@ -967,7 +967,7 @@ bool DiskBasicTypeFLEX::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 /// 空きエリアのチェインを作り直す
 void DiskBasicTypeFLEX::RemakeChainOnFreeArea()
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 	flex_ptr_t *p;
 
 	// 空き領域のリスト

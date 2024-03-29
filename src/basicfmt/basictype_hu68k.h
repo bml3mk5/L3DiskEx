@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_HU68K_H_
-#define _BASICTYPE_HU68K_H_
+#ifndef BASICTYPE_HU68K_H
+#define BASICTYPE_HU68K_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -45,4 +45,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_HU68K_H_ */
+#endif /* BASICTYPE_HU68K_H */

@@ -77,7 +77,7 @@ double DiskBasicTypeDOS80::CheckFat(bool is_formatting)
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeDOS80::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeDOS80::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -88,7 +88,7 @@ bool DiskBasicTypeDOS80::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 {
 	bool valid = true;
 
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 
 	// DIR
 	for(int sec = basic->GetDirStartSector(); sec <= basic->GetDirEndSector(); sec++) {

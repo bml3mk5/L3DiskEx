@@ -38,13 +38,13 @@ DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic)
 	m_data.Alloc();
 	AllocateItem(NULL);
 }
-DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 	AllocateItem(NULL);
 }
-DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -64,7 +64,7 @@ DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, int n_num, const Di
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -413,7 +413,7 @@ int DiskBasicDirItemSDOS::ConvOriginalTypeFromFileName(const wxString &filename)
 	int t1 = TYPE_NAME_SDOS_DAT;
 	// 拡張子で属性を設定する
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		if ((sa->GetType() & (FILE_TYPE_BASIC_MASK | FILE_TYPE_BINARY_MASK)) == (FILE_TYPE_BASIC_MASK | FILE_TYPE_BINARY_MASK)) {
 			if (basic->GetFormatSubTypeNumber() != 0) {

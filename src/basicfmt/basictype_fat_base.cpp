@@ -151,7 +151,7 @@ int DiskBasicTypeFATBase::CalcDataStartSectorPos()
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeFATBase::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeFATBase::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	int sector_pos = basic->CalcSectorPosFromNumForGroup(track->GetTrackNumber(), track->GetSideNumber(), sector->GetSectorNumber());
 	if (sector_pos < 0) {

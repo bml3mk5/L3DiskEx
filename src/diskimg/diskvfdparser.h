@@ -9,14 +9,14 @@
 #define DISKVFD_PARSER_H
 
 #include "../common.h"
-#include "diskplainparser.h"
+#include "diskparser.h"
 
 
 class wxInputStream;
 class wxArrayString;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskParser;
 class DiskParam;
 class DiskParamPtrs;
@@ -25,27 +25,26 @@ class FileParam;
 
 
 /// Virtual98 FDディスクイメージパーサ
-class DiskVFDParser
+class DiskVFDParser : public DiskImageParser
 {
 private:
-	DiskD88File	*file;
-	short		mod_flags;
-	DiskResult	*result;
-
 	/// セクタデータの作成
-	wxUint32 ParseSector(wxInputStream &istream, int sector_nums, void *user_data, DiskD88Track *track);
+	wxUint32 ParseSector(wxInputStream &istream, int sector_nums, void *user_data, DiskImageTrack *track);
 	/// トラックデータの作成
-	wxUint32 ParseTrack(wxInputStream &istream, void *user_data, int offset_pos, wxUint32 offset, DiskD88Disk *disk);
+	wxUint32 ParseTrack(wxInputStream &istream, void *user_data, int offset_pos, wxUint32 offset, DiskImageDisk *disk);
 	/// ディスクの解析
 	wxUint32 ParseDisk(wxInputStream &istream);
 
+	int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+
 public:
-	DiskVFDParser(DiskD88File *file, short mod_flags, DiskResult *result);
+	DiskVFDParser(DiskImageFile *file, short mod_flags, DiskResult *result);
 	~DiskVFDParser();
 
 	/// チェック
 	int Check(wxInputStream &istream);
-	int Parse(wxInputStream &istream);
+	/// 解析
+	int Parse(wxInputStream &istream, const DiskParam *disk_param = NULL);
 };
 
 #endif /* DISKVFD_PARSER_H */

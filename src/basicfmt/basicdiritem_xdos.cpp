@@ -149,7 +149,7 @@ void DiskBasicDirItemXDOSChain::Dup(const DiskBasicDirItemXDOSChain &src)
 }
 #endif
 /// ポインタをセット
-void DiskBasicDirItemXDOSChain::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, xdos_chain_t *n_chain)
+void DiskBasicDirItemXDOSChain::Set(DiskBasic *n_basic, DiskImageSector *n_sector, xdos_chain_t *n_chain)
 {
 	basic = n_basic;
 	sector = n_sector;
@@ -239,17 +239,17 @@ DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic)
 	chain.SetBasic(basic);
 	chain.Alloc();
 }
-DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	chain.SetBasic(basic);
 	chain.Alloc();
 }
-DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit)
+DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }
-DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }
@@ -262,7 +262,7 @@ DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, 
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemXDOSBase::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemXDOSBase::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 }
@@ -272,7 +272,7 @@ void DiskBasicDirItemXDOSBase::SetDataPtr(int n_num, const DiskBasicGroupItem *n
 void DiskBasicDirItemXDOSBase::AttachChain(wxUint32 group_num)
 {
 	if (group_num != 0) {
-		DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 		if (sector) {
 			chain.Set(basic, sector, (xdos_chain_t *)sector->GetSectorBuffer());
 		}
@@ -380,7 +380,7 @@ int	DiskBasicDirItemXDOSBase::RecalcFileSize(DiskBasicGroups &group_items, int o
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -418,7 +418,7 @@ wxString DiskBasicDirItemXDOSBase::GetFileCreateTimeStr() const
 /// @param [in] sector セクタ
 /// @param [in] data   セクタ内のバッファ
 /// @param [in] pitem  コピー元のアイテム
-void DiskBasicDirItemXDOSBase::SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
+void DiskBasicDirItemXDOSBase::SetChainSector(DiskImageSector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
 {
 	chain.Set(basic, sector, (xdos_chain_t *)data);
 }
@@ -464,16 +464,16 @@ DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemXDOSBase(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit)
+DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse, bool n_inherit)
 	: DiskBasicDirItemXDOSBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }
-DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemXDOSBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -500,7 +500,7 @@ DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const Di
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemXDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemXDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemXDOSBase::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 

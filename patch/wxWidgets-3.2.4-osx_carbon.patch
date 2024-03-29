@@ -1,0 +1,24 @@
+*** wxWidgets-3.2.4-orig/src/osx/carbon/dataobj.cpp	Thu Nov  9 07:53:55 2023
+--- wxWidgets-3.2.4/src/osx/carbon/dataobj.cpp	Fri Mar  8 15:39:54 2024
+***************
+*** 469,475 ****
+                              // revert the translation and decomposition to arrive at a proper utf8 string again
+                              
+                              wxCFRef<CFURLRef> url = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8*) buf, flavorDataSize, kCFStringEncodingUTF8, NULL);
+!                             wxCFStringRef cfString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+                                  
+                              CFMutableStringRef cfMutableString = CFStringCreateMutableCopy(NULL, 0, cfString);
+                              CFStringNormalize(cfMutableString, kCFStringNormalizationFormC);
+--- 469,480 ----
+                              // revert the translation and decomposition to arrive at a proper utf8 string again
+                              
+                              wxCFRef<CFURLRef> url = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8*) buf, flavorDataSize, kCFStringEncodingUTF8, NULL);
+!                             wxCFStringRef cfString = NULL;
+!                             if (url) {
+!                                 cfString = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle);
+!                             } else {
+!                                 cfString = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *) buf, flavorDataSize, kCFStringEncodingUTF8, false);
+!                             }
+                                  
+                              CFMutableStringRef cfMutableString = CFStringCreateMutableCopy(NULL, 0, cfString);
+                              CFStringNormalize(cfMutableString, kCFStringNormalizationFormC);

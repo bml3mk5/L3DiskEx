@@ -8,12 +8,34 @@
 #include "diskwriter.h"
 #include <wx/filename.h>
 #include <wx/wfstream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskd88writer.h"
 #include "diskplainwriter.h"
 #include "fileparam.h"
 #include "diskresult.h"
 
+//////////////////////////////////////////////////////////////////////
+
+const char *DiskWriter::cFormatTypeNamesForSave[] = {
+	"", "d88", "plain", NULL
+};
+
+//////////////////////////////////////////////////////////////////////
+//
+//
+//
+DiskWriteOptions::DiskWriteOptions()
+{
+	m_trim_unused_data = false;
+}
+DiskWriteOptions::DiskWriteOptions(
+	bool n_trim_unused_data
+) {
+	m_trim_unused_data = n_trim_unused_data;
+}
+DiskWriteOptions::~DiskWriteOptions()
+{
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -22,9 +44,9 @@
 DiskWriter::DiskWriter()
 	: DiskWriteOptions()
 {
-	this->d88 = NULL;
-	this->ostream = NULL;
-	this->result = NULL;
+	p_image = NULL;
+	p_ostream = NULL;
+	p_result = NULL;
 }
 DiskWriter::DiskWriter(const DiskWriter &src)
 	: DiskWriteOptions(src)
@@ -35,31 +57,32 @@ DiskWriter::DiskWriter(const DiskWriter &src)
 /// @param [in] path      ファイルパス
 /// @param [in] options   出力時のオプション
 /// @param [out] result   結果
-DiskWriter::DiskWriter(DiskD88 *image, const wxString &path, const DiskWriteOptions &options, DiskResult *result)
+DiskWriter::DiskWriter(DiskImage *image, const wxString &path, const DiskWriteOptions &options, DiskResult *result)
 	: DiskWriteOptions(options)
 {
-	this->d88 = image;
-	this->file_path = path;
-	this->result = result;
-	this->Open(path);
+	p_image = image;
+	m_file_path = path;
+	p_result = result;
+	p_ostream = NULL;
+	Open(path);
 }
 
 /// @param [in]  image    ディスクイメージ
 /// @param [out] result   結果
-DiskWriter::DiskWriter(DiskD88 *image, DiskResult *result)
+DiskWriter::DiskWriter(DiskImage *image, DiskResult *result)
 	: DiskWriteOptions()
 {
-	this->d88 = image;
-	this->file_path = wxEmptyString;
-	this->result = result;
-	this->ostream = NULL;
-	this->ownstream = false;
+	p_image = image;
+	m_file_path = wxEmptyString;
+	p_result = result;
+	p_ostream = NULL;
+	m_ownstream = false;
 }
 
 DiskWriter::~DiskWriter()
 {
-	if (ownstream) {
-		delete ostream;
+	if (m_ownstream) {
+		delete p_ostream;
 	}
 }
 
@@ -70,17 +93,17 @@ int DiskWriter::Open(const wxString &path)
 {
 	wxFileOutputStream *fstream = new wxFileOutputStream(path);
 //	if (!fstream->IsOk()) {
-//		result->SetError(DiskResult::ERR_CANNOT_SAVE);
+//		p_result->SetError(DiskResult::ERR_CANNOT_SAVE);
 //	}
-	ostream = fstream;
-	ownstream = true;
-	return result->GetValid();
+	p_ostream = fstream;
+	m_ownstream = true;
+	return p_result->GetValid();
 }
 
 /// 出力先がオープンしているか
 bool DiskWriter::IsOk() const
 {
-	return ostream ? ostream->IsOk() : false;
+	return p_ostream ? p_ostream->IsOk() : false;
 }
 
 /// 拡張子をさがす
@@ -91,16 +114,16 @@ int DiskWriter::CanSaveDiskByExt(int disk_number, int side_number)
 	int  rc = 0;
 
 	// ファイル形式の指定がない場合
-	wxFileName fpath(file_path);
+	wxFileName fpath(m_file_path);
 
 	// 拡張子で判定
 	wxString ext = fpath.GetExt();
 
 	// サポートしているファイルか
-	FileParam *fitem = gFileTypes.FindExt(ext);
+	const FileParam *fitem = gFileTypes.FindExt(ext);
 	if (!fitem) {
-		result->SetError(DiskResult::ERR_UNSUPPORTED);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return p_result->GetValid();
 	}
 
 	// 指定した形式でファイル出力
@@ -125,16 +148,16 @@ int DiskWriter::SaveDiskByExt(int disk_number, int side_number, bool &support)
 	int  rc = 0;
 
 	// ファイル形式の指定がない場合
-	wxFileName fpath(file_path);
+	wxFileName fpath(m_file_path);
 
 	// 拡張子で判定
 	wxString ext = fpath.GetExt();
 
 	// サポートしているファイルか
-	FileParam *fitem = gFileTypes.FindExt(ext);
+	const FileParam *fitem = gFileTypes.FindExt(ext);
 	if (!fitem) {
-		result->SetError(DiskResult::ERR_UNSUPPORTED);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return p_result->GetValid();
 	}
 
 	// 指定した形式でファイル出力
@@ -148,6 +171,19 @@ int DiskWriter::SaveDiskByExt(int disk_number, int side_number, bool &support)
 	}
 
 	return rc;
+}
+
+/// 対応しているディスクイメージか
+bool DiskWriter::SupportedFormat(const wxString &file_format)
+{
+	bool match = false;
+	for(size_t i=1; cFormatTypeNamesForSave[i]; i++) {
+		if (file_format == cFormatTypeNamesForSave[i]) {
+			match = true;
+			break;
+		}
+	}
+	return match;
 }
 
 /// ディスクイメージを保存できるか
@@ -195,8 +231,8 @@ int DiskWriter::SaveDisk(int disk_number, int side_number, const wxString &file_
 	bool support = false;
 
 	if (!IsOk()) {
-		result->SetError(DiskResult::ERR_CANNOT_SAVE);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_CANNOT_SAVE);
+		return p_result->GetValid();
 	}
 
 	if (file_format.IsEmpty()) {
@@ -207,8 +243,8 @@ int DiskWriter::SaveDisk(int disk_number, int side_number, const wxString &file_
 		rc = SelectSaveDisk(file_format, disk_number, side_number, support);
 	}
 	if (!support) {
-		result->SetError(DiskResult::ERR_UNSUPPORTED);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERR_UNSUPPORTED);
+		return p_result->GetValid();
 	}
 	return rc;
 }
@@ -222,16 +258,16 @@ int DiskWriter::SelectCanSaveDisk(const wxString &file_format, int disk_number, 
 	int rc = -1;
 	if (file_format == wxT("d88")) {
 		// d88形式
-		DiskD88Writer wr(this, result);
-		rc = wr.ValidateDisk(d88, disk_number, side_number);
+		DiskD88Writer wr(this, p_result);
+		rc = wr.ValidateDisk(p_image, disk_number, side_number);
 //	} else if (file_format == wxT("cpcdsk")) {
 //		// CPC DSK形式
-//		DiskDskWriter wr(result);
-//		rc = wr.ValidateDisk(d88, disk_number, side_number);
+//		DiskDskWriter wr(p_result);
+//		rc = wr.ValidateDisk(p_image, disk_number, side_number);
 	} else if (file_format == wxT("plain")) {
 		// ベタ
-		DiskPlainWriter wr(this, result);
-		rc = wr.ValidateDisk(d88, disk_number, side_number);
+		DiskPlainWriter wr(this, p_result);
+		rc = wr.ValidateDisk(p_image, disk_number, side_number);
 	}
 	return rc;
 }
@@ -247,23 +283,23 @@ int DiskWriter::SelectSaveDisk(const wxString &file_format, int disk_number, int
 	int rc = -1;
 	if (file_format == wxT("d88")) {
 		// d88形式
-		DiskD88Writer wr(this, result);
-		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
+		DiskD88Writer wr(this, p_result);
+		rc = wr.SaveDisk(p_image, disk_number, side_number, p_ostream);
 		support = true;
 //	} else if (file_format == wxT("cpcdsk")) {
 //		// CPC DSK形式
-//		DiskDskWriter wr(result);
-//		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
+//		DiskDskWriter wr(p_result);
+//		rc = wr.SaveDisk(p_image, disk_number, side_number, p_ostream);
 //		support = true;
 	} else if (file_format == wxT("plain")) {
 		// ベタ
-		DiskPlainWriter wr(this, result);
-		rc = wr.SaveDisk(d88, disk_number, side_number, ostream);
+		DiskPlainWriter wr(this, p_result);
+		rc = wr.SaveDisk(p_image, disk_number, side_number, p_ostream);
 		support = true;
 	}
 	if (support && rc >= 0) {
 		// 保存したファイル名を持っておく
-		d88->SetFileName(file_path);
+		p_image->SetFileName(m_file_path);
 	}
 	return rc;
 }
@@ -272,13 +308,13 @@ int DiskWriter::SelectSaveDisk(const wxString &file_format, int disk_number, int
 //
 // 形式ごとの保存
 //
-DiskInhWriterBase::DiskInhWriterBase(DiskWriter *dw_, DiskResult *result_)
+DiskImageWriter::DiskImageWriter(DiskWriter *dw_, DiskResult *result_)
 {
-	this->dw = dw_;
-	this->result = result_;
+	p_dw = dw_;
+	p_result = result_;
 }
 
-DiskInhWriterBase::~DiskInhWriterBase()
+DiskImageWriter::~DiskImageWriter()
 {
 }
 
@@ -287,9 +323,9 @@ DiskInhWriterBase::~DiskInhWriterBase()
 /// @param [in]     disk_number ディスク番号(0-) / -1のときは全体 
 /// @param [in]     side_number サイド番号(0-) / -1のときは両面 
 /// @retval  0 正常
-int DiskInhWriterBase::ValidateDisk(DiskD88 *image, int disk_number, int side_number)
+int DiskImageWriter::ValidateDisk(DiskImage *image, int disk_number, int side_number)
 {
-	result->Clear();
+	p_result->Clear();
 
 	return 0;
 }
@@ -300,9 +336,9 @@ int DiskInhWriterBase::ValidateDisk(DiskD88 *image, int disk_number, int side_nu
 /// @param [in]     side_number サイド番号(0-) / -1のときは両面 
 /// @param [out]    ostream     出力先
 /// @retval  0 正常
-int DiskInhWriterBase::SaveDisk(DiskD88 *image, int disk_number, int side_number, wxOutputStream *ostream)
+int DiskImageWriter::SaveDisk(DiskImage *image, int disk_number, int side_number, wxOutputStream *ostream)
 {
-	result->Clear();
+	p_result->Clear();
 
 	return 0;
 }

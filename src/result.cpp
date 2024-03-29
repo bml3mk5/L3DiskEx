@@ -97,7 +97,7 @@ const wxArrayString &ResultInfo::GetMessages(int maxrow)
 			bufs.Add(msgs[i]);
 		}
 		if ((size_t)maxrow < cnt) {
-			bufs.Add(wxString::Format(_("And have more %d messages..."), cnt - (size_t)maxrow));
+			bufs.Add(wxString::Format(_("And have more %u messages..."), (unsigned int)(cnt - (size_t)maxrow)));
 		}
 		return bufs;
 	} else {

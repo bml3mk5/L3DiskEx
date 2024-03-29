@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICSELBOX_H_
-#define _BASICSELBOX_H_
+#ifndef BASICSELBOX_H
+#define BASICSELBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
@@ -21,7 +21,7 @@ class wxStaticText;
 class DiskBasic;
 class DiskBasicParam;
 class DiskBasicParamPtrs;
-class DiskD88Disk;
+class DiskImageDisk;
 
 /// VOLUMEコントロール
 class VolumeCtrl
@@ -57,10 +57,10 @@ private:
 
 	DiskBasicParamPtrs params;
 
-	DiskD88Disk *disk;
+	DiskImageDisk *p_disk;
 
 public:
-	BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, DiskBasic *basic, int show_flags);
+	BasicSelBox(wxWindow* parent, wxWindowID id, DiskImageDisk *disk, DiskBasic *basic, int show_flags);
 
 	enum {
 		IDC_LIST_BASIC = 1,
@@ -89,5 +89,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _BASICSELBOX_H_ */
+#endif /* BASICSELBOX_H */
 

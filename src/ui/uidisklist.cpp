@@ -7,7 +7,11 @@
 
 #include "uidisklist.h"
 #include <wx/imaglist.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
+#include "mymenu.h"
 #include "../main.h"
+#include "uimainframe.h"
 #include "uidiskattr.h"
 #include "uifilelist.h"
 #include "diskparambox.h"
@@ -51,7 +55,7 @@ enum en_icons_for_tree {
 /// @param [in] n_pos       : ディレクトリ位置
 /// @param [in] n_editable  : ディスク名の編集が可能か
 /// @param [in] n_ditem     : DISK BASIC ディレクトリアイテム
-L3DiskPositionData::L3DiskPositionData(int n_disknum, int n_typenum, int n_sidenum, int n_pos, bool n_editable, DiskBasicDirItem *n_ditem)
+UiDiskPositionData::UiDiskPositionData(int n_disknum, int n_typenum, int n_sidenum, int n_pos, bool n_editable, DiskBasicDirItem *n_ditem)
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
 	: wxClientData()
 #else
@@ -66,7 +70,7 @@ L3DiskPositionData::L3DiskPositionData(int n_disknum, int n_typenum, int n_siden
 	ditem = n_ditem;
 	shown = false;
 }
-L3DiskPositionData::~L3DiskPositionData()
+UiDiskPositionData::~UiDiskPositionData()
 {
 }
 
@@ -76,16 +80,16 @@ L3DiskPositionData::~L3DiskPositionData()
 //
 //
 //
-L3DiskTreeStoreModel::L3DiskTreeStoreModel(L3DiskFrame *parentframe)
+UiDiskTreeStoreModel::UiDiskTreeStoreModel(UiDiskFrame *parentframe)
 	: wxDataViewTreeStore()
 {
 	frame = parentframe;
 }
 /// ディスク名編集できるか
-bool L3DiskTreeStoreModel::IsEnabled(const wxDataViewItem &item, unsigned int col) const
+bool UiDiskTreeStoreModel::IsEnabled(const wxDataViewItem &item, unsigned int col) const
 {
 #if defined(__WXOSX__)
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(item);
 	if (!cd) return false;
 	return cd->GetEditable();
 #else
@@ -93,15 +97,15 @@ bool L3DiskTreeStoreModel::IsEnabled(const wxDataViewItem &item, unsigned int co
 #endif
 }
 /// ディスク名を変更した
-bool L3DiskTreeStoreModel::SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
+bool UiDiskTreeStoreModel::SetValue(const wxVariant &variant, const wxDataViewItem &item, unsigned int col)
 {
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(item);
 	if (!cd || cd->GetDiskNumber() < 0 || cd->GetEditable() != true) return false;
 
 	wxDataViewIconText data;
 	data << variant;
-	if (frame->GetDiskD88().SetDiskName(cd->GetDiskNumber(), data.GetText())) {
-		SetItemText(item, frame->GetDiskD88().GetDiskName(cd->GetDiskNumber()));
+	if (frame->GetDiskImage().SetDiskName(cd->GetDiskNumber(), data.GetText())) {
+		SetItemText(item, frame->GetDiskImage().GetDiskName(cd->GetDiskNumber()));
 	}
 	return true;
 }
@@ -111,11 +115,11 @@ bool L3DiskTreeStoreModel::SetValue(const wxVariant &variant, const wxDataViewIt
 //
 // ツリーコントロール
 //
-L3DiskTreeCtrl::L3DiskTreeCtrl(wxWindow *parentwindow, wxWindowID id)
+UiDiskTreeCtrl::UiDiskTreeCtrl(wxWindow *parentwindow, wxWindowID id)
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
-	: L3CDTreeCtrl(parentwindow, id)
+	: MyCDTreeCtrl(parentwindow, id)
 #else
-	: L3CTreeCtrl(parentwindow, id)
+	: MyCTreeCtrl(parentwindow, id)
 #endif
 {
 }
@@ -125,53 +129,59 @@ L3DiskTreeCtrl::L3DiskTreeCtrl(wxWindow *parentwindow, wxWindowID id)
 // Left Panel
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskList, L3DiskTreeCtrl)
+wxBEGIN_EVENT_TABLE(UiDiskList, UiDiskTreeCtrl)
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
-	EVT_DATAVIEW_ITEM_CONTEXT_MENU(wxID_ANY, L3DiskList::OnContextMenu)
+	EVT_DATAVIEW_ITEM_CONTEXT_MENU(wxID_ANY, UiDiskList::OnContextMenu)
 
-	EVT_DATAVIEW_SELECTION_CHANGED(wxID_ANY, L3DiskList::OnSelectionChanged)
+	EVT_DATAVIEW_SELECTION_CHANGED(wxID_ANY, UiDiskList::OnSelectionChanged)
 
-	EVT_DATAVIEW_ITEM_EXPANDING(wxID_ANY, L3DiskList::OnItemExpanding)
+	EVT_DATAVIEW_ITEM_EXPANDING(wxID_ANY, UiDiskList::OnItemExpanding)
+
+	EVT_DATAVIEW_ITEM_BEGIN_DRAG(wxID_ANY, UiDiskList::OnBeginDrag)
 
 // OSXでは発生しない！
-	EVT_DATAVIEW_ITEM_START_EDITING(wxID_ANY, L3DiskList::OnStartEditing)
-//	EVT_DATAVIEW_ITEM_EDITING_DONE(wxID_ANY, L3DiskList::OnEditingDone)
+	EVT_DATAVIEW_ITEM_START_EDITING(wxID_ANY, UiDiskList::OnStartEditing)
+//	EVT_DATAVIEW_ITEM_EDITING_DONE(wxID_ANY, UiDiskList::OnEditingDone)
 #else
-	EVT_TREE_ITEM_MENU(wxID_ANY, L3DiskList::OnContextMenu)
-	EVT_TREE_SEL_CHANGED(wxID_ANY, L3DiskList::OnSelectionChanged)
-	EVT_TREE_ITEM_EXPANDING(wxID_ANY, L3DiskList::OnItemExpanding)
-	EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, L3DiskList::OnStartEditing)
-	EVT_TREE_END_LABEL_EDIT(wxID_ANY, L3DiskList::OnEditingDone)
+	EVT_TREE_ITEM_MENU(wxID_ANY, UiDiskList::OnContextMenu)
+	EVT_TREE_SEL_CHANGED(wxID_ANY, UiDiskList::OnSelectionChanged)
+	EVT_TREE_ITEM_EXPANDING(wxID_ANY, UiDiskList::OnItemExpanding)
+	EVT_TREE_BEGIN_LABEL_EDIT(wxID_ANY, UiDiskList::OnStartEditing)
+	EVT_TREE_END_LABEL_EDIT(wxID_ANY, UiDiskList::OnEditingDone)
+	EVT_TREE_BEGIN_DRAG(wxID_ANY, UiDiskList::OnBeginDrag)
 #endif
 
-	EVT_MENU(IDM_SAVE_DISK, L3DiskList::OnSaveDisk)
-	EVT_MENU(IDM_ADD_DISK_NEW, L3DiskList::OnAddNewDisk)
-	EVT_MENU(IDM_ADD_DISK_FROM_FILE, L3DiskList::OnAddDiskFromFile)
-	EVT_MENU(IDM_REPLACE_DISK_FROM_FILE, L3DiskList::OnReplaceDisk)
-	EVT_MENU(IDM_DELETE_DISK_FROM_FILE, L3DiskList::OnDeleteDisk)
-	EVT_MENU(IDM_RENAME_DISK, L3DiskList::OnRenameDisk)
+	EVT_MENU(IDM_SAVE_DISK, UiDiskList::OnSaveDisk)
+	EVT_MENU(IDM_ADD_DISK_NEW, UiDiskList::OnAddNewDisk)
+	EVT_MENU(IDM_ADD_DISK_FROM_FILE, UiDiskList::OnAddDiskFromFile)
+	EVT_MENU(IDM_REPLACE_DISK_FROM_FILE, UiDiskList::OnReplaceDisk)
+	EVT_MENU(IDM_DELETE_DISK_FROM_FILE, UiDiskList::OnDeleteDisk)
+	EVT_MENU(IDM_RENAME_DISK, UiDiskList::OnRenameDisk)
 
-	EVT_MENU(IDM_DELETE_DIRECTORY, L3DiskList::OnDeleteDirectory)
+	EVT_MENU(IDM_DELETE_DIRECTORY, UiDiskList::OnDeleteDirectory)
 
-	EVT_MENU(IDM_INITIALIZE_DISK, L3DiskList::OnInitializeDisk)
-	EVT_MENU(IDM_FORMAT_DISK, L3DiskList::OnFormatDisk)
+	EVT_MENU(IDM_INITIALIZE_DISK, UiDiskList::OnInitializeDisk)
+	EVT_MENU(IDM_FORMAT_DISK, UiDiskList::OnFormatDisk)
 
-	EVT_MENU(IDM_PROPERTY_DISK, L3DiskList::OnPropertyDisk)
-	EVT_MENU(IDM_PROPERTY_BASIC, L3DiskList::OnPropertyBasic)
+	EVT_MENU(IDM_COPY_FILE, UiDiskList::OnCopyFile)
+	EVT_MENU(IDM_PASTE_FILE, UiDiskList::OnPasteFile)
+
+	EVT_MENU(IDM_PROPERTY_DISK, UiDiskList::OnPropertyDisk)
+	EVT_MENU(IDM_PROPERTY_BASIC, UiDiskList::OnPropertyBasic)
 wxEND_EVENT_TABLE()
 
-L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
-       : L3DiskTreeCtrl(parentwindow, wxID_ANY)
+UiDiskList::UiDiskList(UiDiskFrame *parentframe, wxWindow *parentwindow)
+       : UiDiskTreeCtrl(parentwindow, wxID_ANY)
 {
 	parent   = parentwindow;
 	frame    = parentframe;
 
-	initialized = false;
+	m_initialized = false;
 
 	AssignTreeIcons( icons_for_tree );
 
 #ifndef USE_TREE_CTRL_ON_DISK_LIST
-	L3DiskTreeStoreModel *model = new L3DiskTreeStoreModel(parentframe);
+	UiDiskTreeStoreModel *model = new UiDiskTreeStoreModel(parentframe);
 	AssociateModel(model);
 	model->DecRef();
 #endif
@@ -187,53 +197,73 @@ L3DiskList::L3DiskList(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	MakePopupMenu();
 
 	// key
-	Bind(wxEVT_CHAR, &L3DiskList::OnChar, this);
+	Bind(wxEVT_CHAR, &UiDiskList::OnChar, this);
 
 	ClearFileName();
 
-	initialized = true;
+	m_initialized = true;
 }
 
-L3DiskList::~L3DiskList()
+UiDiskList::~UiDiskList()
 {
-	// save ini file
-//	Config *ini = wxGetApp().GetConfig();
-
 	delete menuPopup;
+}
+
+/// コピー選択
+/// @param[in] event コマンドイベント
+void UiDiskList::OnCopyFile(wxCommandEvent& WXUNUSED(event))
+{
+	CopyToClipboard();
+}
+
+/// ペースト選択
+/// @param[in] event コマンドイベント
+void UiDiskList::OnPasteFile(wxCommandEvent& WXUNUSED(event))
+{
+	PasteFromClipboard();
+}
+
+/// ツリー上でドラッグ開始
+/// @param[in] event リストイベント
+void UiDiskList::OnBeginDrag(UiDiskListEvent& event)
+{
+	// ドラッグ
+	UiDiskListItem item = event.GetItem();
+	DragDataSource(item);
 }
 
 /// 右クリック選択
 /// @param[in] event リストイベント
-void L3DiskList::OnContextMenu(L3DiskListEvent& event)
+void UiDiskList::OnContextMenu(UiDiskListEvent& event)
 {
-	L3DiskListItem item = event.GetItem();
+	UiDiskListItem item = event.GetItem();
 	SelectTreeNode(item);
 	ShowPopupMenu();
 }
 
 /// ツリーアイテム選択
 /// @param[in] event リストイベント
-void L3DiskList::OnSelectionChanged(L3DiskListEvent& event)
+void UiDiskList::OnSelectionChanged(UiDiskListEvent& event)
 {
-	L3DiskListItem item = event.GetItem();
+	UiDiskListItem item = event.GetItem();
 	ChangeSelection(item);
 }
 
 /// アイテム展開
 /// @param[in] event リストイベント
-void L3DiskList::OnItemExpanding(L3DiskListEvent& event)
+void UiDiskList::OnItemExpanding(UiDiskListEvent& event)
 {
-	L3DiskListItem item = event.GetItem();
+	UiDiskListItem item = event.GetItem();
 	ExpandItemNode(item);
 }
 
 /// アイテム編集開始
 /// @note wxDataViewTreeCtrl OSXでは発生しない
 /// @param[in] event リストイベント
-void L3DiskList::OnStartEditing(L3DiskListEvent& event)
+void UiDiskList::OnStartEditing(UiDiskListEvent& event)
 {
-	L3DiskListItem item = event.GetItem();
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
+	UiDiskListItem item = event.GetItem();
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(item);
 	if (!cd || !cd->GetEditable()) {
 		event.Veto();
 	}
@@ -241,16 +271,16 @@ void L3DiskList::OnStartEditing(L3DiskListEvent& event)
 
 /// アイテム編集終了
 /// @param[in] event リストイベント
-void L3DiskList::OnEditingDone(L3DiskListEvent& event)
+void UiDiskList::OnEditingDone(UiDiskListEvent& event)
 {
 #ifdef USE_TREE_CTRL_ON_DISK_LIST
 	if (event.IsEditCancelled()) return;
-	L3DiskListItem item = event.GetItem();
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(item);
+	UiDiskListItem item = event.GetItem();
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(item);
 	if (!cd || cd->GetDiskNumber() < 0 || cd->GetEditable() != true) return;
 
-	if (frame->GetDiskD88().SetDiskName(cd->GetDiskNumber(), event.GetLabel())) {
-		SetItemText(item, frame->GetDiskD88().GetDiskName(cd->GetDiskNumber()));
+	if (frame->GetDiskImage().SetDiskName(cd->GetDiskNumber(), event.GetLabel())) {
+		SetItemText(item, frame->GetDiskImage().GetDiskName(cd->GetDiskNumber()));
 	}
 	event.Veto();
 #endif
@@ -258,84 +288,84 @@ void L3DiskList::OnEditingDone(L3DiskListEvent& event)
 
 /// ディスクを保存選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnSaveDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnSaveDisk(wxCommandEvent& WXUNUSED(event))
 {
 	ShowSaveDiskDialog();
 }
 
 /// ディスクを新規に追加選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnAddNewDisk(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowAddNewDiskDialog();
 }
 
 /// ディスクをファイルから追加選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnAddDiskFromFile(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnAddDiskFromFile(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowAddFileDialog();
 }
 
 /// ディスクイメージを置換選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnReplaceDisk(wxCommandEvent& WXUNUSED(event))
 {
 	ReplaceDisk();
 }
 
 /// ディスクを削除選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnDeleteDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnDeleteDisk(wxCommandEvent& WXUNUSED(event))
 {
 	DeleteDisk();
 }
 
 /// ディスク名を変更選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnRenameDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnRenameDisk(wxCommandEvent& WXUNUSED(event))
 {
 	RenameDisk();
 }
 
 /// ディレクトリを削除選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnDeleteDirectory(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnDeleteDirectory(wxCommandEvent& WXUNUSED(event))
 {
 	DeleteDirectory();
 }
 
 /// 初期化選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnInitializeDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnInitializeDisk(wxCommandEvent& WXUNUSED(event))
 {
 	InitializeDisk();
 }
 
 /// フォーマット選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnFormatDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnFormatDisk(wxCommandEvent& WXUNUSED(event))
 {
 	frame->FormatDisk();
 }
 
 /// プロパティ選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnPropertyDisk(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnPropertyDisk(wxCommandEvent& WXUNUSED(event))
 {
 	ShowDiskAttr();
 }
 
 /// BASIC情報選択
 /// @param[in] event コマンドイベント
-void L3DiskList::OnPropertyBasic(wxCommandEvent& WXUNUSED(event))
+void UiDiskList::OnPropertyBasic(wxCommandEvent& WXUNUSED(event))
 {
 	frame->ShowBasicAttr();
 }
 
 /// キー入力
 /// @param[in] event キーイベント
-void L3DiskList::OnChar(wxKeyEvent& event)
+void UiDiskList::OnChar(wxKeyEvent& event)
 {
 	switch(event.GetKeyCode()) {
 	case WXK_RETURN:
@@ -351,10 +381,10 @@ void L3DiskList::OnChar(wxKeyEvent& event)
 }
 
 /// ポップアップメニュー作成
-void L3DiskList::MakePopupMenu()
+void UiDiskList::MakePopupMenu()
 {
-	menuPopup = new wxMenu;
-	wxMenu *sm = new wxMenu();
+	menuPopup = new MyMenu;
+	MyMenu *sm = new MyMenu();
 	menuPopup->Append( IDM_SAVE_DISK, _("&Save Disk...") );
 	menuPopup->AppendSeparator();
 		sm->Append( IDM_ADD_DISK_NEW, _("&New Disk...") );
@@ -371,22 +401,25 @@ void L3DiskList::MakePopupMenu()
 	menuPopup->Append(IDM_INITIALIZE_DISK, _("I&nitialize..."));
 	menuPopup->Append(IDM_FORMAT_DISK, _("F&ormat For BASIC..."));
 	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_COPY_FILE, _("&Copy"));
+	menuPopup->Append(IDM_PASTE_FILE, _("&Paste..."));
+	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_PROPERTY_DISK, _("Disk &Information..."));
 	menuPopup->Append(IDM_PROPERTY_BASIC, _("&BASIC Information..."));
 }
 
 /// ポップアップメニュー表示
-void L3DiskList::ShowPopupMenu()
+void UiDiskList::ShowPopupMenu()
 {
 	if (!menuPopup) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 
 	bool opened = (cd != NULL);
 	menuPopup->Enable(IDM_ADD_DISK_NEW, opened);
 	menuPopup->Enable(IDM_ADD_DISK_FROM_FILE, opened);
 
-	opened = (opened && (selected_disk != NULL));
+	opened = (opened && (m_selected_disk != NULL));
 	menuPopup->Enable(IDM_REPLACE_DISK_FROM_FILE, opened);
 	menuPopup->Enable(IDM_SAVE_DISK, opened);
 	menuPopup->Enable(IDM_DELETE_DISK_FROM_FILE, opened);
@@ -394,8 +427,8 @@ void L3DiskList::ShowPopupMenu()
 	menuPopup->Enable(IDM_INITIALIZE_DISK, opened);
 	menuPopup->Enable(IDM_PROPERTY_DISK, opened);
 
-//	L3DiskFileList *list = frame->GetFileListPanel();
-	opened = (opened && disk_selecting);
+//	UiDiskFileList *list = frame->GetFileListPanel();
+	opened = (opened && m_disk_selecting);
 	menuPopup->Enable(IDM_FORMAT_DISK, opened && frame->IsFormattableDisk());
 	menuPopup->Enable(IDM_PROPERTY_BASIC, opened && frame->CanUseBasicDisk());
 
@@ -406,17 +439,18 @@ void L3DiskList::ShowPopupMenu()
 }
 
 /// ディレクトリ/ディスク削除選択
-void L3DiskList::SelectDeleting()
+void UiDiskList::SelectDeleting()
 {
-	L3DiskListItem node = GetSelection();
-	if (!node.IsOk()) return;
+	UiDiskListItem node = GetSelection();
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	if (!cd) return;
 
 	if (cd->GetTypeNumber() == CD_TYPENUM_NODE_DIR) {
 		// ディレクトリ
-		frame->DeleteDirectory(selected_disk, cd->GetSideNumber(), cd->GetDiskBasicDirItem());
+		DiskBasicDirItem *dir_item = cd->GetDiskBasicDirItem();
+		if (dir_item) frame->DeleteDirectory(dir_item->GetBasic(), dir_item);
 	} else {
 		// ディスク
 		DeleteDisk();
@@ -425,17 +459,22 @@ void L3DiskList::SelectDeleting()
 
 /// フォーカスのあるディレクトリを削除
 /// @return true:OK false:Error
-bool L3DiskList::DeleteDirectory()
+bool UiDiskList::DeleteDirectory()
 {
-	L3DiskListItem node = GetSelection();
-	if (!node.IsOk()) return false;
+	UiDiskListItem node = GetSelection();
+	if (!UiDiskListItem_IsOk(node)) return false;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	if (!cd) return false;
 
 	if (cd->GetTypeNumber() == CD_TYPENUM_NODE_DIR) {
 		// ディレクトリ
-		return frame->DeleteDirectory(selected_disk, cd->GetSideNumber(), cd->GetDiskBasicDirItem());
+		DiskBasicDirItem *dir_item = cd->GetDiskBasicDirItem();
+		if (dir_item) {
+			return frame->DeleteDirectory(dir_item->GetBasic(), dir_item);
+		} else {
+			return false;
+		}
 	} else {
 		return false;
 	}
@@ -443,16 +482,16 @@ bool L3DiskList::DeleteDirectory()
 
 /// 再選択
 /// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
-void L3DiskList::ReSelect(const DiskBasicParam *newparam)
+void UiDiskList::ReSelect(const DiskBasicParam *newparam)
 {
-	L3DiskListItem item = GetSelection();
+	UiDiskListItem item = GetSelection();
 	ChangeSelection(item, newparam);
 }
 
 /// ツリーを選択
 /// @param [in] node     選択したノード
 /// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
-void L3DiskList::ChangeSelection(L3DiskListItem &node, const DiskBasicParam *newparam)
+void UiDiskList::ChangeSelection(UiDiskListItem &node, const DiskBasicParam *newparam)
 {
 	SetDataOnItemNode(node, NODE_SELECTED, newparam);
 }
@@ -460,10 +499,10 @@ void L3DiskList::ChangeSelection(L3DiskListItem &node, const DiskBasicParam *new
 /// ディスクを指定して選択状態にする
 /// @param [in] disk_number ディスク番号
 /// @param [in] side_number サイド番号 両面なら-1
-void L3DiskList::ChangeSelection(int disk_number, int side_number)
+void UiDiskList::ChangeSelection(int disk_number, int side_number)
 {
-	L3DiskListItem match_node = FindNodeByDiskAndSideNumber(root_node, disk_number, side_number);
-	if (match_node.IsOk()) {
+	UiDiskListItem match_node = FindNodeByDiskAndSideNumber(m_root_node, disk_number, side_number);
+	if (UiDiskListItem_IsOk(match_node)) {
 		SelectTreeNode(match_node);
 		ChangeSelection(match_node);
 	}
@@ -471,11 +510,11 @@ void L3DiskList::ChangeSelection(int disk_number, int side_number)
 
 /// ツリーを展開
 /// @param [in] node     選択したノード
-void L3DiskList::ExpandItemNode(L3DiskListItem &node)
+void UiDiskList::ExpandItemNode(UiDiskListItem &node)
 {
-	if (!node.IsOk()) return;
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskListItem sel_node = GetSelection();
+	UiDiskListItem sel_node = GetSelection();
 
 	if (sel_node.GetID() != node.GetID()) {
 		SetDataOnItemNode(node, NODE_EXPANDED);
@@ -484,46 +523,42 @@ void L3DiskList::ExpandItemNode(L3DiskListItem &node)
 
 /// 指定ノードにデータを設定する
 /// @param [in] node     選択したノード
-/// @param [in] flag     NODE_SELECT / NODE_EXPANDED
+/// @param [in] flag     NODE_SELECTED / NODE_EXPANDED
 /// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
-void L3DiskList::SetDataOnItemNode(const L3DiskListItem &node, SetDataOnItemNodeFlags flag, const DiskBasicParam *newparam)
+void UiDiskList::SetDataOnItemNode(const UiDiskListItem &node, SetDataOnItemNodeFlags flag, const DiskBasicParam *newparam)
 {
-	if (!initialized) return;
+	if (!m_initialized) return;
 
-	if (!node.IsOk()) {
+	if (!UiDiskListItem_IsOk(node)) {
 		// rootアイテムを選択したらファイル一覧をクリア
-		selected_disk = NULL;
+		m_selected_disk = NULL;
 		// 全パネルのデータをクリアする
 		frame->ClearAllData();
 		return;
 	}
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 
-	if (flag == NODE_SELECTED) disk_selecting = false;
+	if (flag == NODE_SELECTED) m_disk_selecting = false;
+
+	DiskImage *image = &frame->GetDiskImage();
 
 	if (cd == NULL || (TreeNodeHasChildren(node) && cd->GetDiskNumber() < 0)) {
 		// rootアイテムを選択したらファイル一覧をクリア
-		selected_disk = NULL;
+		m_selected_disk = NULL;
 		// 全パネルのデータをクリアする
 		frame->ClearAllData();
 		return;
 	}
 
-//	if (!cd || cd->GetDiskNumber() < 0) {
-//		selected_disk = NULL;
-//		return;
-//	}
-
-	DiskD88 *d88 = &frame->GetDiskD88();
-	DiskD88Disk *disk = d88->GetDisk(cd->GetDiskNumber());
+	DiskImageDisk *disk = image->GetDisk(cd->GetDiskNumber());
 	if (!disk) {
 		return;
 	}
 
 	// ディスク属性をセット
 	if (flag == NODE_SELECTED) {
-		selected_disk = disk;
+		m_selected_disk = disk;
 		frame->SetDiskAttrData(disk);
 	}
 
@@ -538,15 +573,18 @@ void L3DiskList::SetDataOnItemNode(const L3DiskListItem &node, SetDataOnItemNode
 	}
 
 	// ディスク１枚 or ディレクトリを選択
-	if (flag == NODE_SELECTED) disk_selecting = true;
+	if (flag == NODE_SELECTED) m_disk_selecting = true;
 
 	// サブディレクトリの場合
 	if (typenum == CD_TYPENUM_NODE_DIR) {
 		frame->AttachDiskBasicOnFileList(disk, sidenum);
-		if (flag == NODE_SELECTED) {
-			frame->ChangeDirectory(disk, sidenum, cd->GetDiskBasicDirItem(), true);
-		} else {
-			frame->AssignDirectory(disk, sidenum, cd->GetDiskBasicDirItem());
+		DiskBasicDirItem *dir_item = cd->GetDiskBasicDirItem();
+		if (dir_item) {
+			if (flag == NODE_SELECTED) {
+				frame->ChangeDirectory(dir_item->GetBasic(), dir_item, true);
+			} else {
+				frame->AssignDirectory(dir_item->GetBasic(), dir_item);
+			}
 		}
 		return;
 	}
@@ -565,7 +603,7 @@ void L3DiskList::SetDataOnItemNode(const L3DiskListItem &node, SetDataOnItemNode
 /// @param [in] newsidenum サイド番号 片面選択時0/1 両面なら-1
 /// @param [in] newparam   BASICパラメータ 通常NULL BASICを変更した際に設定する
 /// @return 片面のみ使用するBASICの場合false -> さらに下位ノードで解析
-bool L3DiskList::ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *cd, DiskD88Disk *newdisk, int newsidenum, const DiskBasicParam *newparam)
+bool UiDiskList::ParseDiskBasic(const UiDiskListItem &node, UiDiskPositionData *cd, DiskImageDisk *newdisk, int newsidenum, const DiskBasicParam *newparam)
 {
 	DiskBasic *newbasic = newdisk->GetDiskBasic(newsidenum);
 
@@ -578,13 +616,9 @@ bool L3DiskList::ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *
 		bool found = newdisk->ExistTrack(newsidenum);
 		if (found) {
 			// ディスクをDISK BASICとして解析
-			valid = (newbasic->ParseDisk(newdisk, newsidenum, newparam, false) == 0);
+			valid = (newbasic->ParseBasic(newdisk, newsidenum, newparam, false) == 0);
 		} else {
 			// トラックがない
-//			DiskResult result;
-//			result.SetWarn(DiskResult::ERR_NO_FOUND_TRACK);
-//			ResultInfo::ShowMessage(result.GetValid(), result.GetMessages());
-//			newbasic->Clear();
 			newbasic->GetErrinfo().SetWarn(DiskBasicError::ERR_NO_FOUND_TRACK);
 		}
 
@@ -631,7 +665,7 @@ bool L3DiskList::ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *
 				}
 				SubCaption(type, i, caption);
 				AddTreeContainer(node, caption, ICON_FOR_TREE_SINGLE, ICON_FOR_TREE_NONE,
-					new L3DiskPositionData((int)cd->GetDiskNumber(), type, i, i, false));
+					new UiDiskPositionData((int)cd->GetDiskNumber(), type, i, i, false));
 			}
 			Expand(node);
 			cd->Shown(false);
@@ -646,7 +680,7 @@ bool L3DiskList::ParseDiskBasic(const L3DiskListItem &node, L3DiskPositionData *
 /// @param[in] type        タイプ
 /// @param[in] side_number サイド番号
 /// @param[out] caption    キャプション
-void L3DiskList::SubCaption(int type, int side_number, wxString &caption) const
+void UiDiskList::SubCaption(int type, int side_number, wxString &caption) const
 {
 	if (side_number < 0) return;
 
@@ -654,19 +688,19 @@ void L3DiskList::SubCaption(int type, int side_number, wxString &caption) const
 }
 
 /// 選択しているディスクの子供を削除
-void L3DiskList::DeleteChildrenOnSelectedDisk()
+void UiDiskList::DeleteChildrenOnSelectedDisk()
 {
-	L3DiskListItem node = GetSelection();
-	if (!node.IsOk()) return;
+	UiDiskListItem node = GetSelection();
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	if (!cd) return;
 
 	int disk_number = cd->GetDiskNumber();
-	node = FindNodeByDiskNumber(root_node, disk_number); 
-	if (!node.IsOk()) return;
+	node = FindNodeByDiskNumber(m_root_node, disk_number); 
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	cd = (L3DiskPositionData *)GetItemData(node);
+	cd = (UiDiskPositionData *)GetItemData(node);
 
 	Collapse(node);
 	DeleteChildren(node);
@@ -677,7 +711,7 @@ void L3DiskList::DeleteChildrenOnSelectedDisk()
 
 /// 選択しているディスクのルートを初期化＆再選択
 /// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
-void L3DiskList::RefreshSelectedDisk(const DiskBasicParam *newparam)
+void UiDiskList::RefreshSelectedDisk(const DiskBasicParam *newparam)
 {
 	// 子供を削除
 	DeleteChildrenOnSelectedDisk();
@@ -687,7 +721,7 @@ void L3DiskList::RefreshSelectedDisk(const DiskBasicParam *newparam)
 
 /// 選択しているサイドを再選択
 /// @param [in] newparam BASICパラメータ 通常NULL BASICを変更した際に設定する 
-void L3DiskList::RefreshSelectedSide(const DiskBasicParam *newparam)
+void UiDiskList::RefreshSelectedSide(const DiskBasicParam *newparam)
 {
 	if (newparam && !newparam->CanMountEachSides()) {
 		// 両面の場合
@@ -699,29 +733,29 @@ void L3DiskList::RefreshSelectedSide(const DiskBasicParam *newparam)
 }
 
 /// ファイル名をリストにセット
-void L3DiskList::SetFileName()
+void UiDiskList::SetFileName()
 {
 	SetFileName(frame->GetFileName());
 }
 
 /// ファイル名をリストにセット
 /// @param [in] filename ファイル名
-void L3DiskList::SetFileName(const wxString &filename)
+void UiDiskList::SetFileName(const wxString &filename)
 {
-	DiskD88Disks *disks = frame->GetDiskD88().GetDisks();
+	DiskImageDisks *disks = frame->GetDiskImage().GetDisks();
 	if (!disks) return;
 
 	DeleteAllItems();
 
-	L3DiskListItem node = AddRootTreeNode(filename, ICON_FOR_TREE_ROOT, ICON_FOR_TREE_NONE
-		, new L3DiskPositionData(CD_DISKNUM_ROOT, CD_TYPENUM_NODE, -1, 0, false));
-	root_node = node;
+	UiDiskListItem node = AddRootTreeNode(filename, ICON_FOR_TREE_ROOT, ICON_FOR_TREE_NONE
+		, new UiDiskPositionData(CD_DISKNUM_ROOT, CD_TYPENUM_NODE, -1, 0, false));
+	m_root_node = node;
 
 	for(size_t i=0; i<disks->Count(); i++) {
-		DiskD88Disk *diskn = disks->Item(i);
+		DiskImageDisk *diskn = disks->Item(i);
 		// ディスク１つ
 		AddTreeContainer(node, diskn->GetName(), ICON_FOR_TREE_SINGLE, ICON_FOR_TREE_NONE
-			, new L3DiskPositionData((int)i, CD_TYPENUM_NODE, CD_TYPENUM_NODE, CD_TYPENUM_NODE, true));
+			, new UiDiskPositionData((int)i, CD_TYPENUM_NODE, CD_TYPENUM_NODE, CD_TYPENUM_NODE, true));
 	}
 
 	Expand(node);
@@ -730,27 +764,27 @@ void L3DiskList::SetFileName(const wxString &filename)
 }
 
 /// リストをクリア
-void L3DiskList::ClearFileName()
+void UiDiskList::ClearFileName()
 {
 	DeleteAllItems();
 
-	L3DiskListItem node = AddRootTreeNode( _("(none)") );
-	root_node = node;
+	UiDiskListItem node = AddRootTreeNode( _("(none)") );
+	m_root_node = node;
 
 	Expand(node);
 
-	selected_disk = NULL;
-	disk_selecting = false;
+	m_selected_disk = NULL;
+	m_disk_selecting = false;
 }
 
 /// ファイルパスをリストにセット
 /// @param [in] filename ファイル名
-void L3DiskList::SetFilePath(const wxString &filename)
+void UiDiskList::SetFilePath(const wxString &filename)
 {
 	if (!filename.IsEmpty()) {
-		SetItemText(root_node, filename);
+		SetItemText(m_root_node, filename);
 	} else {
-		SetItemText(root_node, _("(none)"));
+		SetItemText(m_root_node, _("(none)"));
 	}
 }
 
@@ -761,15 +795,15 @@ void L3DiskList::SetFilePath(const wxString &filename)
 /// @param [in] tag_item    対象ディレクトリアイテム
 /// @param [in] depth       深さ
 /// @return 一致したノード
-L3DiskListItem L3DiskList::FindNodeByDirItem(const L3DiskListItem &node, int disk_number, DiskBasicDirItem *tag_item, int depth)
+UiDiskListItem UiDiskList::FindNodeByDirItem(const UiDiskListItem &node, int disk_number, DiskBasicDirItem *tag_item, int depth)
 {
-	L3DiskListItem match_node;
+	UiDiskListItem match_node;
 
 	if (depth < 100 && TreeNodeHasChildren(node)) {
-		L3DiskTreeIdVal cookie;
-		L3DiskListItem child_node = GetFirstChild(node, cookie);
-		while(child_node.IsOk() && !match_node.IsOk()) {
-			L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(child_node);
+		UiDiskTreeIdVal cookie;
+		UiDiskListItem child_node = GetFirstChild(node, cookie);
+		while(UiDiskListItem_IsOk(child_node) && !UiDiskListItem_IsOk(match_node)) {
+			UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(child_node);
 			if (cd) {
 				// ディスク番号を比較
 				if (cd->GetDiskNumber() == disk_number) {
@@ -794,23 +828,20 @@ L3DiskListItem L3DiskList::FindNodeByDirItem(const L3DiskListItem &node, int dis
 /// @param [in] disk_number ディスク番号
 /// @param [in] depth       深さ
 /// @return 一致したノード
-L3DiskListItem L3DiskList::FindNodeByDiskNumber(const L3DiskListItem &node, int disk_number, int depth)
+UiDiskListItem UiDiskList::FindNodeByDiskNumber(const UiDiskListItem &node, int disk_number, int depth)
 {
-	L3DiskListItem match_node;
+	UiDiskListItem match_node;
 
 	if (depth < 100 && TreeNodeHasChildren(node)) {
-		L3DiskTreeIdVal cookie;
-		L3DiskListItem child_node = GetFirstChild(node, cookie);
-		while(child_node.IsOk() && !match_node.IsOk()) {
-			L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(child_node);
+		UiDiskTreeIdVal cookie;
+		UiDiskListItem child_node = GetFirstChild(node, cookie);
+		while(UiDiskListItem_IsOk(child_node) && !UiDiskListItem_IsOk(match_node)) {
+			UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(child_node);
 			if (cd) {
 				// ディスク番号を比較
 				if (cd->GetDiskNumber() == disk_number) {
 					match_node = child_node;
 					break;
-//				} else if (TreeNodeHasChildren(child_node)) {
-//					// 再帰的に探す
-//					match_node = FindNodeByDiskNumber(child_node, disk_number, depth + 1);
 				}
 			}
 			child_node = GetNextChild(node, cookie);
@@ -826,15 +857,15 @@ L3DiskListItem L3DiskList::FindNodeByDiskNumber(const L3DiskListItem &node, int 
 /// @param [in] side_number サイド番号 両面なら-1
 /// @param [in] depth       深さ
 /// @return 一致したノード
-L3DiskListItem L3DiskList::FindNodeByDiskAndSideNumber(const L3DiskListItem &node, int disk_number, int side_number, int depth)
+UiDiskListItem UiDiskList::FindNodeByDiskAndSideNumber(const UiDiskListItem &node, int disk_number, int side_number, int depth)
 {
-	L3DiskListItem match_node;
+	UiDiskListItem match_node;
 
 	if (depth < 100 && TreeNodeHasChildren(node)) {
-		L3DiskTreeIdVal cookie;
-		L3DiskListItem child_node = GetFirstChild(node, cookie);
-		while(child_node.IsOk() && !match_node.IsOk()) {
-			L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(child_node);
+		UiDiskTreeIdVal cookie;
+		UiDiskListItem child_node = GetFirstChild(node, cookie);
+		while(UiDiskListItem_IsOk(child_node) && !UiDiskListItem_IsOk(match_node)) {
+			UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(child_node);
 			if (cd) {
 				// ディスク番号を比較
 				if (cd->GetDiskNumber() == disk_number) {
@@ -856,12 +887,12 @@ L3DiskListItem L3DiskList::FindNodeByDiskAndSideNumber(const L3DiskListItem &nod
 /// ルートディレクトリを更新
 /// @param [in] disk        ディスク
 /// @param [in] side_number サイド番号
-void L3DiskList::RefreshRootDirectoryNode(DiskD88Disk *disk, int side_number)
+void UiDiskList::RefreshRootDirectoryNode(DiskImageDisk *disk, int side_number)
 {
-	L3DiskListItem node = FindNodeByDiskAndSideNumber(root_node, disk->GetNumber(), side_number);
-	if (!node.IsOk()) return;
+	UiDiskListItem node = FindNodeByDiskAndSideNumber(m_root_node, disk->GetNumber(), side_number);
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	DiskBasic *basic = disk->GetDiskBasic(side_number);
 	if (!basic) return;
 	DiskBasicDirItem *root_item = basic->GetRootDirectory();
@@ -872,11 +903,11 @@ void L3DiskList::RefreshRootDirectoryNode(DiskD88Disk *disk, int side_number)
 /// ルートディレクトリを更新
 /// @param [in] disk      ディスク
 /// @param [in] node      ノード
-void L3DiskList::RefreshRootDirectoryNode(DiskD88Disk *disk, const L3DiskListItem &node)
+void UiDiskList::RefreshRootDirectoryNode(DiskImageDisk *disk, const UiDiskListItem &node)
 {
-	if (!node.IsOk()) return;
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	DiskBasic *basic = disk->GetDiskBasic(cd->GetSideNumber());
 	if (!basic) return;
 	DiskBasicDirItem *root_item = basic->GetRootDirectory();
@@ -888,12 +919,12 @@ void L3DiskList::RefreshRootDirectoryNode(DiskD88Disk *disk, const L3DiskListIte
 /// ディレクトリノードを更新
 /// @param [in] disk     ディスク
 /// @param [in] dir_item 対象ディレクトリアイテム
-void L3DiskList::RefreshDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item)
+void UiDiskList::RefreshDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item)
 {
-	L3DiskListItem node = FindNodeByDirItem(root_node, disk->GetNumber(), dir_item);
-	if (!node.IsOk()) return;
+	UiDiskListItem node = FindNodeByDirItem(m_root_node, disk->GetNumber(), dir_item);
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 
 	RefreshDirectorySub(disk, node, cd, dir_item);
 }
@@ -901,35 +932,29 @@ void L3DiskList::RefreshDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_i
 /// 全てのディレクトリを更新
 /// @param [in] disk        ディスク
 /// @param [in] side_number サイド番号
-void L3DiskList::RefreshAllDirectoryNodes(DiskD88Disk *disk, int side_number)
+/// @param [in] dir_item    対象ディレクトリアイテム
+void UiDiskList::RefreshAllDirectoryNodes(DiskImageDisk *disk, int side_number, DiskBasicDirItem *dir_item)
 {
 	if (!disk) return;
-	DiskBasic *basic = disk->GetDiskBasic(side_number);
-	if (!basic) return;
-	DiskBasicDirItem *dir_item = basic->GetCurrentDirectory();
-	DiskBasicDirItem *root_item = basic->GetRootDirectory();
-	if (root_item == dir_item) {
-		root_item->ValidDirectory(false);
+
+	if (!dir_item->GetParent()) {
 		// ルートツリーを更新
-		frame->RefreshRootDirectoryNodeOnDiskList(disk, side_number);
-		root_item->ValidDirectory(true);
+		RefreshRootDirectoryNode(disk, side_number);
 	} else {
-		dir_item->ValidDirectory(false);
 		// ディレクトリツリーを更新
-		frame->RefreshDirectoryNodeOnDiskList(disk, dir_item);
-		dir_item->ValidDirectory(true);
+		RefreshDirectoryNode(disk, dir_item);
 	}
 }
 
 /// ディレクトリノードを選択
 /// @param [in] disk     ディスク
 /// @param [in] dir_item 対象ディレクトリアイテム
-void L3DiskList::SelectDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item)
+void UiDiskList::SelectDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item)
 {
-	L3DiskListItem node = FindNodeByDirItem(root_node, disk->GetNumber(), dir_item);
-	if (!node.IsOk()) return;
+	UiDiskListItem node = FindNodeByDirItem(m_root_node, disk->GetNumber(), dir_item);
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 
 	RefreshDirectorySub(disk, node, cd, dir_item);
 
@@ -939,16 +964,16 @@ void L3DiskList::SelectDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_it
 /// ディレクトリノードを削除
 /// @param [in] disk      ディスク
 /// @param [in] dir_item  対象ディレクトリアイテム
-void L3DiskList::DeleteDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_item)
+void UiDiskList::DeleteDirectoryNode(DiskImageDisk *disk, DiskBasicDirItem *dir_item)
 {
-	L3DiskListItem node = FindNodeByDirItem(root_node, disk->GetNumber(), dir_item);
-	if (!node.IsOk()) return;
+	UiDiskListItem node = FindNodeByDirItem(m_root_node, disk->GetNumber(), dir_item);
+	if (!UiDiskListItem_IsOk(node)) return;
 
-	L3DiskListItem parent_node = GetParentTreeNode(node);
+	UiDiskListItem parent_node = GetParentTreeNode(node);
 
 	DeleteTreeNode(node);
 
-	if (!parent_node.IsOk()) return;
+	if (!UiDiskListItem_IsOk(parent_node)) return;
 
 	SelectTreeNode(parent_node);
 	ChangeSelection(parent_node);
@@ -957,13 +982,13 @@ void L3DiskList::DeleteDirectoryNode(DiskD88Disk *disk, DiskBasicDirItem *dir_it
 /// ディレクトリノードを一括削除
 /// @param [in] disk      ディスク
 /// @param [in] dir_items 対象ディレクトリアイテム
-void L3DiskList::DeleteDirectoryNodes(DiskD88Disk *disk, DiskBasicDirItems &dir_items)
+void UiDiskList::DeleteDirectoryNodes(DiskImageDisk *disk, DiskBasicDirItems &dir_items)
 {
 	for(size_t i=0; i<dir_items.Count(); i++) {
 		DiskBasicDirItem *dir_item = dir_items.Item(i);
 
-		L3DiskListItem node = FindNodeByDirItem(root_node, disk->GetNumber(), dir_item);
-		if (!node.IsOk()) continue;
+		UiDiskListItem node = FindNodeByDirItem(m_root_node, disk->GetNumber(), dir_item);
+		if (!UiDiskListItem_IsOk(node)) continue;
 
 		DeleteTreeNode(node);
 	}
@@ -974,14 +999,24 @@ void L3DiskList::DeleteDirectoryNodes(DiskD88Disk *disk, DiskBasicDirItems &dir_
 /// @param [in] node      ノード
 /// @param [in] cd        ノード情報
 /// @param [in] dir_item  対象ディレクトリアイテム
-void L3DiskList::RefreshDirectorySub(DiskD88Disk *disk, const L3DiskListItem &node, L3DiskPositionData *cd, DiskBasicDirItem *dir_item)
+void UiDiskList::RefreshDirectorySub(DiskImageDisk *disk, const UiDiskListItem &node, UiDiskPositionData *cd, DiskBasicDirItem *dir_item)
 {
-	if (dir_item->IsValidDirectory() && cd->IsShown()) return;
+	if (dir_item->IsValidDirectory() && cd->IsShown()) {
+		return;
+	}
 
 	bool expanded = IsExpanded(node);
 
+	// サブディレクトリを消す
 	DeleteChildren(node);
 
+	// サブディレクトリを消して選択位置が変わるとイベントが発生する
+	// その結果、現ディレクトリが選択された場合は、選択時に既に
+	// 更新されているのでここで終了する。
+	if (dir_item->IsValidDirectory() && cd->IsShown()) {
+		return;
+	}
+	
 	// ディレクトリ一覧を設定
 	DiskBasicDirItems *dir_items = dir_item->GetChildren();
 	if (dir_items) {
@@ -995,37 +1030,38 @@ void L3DiskList::RefreshDirectorySub(DiskD88Disk *disk, const L3DiskListItem &no
 		}
 	}
 
-	if (expanded) Expand(node);
-
+	dir_item->ValidDirectory(true);
 	cd->Shown(true);
+
+	if (expanded) Expand(node);
 }
 
 /// ディレクトリを追加
 /// @param [in] parent    親ノード
 /// @param [in] dir_item  対象ディレクトリアイテム
-L3DiskListItem L3DiskList::AppendDirectory(const L3DiskListItem &parent, DiskBasicDirItem *dir_item)
+UiDiskListItem UiDiskList::AppendDirectory(const UiDiskListItem &parent, DiskBasicDirItem *dir_item)
 {
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(parent);
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(parent);
 	int disk_number = cd->GetDiskNumber();
 	int side_number = cd->GetSideNumber();
 	wxString name = dir_item->GetFileNameStr();
-	if (!dir_item->IsVisibleOnTree()) return L3DiskListItem();
-//	if (name == wxT(".") || name == wxT("..")) return L3DiskListItem();
+	// 対象外ディレクトリならスキップ "."や".."など
+	if (!dir_item->IsVisibleOnTree()) return UiDiskListItem();
 
 	int pos = GetTreeChildCount(parent);
-	L3DiskListItem newitem = AddTreeContainer(parent, name, ICON_FOR_TREE_CLOSE, ICON_FOR_TREE_OPEN
-		,new L3DiskPositionData(disk_number, CD_TYPENUM_NODE_DIR, side_number, pos, false, dir_item));
+	UiDiskListItem newitem = AddTreeContainer(parent, name, ICON_FOR_TREE_CLOSE, ICON_FOR_TREE_OPEN
+		,new UiDiskPositionData(disk_number, CD_TYPENUM_NODE_DIR, side_number, pos, false, dir_item));
 
 	return newitem;
 }
 
 /// ツリービューのディレクトリ名を再設定（キャラクターコードを変更した時）
 /// @param [in] disk      ディスク
-void L3DiskList::RefreshDirectoryName(DiskD88Disk *disk)
+void UiDiskList::RefreshDirectoryName(DiskImageDisk *disk)
 {
 	if (!disk) return;
 
-	RefreshDirectoryName(root_node, disk->GetNumber());
+	RefreshDirectoryName(m_root_node, disk->GetNumber());
 }
 
 /// ツリービューのディレクトリ名を再設定
@@ -1033,13 +1069,13 @@ void L3DiskList::RefreshDirectoryName(DiskD88Disk *disk)
 /// @param [in] node        ノード
 /// @param [in] disk_number ディスク番号
 /// @param [in] depth       深さ
-void L3DiskList::RefreshDirectoryName(const L3DiskListItem &node, int disk_number, int depth)
+void UiDiskList::RefreshDirectoryName(const UiDiskListItem &node, int disk_number, int depth)
 {
 	if (depth < 100 && TreeNodeHasChildren(node)) {
-		L3DiskTreeIdVal cookie;
-		L3DiskListItem child_node = GetFirstChild(node, cookie);
-		while(child_node.IsOk()) {
-			L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(child_node);
+		UiDiskTreeIdVal cookie;
+		UiDiskListItem child_node = GetFirstChild(node, cookie);
+		while(UiDiskListItem_IsOk(child_node)) {
+			UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(child_node);
 			if (cd) {
 				// ディスク番号を比較
 				if (cd->GetDiskNumber() == disk_number) {
@@ -1061,22 +1097,22 @@ void L3DiskList::RefreshDirectoryName(const L3DiskListItem &node, int disk_numbe
 
 /// ディスクの初期化
 /// @return true:OK false:Error
-bool L3DiskList::InitializeDisk()
+bool UiDiskList::InitializeDisk()
 {
-	if (!selected_disk) return false;
-	if (selected_disk->IsWriteProtected()) {
+	if (!m_selected_disk) return false;
+	if (m_selected_disk->IsWriteProtected()) {
 		DiskResult err;
 		err.SetError(DiskResult::ERR_WRITE_PROTECTED);
 		err.Show();
 		return false;
 	}
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 
 	int ans = wxYES;
-	wxString diskname = wxT("'")+selected_disk->GetName()+wxT("'");
+	wxString diskname = wxT("'")+m_selected_disk->GetName()+wxT("'");
 	int selected_side = cd->GetPosition();
-	bool found = selected_disk->ExistTrack(selected_side);
+	bool found = m_selected_disk->ExistTrack(selected_side);
 	bool sts = false;
 	if (found) {
 		// トラックがある場合は、初期化
@@ -1088,53 +1124,53 @@ bool L3DiskList::InitializeDisk()
 
 		if (ans == wxYES) {
 			// ディスク初期化
-			sts = selected_disk->Initialize(selected_side);
+			sts = m_selected_disk->Initialize(selected_side);
 			// 右パネルをクリア
 			frame->ClearRPanelData();
 			// DISK BASICを改めて解析させる
-			DiskBasics *basics = selected_disk->GetDiskBasics();
+			DiskBasics *basics = m_selected_disk->GetDiskBasics();
 			if (basics) {
 				basics->ClearParseAndAssign(selected_side);
 			}
 			// ディスク再選択
 			RefreshSelectedDisk();
 
-			frame->IncrementUniqueNumber();
+			frame->IncreaseUniqueNumber();
 		}
 	} else {
 		// トラックが全くない場合は、ディスク作成
 		if (selected_side >= 0) {
 			// 選択したサイドだけ作り直す
-			DiskParamBox dlg(this, wxID_ANY, DiskParamBox::REBUILD_TRACKS, 0, selected_disk, NULL, NULL, 0);
+			DiskParamBox dlg(this, wxID_ANY, frame->GetDiskImage(), DiskParamBox::REBUILD_TRACKS, 0, m_selected_disk, NULL, NULL, 0);
 			int rc = dlg.ShowModal();
 			if (rc == wxID_OK) {
 				DiskParam param;
 				dlg.GetParam(param);
-				selected_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
-				sts = selected_disk->Rebuild(param, selected_side);
+				m_selected_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
+				sts = m_selected_disk->Rebuild(param, selected_side);
 
 				// ファイル名一覧を更新
 				SetFileName();
 
-				frame->IncrementUniqueNumber();
+				frame->IncreaseUniqueNumber();
 			}
 		} else {
 			// パラメータを選択するダイアログを表示
-			DiskParamBox dlg(this, wxID_ANY, DiskParamBox::REBUILD_TRACKS, -1, selected_disk, NULL, NULL, DiskParamBox::SHOW_ALL);
+			DiskParamBox dlg(this, wxID_ANY, frame->GetDiskImage(), DiskParamBox::REBUILD_TRACKS, -1, m_selected_disk, NULL, NULL, DiskParamBox::SHOW_ALL);
 			int rc = dlg.ShowModal();
 			if (rc == wxID_OK) {
 				DiskParam param;
 				dlg.GetParam(param);
-				selected_disk->SetName(dlg.GetDiskName());
-				selected_disk->SetDensity(dlg.GetDensityValue());
-				selected_disk->SetWriteProtect(dlg.IsWriteProtected());
-				selected_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
-				sts = selected_disk->Rebuild(param, selected_side);
+				m_selected_disk->SetName(dlg.GetDiskName());
+				m_selected_disk->SetDensity(dlg.GetDensityValue());
+				m_selected_disk->SetWriteProtect(dlg.IsWriteProtected());
+				m_selected_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
+				sts = m_selected_disk->Rebuild(param, selected_side);
 
 				// ファイル名一覧を更新
 				SetFileName();
 
-				frame->IncrementUniqueNumber();
+				frame->IncreaseUniqueNumber();
 			}
 		}
 	}
@@ -1144,14 +1180,14 @@ bool L3DiskList::InitializeDisk()
 
 /// ディスクの論理フォーマット
 /// @return true:OK false:Error
-bool L3DiskList::FormatDisk()
+bool UiDiskList::FormatDisk()
 {
-	if (!selected_disk) return false;
+	if (!m_selected_disk) return false;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	int selected_side = cd->GetPosition();
 
-	DiskBasic *current_basic = selected_disk->GetDiskBasic(selected_side);
+	DiskBasic *current_basic = m_selected_disk->GetDiskBasic(selected_side);
 
 	if (!current_basic->IsWritableIntoDisk()) {
 		current_basic->ShowErrorMessage();
@@ -1159,21 +1195,23 @@ bool L3DiskList::FormatDisk()
 	}
 
 	// BASIC種類を選択
-	BasicSelBox dlg(this, wxID_ANY, selected_disk, current_basic, BasicSelBox::SHOW_ATTR_CONTROLS);
+	BasicSelBox dlg(this, wxID_ANY, m_selected_disk, current_basic, BasicSelBox::SHOW_ATTR_CONTROLS);
 	int ans = dlg.ShowModal();
 	if (ans != wxID_OK) {
 		return false;
 	}
 
+	// 選択したBASICでフォーマット可能か
 	DiskBasic new_basic;
-	new_basic.ParseDisk(selected_disk, selected_side, dlg.GetBasicParam(), true);
+	new_basic.ParseBasic(m_selected_disk, selected_side, dlg.GetBasicParam(), true);
 	if (!new_basic.IsFormattable()) {
 		new_basic.ShowErrorMessage();
 		return false;
 	}
 
+	// 最終確認
 	ans = wxYES;
-	wxString diskname = wxT("'")+selected_disk->GetName()+wxT("'");
+	wxString diskname = wxT("'")+m_selected_disk->GetName()+wxT("'");
 	diskname += new_basic.GetSelectedSideStr();
 	wxString msg = wxString::Format(_("All files and datas will delete on %s. Do you really want to format it?"), diskname);
 	ans = wxMessageBox(msg, _("Format"), wxYES_NO);
@@ -1187,15 +1225,15 @@ bool L3DiskList::FormatDisk()
 			dlg.GetVolumeDate()
 		);
 
-		selected_disk->Initialize(current_basic->GetSelectedSide());
-		selected_disk->SetModify();
+		m_selected_disk->Initialize(current_basic->GetSelectedSide());
+		m_selected_disk->SetModify();
 
 		// DISK BASIC用にフォーマット
 		current_basic->ClearParseAndAssign();
 		if (current_basic->GetBasicTypeName() != new_basic.GetBasicTypeName()) {
 			// 違うDISK BASICの場合はパラメータを設定
-			selected_disk->GetFile()->SetBasicTypeHint(new_basic.GetBasicCategoryName());
-			current_basic->ParseDisk(selected_disk, selected_side, dlg.GetBasicParam(), true);
+			m_selected_disk->GetFile()->SetBasicTypeHint(new_basic.GetBasicCategoryName());
+			current_basic->ParseBasic(m_selected_disk, selected_side, dlg.GetBasicParam(), true);
 		}
 
 		sts = current_basic->FormatDisk(data);
@@ -1207,7 +1245,7 @@ bool L3DiskList::FormatDisk()
 		// ディスク再選択
 		RefreshSelectedDisk();
 
-		frame->IncrementUniqueNumber();
+		frame->IncreaseUniqueNumber();
 	}
 //	frame->UpdateMenuAndToolBarFileList(this);
 
@@ -1215,17 +1253,17 @@ bool L3DiskList::FormatDisk()
 }
 
 /// ディスクをファイルに保存ダイアログ
-void L3DiskList::ShowSaveDiskDialog()
+void UiDiskList::ShowSaveDiskDialog()
 {
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return;
 	frame->ShowSaveDiskDialog(cd->GetDiskNumber(), cd->GetPosition(), cd->GetTypeNumber() != CD_TYPENUM_NODE_AB);
 }
 
 /// ディスクを置換
-void L3DiskList::ReplaceDisk()
+void UiDiskList::ReplaceDisk()
 {
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return;
 
 	wxString caption;
@@ -1236,20 +1274,20 @@ void L3DiskList::ReplaceDisk()
 
 /// ディスクをファイルから削除
 /// @return true:OK false:Error
-bool L3DiskList::DeleteDisk()
+bool UiDiskList::DeleteDisk()
 {
-	if (!selected_disk) return false;
+	if (!m_selected_disk) return false;
 
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 
 	int ans = wxYES;
-	wxString diskname = wxT("'")+selected_disk->GetName()+wxT("'");
+	wxString diskname = wxT("'")+m_selected_disk->GetName()+wxT("'");
 	wxString msg = wxString::Format(_("%s will be deleted. Do you really want to delete it?"), diskname);
 	ans = wxMessageBox(msg, _("Delete Disk"), wxYES_NO);
 
 	bool sts = false;
 	if (ans == wxYES) {
-		sts = frame->GetDiskD88().Delete(cd->GetDiskNumber());
+		sts = frame->GetDiskImage().Delete(cd->GetDiskNumber());
 
 		// 画面を更新
 		frame->UpdateDataOnWindow(false);
@@ -1261,48 +1299,48 @@ bool L3DiskList::DeleteDisk()
 }
 
 /// ディスク名を変更
-void L3DiskList::RenameDisk()
+void UiDiskList::RenameDisk()
 {
-	L3DiskListItem node = SetSelectedItemAtDiskImage();
-	if (!node.IsOk()) return;
+	UiDiskListItem node = SetSelectedItemAtDiskImage();
+	if (!UiDiskListItem_IsOk(node)) return;
 	EditTreeNode(node);
 }
 
 /// ディスク情報ダイアログ
-void L3DiskList::ShowDiskAttr()
+void UiDiskList::ShowDiskAttr()
 {
-	if (!selected_disk) return;
+	if (!m_selected_disk) return;
 
-	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::SHOW_DISK_PARAM, -1, selected_disk, NULL, NULL, DiskParamBox::SHOW_DISKLABEL_ALL);
+	DiskParamBox dlg(this, wxID_ANY, frame->GetDiskImage(), DiskParamBox::SHOW_DISK_PARAM, -1, m_selected_disk, NULL, NULL, DiskParamBox::SHOW_DISKLABEL_ALL);
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
 		DiskParam param;
 		dlg.GetParam(param);
-		selected_disk->SetName(dlg.GetDiskName());
-		selected_disk->SetDensity(dlg.GetDensityValue());
-		selected_disk->SetWriteProtect(dlg.IsWriteProtected());
-		selected_disk->SetModify();
+		m_selected_disk->SetName(dlg.GetDiskName());
+		m_selected_disk->SetDensity(dlg.GetDensityValue());
+		m_selected_disk->SetWriteProtect(dlg.IsWriteProtected());
+		m_selected_disk->SetModify();
 		// ディスク名をセット
-		SetDiskName(selected_disk->GetName());
+		SetDiskName(m_selected_disk->GetName());
 		// ディスク属性をセット
-		frame->SetDiskAttrData(selected_disk);
+		frame->SetDiskAttrData(m_selected_disk);
 	}
 }
 
 /// 選択位置のディスクイメージ
-L3DiskListItem L3DiskList::SetSelectedItemAtDiskImage()
+UiDiskListItem UiDiskList::SetSelectedItemAtDiskImage()
 {
-	L3DiskListItem invalid;
-	if (!selected_disk) return invalid;
-	L3DiskListItem node = GetSelection();
-	if (!node.IsOk()) return invalid;
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(node);
+	UiDiskListItem invalid;
+	if (!m_selected_disk) return invalid;
+	UiDiskListItem node = GetSelection();
+	if (!UiDiskListItem_IsOk(node)) return invalid;
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
 	if (!cd) return invalid;
 	if (cd->GetPosition() >= 0) {
 		// ディスク名は親アイテムになる
 		node = GetParentTreeNode(node);
-		if (!node.IsOk()) return invalid;
-		L3DiskPositionData *pcd = (L3DiskPositionData *)GetItemData(node);
+		if (!UiDiskListItem_IsOk(node)) return invalid;
+		UiDiskPositionData *pcd = (UiDiskPositionData *)GetItemData(node);
 		if (pcd->GetDiskNumber() != cd->GetDiskNumber()) return invalid;
 	}
 	return node;
@@ -1310,20 +1348,20 @@ L3DiskListItem L3DiskList::SetSelectedItemAtDiskImage()
 
 /// 選択位置のディスク名をセット
 /// @param[in] val ディスク名
-void L3DiskList::SetDiskName(const wxString &val)
+void UiDiskList::SetDiskName(const wxString &val)
 {
-	L3DiskListItem item = SetSelectedItemAtDiskImage();
-	if (!item.IsOk()) return;
+	UiDiskListItem item = SetSelectedItemAtDiskImage();
+	if (!UiDiskListItem_IsOk(item)) return;
 	SetItemText(item, val);
 }
 
 /// キャラクターコード変更
 /// @param[in] name コード名
-void L3DiskList::ChangeCharCode(const wxString &name)
+void UiDiskList::ChangeCharCode(const wxString &name)
 {
-	DiskD88 *d88 = &frame->GetDiskD88();
-	if (!d88) return;
-	DiskD88Disks *disks = d88->GetDisks();
+	DiskImage *image = &frame->GetDiskImage();
+	if (!image) return;
+	DiskImageDisks *disks = image->GetDisks();
 	if (!disks) return;
 	for(size_t i=0; i<disks->Count(); i++) {
 		RefreshDirectoryName(disks->Item(i));
@@ -1332,54 +1370,310 @@ void L3DiskList::ChangeCharCode(const wxString &name)
 
 /// フォントをセット
 /// @param[in] font フォント
-void L3DiskList::SetListFont(const wxFont &font)
+void UiDiskList::SetListFont(const wxFont &font)
 {
 	SetFont(font);
 	Refresh();
 }
 
-/// 選択しているディスクイメージのディスク番号を返す
-int L3DiskList::GetSelectedDiskNumber()
+/// ドラッグする
+bool UiDiskList::DragDataSource(const UiDiskListItem &sel_node)
 {
-	if (!selected_disk) return wxNOT_FOUND;
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	wxString tmp_dir_name;
+
+#ifdef USE_DATA_OBJECT_COMPOSITE
+	wxDataObjectComposite compo;
+
+	wxFileDataObject *file_object = NULL;
+
+	bool sts = true;
+	if (sts) {
+		file_object = new wxFileDataObject();
+		sts = CreateFileObject(sel_node, tmp_dir_name, _("dragging..."), _("dragged."), *file_object);
+	}
+	if (!sts) {
+		delete file_object;
+		return false;
+	}
+	// ドラッグしたアイテムを覚えておく
+	m_dragging_node = sel_node;
+
+	// ファイルデータは外部用
+	if (file_object) compo.Add(file_object);
+
+#ifdef __WXMSW__
+	wxDropSource dragSource(compo);
+#else
+	wxDropSource dragSource(compo, frame);
+#endif
+#else
+
+	wxFileDataObject file_object;
+	bool sts = true;
+	if (sts) {
+		sts = CreateFileObject(sel_node, tmp_dir_name, _("dragging..."), _("dragged."), file_object);
+	}
+	if (!sts) {
+		return false;
+	}
+	// ドラッグしたアイテムを覚えておく
+	m_dragging_node = sel_node;
+
+#ifdef __WXMSW__
+	wxDropSource dragSource(file_object);
+#else
+	wxDropSource dragSource(file_object, frame);
+#endif
+#endif
+
+	dragSource.DoDragDrop();
+
+	return true;
+}
+
+/// ファイルをテンポラリディレクトリにエクスポートしファイルリストを作成する（DnD, クリップボード用）
+/// @param [in]     sel_node     選択したツリーアイテム
+/// @param [in]     tmp_dir_name テンポラリフォルダ
+/// @param [in]     start_msg    開始メッセージ
+/// @param [in]     end_msg      終了メッセージ
+/// @param [in,out] file_object ファイルオブジェクト
+/// @return true:OK false:Error
+bool UiDiskList::CreateFileObject(const UiDiskListItem &sel_node, wxString &tmp_dir_name, const wxString &start_msg, const wxString &end_msg, wxFileDataObject &file_object)
+{
+	UiDiskListItems selected_items;
+
+	selected_items.Add(sel_node);
+
+	wxString tmp_data_path, tmp_attr_path;
+	if (!frame->CreateTemporaryFolder(tmp_dir_name, tmp_data_path, tmp_attr_path)) {
+		return false;
+	}
+
+	ExportDataFiles(selected_items, tmp_data_path, tmp_attr_path, start_msg, end_msg, &file_object);
+
+	return true;
+}
+
+/// 指定したフォルダにエクスポート
+/// @param [in]     selected_items 選択したリスト
+/// @param [in]     data_dir       データファイル出力先フォルダ
+/// @param [in]     attr_dir       属性ファイル出力先フォルダ
+/// @param [in]     start_msg      開始メッセージ
+/// @param [in]     end_msg        終了メッセージ
+/// @param [in,out] file_object    ファイルオブジェクト
+/// @return 0:OK >0:Warning <0:Error
+int UiDiskList::ExportDataFiles(const UiDiskListItems &selected_items, const wxString &data_dir, const wxString &attr_dir, const wxString &start_msg, const wxString &end_msg, wxFileDataObject *file_object)
+{
+	frame->StartExportCounter(0, start_msg);
+
+	// 選択したファイルをリストにする。
+	int selcount = (int)selected_items.Count();
+	DiskBasicDirItems dir_items;
+	for(int i=0; i<selcount; i++) {
+		UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(selected_items.Item(i));
+		DiskBasicDirItem *item = cd->GetDiskBasicDirItem();
+		if (!item) {
+			continue;
+		}
+		dir_items.Add(item);
+	}
+
+	int sts = 0;
+	do {
+		if (dir_items.Count() <= 0) {
+			// 対象がない
+			break;
+		}
+		// 選択したファイルのOS
+		DiskBasic *basic = dir_items.Item(0)->GetBasic();
+		if (!basic) {
+			sts = -1;
+			break;
+		}
+		// エクスポート
+		sts = frame->ExportDataFiles(basic, &dir_items, data_dir, attr_dir, file_object, 0);
+		if (sts != 0) {
+			basic->ShowErrorMessage();
+		}
+	} while(0);
+
+	frame->FinishExportCounter(end_msg);
+
+	return sts;
+}
+
+/// ファイルをドロップ
+/// @param[in] base         座標の基準となるウィンドウ
+/// @param[in] x            ドロップした位置X
+/// @param[in] y            ドロップした位置Y
+/// @param[in] paths        ドロップしたファイル一覧
+/// @param[in] dir_included ファイル一覧にディレクトリが含まれるか
+bool UiDiskList::DropDataFiles(wxWindow *base, int x, int y, const wxArrayString &paths, bool dir_included)
+{
+	if (paths.Count() == 0) {
+		return false;
+	}
+
+	int bx = 0;
+	int by = 0;
+	// リストコントロールの親との相対位置
+	UiDiskFrame::GetPositionFromBaseWindow(base, this, bx, by);
+	UiDiskListItem node = GetNodeAtPoint(x - bx, y - by);
+	if (!UiDiskListItem_IsOk(node)) {
+		return false;
+	}
+	// ドラッグしたアイテムと同じならドロップしない
+	bool sts = (node == m_dragging_node);
+	UiDiskListItem_Unset(m_dragging_node);
+	if (sts) {
+		return true;
+	}
+
+	// 指定位置のディレクトリアイテムを取得
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
+	DiskBasicDirItem *dir_item = cd->GetDiskBasicDirItem();
+	if (!dir_item) {
+		if (dir_included) {
+			return false;
+		}
+		// ディスクイメージならディスク追加する
+		return frame->PreAddDiskFile(paths.Item(0));
+	}
+	DiskBasic *dir_basic = dir_item->GetBasic();
+	if (!dir_basic) {
+		return false;
+	}
+
+	// フォーマットされていて書き込み可能か
+	if (!dir_basic->IsFormatted()) {
+		return false;
+	}
+	if (!dir_basic->IsWritableIntoDisk()) {
+		dir_basic->ShowErrorMessage();
+		return false;
+	}
+
+	// ディレクトリの構成をアサイン
+	dir_basic->AssignDirectory(dir_item);
+
+	// カーソル先にあるディレクトリにドロップ
+	return frame->ImportDataFiles(paths, dir_basic, dir_item, dir_included, _("dropping..."), _("dropped."));
+}
+
+/// クリップボードへコピー
+bool UiDiskList::CopyToClipboard()
+{
+	wxString tmp_dir_name;
+	UiDiskListItem sel_node = GetSelection();
+	if (!UiDiskListItem_IsOk(sel_node)) {
+		return false;
+	}
+
+	wxFileDataObject *file_object = new wxFileDataObject();
+	bool sts = CreateFileObject(sel_node, tmp_dir_name, _("copying..."), _("copied."), *file_object);
+	if (sts) {
+		if (wxTheClipboard->Open())	{
+		    // This data objects are held by the clipboard,
+			// so do not delete them in the app.
+			wxTheClipboard->SetData(file_object);
+			wxTheClipboard->Close();
+		}
+	} else {
+		delete file_object;
+	}
+	return sts;
+}
+
+/// クリップボードからペースト
+bool UiDiskList::PasteFromClipboard()
+{
+	// 現在選択中のディレクトリにインポート
+	UiDiskListItem node = GetSelection();
+	if (!UiDiskListItem_IsOk(node)) {
+		return false;
+	}
+
+	// ディレクトリアイテムを得る
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(node);
+	DiskBasicDirItem *dir_item = cd->GetDiskBasicDirItem();
+	if (!dir_item) {
+		return false;
+	}
+	// OSを得る
+	DiskBasic *dir_basic = dir_item->GetBasic();
+	if (!dir_basic) {
+		return false;
+	}
+
+	// フォーマットされていて書き込み可能か
+	if (!dir_basic->IsFormatted()) {
+		return false;
+	}
+	if (!dir_basic->IsWritableIntoDisk()) {
+		dir_basic->ShowErrorMessage();
+		return false;
+	}
+
+	// ディレクトリの構成をアサイン
+	dir_basic->AssignDirectory(dir_item);
+
+	// Read some text
+	wxFileDataObject file_object;
+
+	if (wxTheClipboard->Open()) {
+		if (wxTheClipboard->IsSupported( wxDF_FILENAME )) {
+			wxTheClipboard->GetData( file_object );
+		}
+		wxTheClipboard->Close();
+	}
+
+	// インポート
+	// ペーストの時はインポート先ディレクトリを指定しているので確認はしない。
+	return frame->ImportDataFiles(file_object.GetFilenames(), dir_basic, dir_item, false, _("pasting..."), _("pasted."));
+}
+
+/// 選択しているディスクイメージのディスク番号を返す
+int UiDiskList::GetSelectedDiskNumber()
+{
+	if (!m_selected_disk) return wxNOT_FOUND;
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return wxNOT_FOUND;
 	return cd->GetDiskNumber();
 }
 /// 選択しているディスクイメージのサイド番号を返す
-int L3DiskList::GetSelectedDiskSide()
+int UiDiskList::GetSelectedDiskSide()
 {
-	if (!selected_disk) return wxNOT_FOUND;
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	if (!m_selected_disk) return wxNOT_FOUND;
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return wxNOT_FOUND;
 	return cd->GetPosition();
 }
 /// 選択しているディスクイメージのディスク番号とサイド番号を返す
 /// @param[out] disk_number ディスク番号
 /// @param[out] side_number サイド番号
-void L3DiskList::GetSelectedDisk(int &disk_number, int &side_number)
+void UiDiskList::GetSelectedDisk(int &disk_number, int &side_number)
 {
-	if (!selected_disk) return;
-	L3DiskPositionData *cd = (L3DiskPositionData *)GetItemData(GetSelection());
+	if (!m_selected_disk) return;
+	UiDiskPositionData *cd = (UiDiskPositionData *)GetItemData(GetSelection());
 	if (!cd) return;
 	disk_number = cd->GetDiskNumber();
 	side_number = cd->GetPosition();
 }
 
 /// ディスクイメージを選択しているか
-bool L3DiskList::IsSelectedDiskImage()
+bool UiDiskList::IsSelectedDiskImage()
 {
-	return (selected_disk != NULL);
+	return (m_selected_disk != NULL);
 }
 
 /// ディスクを選択しているか
-bool L3DiskList::IsSelectedDisk()
+bool UiDiskList::IsSelectedDisk()
 {
-	return disk_selecting;
+	return m_disk_selecting;
 }
 
 /// ディスクを選択しているか(AB面どちらか)
-bool L3DiskList::IsSelectedDiskSide()
+bool UiDiskList::IsSelectedDiskSide()
 {
-	return (disk_selecting && selected_disk != NULL && selected_disk->IsReversible());	// AB面あり;
+	return (m_disk_selecting && m_selected_disk != NULL && m_selected_disk->IsReversible());	// AB面あり;
 }

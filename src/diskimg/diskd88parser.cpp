@@ -7,7 +7,7 @@
 
 #include "diskd88parser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskd88.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -73,11 +73,11 @@ WX_DEFINE_OBJARRAY(DiskD88ParseOffsets);
 //
 //
 //
-DiskD88Parser::DiskD88Parser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskD88Parser::DiskD88Parser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskD88Parser::~DiskD88Parser()
@@ -128,46 +128,49 @@ void DiskD88Parser::PreParseSectors(wxInputStream &istream, int disk_number, int
 }
 
 /// セクタデータの解析
-wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskD88Track *track)
+wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskImageTrack *track)
 {
-	d88_sector_header_t *sector_header = new d88_sector_header_t;
+	DiskD88SectorHeader sector_header;
+	sector_header.Alloc();
+	size_t header_size = istream.Read((void *)sector_header.GetHeader(), sector_header.GetHeaderSize()).LastRead();
 
-	size_t header_size = istream.Read((void *)sector_header, sizeof(d88_sector_header_t)).LastRead();
+	//	d88_sector_header_t *sector_header = new d88_sector_header_t;
+//	size_t header_size = istream.Read((void *)sector_header, sizeof(d88_sector_header_t)).LastRead();
 			
 	// track number is same ?
-	if (sector_header->id.c != track_number) {
-		result->SetWarn(DiskResult::ERRV_ID_TRACK, disk_number, track_number, sector_header->id.c, sector_header->id.h, sector_header->id.r);
+	if (sector_header.GetIDC() != track_number) {
+		p_result->SetWarn(DiskResult::ERRV_ID_TRACK, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
 	}
 	// side number is valid ?
-	if (sector_header->id.h > 1) {
-		result->SetWarn(DiskResult::ERRV_ID_SIDE, disk_number, track_number, sector_header->id.c, sector_header->id.h, sector_header->id.r);
+	if (sector_header.GetIDH() > 1) {
+		p_result->SetWarn(DiskResult::ERRV_ID_SIDE, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
 	}
-	int sector_number = sector_header->id.r;
+	int sector_number = sector_header.GetIDR();
 	// sector number is valid ?
 	if (sector_number <= 0) {
-		result->SetWarn(DiskResult::ERRV_ID_SECTOR, disk_number, track_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_nums);
+		p_result->SetWarn(DiskResult::ERRV_ID_SECTOR, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_nums);
 	}
 	// invalid sector size
-	if (sector_header->size > 2048) {
-		result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
-	} else if (sector_header->size == 0) {
-		result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header->id.c, sector_header->id.h, sector_header->id.r, sector_header->id.n, sector_header->size);
+	if (sector_header.GetSize() > 2048) {
+		p_result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetIDN(), sector_header.GetSize());
+	} else if (sector_header.GetSize() == 0) {
+		p_result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetIDN(), sector_header.GetSize());
 	}
 
 	// 追加
-	size_t data_size = sector_header->size;
-	if (result->GetValid() >= 0) {
+	size_t data_size = sector_header.GetSize();
+	if (p_result->GetValid() >= 0) {
 		wxUint8 *sector_data = NULL;
 		if (data_size > 0) {
 			sector_data = new wxUint8[data_size];
 			istream.Read((void *)sector_data, data_size);
 		}
-		DiskD88Sector *sector = new DiskD88Sector(sector_number, sector_header, sector_data);
+		DiskImageSector *sector = track->NewImageSector(sector_number, sector_header, sector_data);
 		track->Add(sector);
 
 	} else {
 		data_size = 0;
-		delete sector_header;
+//		delete sector_header;
 	}
 
 	// このセクタデータのサイズを返す
@@ -175,7 +178,7 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 }
 
 /// トラックデータの解析
-wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskD88Disk *disk)
+wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskImageDisk *disk)
 {
 	int track_number = 0;
 	int side_number = 0;
@@ -188,7 +191,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 
 	// セクタ数が多すぎる
 	if (sector_nums > 255) {
-		result->SetWarn(DiskResult::ERRV_TOO_MANY_SECTORS, disk_number, 255, track_number, side_number, sector_nums);
+		p_result->SetWarn(DiskResult::ERRV_TOO_MANY_SECTORS, disk_number, 255, track_number, side_number, sector_nums);
 		sector_nums = 255;
 	}
 	// セクタがない場合
@@ -197,32 +200,32 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 		side_number = -1;
 	}
 
-	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(track_number, side_number, offset_pos, 1);
 	disk->SetMaxTrackNumber(track_number);
 
 	// sectors
 	wxUint32 sector_total_size = 0;
-	for(int sec_pos = 0; sec_pos < sector_nums && result->GetValid() >= 0; sec_pos++) {
+	for(int sec_pos = 0; sec_pos < sector_nums && p_result->GetValid() >= 0; sec_pos++) {
 		sector_total_size += ParseSector(istream, disk_number, track_number, sector_nums, sector_size, track);
 	}
 
 	// sector number is valid ?
-	DiskD88Sectors *sectors = track->GetSectors(); 
+	DiskImageSectors *sectors = track->GetSectors(); 
 	if (sectors && sector_nums != (int)sectors->Count()) {
-		result->SetWarn(DiskResult::ERRV_ID_NUM_OF_SECTOR, disk_number, track_number, side_number);
+		p_result->SetWarn(DiskResult::ERRV_ID_NUM_OF_SECTOR, disk_number, track_number, side_number);
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// セクタの重複や存在をチェック
 		if (sectors) {
 			wxArrayInt arr;
 			for(size_t sec_pos = 0; sec_pos < sectors->Count(); sec_pos++) {
-				DiskD88Sector *s = sectors->Item(sec_pos);
+				DiskImageSector *s = sectors->Item(sec_pos);
 				arr.Add(s->GetSectorNumber());
 			}
 			arr.Sort(&compare_int);
@@ -232,10 +235,10 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 				if (prev >= 0) {
 					if (curr == prev) {
 						// duplicate
-						result->SetWarn(DiskResult::ERRV_DUPLICATE_SECTOR, disk_number, curr, track_number, side_number);
+						p_result->SetWarn(DiskResult::ERRV_DUPLICATE_SECTOR, disk_number, curr, track_number, side_number);
 					} else if (prev + 1 != curr) {
 						// non sequential
-						result->SetWarn(DiskResult::ERRV_NO_SECTOR, disk_number, prev + 1, track_number, side_number);
+						p_result->SetWarn(DiskResult::ERRV_NO_SECTOR, disk_number, prev + 1, track_number, side_number);
 					}
 				}
 				prev = curr;
@@ -243,20 +246,20 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 		}
 	}
 
-	if (result->GetValid() >= 0 && track_number >= 0) {
+	if (p_result->GetValid() >= 0 && track_number >= 0) {
 		// トラックの重複チェック
-		DiskD88Tracks *tracks = disk->GetTracks();
+		DiskImageTracks *tracks = disk->GetTracks();
 		if (tracks) {
 			bool dup = false;
 			do {
 				dup = false;
 				for(size_t i=0; i<tracks->Count(); i++) {
-					DiskD88Track *t = tracks->Item(i);
+					DiskImageTrack *t = tracks->Item(i);
 					if (t->GetTrackNumber() == track_number && t->GetSideNumber() == side_number) {
 						// すでに同じトラック番号とサイド番号がある
 						if (sector_size >= 256) {
 							// セクターサイズが256バイト以上なら警告を出す。
-							result->SetWarn(DiskResult::ERRV_DUPLICATE_TRACK, disk_number, track_number, side_number, side_number + 1);
+							p_result->SetWarn(DiskResult::ERRV_DUPLICATE_TRACK, disk_number, track_number, side_number, side_number + 1);
 						}
 						// サイド番号を変更する
 						side_number++;
@@ -269,7 +272,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 		}
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// 残りデータ
 		if ((int)sector_total_size < track_size) {
 			size_t size = (size_t)(track_size - (int)sector_total_size);
@@ -297,7 +300,9 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 /// @return ディスクサイズ
 wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int disk_number)
 {
-	d88_header_t *disk_header = new d88_header_t;
+	DiskD88DiskHeader disk_header;
+	disk_header.Alloc();
+//	d88_header_t *disk_header = new d88_header_t;
 
 	bool valid_header = false;
 	wxUint32 size = 0;
@@ -306,11 +311,11 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 		// seek 
 		istream.SeekI(start_pos);
 
-		wxUint32 header_size = (wxUint32)istream.Read((void *)disk_header, sizeof(d88_header_t)).LastRead();
+		wxUint32 header_size = (wxUint32)istream.Read((void *)disk_header.GetHeader(), disk_header.GetHeaderSize()).LastRead();
 		size = header_size;
 
 		// EOF(0x1a)ならスキップ
-		wxByte *p = (wxByte *)disk_header;
+		wxByte *p = (wxByte *)disk_header.GetHeader();
 		bool all_eot = true;
 		for(wxUint32 pos = 0; pos < header_size; pos++) {
 			if (p[pos] != 0x1a) {
@@ -323,38 +328,37 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 		}
 
 		// ディスクサイズが小さすぎる
-		if (header_size < sizeof(d88_header_t)) {
-			result->SetWarn(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+		if (header_size < disk_header.GetHeaderSize()) {
+			p_result->SetWarn(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 			break;
 		}
 
-		wxUint32 disk_size = disk_header->disk_size;
-		disk_size = wxUINT32_SWAP_ON_BE(disk_size);
+		wxUint32 disk_size = disk_header.GetDiskSize();
 		// ディスクサイズが小さすぎる
-		if (disk_size < sizeof(d88_header_t)) {
-			result->SetWarn(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+		if (disk_size < disk_header.GetHeaderSize()) {
+			p_result->SetWarn(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
 			break;
 		}
 
 		wxUint32 stream_size = (wxUint32)istream.GetLength();
 		// ディスクサイズがファイルサイズより大きい、または4MBを超えている
 		if (stream_size < disk_size || (1024*1024*4) < disk_size) {
-			result->SetWarn(DiskResult::ERRV_DISK_TOO_LARGE, disk_number);
+			p_result->SetWarn(DiskResult::ERRV_DISK_TOO_LARGE, disk_number);
 			disk_size = stream_size;
 		}
 
 		size = disk_size;
 
 		// 名前の17文字目は'\0'
-		if (disk_header->diskname[16] != '\0') {
-			result->SetWarn(DiskResult::ERRV_DISK_HEADER, disk_number);
+		if (disk_header.GetHeader()->diskname[16] != '\0') {
+			p_result->SetWarn(DiskResult::ERRV_DISK_HEADER, disk_number);
 		}
 
 		// オフセット部分の最小値を求める
 		// -> 古いd88はオフセット部分が少ない
 		wxUint32 offset_start = (wxUint32)-1;
 		for(int pos = 0; pos < (DISKD88_MAX_TRACKS - 16); pos++) {
-			wxUint32 offset = disk_header->offsets[pos];
+			wxUint32 offset = disk_header.GetOffset(pos);
 			offset = wxUINT32_SWAP_ON_BE(offset);
 			if (offset_start > offset && offset > 0) {
 				offset_start = offset;
@@ -369,18 +373,18 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 		int max_tracks = DISKD88_MAX_TRACKS - ((int)sizeof(d88_header_t) - (int)offset_start) / 4;
 		if (max_tracks < 0 || max_tracks > DISKD88_MAX_TRACKS) {
 			// トラック数がおかしい
-			result->SetWarn(DiskResult::ERRV_INVALID_DISK, disk_number);
+			p_result->SetWarn(DiskResult::ERRV_INVALID_DISK, disk_number);
 			break;
 		}
 
 		for(int pos = max_tracks; pos < DISKD88_MAX_TRACKS; pos++) {
-			disk_header->offsets[pos] = 0;
+			disk_header.SetOffset(pos, 0);
 		}
 
 		// オフセットから各トラックのサイズを計算する
 		DiskD88ParseOffsets offsets;
 		for(int pos = 0; pos < max_tracks; pos++) {
-			wxUint32 offset = disk_header->offsets[pos];
+			wxUint32 offset = disk_header.GetOffset(pos);
 			offset = wxUINT32_SWAP_ON_BE(offset);
 			if (offset >= offset_start) {
 				offsets.Add(DiskD88ParseOffset(pos, offset, 0));
@@ -404,17 +408,17 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 		//
 
 		valid_header = true;
-		DiskD88Disk *disk = new DiskD88Disk(file, disk_number, disk_header);
+		DiskImageDisk *disk = p_file->NewImageDisk(disk_number, disk_header);
 
 		disk->SetOffsetStart(offset_start);
 
 		// parse tracks
-		for(int pos = 0; pos < offsets_count && result->GetValid() >= 0; pos++) {
+		for(int pos = 0; pos < offsets_count && p_result->GetValid() >= 0; pos++) {
 			DiskD88ParseOffset *curr = &offsets.Item(pos);
 
 			// オフセットがディスクサイズを超えている？
 			if (curr->GetOffset() >= disk_size) {
-				result->SetWarn(DiskResult::ERRV_OVERFLOW_OFFSET, disk_number, curr->GetNum(), curr->GetOffset(), disk_size);
+				p_result->SetWarn(DiskResult::ERRV_OVERFLOW_OFFSET, disk_number, curr->GetNum(), curr->GetOffset(), disk_size);
 				disk->SetOffset(curr->GetNum(), 0);
 				continue;
 			}
@@ -422,19 +426,19 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 			ParseTrack(istream, start_pos, curr->GetNum(), curr->GetOffset(), disk_number, curr->GetSize(), disk);
 		}
 
-		if (result->GetValid() >= 0) {
+		if (p_result->GetValid() >= 0) {
 			// ディスクを追加
 			disk->CalcMajorNumber();
-			file->Add(disk, mod_flags);
+			p_file->Add(disk, m_mod_flags);
 			// セクタ数をチェック
-			DiskD88Tracks *tracks = disk->GetTracks();
+			DiskImageTracks *tracks = disk->GetTracks();
 			if (tracks) {
 				for(size_t pos = 0; pos < tracks->Count(); pos++) {
-					DiskD88Track *track = tracks->Item(pos);
-					DiskD88Sectors *sectors = track->GetSectors();
+					DiskImageTrack *track = tracks->Item(pos);
+					DiskImageSectors *sectors = track->GetSectors();
 					if (sectors) {
 						if ((int)sectors->Count() < disk->GetSectorsPerTrack()) {
-							result->SetWarn(DiskResult::ERRV_SHORT_SECTORS, disk_number, disk->GetSectorsPerTrack(), track->GetTrackNumber(), track->GetSideNumber(), (int)sectors->Count());
+							p_result->SetWarn(DiskResult::ERRV_SHORT_SECTORS, disk_number, disk->GetSectorsPerTrack(), track->GetTrackNumber(), track->GetSideNumber(), (int)sectors->Count());
 						}
 					}
 				}
@@ -445,7 +449,7 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 	} while(0);
 
 	if (!valid_header) {
-		delete disk_header;
+//		delete disk_header;
 	}
 
 	return size;
@@ -453,30 +457,36 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 
 /// D88ファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88Parser::Parse(wxInputStream &istream)
+int DiskD88Parser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	size_t read_size = 0;
 	size_t stream_size = istream.GetLength();
-	int disk_number = (int)file->Count();
+	int disk_number = (int)p_file->Count();
 	// ディスクサイズが0
 	if (stream_size == 0) {
-		result->SetError(DiskResult::ERRV_DISK_SIZE_ZERO, disk_number);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_DISK_SIZE_ZERO, disk_number);
+		return p_result->GetValid();
 	}
 	// チェック
 	if (Check(istream) != 0) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, disk_number);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, disk_number);
+		return p_result->GetValid();
 	}
-	for(; read_size < stream_size && result->GetValid() >= 0; disk_number++) {
+	for(; read_size < stream_size && p_result->GetValid() >= 0; disk_number++) {
 		wxUint32 size = ParseDisk(istream, read_size, disk_number);
 		if (size == 0) break;
 		read_size += size;
 	}
-	return result->GetValid();
+	return p_result->GetValid();
+}
+
+int DiskD88Parser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
 }
 
 /// チェック
@@ -492,7 +502,7 @@ int DiskD88Parser::Check(wxInputStream &istream)
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len < (size_t)header_size_min) {
 		// too short
-		result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
 		return -1;
 	}
 
@@ -516,7 +526,7 @@ int DiskD88Parser::Check(wxInputStream &istream)
 		valid = 0;
 	}
 	if (valid < 0) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 	}
 	return valid;
 }

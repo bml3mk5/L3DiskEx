@@ -26,7 +26,7 @@ ProDOSBitmap::ProDOSBitmap()
 }
 
 /// ポインタをセット
-void ProDOSBitmap::AddBitmap(DiskD88Sector *sector)
+void ProDOSBitmap::AddBitmap(DiskImageSector *sector)
 {
 	DiskBasicBitMLMap::AddBuffer(
 		sector->GetSectorBuffer(),
@@ -84,7 +84,7 @@ double DiskBasicTypeProDOS::CheckFat(bool is_formatting)
 	int st_pos = GetStartSectorFromGroup(group_num);
 	int ed_pos = GetEndSectorFromGroup(group_num, 0, st_pos, 0, 0);
 	for(int sec = st_pos; sec <= ed_pos; sec++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 		if (!sector) {
 			return -1.0;
 		}
@@ -114,7 +114,7 @@ double DiskBasicTypeProDOS::ParseParamOnDisk(bool is_formatting)
 	basic->SetFatEndGroup(calc_total_blocks - 1);
 
 	// ボリュームディレクトリ
-	DiskD88Sector *sector = basic->GetSectorFromGroup(basic->GetDirStartSector() / basic->GetSectorsPerGroup());
+	DiskImageSector *sector = basic->GetSectorFromGroup(basic->GetDirStartSector() / basic->GetSectorsPerGroup());
 	if (!sector) {
 		return -1.0;
 	}
@@ -183,7 +183,7 @@ bool DiskBasicTypeProDOS::AssignRootDirectory(int start_sector, int end_sector, 
 
 	// ボリュームヘッダの内容をコピーする
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
-	DiskD88Sector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
 	directory_t *vol = (directory_t *)sector->GetSectorBuffer(4);
 	dir_item->CopyData(vol);
 	// ディレクトリ属性にしておく
@@ -223,7 +223,7 @@ bool DiskBasicTypeProDOS::CalcGroupsOnRootDirectory(int start_sector, int end_se
 //		voldir.Add((int)group_num);
 
 		for(int ss = 0; ss < basic->GetSectorsPerGroup(); ss++) {
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
+			DiskImageSector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
 			if (!sector) {
 				valid = false;
 				break;
@@ -408,7 +408,7 @@ wxUint32 DiskBasicTypeProDOS::AllocChainSector(int idx, DiskBasicDirItem *item)
 	int st_pos = GetStartSectorFromGroup(gnum);
 	int ed_pos = GetEndSectorFromGroup(gnum, 0, st_pos, 0, 0);
 	for(int sec = st_pos; sec <= ed_pos; sec++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 		if (!sector) {
 			return INVALID_GROUP_NUMBER;
 		}
@@ -439,7 +439,7 @@ int DiskBasicTypeProDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 {
 //	myLog.SetDebug("DiskBasicTypeProDOS::AllocateGroups {");
 
-	int file_size = 0;
+//	int file_size = 0;
 	int groups = 0;
 
 	int rc = 0;
@@ -471,7 +471,7 @@ int DiskBasicTypeProDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 			}
 			chain_idx++;
 
-			file_size += block_size;
+//			file_size += block_size;
 			groups++;
 			remain -= block_size;
 			limit--;
@@ -505,7 +505,7 @@ int DiskBasicTypeProDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 
 			chain_idx++;
 
-			file_size += block_size;
+//			file_size += block_size;
 			groups++;
 			remain -= block_size;
 			limit--;
@@ -547,7 +547,7 @@ int DiskBasicTypeProDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 
 			chain_idx++;
 
-			file_size += block_size;
+//			file_size += block_size;
 			groups++;
 			remain -= block_size;
 			limit--;
@@ -572,7 +572,7 @@ int DiskBasicTypeProDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 			}
 			chain_idx++;
 
-			file_size += block_size;
+//			file_size += block_size;
 			groups++;
 			remain -= block_size;
 			limit--;
@@ -605,7 +605,7 @@ int DiskBasicTypeProDOS::ChainDirectoryGroups(DiskBasicDirItem *item, DiskBasicG
 		DiskBasicGroupItem *item = &group_items.Item(i);
 		if (item->group != group_num) {
 			group_num = item->group;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 			prodos_dir_ptr_t *curr = (prodos_dir_ptr_t *)sector->GetSectorBuffer();
 
 			curr->prev_block = prev_group_num != INVALID_GROUP_NUMBER ? prev_group_num : 0;
@@ -868,7 +868,7 @@ void DiskBasicTypeProDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *ite
 
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskD88Sector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer(4);
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
@@ -910,7 +910,7 @@ void DiskBasicTypeProDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *ite
 /// フォーマット時セクタデータを指定コードで埋める
 /// @param[in] track  トラック
 /// @param[in] sector セクタ
-void DiskBasicTypeProDOS::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeProDOS::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -919,7 +919,7 @@ void DiskBasicTypeProDOS::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 /// フォーマット時セクタデータを埋めた後の個別処理
 bool DiskBasicTypeProDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	// ボリュームディレクトリをクリア
 	int st_pos = basic->GetDirStartSector();

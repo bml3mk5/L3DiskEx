@@ -61,7 +61,7 @@ double DiskBasicTypeX1HU::CheckFat(bool is_formatting)
 		int atype = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
 		int pt = 0;
 		for(int i=0; i<2; i++) {
-			DiskD88Sector *sector = NULL;
+			DiskImageSector *sector = NULL;
 			switch(i) {
 			case 0:
 				// IPL領域
@@ -356,7 +356,7 @@ bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	// IPL (MZ用)
 	int len = (int)basic->GetVariousStringParam(wxT("IPLString")).Length();
 	if (len > 0) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(0);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(0);
 		if (sector) {
 			sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()), 32);	// invert
 			wxUint8 buf[32];
@@ -380,7 +380,7 @@ bool DiskBasicTypeX1HU::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDa
 	// システム領域のグループを埋める
 	int trk_num, sid_num;
 	int sec_num = basic->GetDirEndSector();
-	DiskD88Track *trk = basic->GetManagedTrack(sec_num - 1, &sid_num, &sec_num);
+	DiskImageTrack *trk = basic->GetManagedTrack(sec_num - 1, &sid_num, &sec_num);
 	trk_num = trk->GetTrackNumber();
 
 	if (basic->IsDataInverted()) sid_num = 1 - sid_num;

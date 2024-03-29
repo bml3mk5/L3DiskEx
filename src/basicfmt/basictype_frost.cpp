@@ -70,9 +70,9 @@ double DiskBasicTypeFROST::ParseParamOnDisk(bool is_formatting)
 	if (basic->GetGroupsPerTrack() == 0) {
 		// 512バイトを１グループとして計算する
 		int cnt = 0;
-		DiskD88Track *track = basic->GetTrack(1, 0);
+		DiskImageTrack *track = basic->GetTrack(1, 0);
 		if (track) {
-			DiskD88Sectors *secs = track->GetSectors();
+			DiskImageSectors *secs = track->GetSectors();
 			if (secs) {
 				for(size_t sec = 0; sec < secs->Count(); sec++) {
 					int siz = secs->Item(sec)->GetSectorSize();
@@ -343,7 +343,7 @@ int  DiskBasicTypeFROST::GetSectorPosFromNum(int track_num, int side_num, int se
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeFROST::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeFROST::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -419,7 +419,7 @@ void DiskBasicTypeFROST::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
 	// タイトル名 FATエリア 
 	int div_num, div_nums;
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1 + 3, NULL, NULL, NULL, &div_num, &div_nums);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1 + 3, NULL, NULL, NULL, &div_num, &div_nums);
 	if (sector) {
 		wxUint8 *buf = sector->GetSectorBuffer();
 		buf += sector->GetSectorSize() * div_num / div_nums + 0x140;

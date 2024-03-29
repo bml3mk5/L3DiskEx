@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MSDOS_H_
-#define _BASICDIRITEM_MSDOS_H_
+#ifndef BASICDIRITEM_MSDOS_H
+#define BASICDIRITEM_MSDOS_H
 
 #include "basicdiritem.h"
 
@@ -86,11 +86,11 @@ protected:
 
 public:
 	DiskBasicDirItemMSDOS(DiskBasic *basic);
-	DiskBasicDirItemMSDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMSDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -166,6 +166,12 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvFileTypeFromFileName(const wxString &filename) const;
 
+	/// @brief ファイルの終端コードをチェックする必要があるか
+	virtual bool	NeedCheckEofCode();
+
+	/// @brief セーブ時にファイルサイズを再計算する ファイルの終端コードが必要な場合など
+	virtual int		RecalcFileSizeOnSave(wxInputStream *istream, int file_size);
+
 
 	/// @name プロパティダイアログ用
 	//@{
@@ -198,8 +204,8 @@ protected:
 
 public:
 	DiskBasicDirItemVFAT(DiskBasic *basic);
-	DiskBasicDirItemVFAT(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemVFAT(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemVFAT(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemVFAT(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -271,4 +277,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_MSDOS_H_ */
+#endif /* BASICDIRITEM_MSDOS_H */

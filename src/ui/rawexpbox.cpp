@@ -12,7 +12,7 @@
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 
 
 // Attach Event
@@ -20,14 +20,14 @@ BEGIN_EVENT_TABLE(RawExpBox, wxDialog)
 	EVT_BUTTON(wxID_OK, RawExpBox::OnOK)
 END_EVENT_TABLE()
 
-RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, int sel_side_num
+RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskImageDisk *disk, int sel_side_num
 	, int start_track_num, int start_side_num, int start_sector_num
 	, int end_track_num, int end_side_num, int end_sector_num
 	, bool invert_data, bool reverse_side
 )	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	this->disk = disk;
-	this->sel_side_num = sel_side_num;
+	p_disk = disk;
+	m_sel_side_num = sel_side_num;
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	long style = 0;
@@ -98,23 +98,23 @@ bool RawExpBox::ValidateParam()
 	for(int i=0; i<2; i++) {
 		wxString smsg = (i == 0 ? _("Start") : _("End"));
 		int trk = GetTrackNumber(i);
-		int min_trk = disk->GetTrackNumberBaseOnDisk();
-		int max_trk = disk->GetTracksPerSide() + min_trk;
+		int min_trk = p_disk->GetTrackNumberBaseOnDisk();
+		int max_trk = p_disk->GetTracksPerSide() + min_trk;
 		if (trk < min_trk || trk >= max_trk) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("track"));
 			valid = false;
 			break;
 		}
 		int sid = GetSideNumber(i);
-		DiskD88Track *track = disk->GetTrack(trk, sid);
-		if (track == NULL || (sel_side_num >= 0 && sid != sel_side_num)) {
+		DiskImageTrack *track = p_disk->GetTrack(trk, sid);
+		if (track == NULL || (m_sel_side_num >= 0 && sid != m_sel_side_num)) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("side"));
 			valid = false;
 			break;
 		}
 		int sec = GetSectorNumber(i);
-		DiskD88Sector *sector = disk->GetSector(trk, sid, sec);
-		if (sector == NULL || sec < disk->GetSectorNumberBaseOnDisk()) {
+		DiskImageSector *sector = p_disk->GetSector(trk, sid, sec);
+		if (sector == NULL || sec < p_disk->GetSectorNumberBaseOnDisk()) {
 			msg = wxString::Format(_("%s %s number is out of range."), smsg, _("sector"));
 			valid = false;
 			break;

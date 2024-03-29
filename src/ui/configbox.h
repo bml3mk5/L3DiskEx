@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _CONFIGBOX_H_
-#define _CONFIGBOX_H_
+#ifndef CONFIGBOX_H
+#define CONFIGBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
@@ -17,6 +17,7 @@ class wxCheckBox;
 class wxTextCtrl;
 class wxChoice;
 class wxStaticText;
+class wxSpinCtrl;
 class Config;
 
 /// 設定ボックス
@@ -33,10 +34,13 @@ private:
 	wxCheckBox *chkDecAttrImport;
 	wxCheckBox *chkDateImport;
 	wxCheckBox *chkIgnoreDate;
+	wxSpinCtrl *spnDirDepth;
 	wxTextCtrl *txtTempFolder;
 	wxCheckBox *chkTempFolder;
 	wxButton   *btnTempFolder;
-	wxTextCtrl *txtBinaryEditer;
+	wxTextCtrl *txtBinaryEditor;
+	wxTextCtrl *txtTextEditor;
+	wxCheckBox *chkInterDirItem;
 	wxChoice   *comLanguage;
 
 public:
@@ -51,11 +55,15 @@ public:
 		IDC_CHECK_DEC_ATTR_IMPORT,
 		IDC_CHECK_DATE_IMPORT,
 		IDC_CHECK_IGNORE_DATE,
+		IDC_SPIN_DIR_DEPTH,
 		IDC_TEXT_TEMP_FOLDER,
 		IDC_BUTTON_TEMP_FOLDER,
 		IDC_CHECK_TEMP_FOLDER,
-		IDC_TEXT_BINARY_EDITER,
-		IDC_BUTTON_BINARY_EDITER,
+		IDC_TEXT_BINARY_EDITOR,
+		IDC_BUTTON_BINARY_EDITOR,
+		IDC_TEXT_TEXT_EDITOR,
+		IDC_BUTTON_TEXT_EDITOR,
+		IDC_CHECK_INTER_DIR_ITEM,
 		IDC_COMBO_LANGUAGE,
 	};
 
@@ -72,12 +80,13 @@ public:
 	void OnOK(wxCommandEvent& event);
 	void OnCheckTempFolder(wxCommandEvent& event);
 	void OnClickTempFolder(wxCommandEvent& event);
-	void OnClickBinaryEditer(wxCommandEvent& event);
+	void OnClickBinaryEditor(wxCommandEvent& event);
+	void OnClickTextEditor(wxCommandEvent& event);
 
 	// properties
 
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _CONFIGBOX_H_ */
+#endif /* CONFIGBOX_H */
 

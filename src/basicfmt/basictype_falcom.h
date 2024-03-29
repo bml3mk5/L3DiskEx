@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FALCOM_H_
-#define _BASICTYPE_FALCOM_H_
+#ifndef BASICTYPE_FALCOM_H
+#define BASICTYPE_FALCOM_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -85,4 +85,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_FALCOM_H_ */
+#endif /* BASICTYPE_FALCOM_H */

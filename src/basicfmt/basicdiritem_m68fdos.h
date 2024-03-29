@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_M68_FDOS_H_
-#define _BASICDIRITEM_M68_FDOS_H_
+#ifndef BASICDIRITEM_M68_FDOS_H
+#define BASICDIRITEM_M68_FDOS_H
 
 #include "basicdiritem_mz_base.h"
 
@@ -111,11 +111,11 @@ private:
 
 public:
 	DiskBasicDirItemM68FDOS(DiskBasic *basic);
-	DiskBasicDirItemM68FDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemM68FDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -211,4 +211,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_M68_FDOS_H_ */
+#endif /* BASICDIRITEM_M68_FDOS_H */

@@ -32,7 +32,7 @@ double DiskBasicTypeFP::CheckFat(bool is_formatting)
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeFP::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 
 	// FATエリア
 	sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);

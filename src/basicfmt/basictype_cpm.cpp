@@ -47,7 +47,7 @@ double DiskBasicTypeCPM::ParseParamOnDisk(bool is_formatting)
 	}
 
 	// セクタ０
-	DiskD88Sector *sector = basic->GetSector(0, 0, 1);
+	DiskImageSector *sector = basic->GetSector(0, 0, 1);
 	if (!sector) {
 		return -1.0;
 	}
@@ -469,7 +469,7 @@ bool DiskBasicTypeCPM::IsRootDirectory(wxUint32 group_num)
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeCPM::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeCPM::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -479,7 +479,7 @@ bool DiskBasicTypeCPM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 {
 	// ディレクトリエリア
 	for(int sec_pos = basic->GetDirStartSector(); sec_pos <= basic->GetDirEndSector(); sec_pos++) {
-		DiskD88Sector *sector = basic->GetManagedSector(sec_pos - 1);
+		DiskImageSector *sector = basic->GetManagedSector(sec_pos - 1);
 		if (sector) {
 			sector->Fill(basic->GetFillCodeOnDir());
 		}

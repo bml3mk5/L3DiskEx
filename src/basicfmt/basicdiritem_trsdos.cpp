@@ -44,13 +44,13 @@ DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic)
 	m_position_in_hit = -1;
 	next_item = NULL;
 }
-DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_position_in_hit = -1;
 	next_item = NULL;
 }
-DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_position_in_hit = -1;
@@ -64,7 +64,7 @@ DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, int n_num, cons
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemTRSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemTRSDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 	m_position_in_hit = -1;
@@ -325,7 +325,7 @@ void DiskBasicDirItemTRSDOS::TakeAddressesInFile(DiskBasicGroups &group_items)
 		return;
 	}
 //	DiskBasicGroupItem *item = &group_items.Item(0);
-//	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+//	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
 //	if (!sector) return;
 
 	// 開始アドレス
@@ -725,7 +725,7 @@ DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemTRSDOS(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
@@ -733,7 +733,7 @@ DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, DiskD88Sector *
 		m_position_in_hit = DiskBasicTypeTRSD23::GetHIPosition(n_sector->GetSectorNumber() - basic->GetSectorNumberBase(), n_secpos / sizeof(directory_trsd23_t));
 	}
 }
-DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemTRSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -749,7 +749,7 @@ DiskBasicDirItemTRSD23::DiskBasicDirItemTRSD23(DiskBasic *basic, int n_num, cons
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemTRSD23::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemTRSD23::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemTRSDOS::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -1057,7 +1057,7 @@ DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemTRSDOS(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
@@ -1066,7 +1066,7 @@ DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, DiskD88Sector *
 		m_position_in_hit = DiskBasicTypeTRSD13::GetHIPosition((n_sector->GetSectorNumber() - basic->GetSectorNumberBase() - 2) * n + (n_secpos / (int)sizeof(directory_trsd13_t)));
 	}
 }
-DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemTRSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -1082,7 +1082,7 @@ DiskBasicDirItemTRSD13::DiskBasicDirItemTRSD13(DiskBasic *basic, int n_num, cons
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemTRSD13::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemTRSD13::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemTRSDOS::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FAT16_H_
-#define _BASICTYPE_FAT16_H_
+#ifndef BASICTYPE_FAT16_H
+#define BASICTYPE_FAT16_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -74,4 +74,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_FAT16_H_ */
+#endif /* BASICTYPE_FAT16_H */

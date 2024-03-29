@@ -8,7 +8,7 @@
 #include "diskg64parser.h"
 #include <wx/mstream.h>
 #include <wx/dynarray.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -39,12 +39,10 @@ typedef struct st_g64_sector_data {
 //
 //
 //
-DiskG64Parser::DiskG64Parser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskG64Parser::DiskG64Parser(DiskImageFile *file, short mod_flags, DiskResult *result)
+	: DiskImageParser(file, mod_flags, result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
-	memset(&this->header, 0, sizeof(this->header));
+	memset(&m_header, 0, sizeof(m_header));
 }
 
 DiskG64Parser::~DiskG64Parser()
@@ -62,10 +60,10 @@ DiskG64Parser::~DiskG64Parser()
 /// @param [in] single_density  単密度か
 /// @param [in,out] track       トラック
 /// @return ヘッダ込みのセクタサイズ
-wxUint32 DiskG64Parser::ParseSector(wxUint8 *indata, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskD88Track *track)
+wxUint32 DiskG64Parser::ParseSector(wxUint8 *indata, int disk_number, int track_number, int side_number, int sector_nums, int sector_number, int sector_size, bool single_density, DiskImageTrack *track)
 {
 	// セクタ作成
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, false);
 	track->Add(sector);
 
 	// コピー plain data
@@ -75,7 +73,7 @@ wxUint32 DiskG64Parser::ParseSector(wxUint8 *indata, int disk_number, int track_
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + sector_size;
+	return (wxUint32)sector->GetSize();
 }
 
 /// Commodore GCR 5-bit -> HEX 4-bit map
@@ -128,7 +126,7 @@ size_t DiskG64Parser::DecodeGCR(const wxUint8 *indata, int inbitlen, wxUint8 *ou
 /// @param [in] offset          オフセット位置
 /// @param [in,out] disk        ディスク
 /// @return -1:エラー or 終り >0:トラックサイズ
-int DiskG64Parser::ParseTrack(wxInputStream &istream, int disk_number, int side_number, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+int DiskG64Parser::ParseTrack(wxInputStream &istream, int disk_number, int side_number, int offset_pos, wxUint32 offset, DiskImageDisk *disk)
 {
 	wxUint16 track_size = 0;
 	size_t len = 0;
@@ -205,7 +203,7 @@ int DiskG64Parser::ParseTrack(wxInputStream &istream, int disk_number, int side_
 
 	// トラックの作成
 	wxUint32 d88_track_size = 0;
-	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(track_number, side_number, offset_pos, 1);
 	disk->SetMaxTrackNumber(track_number);
 
 	for(size_t i=0; i<sector_datas.Count(); i++) {
@@ -225,12 +223,12 @@ int DiskG64Parser::ParseTrack(wxInputStream &istream, int disk_number, int side_
 		);
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// トラックサイズ設定
 		track->SetSize(d88_track_size);
 		// サイド番号は各セクタのID Hに合わせる
@@ -264,7 +262,7 @@ int DiskG64Parser::ParseDisk(wxInputStream &istream, int disk_number)
 	size_t len = 0;
 	wxArrayInt offsets;
 	bool has_halftrack = false;
-	for(int pos = 0; pos < header.num_of_tracks; pos++) {
+	for(int pos = 0; pos < m_header.num_of_tracks; pos++) {
 		wxUint32 offset = 0;
 		len = istream.Read(&offset, 4).LastRead();
 		if (len < 4) {
@@ -278,19 +276,19 @@ int DiskG64Parser::ParseDisk(wxInputStream &istream, int disk_number)
 	}
 
 	// skip spped zone data
-	size_t size = header.num_of_tracks * 4;
+	size_t size = m_header.num_of_tracks * 4;
 	len = istream.SeekI(size, wxFromCurrent);
 	if (len == (size_t)wxInvalidOffset) {
 		return -1;
 	}
 
 	// ディスク作成
-	DiskD88Disk *disk = new DiskD88Disk(file, disk_number);
+	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);
 
 	// トラック解析
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
-	for(int pos = 0; pos < header.num_of_tracks; pos++) {
+	for(int pos = 0; pos < m_header.num_of_tracks; pos++) {
 		size = offsets[pos];
 		if (size == 0) {
 			// skip empty track
@@ -314,13 +312,13 @@ int DiskG64Parser::ParseDisk(wxInputStream &istream, int disk_number)
 	}
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
 			disk->SetDensity(disk_param->GetParamDensity());
 		}
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
@@ -337,28 +335,32 @@ int DiskG64Parser::ParseHeader(wxInputStream &istream, int disk_number)
 {
 	size_t len = 0;
 
-	len = istream.Read(&header, sizeof(header)).LastRead();
-	if (len < sizeof(header)) {
+	len = istream.Read(&m_header, sizeof(m_header)).LastRead();
+	if (len < sizeof(m_header)) {
 		// too short
 		return -1;
 	}
-	if (memcmp(header.sig, "GCR-1541", sizeof(header.sig)) != 0) {
+	if (memcmp(m_header.sig, "GCR-1541", sizeof(m_header.sig)) != 0) {
 		// not a image
 		return -1;
 	}
-	if (header.num_of_tracks == 0) {
+	if (m_header.num_of_tracks == 0) {
 		return -1;
 	}
 
 	return 0;
 }
 
+int DiskG64Parser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
+}
+
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskG64Parser::Check(DiskParser &dp, wxInputStream &istream)
+int DiskG64Parser::Check(wxInputStream &istream)
 {
 	istream.SeekI(0);
 
@@ -371,10 +373,11 @@ int DiskG64Parser::Check(DiskParser &dp, wxInputStream &istream)
 
 /// ファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskG64Parser::Parse(wxInputStream &istream)
+int DiskG64Parser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	istream.SeekI(0);
 
@@ -383,5 +386,5 @@ int DiskG64Parser::Parse(wxInputStream &istream)
 			break;
 		}
 	}
-	return result->GetValid();
+	return p_result->GetValid();
 }

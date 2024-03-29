@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _RAWSECTORBOX_H_
-#define _RAWSECTORBOX_H_
+#ifndef RAWSECTORBOX_H
+#define RAWSECTORBOX_H
 
 #define SECTORBOX_TRANS \
 _("Required information entry is empty.") \
@@ -75,5 +75,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _RAWSECTORBOX_H_ */
+#endif /* RAWSECTORBOX_H */
 

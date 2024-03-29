@@ -16,10 +16,10 @@
 // 右パネル上下
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskRPanel, wxSplitterWindow)
+wxBEGIN_EVENT_TABLE(UiDiskRPanel, wxSplitterWindow)
 wxEND_EVENT_TABLE()
 
-L3DiskRPanel::L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int selected_window)
+UiDiskRPanel::UiDiskRPanel(UiDiskFrame *parentframe, wxWindow *parentwindow, int selected_window)
                 : wxSplitterWindow(parentwindow, wxID_ANY,
                                    wxDefaultPosition, wxDefaultSize,
                                    wxSP_BORDER | wxSP_LIVE_UPDATE |
@@ -34,8 +34,8 @@ L3DiskRPanel::L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int
 	// resize right window when resize parent window.
 	SetSashGravity(0.0);
 
-	diskattr = new L3DiskDiskAttr(parentframe, this);
-	bpanel = new L3DiskRBPanel(parentframe, this, selected_window);
+	diskattr = new UiDiskDiskAttr(parentframe, this);
+	bpanel = new UiDiskRBPanel(parentframe, this, selected_window);
 
 	SplitHorizontally(diskattr, bpanel, 32);
 
@@ -44,7 +44,7 @@ L3DiskRPanel::L3DiskRPanel(L3DiskFrame *parentframe, wxWindow *parentwindow, int
 
 /// パネルの切り替え
 /// @param [in] num 0:ファイルリスト 1:RAWディスク
-void L3DiskRPanel::ChangePanel(int num)
+void UiDiskRPanel::ChangePanel(int num)
 {
 	if (bpanel) bpanel->ChangePanel(num);
 }
@@ -52,7 +52,7 @@ void L3DiskRPanel::ChangePanel(int num)
 /// ファイルリストパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
 /// @return パネル
-L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
+UiDiskFileList *UiDiskRPanel::GetFileListPanel(bool inst) const
 {
 	if (bpanel) return bpanel->GetFileListPanel(inst);
 	else return NULL;
@@ -61,7 +61,7 @@ L3DiskFileList *L3DiskRPanel::GetFileListPanel(bool inst) const
 /// Rawディスクパネルを返す
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
 /// @return パネル
-L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
+UiDiskRawPanel *UiDiskRPanel::GetRawPanel(bool inst) const
 {
 	if (bpanel) return bpanel->GetRawPanel(inst);
 	else return NULL;
@@ -69,15 +69,15 @@ L3DiskRawPanel *L3DiskRPanel::GetRawPanel(bool inst) const
 
 /// フォントをセット
 /// @param [in] font フォント
-void L3DiskRPanel::SetListFont(const wxFont &font)
+void UiDiskRPanel::SetListFont(const wxFont &font)
 {
-	L3DiskDiskAttr *dattr = GetDiskAttrPanel();
+	UiDiskDiskAttr *dattr = GetDiskAttrPanel();
 	if (dattr) dattr->SetListFont(font);
 
-	L3DiskFileList *flist = GetFileListPanel(true);
+	UiDiskFileList *flist = GetFileListPanel(true);
 	if (flist) flist->SetListFont(font);
 
-	L3DiskRawPanel *rlist = GetRawPanel(true);
+	UiDiskRawPanel *rlist = GetRawPanel(true);
 	if (rlist) rlist->SetListFont(font);
 }
 
@@ -86,21 +86,21 @@ void L3DiskRPanel::SetListFont(const wxFont &font)
 //
 // Attach Event
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-wxBEGIN_EVENT_TABLE(L3DiskRBPanel, wxSplitterWindow)
+wxBEGIN_EVENT_TABLE(UiDiskRBPanel, wxSplitterWindow)
 wxEND_EVENT_TABLE()
 #else
-wxBEGIN_EVENT_TABLE(L3DiskRBPanel, wxPanel)
+wxBEGIN_EVENT_TABLE(UiDiskRBPanel, wxPanel)
 wxEND_EVENT_TABLE()
 #endif
 
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-L3DiskRBPanel::L3DiskRBPanel(L3DiskFrame *parentframe, L3DiskRPanel *parentwindow, int selected_window)
+UiDiskRBPanel::UiDiskRBPanel(UiDiskFrame *parentframe, UiDiskRPanel *parentwindow, int selected_window)
                 : wxSplitterWindow(parentwindow, wxID_ANY,
                                    wxDefaultPosition, wxDefaultSize,
                                    wxSP_BORDER | wxSP_LIVE_UPDATE |
                                    wxCLIP_CHILDREN /* | wxSP_NO_XP_THEME */ )
 #else
-L3DiskRBPanel::L3DiskRBPanel(L3DiskFrame *parentframe, L3DiskRPanel *parentwindow, int selected_window)
+UiDiskRBPanel::UiDiskRBPanel(UiDiskFrame *parentframe, UiDiskRPanel *parentwindow, int selected_window)
 				: wxPanel(parentwindow, wxID_ANY,
 				   wxDefaultPosition, wxDefaultSize	)
 #endif
@@ -116,10 +116,10 @@ L3DiskRBPanel::L3DiskRBPanel(L3DiskFrame *parentframe, L3DiskRPanel *parentwindo
 	SetSashGravity(0.0);
 #endif
 
-	filelist = new L3DiskFileList(parentframe, this);
-	rawpanel = new L3DiskRawPanel(parentframe, this);
+	filelist = new UiDiskFileList(parentframe, this);
+	rawpanel = new UiDiskRawPanel(parentframe, this);
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-//	bindump = new L3DiskBinDump(parentframe, this);
+//	bindump = new UiDiskBinDump(parentframe, this);
 	proppanel = new wxPanel(this);
 #endif
 
@@ -149,7 +149,7 @@ L3DiskRBPanel::L3DiskRBPanel(L3DiskFrame *parentframe, L3DiskRPanel *parentwindo
 #endif
 }
 
-void L3DiskRBPanel::ChangePanel(int num)
+void UiDiskRBPanel::ChangePanel(int num)
 {
 	switch(num) {
 	case 1:
@@ -186,14 +186,14 @@ void L3DiskRBPanel::ChangePanel(int num)
 }
 
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
-L3DiskFileList *L3DiskRBPanel::GetFileListPanel(bool inst) const
+UiDiskFileList *UiDiskRBPanel::GetFileListPanel(bool inst) const
 {
 	if (filelist && (inst || filelist->IsShown())) return filelist;
 	else return NULL;
 }
 
 /// @param [in] inst  true:常にポインタを返す / false:リスト非表示ならNULLを返す 
-L3DiskRawPanel *L3DiskRBPanel::GetRawPanel(bool inst) const
+UiDiskRawPanel *UiDiskRBPanel::GetRawPanel(bool inst) const
 {
 	if (rawpanel && (inst || rawpanel->IsShown())) return rawpanel;
 	else return NULL;

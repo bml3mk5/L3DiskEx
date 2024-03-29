@@ -14,19 +14,19 @@
 #include <wx/sizer.h>
 #include <wx/numformatter.h>
 #include "intnamevalid.h"
+#include "../basicfmt/basictemplate.h"
 #include "../basicfmt/basicfmt.h"
 #include "../basicfmt/basictype.h"
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 #include "../utils.h"
 
 
 // Attach Event
 BEGIN_EVENT_TABLE(BasicParamBox, wxDialog)
-//	EVT_LISTBOX(IDC_LIST_BASIC, BasicParamBox::OnBasicChanged)
 	EVT_BUTTON(wxID_OK, BasicParamBox::OnOK)
 END_EVENT_TABLE()
 
-BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, DiskBasic *basic, int show_flags)
+BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskImageDisk *disk, DiskBasic *basic, int show_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 	, VolumeCtrl()
 {
@@ -43,10 +43,6 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	wxStaticText *lbl;
 	wxString str;
 
-//	txtBasic = new wxTextCtrl(this, IDC_TEXT_BASIC, basic->GetBasicDescription(), wxDefaultPosition, wxDefaultSize, wxTE_READONLY);
-//	szrAll->Add(txtBasic, flags);
-
-
 	comBasic = new wxChoice(this, IDC_LIST_BASIC, wxDefaultPosition, wxDefaultSize);
 	szrAll->Add(comBasic, flags);
 
@@ -62,7 +58,6 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 		bool decided = false;
 		for(size_t n = 0; n < params.Count(); n++) {
 			const DiskBasicParam *param = params.Item(n);
-//			if (param == disk->GetDiskBasicParam()) {
 			if (param->GetBasicTypeName() == basic->GetBasicTypeName()) {
 				cur_num = pos;
 				decided = true;

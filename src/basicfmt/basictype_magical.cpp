@@ -57,7 +57,7 @@ double DiskBasicTypeMAGICAL::CheckFat(bool is_formatting)
 	hed[0] = 0;
 	hed[1] = (wxUint8)basic->GetSectorsPerTrackOnBasic();
 	hed[1] |= 0x40;
-	DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 	if (sector) {
 		if (sector->Find(hed, 2) < 0) {
 			return -1.0;
@@ -88,7 +88,7 @@ void DiskBasicTypeMAGICAL::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *it
 	const DiskBasicGroupItem *group = group_items.ItemPtr(0);
 	item->SetStartGroup(0, group->group, basic->GetSubDirGroupSize());
 
-	DiskD88Sector *sector = basic->GetSector(group->track, group->side, group->sector_start);
+	DiskImageSector *sector = basic->GetSector(group->track, group->side, group->sector_start);
 	if (!sector) return;
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -132,7 +132,7 @@ void DiskBasicTypeMAGICAL::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *it
 bool DiskBasicTypeMAGICAL::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// IPL
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	sector = basic->GetSectorFromSectorPos(0);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));	// invert

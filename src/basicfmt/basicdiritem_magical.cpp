@@ -107,13 +107,13 @@ DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic)
 	m_data.Alloc();
 	AllocateItem(NULL);
 }
-DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemXDOSBase(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 	AllocateItem(NULL);
 }
-DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemXDOSBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse, true)
 {
 	m_data.Attach(n_data);
@@ -137,7 +137,7 @@ DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, co
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemMAGICAL::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemMAGICAL::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemXDOSBase::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 	m_data.Attach(n_data);

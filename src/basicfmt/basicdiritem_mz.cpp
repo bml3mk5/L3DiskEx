@@ -46,12 +46,12 @@ DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMZBase(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMZBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	// MZ
@@ -73,7 +73,7 @@ DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int n_num, const DiskBa
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemMZ::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemMZ::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemMZBase::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -327,7 +327,7 @@ void DiskBasicDirItemMZ::PreCalcAllGroups(int &calc_flags, wxUint32 &group_num, 
 	}
 	if (is_brd) {
 		// 開始セクタを得る
-		DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 		if (sector) {
 			// ここが各開始セクタへのポインタマップになっている
 			brd->maps = (wxUint16 *)sector->GetSectorBuffer();

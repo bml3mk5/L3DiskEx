@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_FM_H_
-#define _BASICDIRITEM_FM_H_
+#ifndef BASICDIRITEM_FM_H
+#define BASICDIRITEM_FM_H
 
 #include "basicdiritem_fat8.h"
 
@@ -20,8 +20,8 @@ private:
 
 public:
 	DiskBasicDirItemFM(DiskBasic *basic);
-	DiskBasicDirItemFM(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemFM(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemFM(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemFM(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 };
 
-#endif /* _BASICDIRITEM_FM_H_ */
+#endif /* BASICDIRITEM_FM_H */

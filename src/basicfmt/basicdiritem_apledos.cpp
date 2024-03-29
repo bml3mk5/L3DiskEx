@@ -188,7 +188,7 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic)
 	m_data.Alloc();
 	chain.Alloc();
 }
-DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_start_address = -1;
@@ -196,7 +196,7 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, DiskD88Sect
 
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_start_address = -1;
@@ -212,7 +212,7 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, 
 		chain.SetBasic(basic);
 		wxUint32 grp = GetStartGroup(0);
 		while (grp != 0) {
-			DiskD88Sector *sector = basic->GetSectorFromGroup(grp);
+			DiskImageSector *sector = basic->GetSectorFromGroup(grp);
 			if (!sector) break;
 
 			wxUint8 *buf = sector->GetSectorBuffer();
@@ -232,7 +232,7 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, 
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemAppleDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemAppleDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -492,7 +492,7 @@ int DiskBasicDirItemAppleDOS::RecalcFileSize(DiskBasicGroups &group_items, int o
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -515,7 +515,7 @@ void DiskBasicDirItemAppleDOS::TakeAddressesInFile(DiskBasicGroups &group_items)
 	}
 
 	DiskBasicGroupItem *item = &group_items.Item(0);
-	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
 	if (!sector) return;
 
 	int t1 = GetFileType1();
@@ -602,7 +602,7 @@ void DiskBasicDirItemAppleDOS::ClearChainSector(const DiskBasicDirItem *pitem)
 /// @param [in] gnum   グループ番号
 /// @param [in] data   セクタ内のバッファ
 /// @param [in] pitem  コピー元のアイテム
-void DiskBasicDirItemAppleDOS::SetChainSector(DiskD88Sector *sector, wxUint32 gnum, wxUint8 *data, const DiskBasicDirItem *pitem)
+void DiskBasicDirItemAppleDOS::SetChainSector(DiskImageSector *sector, wxUint32 gnum, wxUint8 *data, const DiskBasicDirItem *pitem)
 {
 	chain.Add((apledos_chain_t *)data);
 	if (chain.Count() > 1) {
@@ -788,7 +788,7 @@ void DiskBasicDirItemAppleDOS::SetFileTypeForAttrDialog(int show_flags, const wx
 		// 外部からインポート時
 		// 拡張子で属性を設定する
 		wxFileName fn(name);
-		const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+		const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 		if (sa) {
 			int ftype = sa->GetType();
 			file_type_1 = ConvToFileType1(ftype);

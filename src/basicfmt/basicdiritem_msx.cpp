@@ -18,11 +18,11 @@ DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
 }
-DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMSDOS(basic, n_sector, n_secpos, n_data)
 {
 }
-DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMSX::DiskBasicDirItemMSX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }

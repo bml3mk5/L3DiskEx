@@ -45,7 +45,7 @@ double DiskBasicTypeFM::CheckFat(bool is_formatting)
 	if (valid_ratio >= 0.0) {
 		// IDのチェック
 		wxUint8 id = basic->GetVariousStringParam(wxT("IDString"))[0];
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetVariousIntegerParam(wxT("IDSectorPosition")));
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(basic->GetVariousIntegerParam(wxT("IDSectorPosition")));
 		if (!(sector && id == sector->Get(0))) {
 			valid_ratio = -1.0;
 		}
@@ -68,7 +68,7 @@ bool DiskBasicTypeFM::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 	fat->Set(0, 0);
 
 	// IDエリアを初期化
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetVariousIntegerParam(wxT("IDSectorPosition")));
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(basic->GetVariousIntegerParam(wxT("IDSectorPosition")));
 	if (sector) {
 		sector->Fill(0);
 		wxCharBuffer id = basic->GetVariousStringParam(wxT("IDString")).To8BitData();

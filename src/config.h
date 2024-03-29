@@ -37,10 +37,12 @@ protected:
 	bool		mIgnoreDateTime;	///< インポートやプロパティ変更時に日時を無視するか
 	bool		mCurrentDateImport;	///< インポート時に現在日時を設定するか
 	bool		mShowInterDirItem;	///< プロパティで内部データをリストで表示するか
+	int			mDirDepth;			///< 一度に処理できるディレクトリの深さ
 	int			mWindowWidth;		///< ウィンドウ幅
 	int			mWindowHeight;		///< ウィンドウ高さ
 	wxString	mTemporaryFolder;	///< テンポラリフォルダのパス
-	wxString	mBinaryEditer;		///< バイナリエディタのパス
+	wxString	mBinaryEditor;		///< バイナリエディタのパス
+	wxString	mTextEditor;		///< テキストエディタのパス
 	wxString	mLanguage;			///< 言語
 	int			mListColumnWidth[LISTCOL_END];	///< ファイルリストの各カラムの幅
 	int			mListColumnPos[LISTCOL_END];	///< ファイルリストの各カラムの位置
@@ -86,6 +88,8 @@ public:
 	bool			IsSetCurrentDateImport() const { return mCurrentDateImport; }
 	void			ShowInterDirItem(bool val) { mShowInterDirItem = val; }
 	bool			DoesShowInterDirItem() const { return mShowInterDirItem; }
+	void			SetDirDepth(int val) { mDirDepth = val; }
+	int				GetDirDepth() const { return mDirDepth; }
 	void			SetWindowWidth(int val) { mWindowWidth = val; }
 	int				GetWindowWidth() const { return mWindowWidth; }
 	void			SetWindowHeight(int val) { mWindowHeight = val; }
@@ -93,8 +97,10 @@ public:
 	void			SetTemporaryFolder(const wxString &val);
 	const wxString &GetTemporaryFolder() const { return mTemporaryFolder; }
 	void			ClearTemporaryFolder() { mTemporaryFolder.Empty(); }
-	void			SetBinaryEditer(const wxString &val);
-	const wxString &GetBinaryEditer() const { return mBinaryEditer; }
+	void			SetBinaryEditor(const wxString &val);
+	const wxString &GetBinaryEditor() const { return mBinaryEditor; }
+	void			SetTextEditor(const wxString &val);
+	const wxString &GetTextEditor() const { return mTextEditor; }
 	void			SetLanguage(const wxString &val) { mLanguage = val; }
 	const wxString &GetLanguage() const { return mLanguage; }
 	void			SetListColumnWidth(int id, int val) { mListColumnWidth[id] = val; }

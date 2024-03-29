@@ -35,10 +35,12 @@ Params::Params()
 #else
 	mShowInterDirItem = false;
 #endif
+	mDirDepth = 20;
 	mWindowWidth = 1000;
 	mWindowHeight = 600;
 	mTemporaryFolder.Empty();
-	mBinaryEditer.Empty();
+	mBinaryEditor.Empty();
+	mTextEditor.Empty();
 	mLanguage.Empty();
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		mListColumnWidth[id]=-1;
@@ -102,9 +104,14 @@ void Params::SetTemporaryFolder(const wxString &val)
 	mTemporaryFolder = wxFileName::FileName(val).GetFullPath();
 }
 
-void Params::SetBinaryEditer(const wxString &val)
+void Params::SetBinaryEditor(const wxString &val)
 {
-	mBinaryEditer = wxFileName::FileName(val).GetFullPath();
+	mBinaryEditor = wxFileName::FileName(val).GetFullPath();
+}
+
+void Params::SetTextEditor(const wxString &val)
+{
+	mTextEditor = wxFileName::FileName(val).GetFullPath();
 }
 
 //
@@ -128,6 +135,8 @@ void Config::SetFileName(const wxString &file)
 void Config::Load()
 {
 	if (ini_file.IsEmpty()) return;
+
+	int ival;
 
 	// load ini file
 	wxFileConfig *ini = new wxFileConfig(wxEmptyString,wxEmptyString,ini_file,wxEmptyString
@@ -170,6 +179,10 @@ void Config::Load()
 	ini->Read(wxT("SetCurrentDateTimeWhenImport"), &mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Read(wxT("ShowInterDirItem"), &mShowInterDirItem);
+	// 一度に処理できるディレクトリの深さ
+	ival = 0;
+	ini->Read(wxT("DirectoriesDepth"), &ival);
+	if (ival >= 1 && ival <= 100) mDirDepth = ival;
 	// ウィンドウ幅
 	ini->Read(wxT("WindowWidth"), &mWindowWidth);
 	// ウィンドウ高さ
@@ -177,20 +190,25 @@ void Config::Load()
 	// テンポラリフォルダのパス
 	ini->Read(wxT("TemporaryFolder"), &mTemporaryFolder);
 	// バイナリエディタのパス
-	ini->Read(wxT("BinaryEditer"), &mBinaryEditer);
+	ini->Read(wxT("BinaryEditor"), &mBinaryEditor);
+	if (mBinaryEditor.IsEmpty()) {
+		ini->Read(wxT("BinaryEditer"), &mBinaryEditor);
+	}
+	// テキストエディタのパス
+	ini->Read(wxT("TextEditor"), &mTextEditor);
 	// 言語
 	ini->Read(wxT("Language"), &mLanguage);
 	// リストのカラム幅
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");
-		key += gL3DiskFileListColumnDefs[id].name;
+		key += gUiDiskFileListColumnDefs[id].name;
 		key += wxT("Width");
 		ini->Read(key, &mListColumnWidth[id]);
 	}
 	// リストのカラム位置
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");
-		key += gL3DiskFileListColumnDefs[id].name;
+		key += gUiDiskFileListColumnDefs[id].name;
 		key += wxT("Pos");
 		ini->Read(key, &mListColumnPos[id]);
 	}
@@ -248,6 +266,8 @@ void Config::Save()
 	ini->Write(wxT("SetCurrentDateTimeWhenImport"), mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Write(wxT("ShowInterDirItem"), mShowInterDirItem);
+	// 一度に処理できるディレクトリの深さ
+	ini->Write(wxT("DirectoriesDepth"), mDirDepth);
 	// ウィンドウ幅
 	ini->Write(wxT("WindowWidth"), mWindowWidth);
 	// ウィンドウ高さ
@@ -255,20 +275,23 @@ void Config::Save()
 	// テンポラリフォルダのパス
 	ini->Write(wxT("TemporaryFolder"), mTemporaryFolder);
 	// バイナリエディタのパス
-	ini->Write(wxT("BinaryEditer"), mBinaryEditer);
+	ini->Write(wxT("BinaryEditor"), mBinaryEditor);
+	ini->DeleteEntry(wxT("BinaryEditer"));
+	// テキストエディタのパス
+	ini->Write(wxT("TextEditor"), mTextEditor);
 	// 言語
 	ini->Write(wxT("Language"), mLanguage);
 	// リストのカラム幅
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");
-		key += gL3DiskFileListColumnDefs[id].name;
+		key += gUiDiskFileListColumnDefs[id].name;
 		key += wxT("Width");
 		ini->Write(key, mListColumnWidth[id]);
 	}
 	// リストのカラム位置
 	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
 		wxString key = wxT("ListColumn");
-		key += gL3DiskFileListColumnDefs[id].name;
+		key += gUiDiskFileListColumnDefs[id].name;
 		key += wxT("Pos");
 		ini->Write(key, mListColumnPos[id]);
 	}

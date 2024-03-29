@@ -17,21 +17,21 @@
 #include "../basicfmt/basicfat.h"
 
 
-class L3DiskFrame;
-class L3DiskFatAreaFrame;
-class L3DiskFatAreaPanel;
+class UiDiskFrame;
+class UiDiskFatAreaFrame;
+class UiDiskFatAreaPanel;
 class DiskBasicGroups;
 
 /// FAT使用状況ウィンドウ
-class L3DiskFatAreaFrame: public wxFrame
+class UiDiskFatAreaFrame: public wxFrame
 {
 private:
-	L3DiskFatAreaPanel *panel;
+	UiDiskFatAreaPanel *panel;
 
 public:
 
-    L3DiskFatAreaFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size);
-	~L3DiskFatAreaFrame();
+    UiDiskFatAreaFrame(UiDiskFrame *parent, const wxString& title, const wxSize& size);
+	~UiDiskFatAreaFrame();
 
 	void OnClose(wxCommandEvent& event);
 	void OnQuit(wxCommandEvent& event);
@@ -50,15 +50,15 @@ public:
 	};
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_NO_COPY_CLASS(L3DiskFatAreaFrame);
+	wxDECLARE_NO_COPY_CLASS(UiDiskFatAreaFrame);
 };
 
 
 /// FAT使用状況 内部パネル
-class L3DiskFatAreaPanel : public wxScrolled<wxPanel>
+class UiDiskFatAreaPanel : public wxScrolled<wxPanel>
 {
 private:
-	L3DiskFatAreaFrame *frame;
+	UiDiskFatAreaFrame *frame;
 
 	wxUint32   offset;	///< 開始グループ番号
 	wxArrayInt datas;	///< 各グループの状態
@@ -80,8 +80,8 @@ private:
 	void ClearGroupBase();
 
 public:
-	L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent);
-	~L3DiskFatAreaPanel();
+	UiDiskFatAreaPanel(UiDiskFatAreaFrame *parent);
+	~UiDiskFatAreaPanel();
 
 	void OnPaint(wxPaintEvent& event);
 	void OnSize(wxSizeEvent& event);
@@ -94,7 +94,7 @@ public:
 	void ClearGroup();
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_NO_COPY_CLASS(L3DiskFatAreaPanel);
+	wxDECLARE_NO_COPY_CLASS(UiDiskFatAreaPanel);
 };
 
 

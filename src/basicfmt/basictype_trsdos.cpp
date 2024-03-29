@@ -146,7 +146,7 @@ double DiskBasicTypeTRSDOS::CheckFat(bool is_formatting)
 
 	// GATエリア
 	int sec = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 	if (!sector) {
 		return -1.0;
 	}
@@ -179,7 +179,7 @@ double DiskBasicTypeTRSDOS::ParseParamOnDisk(bool is_formatting)
 
 	// GATエリアにあるボリューム名
 	int sec = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 	if (!sector) {
 		return -1.0;
 	}
@@ -245,7 +245,7 @@ bool DiskBasicTypeTRSDOS::CalcGroupsOnRootDirectory(int start_sector, int end_se
 //		voldir.Add((int)group_num);
 
 		for(int ss = 0; ss < basic->GetSectorsPerGroup(); ss++) {
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
+			DiskImageSector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
 			if (!sector) {
 				valid = false;
 				break;
@@ -440,7 +440,7 @@ wxUint32 DiskBasicTypeTRSDOS::AllocChainSector(int idx, DiskBasicDirItem *item)
 	int st_pos = GetStartSectorFromGroup(gnum);
 	int ed_pos = GetEndSectorFromGroup(gnum, 0, st_pos, 0, 0);
 	for(int sec = st_pos; sec <= ed_pos; sec++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 		if (!sector) {
 			return INVALID_GROUP_NUMBER;
 		}
@@ -479,7 +479,7 @@ int DiskBasicTypeTRSDOS::ChainDirectoryGroups(DiskBasicDirItem *item, DiskBasicG
 		DiskBasicGroupItem *item = &group_items.Item(i);
 		if (item->group != group_num) {
 			group_num = item->group;
-			DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+			DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 			trsdos_dir_ptr_t *curr = (trsdos_dir_ptr_t *)sector->GetSectorBuffer();
 
 			curr->prev_block = prev_group_num != INVALID_GROUP_NUMBER ? prev_group_num : 0;
@@ -729,7 +729,7 @@ void DiskBasicTypeTRSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *ite
 
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskD88Sector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer(4);
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
@@ -771,7 +771,7 @@ void DiskBasicTypeTRSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *ite
 /// フォーマット時セクタデータを指定コードで埋める
 /// @param[in] track  トラック
 /// @param[in] sector セクタ
-void DiskBasicTypeTRSDOS::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeTRSDOS::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -780,7 +780,7 @@ void DiskBasicTypeTRSDOS::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 /// フォーマット時セクタデータを埋めた後の個別処理
 bool DiskBasicTypeTRSDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	// GAT
 	int st_pos = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + basic->GetDirStartSector() - 2;
@@ -938,7 +938,7 @@ void DiskBasicTypeTRSDOS::GetIdentifiedData(DiskBasicIdentifiedData &data) const
 {
 	// GATエリア
 	int sec = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 	if (!sector) {
 		return;
 	}
@@ -965,7 +965,7 @@ void DiskBasicTypeTRSDOS::SetIdentifiedData(const DiskBasicIdentifiedData &data)
 {
 	// GATエリア
 	int sec = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic();
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(sec);
 	if (!sector) {
 		return;
 	}
@@ -1086,7 +1086,7 @@ bool DiskBasicTypeTRSD23::AssignRootDirectory(int start_sector, int end_sector, 
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeTRSD23::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
-	int groups = 0; 
+//	int groups = 0;
 
 	int  rc = 0;
 //	bool first_group = (flags == ALLOCATE_GROUPS_NEW);
@@ -1108,7 +1108,7 @@ int DiskBasicTypeTRSD23::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 		basic->GetNumsFromGroup(group_num, 0, basic->GetSectorSize(), sizeremain, group_items);
 
 		sizeremain -= bytes_per_group;
-		groups++;
+//		groups++;
 
 		limit--;
 	}
@@ -1238,7 +1238,7 @@ bool DiskBasicTypeTRSD23::AdditionalProcessOnFormatted(const DiskBasicIdentified
 		return false;
 	}
 
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	// GAT
 	int st_pos = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + basic->GetDirStartSector() - 2;
@@ -1362,7 +1362,7 @@ int DiskBasicTypeTRSD13::AdjustPositionAssigningDirectory(int pos)
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeTRSD13::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
-	int groups = 0; 
+//	int groups = 0;
 
 	int  rc = 0;
 //	bool first_group = (flags == ALLOCATE_GROUPS_NEW);
@@ -1384,7 +1384,7 @@ int DiskBasicTypeTRSD13::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 		basic->GetNumsFromGroup(group_num, 0, basic->GetSectorSize(), sizeremain, group_items);
 
 		sizeremain -= bytes_per_group;
-		groups++;
+//		groups++;
 
 		limit--;
 	}
@@ -1448,7 +1448,7 @@ bool DiskBasicTypeTRSD13::AdditionalProcessOnFormatted(const DiskBasicIdentified
 		return false;
 	}
 
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	// GAT
 	int st_pos = basic->GetManagedTrackNumber() * basic->GetSectorsPerTrackOnBasic() * basic->GetSidesPerDiskOnBasic() + basic->GetDirStartSector() - 2;

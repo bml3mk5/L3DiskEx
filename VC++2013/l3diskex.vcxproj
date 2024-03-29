@@ -1,0 +1,710 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DLLDebug|Win32">
+      <Configuration>DLLDebug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DLLDebug|x64">
+      <Configuration>DLLDebug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DLLRelease|Win32">
+      <Configuration>DLLRelease</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DLLRelease|x64">
+      <Configuration>DLLRelease</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\src\res\l3diskex.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\basicfmt\basiccategory.cpp" />
+    <ClCompile Include="..\src\basicfmt\basiccommon.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdir.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_amiga.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_apledos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_c1541.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_cdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_cpm.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_dos80.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_falcom.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fat8.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_flex.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fm.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_fp.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_frost.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_hu68k.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_l31s.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_l32d.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_losa.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_m68fdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_magical.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_msdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_msx.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz_base.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_mz_fdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_n88.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_os9.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_prodos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_sdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_tfdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_trsdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_x1hu.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicdiritem_xdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicerror.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicfat.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicfmt.cpp" />
+    <ClCompile Include="..\src\basicfmt\basicparam.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictemplate.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_amiga.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_apledos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_c1541.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_cdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_cpm.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_dos80.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_falcom.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fat12.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fat16.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fat8.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fat_base.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_flex.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fm.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_fp.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_frost.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_hu68k.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_l31s.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_l32d.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_m68fdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_magical.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_mdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_msdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_msx.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_mz.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_mz_base.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_mz_fdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_n88.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_os9.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_pa.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_prodos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_sdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_smc.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_tfdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_trsdos.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_x1hu.cpp" />
+    <ClCompile Include="..\src\basicfmt\basictype_xdos.cpp" />
+    <ClCompile Include="..\src\charcodes.cpp" />
+    <ClCompile Include="..\src\common.cpp" />
+    <ClCompile Include="..\src\config.cpp" />
+    <ClCompile Include="..\src\diskimg\disk2mgparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskadcparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskcqmparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskd88.cpp" />
+    <ClCompile Include="..\src\diskimg\diskd88parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskd88writer.cpp" />
+    <ClCompile Include="..\src\diskimg\diskdimparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskdmkparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskdskparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskfdiparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskg64parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskhfeparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskimage.cpp" />
+    <ClCompile Include="..\src\diskimg\diskimagecreator.cpp" />
+    <ClCompile Include="..\src\diskimg\diskimdparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskjv3parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskparam.cpp" />
+    <ClCompile Include="..\src\diskimg\diskparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskplainparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskplainwriter.cpp" />
+    <ClCompile Include="..\src\diskimg\diskresult.cpp" />
+    <ClCompile Include="..\src\diskimg\diskstrparser.cpp" />
+    <ClCompile Include="..\src\diskimg\disktd0parser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskvfdparser.cpp" />
+    <ClCompile Include="..\src\diskimg\diskwriter.cpp" />
+    <ClCompile Include="..\src\diskimg\fileparam.cpp" />
+    <ClCompile Include="..\src\logging.cpp" />
+    <ClCompile Include="..\src\main.cpp" />
+    <ClCompile Include="..\src\parambase.cpp" />
+    <ClCompile Include="..\src\result.cpp" />
+    <ClCompile Include="..\src\ui\basicparambox.cpp" />
+    <ClCompile Include="..\src\ui\basicselbox.cpp" />
+    <ClCompile Include="..\src\ui\configbox.cpp" />
+    <ClCompile Include="..\src\ui\diskparambox.cpp" />
+    <ClCompile Include="..\src\ui\diskreplacebox.cpp" />
+    <ClCompile Include="..\src\ui\fileselbox.cpp" />
+    <ClCompile Include="..\src\ui\fontminibox.cpp" />
+    <ClCompile Include="..\src\ui\intnamebox.cpp" />
+    <ClCompile Include="..\src\ui\intnamevalid.cpp" />
+    <ClCompile Include="..\src\ui\mymenu.cpp" />
+    <ClCompile Include="..\src\ui\rawexpbox.cpp" />
+    <ClCompile Include="..\src\ui\rawparambox.cpp" />
+    <ClCompile Include="..\src\ui\rawsectorbox.cpp" />
+    <ClCompile Include="..\src\ui\rawtrackbox.cpp" />
+    <ClCompile Include="..\src\ui\uibindump.cpp" />
+    <ClCompile Include="..\src\ui\uicdlistctrl.cpp" />
+    <ClCompile Include="..\src\ui\uicdtreectrl.cpp" />
+    <ClCompile Include="..\src\ui\uiclistctrl.cpp" />
+    <ClCompile Include="..\src\ui\uictreectrl.cpp" />
+    <ClCompile Include="..\src\ui\uidiskattr.cpp" />
+    <ClCompile Include="..\src\ui\uidisklist.cpp" />
+    <ClCompile Include="..\src\ui\uifatarea.cpp" />
+    <ClCompile Include="..\src\ui\uifilelist.cpp" />
+    <ClCompile Include="..\src\ui\uimainframe.cpp" />
+    <ClCompile Include="..\src\ui\uimainprocess.cpp" />
+    <ClCompile Include="..\src\ui\uirawdisk.cpp" />
+    <ClCompile Include="..\src\ui\uirpanel.cpp" />
+    <ClCompile Include="..\src\utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\basicfmt\basiccategory.h" />
+    <ClInclude Include="..\src\basicfmt\basiccommon.h" />
+    <ClInclude Include="..\src\basicfmt\basicdir.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_amiga.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_apledos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_c1541.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_cdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_cpm.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_dos80.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_falcom.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fat8.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_flex.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fm.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_fp.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_frost.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_hu68k.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_l31s.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_l32d.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_losa.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_m68fdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_magical.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_msdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_msx.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz_base.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_mz_fdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_n88.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_os9.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_prodos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_sdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_tfdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_trsdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_x1hu.h" />
+    <ClInclude Include="..\src\basicfmt\basicdiritem_xdos.h" />
+    <ClInclude Include="..\src\basicfmt\basicerror.h" />
+    <ClInclude Include="..\src\basicfmt\basicfat.h" />
+    <ClInclude Include="..\src\basicfmt\basicfmt.h" />
+    <ClInclude Include="..\src\basicfmt\basicparam.h" />
+    <ClInclude Include="..\src\basicfmt\basictemplate.h" />
+    <ClInclude Include="..\src\basicfmt\basictype.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_amiga.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_apledos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_c1541.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_cdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_cpm.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_dos80.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_falcom.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fat12.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fat16.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fat8.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fat_base.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_flex.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fm.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_fp.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_frost.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_hu68k.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_l31s.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_l32d.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_m68fdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_magical.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_mdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_msdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_msx.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_mz.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_mz_base.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_mz_fdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_n88.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_os9.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_pa.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_prodos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_sdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_smc.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_tfdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_trsdos.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_x1hu.h" />
+    <ClInclude Include="..\src\basicfmt\basictype_xdos.h" />
+    <ClInclude Include="..\src\charcodes.h" />
+    <ClInclude Include="..\src\common.h" />
+    <ClInclude Include="..\src\config.h" />
+    <ClInclude Include="..\src\diskimg\disk2mgparser.h" />
+    <ClInclude Include="..\src\diskimg\diskadcparser.h" />
+    <ClInclude Include="..\src\diskimg\diskcqmparser.h" />
+    <ClInclude Include="..\src\diskimg\diskd88.h" />
+    <ClInclude Include="..\src\diskimg\diskd88parser.h" />
+    <ClInclude Include="..\src\diskimg\diskd88writer.h" />
+    <ClInclude Include="..\src\diskimg\diskdimparser.h" />
+    <ClInclude Include="..\src\diskimg\diskdmkparser.h" />
+    <ClInclude Include="..\src\diskimg\diskdskparser.h" />
+    <ClInclude Include="..\src\diskimg\diskfdiparser.h" />
+    <ClInclude Include="..\src\diskimg\diskg64parser.h" />
+    <ClInclude Include="..\src\diskimg\diskhfeparser.h" />
+    <ClInclude Include="..\src\diskimg\diskimage.h" />
+    <ClInclude Include="..\src\diskimg\diskimagecreator.h" />
+    <ClInclude Include="..\src\diskimg\diskimdparser.h" />
+    <ClInclude Include="..\src\diskimg\diskjv3parser.h" />
+    <ClInclude Include="..\src\diskimg\diskparam.h" />
+    <ClInclude Include="..\src\diskimg\diskparser.h" />
+    <ClInclude Include="..\src\diskimg\diskplainparser.h" />
+    <ClInclude Include="..\src\diskimg\diskplainwriter.h" />
+    <ClInclude Include="..\src\diskimg\diskresult.h" />
+    <ClInclude Include="..\src\diskimg\diskstrparser.h" />
+    <ClInclude Include="..\src\diskimg\disktd0parser.h" />
+    <ClInclude Include="..\src\diskimg\diskvfdparser.h" />
+    <ClInclude Include="..\src\diskimg\diskwriter.h" />
+    <ClInclude Include="..\src\diskimg\fileparam.h" />
+    <ClInclude Include="..\src\logging.h" />
+    <ClInclude Include="..\src\main.h" />
+    <ClInclude Include="..\src\parambase.h" />
+    <ClInclude Include="..\src\result.h" />
+    <ClInclude Include="..\src\ui\basicparambox.h" />
+    <ClInclude Include="..\src\ui\basicselbox.h" />
+    <ClInclude Include="..\src\ui\configbox.h" />
+    <ClInclude Include="..\src\ui\diskparambox.h" />
+    <ClInclude Include="..\src\ui\diskreplacebox.h" />
+    <ClInclude Include="..\src\ui\fileselbox.h" />
+    <ClInclude Include="..\src\ui\fontminibox.h" />
+    <ClInclude Include="..\src\ui\intnamebox.h" />
+    <ClInclude Include="..\src\ui\intnamevalid.h" />
+    <ClInclude Include="..\src\ui\mymenu.h" />
+    <ClInclude Include="..\src\ui\rawexpbox.h" />
+    <ClInclude Include="..\src\ui\rawparambox.h" />
+    <ClInclude Include="..\src\ui\rawsectorbox.h" />
+    <ClInclude Include="..\src\ui\rawtrackbox.h" />
+    <ClInclude Include="..\src\ui\uibindump.h" />
+    <ClInclude Include="..\src\ui\uicdlistctrl.h" />
+    <ClInclude Include="..\src\ui\uicdtreectrl.h" />
+    <ClInclude Include="..\src\ui\uiclistctrl.h" />
+    <ClInclude Include="..\src\ui\uicommon.h" />
+    <ClInclude Include="..\src\ui\uictreectrl.h" />
+    <ClInclude Include="..\src\ui\uidiskattr.h" />
+    <ClInclude Include="..\src\ui\uidisklist.h" />
+    <ClInclude Include="..\src\ui\uifatarea.h" />
+    <ClInclude Include="..\src\ui\uifilelist.h" />
+    <ClInclude Include="..\src\ui\uimainframe.h" />
+    <ClInclude Include="..\src\ui\uimainprocess.h" />
+    <ClInclude Include="..\src\ui\uirawdisk.h" />
+    <ClInclude Include="..\src\ui\uirpanel.h" />
+    <ClInclude Include="..\src\utils.h" />
+    <ClInclude Include="..\src\version.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\data\basic_types.xml" />
+    <None Include="..\data\char_codes.xml" />
+    <None Include="..\data\disk_types.xml" />
+    <None Include="..\data\file_types.xml" />
+    <None Include="..\lang\ja\l3diskex.mo" />
+    <None Include="..\src\res\fd_5inch.ico" />
+    <None Include="..\src\res\l3diskex.ico" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{78F03D52-24EA-44BD-BAAF-DC918E22E3CD}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>l3diskex</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="wxwidgets.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Configuration)\$(Platform)\</IntDir>
+    <PlatformToolset>v120_xp</PlatformToolset>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(wxWidgetsStaticDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wxWidgetsStaticLibDirWin32);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsDebug);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(wxWidgetsDynamicDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wxWidgetsDynamicLibDirWin32);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsDebug);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(wxWidgetsStaticDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wxWidgetsStaticLibDirX64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsDebug);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLLDebug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(wxWidgetsDynamicDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(wxWidgetsDynamicLibDirX64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsDebug);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(wxWidgetsStaticDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(wxWidgetsStaticLibDirWin32);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsRelease);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(wxWidgetsDynamicDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(wxWidgetsDynamicLibDirWin32);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsRelease);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(wxWidgetsStaticDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(wxWidgetsStaticLibDirX64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsRelease);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DLLRelease|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(wxWidgetsDynamicDefs);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(wxWidgetsDynamicLibDirX64);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(wxWidgetsLibsRelease);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(wxWidgetsIncludeDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;$(Platform);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PostBuildEvent>
+      <Command>post_build.bat "$(SolutionDir)" "$(Configuration)\$(Platform)"</Command>
+    </PostBuildEvent>
+    <Manifest>
+      <AdditionalManifestFiles>
+      </AdditionalManifestFiles>
+      <EnableDPIAwareness>true</EnableDPIAwareness>
+    </Manifest>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

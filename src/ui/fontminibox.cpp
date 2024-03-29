@@ -22,7 +22,7 @@ END_EVENT_TABLE()
 FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_font)
 	: wxDialog(parent, id, _("Font"), wxDefaultPosition, wxDefaultSize, wxCAPTION)
 {
-	this->default_font = default_font;
+	mDefaultFont = default_font;
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	wxSize size;
@@ -63,6 +63,9 @@ int FontMiniBox::ShowModal()
 void FontMiniBox::init_dialog()
 {
 	mFontNames = wxFontEnumerator::GetFacenames();
+	if (mFontNames.Index(mDefaultFont.GetFaceName()) == wxNOT_FOUND) {
+		mFontNames.Add(mDefaultFont.GetFaceName());
+	}
 	mFontNames.Sort();
 
 	wxString size;
@@ -111,6 +114,6 @@ void FontMiniBox::OnTextSize(wxCommandEvent& event)
 
 void FontMiniBox::OnButtonDefault(wxCommandEvent& event)
 {
-	SetFontName(default_font.GetFaceName());
-	SetFontSize(default_font.GetPointSize());
+	SetFontName(mDefaultFont.GetFaceName());
+	SetFontSize(mDefaultFont.GetPointSize());
 }

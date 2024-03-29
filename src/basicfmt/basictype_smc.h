@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_SMC_H_
-#define _BASICTYPE_SMC_H_
+#ifndef BASICTYPE_SMC_H
+#define BASICTYPE_SMC_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -24,4 +24,4 @@ public:
 	DiskBasicTypeSMC(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
 };
 
-#endif /* _BASICTYPE_SMC_H_ */
+#endif /* BASICTYPE_SMC_H */

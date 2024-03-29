@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKPLAIN_WRITER_H_
-#define _DISKPLAIN_WRITER_H_
+#ifndef DISKPLAIN_WRITER_H
+#define DISKPLAIN_WRITER_H
 
 #include "../common.h"
 #include "diskwriter.h"
@@ -14,22 +14,22 @@
 
 class wxOutputStream;
 class DiskWriter;
-class DiskD88;
-class DiskD88Disk;
+class DiskImage;
+class DiskImageDisk;
 class DiskResult;
 
 /// べたディスクライター
-class DiskPlainWriter : public DiskInhWriterBase
+class DiskPlainWriter : public DiskImageWriter
 {
 private:
 	/// ディスク1つを保存
-	int SaveDisk(DiskD88Disk *disk, int side_number, wxOutputStream *ostream);
+	int SaveDisk(DiskImageDisk *disk, int side_number, wxOutputStream *ostream);
 
 public:
 	DiskPlainWriter(DiskWriter *dw_, DiskResult *result_);
 
 	/// ストリームの内容をファイルに保存
-	int SaveDisk(DiskD88 *image, int disk_number, int side_number, wxOutputStream *ostream);
+	int SaveDisk(DiskImage *image, int disk_number, int side_number, wxOutputStream *ostream);
 };
 
-#endif /* _DISKPLAIN_WRITER_H_ */
+#endif /* DISKPLAIN_WRITER_H */

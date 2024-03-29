@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_OS9_H_
-#define _BASICDIRITEM_OS9_H_
+#ifndef BASICDIRITEM_OS9_H
+#define BASICDIRITEM_OS9_H
 
 #include "basicdiritem.h"
 
@@ -39,7 +39,7 @@ class DiskBasicDirItemOS9FD
 {
 private:
 	DiskBasic			*basic;
-	DiskD88Sector		*sector;
+	DiskImageSector		*sector;
 	directory_os9_fd_t	*fd;
 	wxUint32			mylsn;
 	bool				fd_ownmake;
@@ -60,7 +60,7 @@ public:
 	void Dup(const DiskBasicDirItemOS9FD &src);
 #endif
 	/// @brief ポインタをセット
-	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd);
+	void Set(DiskBasic *n_basic, DiskImageSector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd);
 	/// @brief FDのメモリ確保
 	void Alloc();
 	/// @brief FDをクリア
@@ -156,11 +156,11 @@ private:
 
 public:
 	DiskBasicDirItemOS9(DiskBasic *basic);
-	DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemOS9(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -197,7 +197,7 @@ public:
 	virtual void	GetExtraGroups(wxArrayInt &arr) const;
 
 	/// @brief チェイン用のセクタをセット
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 
 	/// @brief アイテムが作成日時を持っているか
 	virtual bool	HasCreateDateTime() const { return true; }
@@ -292,4 +292,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_OS9_H_ */
+#endif /* BASICDIRITEM_OS9_H */

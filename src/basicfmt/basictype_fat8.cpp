@@ -66,7 +66,7 @@ double DiskBasicTypeFAT8::CheckFat(bool is_formatting)
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeFAT8::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeFAT8::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	if (track->GetTrackNumber() == basic->GetManagedTrackNumber()) {
 		// ファイル管理エリアの場合

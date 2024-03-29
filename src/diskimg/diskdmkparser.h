@@ -5,46 +5,44 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKDMK_PARSER_H_
-#define _DISKDMK_PARSER_H_
+#ifndef DISKDMK_PARSER_H
+#define DISKDMK_PARSER_H
 
 #include "../common.h"
+#include "diskparser.h"
 
 
 class wxInputStream;
-class DiskD88Track;
-class DiskD88Disk;
-class DiskD88File;
+class DiskImageTrack;
+class DiskImageDisk;
+class DiskImageFile;
 class DiskResult;
 class FileParamFormat;
 
 /// TRS-80 DMKディスクパーサー
-class DiskDmkParser
+class DiskDmkParser : public DiskImageParser
 {
 private:
-	DiskD88File	*file;
-	short		mod_flags;
-	DiskResult	*result;
-//	int			is_extended;
-
 	/// データマークをさがす
 	bool FindDataMark(wxInputStream &istream, int sector_size, bool double_density, int &deleted);
 
 	/// セクタデータの作成
-	wxUint32 ParseSector(wxInputStream &istream, int sector_nums, int flags, DiskD88Track *track);
+	wxUint32 ParseSector(wxInputStream &istream, int sector_nums, int flags, DiskImageTrack *track);
 	/// トラックデータの作成
-	wxUint32 ParseTrack(wxInputStream &istream, int track_size, int offset_pos, wxUint32 offset, DiskD88Disk *disk);
+	wxUint32 ParseTrack(wxInputStream &istream, int track_size, int offset_pos, wxUint32 offset, DiskImageDisk *disk);
 	/// ディスクの解析
 	wxUint32 ParseDisk(wxInputStream &istream);
 
+	int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
+
 public:
-	DiskDmkParser(DiskD88File *file, short mod_flags, DiskResult *result);
+	DiskDmkParser(DiskImageFile *file, short mod_flags, DiskResult *result);
 	~DiskDmkParser();
 
 	/// TRS-80 DMKファイルかどうかをチェック
 	int Check(wxInputStream &istream);
 	/// TRS-80 DMKファイルを解析
-	int Parse(wxInputStream &istream);
+	int Parse(wxInputStream &istream, const DiskParam *disk_param = NULL);
 };
 
-#endif /* _DISKDMK_PARSER_H_ */
+#endif /* DISKDMK_PARSER_H */

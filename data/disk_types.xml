@@ -202,6 +202,7 @@
 		<Density>0x00</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
+			<Type>MSDOS-1D-8</Type>
 			<Type>CPM86-1D-512-2</Type>
 			<Type>CPM86-1D-512-4</Type>
 			<Type>CPM86-1D-AT</Type>
@@ -222,6 +223,19 @@
 		</DiskBasicTypes>
 		<DensityName>1D</DensityName>
 		<Description>[TRS-80 model III]</Description>
+	</DiskType>
+	<DiskType name="1D-40-9-1">
+		<SidesPerDisk>1</SidesPerDisk>
+		<TracksPerSide>40</TracksPerSide>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<SectorSize>512</SectorSize>
+		<Density>0x00</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>MSDOS-1D-9</Type>
+		</DiskBasicTypes>
+		<DensityName>1D</DensityName>
+		<DensityName lang="ja">1D</DensityName>
 	</DiskType>
 	<DiskType name="1D-40-10-1">
 		<SidesPerDisk>1</SidesPerDisk>
@@ -450,7 +464,7 @@
 		<Density>0x00</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
-			<Type>MSDOS-2D</Type>
+			<Type>MSDOS-2D-8</Type>
 			<Type>CPM86-2D-512-2</Type>
 			<Type>CPM86-2D-512-4</Type>
 			<Type>CPM68-2D-512-2</Type>
@@ -469,7 +483,7 @@
 		<Density>0x00</Density>
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
-			<Type>MSDOS-2D</Type>
+			<Type>MSDOS-2D-9</Type>
 			<Type>CDOS2-2D</Type>
 			<Type>LOSA-2D</Type>
 		</DiskBasicTypes>
@@ -869,6 +883,7 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>MSX-1DD8</Type>
+			<Type>MSDOS-1DD-8</Type>
 		</DiskBasicTypes>
 		<DensityName>1DD</DensityName>
 		<DensityName lang="ja">1DD</DensityName>
@@ -884,6 +899,7 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>MSX-1DD9</Type>
+			<Type>MSDOS-1DD-9</Type>
 		</DiskBasicTypes>
 		<DensityName>1DD</DensityName>
 		<DensityName lang="ja">1DD</DensityName>
@@ -949,6 +965,9 @@
 		<DiskBasicTypes>
 			<Type>MSX-2DD8</Type>
 			<Type>MSX-1DD8</Type>
+			<Type>CPM98-2DD</Type>
+			<Type>MSD98-2DD-8</Type>
+			<Type>MSDOS-2DD-8</Type>
 			<Type>CPM86-2DD-8-512-4</Type>
 			<Type>CPM86-2DD-8-512-8</Type>
 			<Type>CPM86-1DD-8-512-4</Type>
@@ -956,8 +975,8 @@
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
-		<Description>[MSX]</Description>
-		<Description lang="ja">[MSX]</Description>
+		<Description>[MSX / MS-DOS]</Description>
+		<Description lang="ja">[MSX / MS-DOS]</Description>
 	</DiskType>
 	<DiskType name="2DD-80-9-1">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -969,7 +988,8 @@
 		<DiskBasicTypes>
 			<Type>MSX-1DD9</Type>
 			<Type>MSX-2DD9</Type>
-			<Type>MSDOS-2DD</Type>
+			<Type>MSD98-2DD-9</Type>
+			<Type>MSDOS-2DD-9</Type>
 			<Type>PCPM-1DD-9-512</Type>
 			<Type>PCPM-2DD-9-512</Type>
 			<Type>CDOS2-2DD</Type>
@@ -1343,6 +1363,7 @@
 			<Type>CPMSORD-2HD</Type>
 			<Type>CPMFM-2HD</Type>
 			<Type>CPMS1-2HD</Type>
+			<Type>N88-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
@@ -1361,6 +1382,7 @@
 			<Type>OS9-2HD</Type>
 			<Type>L3S1-2HD</Type>
 			<Type>CPMS1-2HD</Type>
+			<Type>N88-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
@@ -1447,6 +1469,7 @@
 		<DiskBasicTypes>
 			<Type p="major">HU68K-2HD</Type>
 			<Type p="major">MSD98-2HD</Type>
+			<Type p="major">MSDFM-2HD</Type>
 			<Type>CDOS2-2HD</Type>
 		</DiskBasicTypes>
 		<DensityName>2HD</DensityName>

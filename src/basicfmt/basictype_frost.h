@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_FROST_H_
-#define _BASICTYPE_FROST_H_
+#ifndef BASICTYPE_FROST_H
+#define BASICTYPE_FROST_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -78,7 +78,7 @@ public:
 	/// @name format
 	//@{
 	/// @brief セクタデータを指定コードで埋める
-	void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
+	void	FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	/// @brief セクタデータを埋めた後の個別処理
 	bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
@@ -104,4 +104,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_FROST_H_ */
+#endif /* BASICTYPE_FROST_H */

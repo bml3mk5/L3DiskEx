@@ -91,7 +91,7 @@ double DiskBasicTypeN88::CheckFat(bool is_formatting)
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeN88::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -100,9 +100,9 @@ void DiskBasicTypeN88::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 /// フォーマット FAT予約済みをセット
 bool DiskBasicTypeN88::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Track *track = NULL;
-	DiskD88Sectors *sectors = NULL;
-	DiskD88Sector *sector = NULL;
+	DiskImageTrack *track = NULL;
+	DiskImageSectors *sectors = NULL;
+	DiskImageSector *sector = NULL;
 
 	// FAT,DIRエリア
 	track = basic->GetTrack(basic->GetManagedTrackNumber(), basic->GetFatSideNumber());

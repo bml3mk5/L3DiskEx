@@ -5,11 +5,12 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _L3DISKUTILS_H_
-#define _L3DISKUTILS_H_
+#ifndef DISKUTILS_H
+#define DISKUTILS_H
 
 #include "common.h"
 #include <wx/string.h>
+#include <wx/stopwatch.h>
 #include "charcodes.h"
 
 
@@ -39,6 +40,8 @@ public:
 	void Replace(wxUint8 src, wxUint8 dst);
 	/// @brief バッファのポインタを返す
 	wxUint8 *GetData() { return data; }
+	/// @brief バッファの指定位置のポインタを返す
+	wxUint8 *GetData(size_t pos) { return &data[pos]; }
 	/// @brief データサイズを返す
 	size_t GetSize() const { return size; }
 	/// @brief バッファサイズを返す
@@ -106,6 +109,26 @@ public:
 	int Text(const wxUint8 *buffer, size_t bufsize, const wxString &char_code, wxString &str, bool invert);
 };
 
+//////////////////////////////////////////////////////////////////////
+
+/// ストップウォッチ
+class StopWatch : public wxStopWatch
+{
+private:
+	int  m_id;
+	bool m_now_wait_cursor;
+
+public:
+	StopWatch();
+	void Busy();
+	void Restart();
+	void Finish();
+	int GetID() const { return m_id; }
+	void SetID(int id) { m_id = id; }
+};
+
+//////////////////////////////////////////////////////////////////////
+
 /// @brief 時間構造体を日時データに変換(MS-DOS)
 void	ConvTmToDateTime(const TM &tm, wxUint8 *date, wxUint8 *time);
 /// @brief 日時データを構造体に変換(MS-DOS)
@@ -159,7 +182,10 @@ bool	IsUpperString(const wxString &str);
 /// @brief 2のn乗かどうか
 bool	IsPowerOfTwo(wxUint32 val, int digit);
 
-}; /* namespace L3DiskUtils */
+/// @brief CRC32を計算する
+wxUint32 CRC32(wxUint8 *data, int size);
 
-#endif /* _L3DISKUTILS_H_ */
+}; /* namespace Utils */
+
+#endif /* DISKUTILS_H */
 

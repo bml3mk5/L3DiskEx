@@ -49,7 +49,7 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic)
 
 	next_item = NULL;
 }
-DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
@@ -60,7 +60,7 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, DiskD88Sector *n_sect
 
 	next_item = NULL;
 }
-DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -81,7 +81,7 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int n_num, const Disk
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemCPM::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemCPM::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -136,7 +136,7 @@ int	DiskBasicDirItemCPM::GetFileType2() const
 /// 拡張子からアスキーorバイナリ属性を判断する
 int DiskBasicDirItemCPM::GetFileTypeByExt(int val, const wxString &ext) const
 {
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(ext, FILE_TYPE_BINARY_MASK, 0x3f);
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(ext, FILE_TYPE_BINARY_MASK, 0x3f);
 	if (sa) {
 		val |= FILE_TYPE_BINARY_MASK;
 	}
@@ -390,7 +390,7 @@ int DiskBasicDirItemCPM::RecalcFileSize(DiskBasicGroups &group_items, int occupi
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskD88Sector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();

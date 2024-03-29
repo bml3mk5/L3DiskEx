@@ -8,6 +8,7 @@
 #include "basicfat.h"
 #include "basicfmt.h"
 #include "basictype.h"
+#include "../diskimg/diskimage.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -751,7 +752,7 @@ double DiskBasicFat::Assign(bool is_formatting)
 	type = basic->GetType();
 
 	if (sector_num >= 0) {
-		DiskD88Track *managed_track;
+		DiskImageTrack *managed_track;
 		if (side_num >= 0) {
 			// トラック、サイド番号から計算
 			managed_track = basic->GetTrack(basic->GetManagedTrackNumber(), side_num);
@@ -783,7 +784,7 @@ double DiskBasicFat::Assign(bool is_formatting)
 			for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
 				int div_num = 0;
 				int div_nums = 1;
-				DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec_num, &div_num, &div_nums);
+				DiskImageSector *sector = basic->GetSectorFromSectorPos(sec_num, &div_num, &div_nums);
 				if (!sector) {
 					valid_ratio = -1.0;
 					break;
@@ -840,7 +841,7 @@ void DiskBasicFat::Empty()
 wxUint8 DiskBasicFat::Get(int pos) const
 {
 	wxUint8 code = 0;
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(start);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(start);
 	if (sector) {
 		wxUint8 *buf = sector->GetSectorBuffer();
 		int size = sector->GetSectorBufferSize();
@@ -858,7 +859,7 @@ void DiskBasicFat::Set(int pos, wxUint8 code)
 {
 	int start_sector = start;
 	for(int fat_num = 0; fat_num < vcount; fat_num++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(start_sector);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(start_sector);
 		if (sector) {
 			wxUint8 *buf = sector->GetSectorBuffer();
 			int size = sector->GetSectorBufferSize();
@@ -877,7 +878,7 @@ void DiskBasicFat::Copy(const wxUint8 *buf, size_t len)
 {
 	int start_sector = start;
 	for(int fat_num = 0; fat_num < vcount; fat_num++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(start_sector);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(start_sector);
 		if (sector) {
 			sector->Copy(buf, (int)len);
 		}
@@ -893,7 +894,7 @@ void DiskBasicFat::Fill(wxUint8 code)
 	int end_sector = start + size - 1;
 	for(int fat_num = 0; fat_num < count; fat_num++) {
 		for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
-			DiskD88Sector *sector = basic->GetSectorFromSectorPos(sec_num);
+			DiskImageSector *sector = basic->GetSectorFromSectorPos(sec_num);
 			if (sector) {
 				sector->Fill(code);
 			}

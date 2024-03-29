@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _DISKPARAMBOX_H_
-#define _DISKPARAMBOX_H_
+#ifndef DISKPARAMBOX_H
+#define DISKPARAMBOX_H
 
 #define DISKPARAMBOX_TRANS \
 _("Required information entry is empty.") \
@@ -28,7 +28,8 @@ class wxRadioButton;
 
 class DiskParam;
 class DiskParamPtrs;
-class DiskD88Disk;
+class DiskImage;
+class DiskImageDisk;
 
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
@@ -71,15 +72,16 @@ private:
 	wxTextCtrl *txtSingleSectors;
 	wxComboBox *comSingleSecSize;
 
-	OpeFlags ope_flags;
-	int show_flags;
-	const DiskParamPtrs *disk_params;
-	const DiskParam *manual_param;
+	DiskImage *p_image;
+	OpeFlags m_ope_flags;
+	int m_show_flags;
+	const DiskParamPtrs *p_disk_params;
+	const DiskParam *p_manual_param;
 	bool now_manual_setting;
 
-	wxArrayString type_names;
+	wxArrayString m_type_names;
 
-	int FindTemplate(DiskD88Disk *disk);
+	int FindTemplate(DiskImageDisk *disk);
 	void SetParamFromTemplate(const DiskParam *item);
 	void SetParamOfIndexFromGlobals(size_t index);
 	void SetParamOfIndexFromParams(size_t index);
@@ -90,7 +92,7 @@ private:
 	void GetParamForManual(DiskParam &param);
 
 public:
-	DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags);
+	DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, OpeFlags ope_flags, int select_number, DiskImageDisk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags);
 
 	enum {
 		IDC_COMBO_CATEGORY = 1,
@@ -134,11 +136,11 @@ public:
 	void SetTemplateValuesFromGlobalsSub(int flags);
 	void SetTemplateValuesFromParams();
 	void SetParamOfIndex(size_t index);
-	void SetParamFromDisk(const DiskD88Disk *disk);
+	void SetParamFromDisk(const DiskImageDisk *disk);
 	void SetDensity(int val);
 	void CalcDiskSize();
 	bool GetParam(DiskParam &param);
-	bool GetParamToDisk(DiskD88Disk &disk);
+//	bool GetParamToDisk(DiskImageDisk &disk);
 	wxString GetCategory() const;
 	int GetTracksPerSide() const;
 	int GetSidesPerDisk() const;
@@ -159,5 +161,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _DISKPARAMBOX_H_ */
+#endif /* DISKPARAMBOX_H */
 

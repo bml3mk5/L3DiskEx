@@ -8,6 +8,7 @@
 #include "intnamebox.h"
 #include "intnamevalid.h"
 #include "../main.h"
+#include "uimainprocess.h"
 #include <wx/listctrl.h>
 #include <wx/stattext.h>
 #include <wx/checkbox.h>
@@ -45,7 +46,7 @@ END_EVENT_TABLE()
 /// @param [in] file_size  ファイルサイズ(show_flagsが #INTNAME_SPECIFY_FILE_NAME のとき指定)
 /// @param [in] date_time  日時(show_flagsが #INTNAME_SPECIFY_CDATE_TIME,#INTNAME_SPECIFY_MDATE_TIME のとき指定)
 /// @param [in] show_flags 表示フラグ
-IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
+IntNameBox::IntNameBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
 	DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, const wxString &file_name, int file_size, DiskBasicDirItemAttr *date_time, int show_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER, wxT(INTNAMEBOX_CLASSNAME))
 {
@@ -65,7 +66,7 @@ IntNameBox::IntNameBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, cons
 /// @param [in] file_size  ファイルサイズ(show_flagsが #INTNAME_SPECIFY_FILE_NAME のとき指定)
 /// @param [in] date_time  日時(show_flagsが #INTNAME_SPECIFY_CDATE_TIME,#INTNAME_SPECIFY_MDATE_TIME のとき指定)
 /// @param [in] show_flags 表示フラグ
-void IntNameBox::CreateBox(L3DiskFrame *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
+void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id, const wxString &caption, const wxString &message,
 	DiskBasic *basic, DiskBasicDirItem *item, const wxString &file_path, const wxString &file_name, int file_size, DiskBasicDirItemAttr *date_time, int show_flags)
 {
 	this->frame = frame;
@@ -453,7 +454,7 @@ void IntNameBox::OnOK(wxCommandEvent& event)
 			EndModal(wxID_OK);
 		} else {
 			// モードレスの場合、値を反映
-			L3DiskFileList *file_list = frame->GetFileListPanel();
+			UiDiskFileList *file_list = frame->GetFileListPanel();
 			if (file_list) {
 				file_list->AcceptSubmittedFileAttr(this);
 			}
@@ -520,15 +521,16 @@ void IntNameBox::OnListItemSelected(wxListEvent& event)
 	int idx = (int)event.GetIndex();
 
 	if (frame->GetBinDumpFrame()) {
-		L3DiskFileList *file_list = frame->GetFileListPanel();
+		UiDiskFileList *file_list = frame->GetFileListPanel();
 		if (!file_list) return;
 
 		long grp, trk, sid, sec_start, sec_end;
-		lstGroups->GetItemText(idx, 0).ToLong(&grp, 16);
-		lstGroups->GetItemText(idx, 1).ToLong(&trk);
-		lstGroups->GetItemText(idx, 2).ToLong(&sid);
-		lstGroups->GetItemText(idx, 3).ToLong(&sec_start);
-		lstGroups->GetItemText(idx, 4).ToLong(&sec_end);
+		int col = 0;
+		lstGroups->GetItemText(idx, col++).ToLong(&grp, 16);
+		lstGroups->GetItemText(idx, col++).ToLong(&trk);
+		lstGroups->GetItemText(idx, col++).ToLong(&sid);
+		lstGroups->GetItemText(idx, col++).ToLong(&sec_start);
+		lstGroups->GetItemText(idx, col++).ToLong(&sec_end);
 
 		file_list->SetDumpData((int)trk, (int)sid, (int)sec_start, (int)sec_end);
 	}
@@ -907,11 +909,12 @@ void IntNameBox::SetGroups(const DiskBasicGroups &vals)
 		for(size_t i=0; i < vals.Count(); i++) {
 			DiskBasicGroupItem *item = vals.ItemPtr(i);
 			lstGroups->InsertItem(i, wxString::Format(wxT("%02x"), item->group));
-			lstGroups->SetItem(i, 1, wxString::Format(wxT("%d"), item->track));
-			lstGroups->SetItem(i, 2, wxString::Format(wxT("%d"), item->side));
-			lstGroups->SetItem(i, 3, wxString::Format(wxT("%d"), item->sector_start));
-			lstGroups->SetItem(i, 4, wxString::Format(wxT("%d"), item->sector_end));
-			lstGroups->SetItem(i, 5, wxString::Format(wxT("%d/%d"), item->div_num + 1, item->div_nums));
+			int col = 1;
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->track));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->side));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->sector_start));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->sector_end));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d/%d"), item->div_num + 1, item->div_nums));
 		}
 	}
 }

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _UICTREECTRL_H_
-#define _UICTREECTRL_H_
+#ifndef UICTREECTRL_H
+#define UICTREECTRL_H
 
 #include "../common.h"
 #include <wx/treectrl.h>
@@ -14,40 +14,44 @@
 #include "uicommon.h"
 
 
-#define L3CTreeItem  wxTreeItemId
-#define L3CTreeEvent wxTreeEvent
+#define MyCTreeItem  wxTreeItemId
+#define MyCTreeEvent wxTreeEvent
 
 //////////////////////////////////////////////////////////////////////
 
 /// ツリーコントロール
-class L3CTreeCtrl: public wxTreeCtrl
+class MyCTreeCtrl: public wxTreeCtrl
 {
 protected:
 	/// アイコンを追加
 	void AssignTreeIcons(const char ***icons);
 
 public:
-	L3CTreeCtrl(wxWindow *parentwindow, wxWindowID id);
+	MyCTreeCtrl(wxWindow *parentwindow, wxWindowID id);
 
 	/// ツリーノードを選択
-	void SelectTreeNode(const L3CTreeItem &node);
+	void SelectTreeNode(const MyCTreeItem &node);
 	/// ツリーノードが子供を持つか
-	bool TreeNodeHasChildren(const L3CTreeItem &node);
+	bool TreeNodeHasChildren(const MyCTreeItem &node);
 	/// ツリーノードの子供の数を返す
-	int  GetTreeChildCount(const L3CTreeItem &parent);
+	int  GetTreeChildCount(const MyCTreeItem &parent);
 	/// ツリーノードを編集
-	void EditTreeNode(const L3CTreeItem &node);
+	void EditTreeNode(const MyCTreeItem &node);
 	/// ツリーノードを削除
-	void DeleteTreeNode(const L3CTreeItem &node);
+	void DeleteTreeNode(const MyCTreeItem &node);
 	/// 親ツリーノードを返す
-	L3CTreeItem GetParentTreeNode(const L3CTreeItem &node);
+	MyCTreeItem GetParentTreeNode(const MyCTreeItem &node);
 	/// ルートノードを追加する
-	L3CTreeItem AddRootTreeNode(const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
+	MyCTreeItem AddRootTreeNode(const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
 	/// ノードを追加する
-	L3CTreeItem AddTreeContainer(const L3CTreeItem &parent, const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
+	MyCTreeItem AddTreeContainer(const MyCTreeItem &parent, const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
 	/// ノードを追加する
-	L3CTreeItem AddTreeNode(const L3CTreeItem &parent, const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
+	MyCTreeItem AddTreeNode(const MyCTreeItem &parent, const wxString &text, int def_icon = -1, int sel_icon = -1, wxTreeItemData *n_data = NULL);
+	/// 指定した座標にノードがあるか
+	bool HasNodeAtPoint(int x, int y) const;
+	/// 指定した座標にあるノードを返す
+	MyCTreeItem GetNodeAtPoint(int x, int y) const;
 };
 
-#endif /* _UICTREECTRL_H_ */
+#endif /* UICTREECTRL_H */
 

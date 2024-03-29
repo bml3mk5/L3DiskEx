@@ -8,8 +8,8 @@
 #include "diskparam.h"
 #include <wx/xml/xml.h>
 #include <wx/translation.h>
-#include "logging.h"
-#include "utils.h"
+#include "../logging.h"
+#include "../utils.h"
 
 
 /// (0:128bytes 1:256bytes 2:512bytes 3:1024bytes)
@@ -967,7 +967,7 @@ WX_DEFINE_OBJARRAY(DiskParams);
 //
 // ディスクパラメータのテンプレートを提供する
 //
-DiskTemplates::DiskTemplates()
+DiskTemplates::DiskTemplates() : TemplatesBase()
 {
 }
 /// XMLファイルから読み込み
@@ -1234,25 +1234,6 @@ bool DiskTemplates::LoadParticularSector(const wxXmlNode *node, DiskParticular &
 			d.AddExclude(e);
 		}
 		cnode = cnode->GetNext();
-	}
-	return true;
-}
-
-/// DensityName/Descriptionエレメントをロード
-/// @param[in]  node        子ノード
-/// @param[in]  locale_name ローケル名
-/// @param[out] desc        説明
-/// @param[out] desc_locale 説明ローケル名
-/// @return true
-bool DiskTemplates::LoadDescription(const wxXmlNode *node, const wxString &locale_name, wxString &desc, wxString &desc_locale)
-{
-	if (node->HasAttribute("lang")) {
-		wxString lang = node->GetAttribute("lang");
-		if (locale_name.Find(lang) != wxNOT_FOUND) {
-			desc_locale = node->GetNodeContent();
-		}
-	} else {
-		desc = node->GetNodeContent();
 	}
 	return true;
 }

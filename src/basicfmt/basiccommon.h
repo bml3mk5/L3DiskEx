@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICCOMMON_H_
-#define _BASICCOMMON_H_
+#ifndef BASICCOMMON_H
+#define BASICCOMMON_H
 
 
 #include "../common.h"
@@ -1039,4 +1039,4 @@ public:
 	void Add(const wxString &key, bool val);
 };
 
-#endif /* _BASICCOMMON_H_ */
+#endif /* BASICCOMMON_H */

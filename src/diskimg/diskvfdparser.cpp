@@ -7,7 +7,7 @@
 
 #include "diskvfdparser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -43,11 +43,11 @@ typedef struct st_vfd_header {
 //
 //
 //
-DiskVFDParser::DiskVFDParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskVFDParser::DiskVFDParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskVFDParser::~DiskVFDParser()
@@ -55,7 +55,7 @@ DiskVFDParser::~DiskVFDParser()
 }
 
 /// セクタデータの作成
-wxUint32 DiskVFDParser::ParseSector(wxInputStream &istream, int sector_nums, void *user_data, DiskD88Track *track)
+wxUint32 DiskVFDParser::ParseSector(wxInputStream &istream, int sector_nums, void *user_data, DiskImageTrack *track)
 {
 	vfd_sector_header_t *sector_header = (vfd_sector_header_t *)user_data;
 
@@ -71,14 +71,14 @@ wxUint32 DiskVFDParser::ParseSector(wxInputStream &istream, int sector_nums, voi
 
 	if (sector_size > 7) {
 		// セクタサイズが大きすぎる
-		result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, 0, track_number, side_number, sector_number, sector_size, 128 << sector_size);
+		p_result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, 0, track_number, side_number, sector_number, sector_size, 128 << sector_size);
 		return 0;
 	}
 
 	sector_size = (128 << sector_size);
 
 	// セクタ作成
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, sector_header->dden == 0);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, sector_header->dden == 0);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -91,7 +91,7 @@ wxUint32 DiskVFDParser::ParseSector(wxInputStream &istream, int sector_nums, voi
 		size_t len = istream.Read(buf, siz).LastRead();
 		if (len < (size_t)siz) {
 			// ファイルデータが足りない
-			result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+			p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 		}
 	} else {
 		// データはないので特定データでサプレスする
@@ -101,11 +101,11 @@ wxUint32 DiskVFDParser::ParseSector(wxInputStream &istream, int sector_nums, voi
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + siz;
+	return (wxUint32)sector->GetSize();
 }
 
 /// トラックデータの作成
-wxUint32 DiskVFDParser::ParseTrack(wxInputStream &istream, void *user_data, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+wxUint32 DiskVFDParser::ParseTrack(wxInputStream &istream, void *user_data, int offset_pos, wxUint32 offset, DiskImageDisk *disk)
 {
 	vfd_track_header_t *track_header = (vfd_track_header_t *)user_data;
 
@@ -130,22 +130,22 @@ wxUint32 DiskVFDParser::ParseTrack(wxInputStream &istream, void *user_data, int 
 	int side_number = IntHashMapUtil::GetMaxKeyOnMaxValue(side_number_map);
 
 	// トラック作成
-	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(track_number, side_number, offset_pos, 1);
 	disk->SetMaxTrackNumber(track_number);
 
 	wxUint32 d88_track_size = 0;
-	for(int sec = 0; sec < 26 && result->GetValid() >= 0; sec++) {
+	for(int sec = 0; sec < 26 && p_result->GetValid() >= 0; sec++) {
 		d88_track_size += ParseSector(istream
 			, num_of_sectors
 			, &track_header->sectors[sec], track);
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// トラックサイズ設定
 		track->SetSize(d88_track_size);
 		// サイド番号は各セクタのID Hに合わせる
@@ -165,42 +165,47 @@ wxUint32 DiskVFDParser::ParseTrack(wxInputStream &istream, void *user_data, int 
 /// ディスクの解析
 wxUint32 DiskVFDParser::ParseDisk(wxInputStream &istream)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file, 0);
+	DiskImageDisk *disk = p_file->NewImageDisk(0);
 
 	vfd_header_t header;
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len != sizeof(header)) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 		return 0;
 	}
 
 	disk->SetName(header.label, sizeof(header.label));
 
 	// d88トラックの作成
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
 	for(int pos = 0; pos < 160; pos++) {
 		d88_offset += ParseTrack(istream, &header.tracks[pos]
 			, d88_offset_pos, d88_offset, disk); 
 		d88_offset_pos++;
-		if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-			result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
+		if (d88_offset_pos >= disk->GetCreatableTracks()) {
+			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
 		}
 	}
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
 			disk->SetDensity(disk_param->GetParamDensity());
 		}
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
 
 	return d88_offset;
+}
+
+int DiskVFDParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
 }
 
 /// チェック
@@ -230,11 +235,12 @@ int DiskVFDParser::Check(wxInputStream &istream)
 
 /// VFDファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskVFDParser::Parse(wxInputStream &istream)
+int DiskVFDParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	ParseDisk(istream);
-	return result->GetValid();
+	return p_result->GetValid();
 }

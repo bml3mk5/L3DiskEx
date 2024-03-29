@@ -334,8 +334,15 @@
 			<InvalidCode>0x3c</InvalidCode>
 			<InvalidCode>0x3e</InvalidCode>
 		</VolumeNameCharacters>
+		<FileNameCompareCase>insensitive</FileNameCompareCase>
 		<RequireFileName>true</RequireFileName>
 		<VolumeNameMaxLength>18</VolumeNameMaxLength>
+		<AttributesByExtension>
+			<Ascii name="BAS" />
+			<Ascii name="TXT" />
+			<Ascii name="DOC" />
+			<Ascii name="BAT" />
+		</AttributesByExtension>
 	</DiskBasicFormat>
 	<DiskBasicFormat type="15" name="APPLEDOS">
 		<HasVolumeNumber>true</HasVolumeNumber>
@@ -758,125 +765,6 @@
 	</DiskBasicFormat>
 </DiskBasicFormats>
 
-<DiskBasicCategories version="1.0">
-	<DiskBasicCategory name="L3S1">
-		<Description>HITACHI LEVEL-3/S1 DISK BASIC</Description>
-		<Description lang="ja">日立 LEVEL-3/S1 DISK BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="FM">
-		<Description>FUJITSU F-BASIC</Description>
-		<Description lang="ja">富士通 F-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MSX">
-		<Description>MSX DISK BASIC / MSX-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="N88">
-		<Description>NEC N88-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="N66">
-		<Description>NEC N66-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="X1HU">
-		<Description>SHARP X1 Hu-BASIC</Description>
-		<Description lang="ja">シャープ X1 Hu-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="HU68K">
-		<Description>SHARP X68000 Human68k</Description>
-		<Description lang="ja">シャープ X68000 Human68k</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MZHU">
-		<Description>SHARP MZ Hu-BASIC</Description>
-		<Description lang="ja">シャープ MZ Hu-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MZ">
-		<Description>SHARP MZ DISK BASIC</Description>
-		<Description lang="ja">シャープ MZ DISK BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MZFDOS">
-		<Description>SHARP MZ Floppy DOS</Description>
-		<Description lang="ja">シャープ MZ Floppy DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="PA">
-		<Description>TOSHIBA PASOPIA T-BASIC</Description>
-		<Description lang="ja">東芝 パソピア T-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="SMC">
-		<Description>SONY SMC-777 Sony Filer</Description>
-		<Description lang="ja">ソニー SMC-777 Sony Filer</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="FP">
-		<Description>CASIO FP-1100 C82-BASIC</Description>
-		<Description lang="ja">カシオ FP-1100 C82-BASIC</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="FLEX">
-		<Description>FLEX</Description>
-		<Description lang="ja">FLEX</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="OS9">
-		<Description>OS-9</Description>
-		<Description lang="ja">OS-9</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="CPM">
-		<Description>CP/M</Description>
-		<Description lang="ja">CP/M</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MSDOS">
-		<Description>MS-DOS</Description>
-		<Description lang="ja">MS-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="CDOS">
-		<Description>Carry Lab. C-DOS</Description>
-		<Description lang="ja">キャリーラボ C-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="CDOS2">
-		<Description>Carry Lab. CDOS II</Description>
-		<Description lang="ja">キャリーラボ CDOS II</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="TFDOS">
-		<Description>TF-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="XDOS">
-		<Description>X-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MAGICAL">
-		<Description>Magical DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="FROST">
-		<Description>Frost-DOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="MDOS">
-		<Description>MDOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="APPLEDOS">
-		<Description>Apple DOS 3.3</Description>
-		<Description lang="ja">アップル DOS 3.3</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="PRODOS">
-		<Description>Apple ProDOS 8 / 16</Description>
-		<Description lang="ja">アップル ProDOS 8 / 16</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="C1541">
-		<Description>Commodore 1541 DOS (for C64)</Description>
-		<Description lang="ja">コモドール 1541 DOS (C64用)</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="AMIGA">
-		<Description>Commodore Amiga DOS</Description>
-		<Description lang="ja">コモドール Amiga DOS / AROS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="M68KDOS">
-		<Description>SORD M68 KDOS</Description>
-		<Description lang="ja">ソード M68 KDOS</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="TRSD23">
-		<Description>Tandy TRSDOS 2.x</Description>
-		<Description lang="ja">タンディ TRSDOS 2.x</Description>
-	</DiskBasicCategory>
-	<DiskBasicCategory name="TRSD13">
-		<Description>Tandy TRSDOS 1.3</Description>
-		<Description lang="ja">タンディ TRSDOS 1.3</Description>
-	</DiskBasicCategory>
-</DiskBasicCategories>
-
 <DiskBasicTypes version="1.0">
 	<DiskBasicType name="L3-1S" type="0" category="L3S1">
 		<SectorsPerGroup>4</SectorsPerGroup>
@@ -1049,7 +937,52 @@
 		<OEMName type="string">LOVERS</OEMName>
 		<Description>L-os Angeles (2D)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="MSDOS-2D" type="3" category="MSDOS">
+	<DiskBasicType name="MSDOS-1D-8" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xfe</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (1D 8sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-1D-9" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xfc</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (1D 9sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-2D-8" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xff</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (2D 8sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-2D-9" type="3" category="MSDOS">
 		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>9</SectorsPerTrack>
@@ -1062,9 +995,92 @@
 		<MediaID>0xfd</MediaID>
 		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
 		<OEMName type="string">FAT12</OEMName>
-		<Description>MS-DOS (2D)</Description>
+		<Description>MS-DOS (2D 9sectors)</Description>
 	</DiskBasicType>
-	<DiskBasicType name="MSDOS-2DD" type="3" category="MSDOS">
+	<DiskBasicType name="MSD98-2DD-8" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xfb</MediaID>
+		<JumpBoot type="string">\xeb\x1c\x90</JumpBoot>
+		<OEMName type="string">NEC</OEMName>
+		<Description>MS-DOS for PC-9801 (2DD 8sectors)</Description>
+		<Description lang="ja">MS-DOS for PC-9801 (2DD 8セクタ)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+		</Categories>
+	</DiskBasicType>
+	<DiskBasicType name="MSD98-2DD-9" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>3</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xf9</MediaID>
+		<JumpBoot type="string">\xeb\x1c\x90</JumpBoot>
+		<OEMName type="string">NEC</OEMName>
+		<Description>MS-DOS for PC-9801 (2DD 9sectors)</Description>
+		<Description lang="ja">MS-DOS for PC-9801 (2DD 9セクタ)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+		</Categories>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-1DD-8" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>1</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xfa</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (1DD 8sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-2DD-8" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xfb</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (2DD 8sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-1DD-9" type="3" category="MSDOS">
+		<SectorsPerGroup>2</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>112</DirEntryCount>
+		<MediaID>0xf8</MediaID>
+		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>MS-DOS (1DD 9sectors)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MSDOS-2DD-9" type="3" category="MSDOS">
 		<SectorsPerGroup>2</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>
 		<SectorsPerTrack>9</SectorsPerTrack>
@@ -1077,7 +1093,7 @@
 		<MediaID>0xf9</MediaID>
 		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
 		<OEMName type="string">FAT12</OEMName>
-		<Description>MS-DOS (2DD)</Description>
+		<Description>MS-DOS (2DD 9sectors)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="MSD98-2HD" type="3" category="MSDOS">
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -1090,8 +1106,28 @@
 		<DirEntryCount>192</DirEntryCount>
 		<MediaID>0xfe</MediaID>
 		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
-		<OEMName type="string">FAT12</OEMName>
+		<OEMName type="string">NEC</OEMName>
 		<Description>MS-DOS for PC-9801 (2HD)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+		</Categories>
+	</DiskBasicType>
+	<DiskBasicType name="MSDFM-2HD" type="3" category="MSDOS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>2</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>192</DirEntryCount>
+		<MediaID>0xfe</MediaID>
+		<JumpBoot type="string">IPL</JumpBoot>
+		<OEMName type="string">4\xeb\x72\x00\x20</OEMName>
+		<Description>MS-DOS for FM TOWNS (2HD)</Description>
+		<Categories>
+			<Category>FMR</Category>
+		</Categories>
 	</DiskBasicType>
 	<DiskBasicType name="MSDOS-2HC" type="3" category="MSDOS">
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -1106,6 +1142,9 @@
 		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
 		<OEMName type="string">FAT12</OEMName>
 		<Description>MS-DOS for PC-AT (2HC)</Description>
+		<Categories>
+			<Category>J3100</Category>
+		</Categories>
 	</DiskBasicType>
 	<DiskBasicType name="MSDOS-2HD" type="3" category="MSDOS">
 		<SectorsPerGroup>1</SectorsPerGroup>
@@ -1120,6 +1159,10 @@
 		<JumpBoot type="string">\xeb\x3c\x90</JumpBoot>
 		<OEMName type="string">FAT12</OEMName>
 		<Description>MS-DOS for PC-AT (2HD)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+			<Category>FMR</Category>
+		</Categories>
 	</DiskBasicType>
 	<DiskBasicType name="MSX-1DD8" type="4" category="MSX">
 		<SectorsPerGroup>2</SectorsPerGroup>
@@ -1959,6 +2002,19 @@
 		<GroupWidth>2</GroupWidth>
 		<Description>Personal CP/M for MZ-2500 (2DD)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="CPM98-2DD" type="10" category="CPM">
+		<SectorsPerGroup>4</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>1</ManagedTrackNumber>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>8</DirEndSector>
+		<GroupWidth>2</GroupWidth>
+		<Description>CP/M-86 for PC-9801 (2DD)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+		</Categories>
+	</DiskBasicType>
 	<DiskBasicType name="CPM-1HS" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>
 		<SidesPerDisk>1</SidesPerDisk>
@@ -2024,6 +2080,9 @@
 		<DirEndSector>32</DirEndSector>
 		<GroupWidth>2</GroupWidth>
 		<Description>CP/M for PC-9801 (2HD)</Description>
+		<Categories>
+			<Category>PC98X1</Category>
+		</Categories>
 	</DiskBasicType>
 	<DiskBasicType name="CPMS1-2HD" type="10" category="CPM">
 		<SectorsPerGroup>8</SectorsPerGroup>

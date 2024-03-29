@@ -90,7 +90,7 @@ int DiskBasicTypeMDOS::CalcDataStartSectorPos()
 bool DiskBasicTypeMDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// FAT
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(basic->GetFatStartSector() - 1);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(basic->GetFatStartSector() - 1);
 	if (sector) {
 		sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFAT()));
 		// トラック0は予約

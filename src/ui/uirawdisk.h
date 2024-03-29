@@ -5,13 +5,13 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _UIRAWDISK_H_
-#define _UIRAWDISK_H_
+#ifndef UIRAWDISK_H
+#define UIRAWDISK_H
 
 #include "uicommon.h"
 #include <wx/string.h>
 #include <wx/splitter.h>
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 
 
 #ifndef USE_LIST_CTRL_ON_TRACK_LIST
@@ -25,10 +25,11 @@
 #include "uiclistctrl.h"
 #endif
 
+class MyMenu;
 class wxFileDataObject;
-class L3DiskFrame;
-class L3DiskRawTrack;
-class L3DiskRawSector;
+class UiDiskFrame;
+class UiDiskRawTrack;
+class UiDiskRawSector;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -44,7 +45,7 @@ enum en_track_list_columns {
 	TRACKCOL_END
 };
 
-extern const struct st_list_columns gL3DiskRawTrackColumnDefs[];
+extern const struct st_list_columns gUiDiskRawTrackColumnDefs[];
 
 enum en_sector_list_columns {
 	SECTORCOL_NUM = 0,
@@ -63,31 +64,31 @@ enum en_sector_list_columns {
 	SECTORCOL_END
 };
 
-extern const struct st_list_columns gL3DiskRawSectorColumnDefs[];
+extern const struct st_list_columns gUiDiskRawSectorColumnDefs[];
 
 //////////////////////////////////////////////////////////////////////
 
 /// 分割ウィンドウ
-class L3DiskRawPanel : public wxSplitterWindow
+class UiDiskRawPanel : public wxSplitterWindow
 {
 private:
 	wxWindow *parent;
-	L3DiskFrame *frame;
+	UiDiskFrame *frame;
 
-	L3DiskRawTrack *lpanel;
-	L3DiskRawSector *rpanel;
+	UiDiskRawTrack *lpanel;
+	UiDiskRawSector *rpanel;
 
 	bool invert_data;	///< インポート・エクスポート時にデータを反転するか
 	bool reverse_side;	///< インポート・エクスポート時にサイド番号を降順で行うか
 
 public:
-	L3DiskRawPanel(L3DiskFrame *parentframe, wxWindow *parentwindow);
+	UiDiskRawPanel(UiDiskFrame *parentframe, wxWindow *parentwindow);
 
-	L3DiskRawTrack *GetLPanel() { return lpanel; }
-	L3DiskRawSector *GetRPanel() { return rpanel; }
+	UiDiskRawTrack *GetLPanel() { return lpanel; }
+	UiDiskRawSector *GetRPanel() { return rpanel; }
 
 	/// トラックリストにデータを設定する
-	void SetTrackListData(DiskD88Disk *disk, int side_num);
+	void SetTrackListData(DiskImageDisk *disk, int side_num);
 	/// トラックリストをクリアする
 	void ClearTrackListData();
 	/// トラックリストを再描画する
@@ -98,7 +99,7 @@ public:
 	int GetTrackListSelectedRow() const;
 
 	/// セクタリストにデータを設定する
-	void SetSectorListData(DiskD88Track *track);
+	void SetSectorListData(DiskImageTrack *track);
 	/// セクタリストをクリアする
 	void ClearSectorListData();
 	/// セクタリストの選択行を返す
@@ -141,7 +142,7 @@ public:
 	bool ShowSectorAttr();
 
 	/// ファイル名
-	wxString MakeFileName(DiskD88Sector *sector);
+	wxString MakeFileName(DiskImageSector *sector);
 	/// ファイル名
 	wxString MakeFileName(int st_c, int st_h, int st_r, int ed_c, int ed_h, int ed_r);
 
@@ -163,82 +164,82 @@ public:
 	void DecreaseSide();
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_NO_COPY_CLASS(L3DiskRawPanel);
+	wxDECLARE_NO_COPY_CLASS(UiDiskRawPanel);
 };
 
 //////////////////////////////////////////////////////////////////////
 
 #ifndef USE_LIST_CTRL_ON_TRACK_LIST
 
-class L3DiskRawTrack;
+class UiDiskRawTrack;
 
 /// トラックリストの挙動を設定
-class L3DiskRawTrackListStoreModel : public wxDataViewListStore
+class UiDiskRawTrackListStoreModel : public wxDataViewListStore
 {
 private:
-	L3DiskRawTrack *ctrl;
+	UiDiskRawTrack *ctrl;
 
 public:
-	L3DiskRawTrackListStoreModel(wxWindow *parent);
+	UiDiskRawTrackListStoreModel(wxWindow *parent);
 
-	void SetControl(L3DiskRawTrack *n_ctrl) { ctrl = n_ctrl; }
+	void SetControl(UiDiskRawTrack *n_ctrl) { ctrl = n_ctrl; }
 	int  Compare(const wxDataViewItem &item1, const wxDataViewItem &item2, unsigned int col, bool ascending) const;
 };
 
-#define L3RawTrackListColumn	wxDataViewColumn*
-#define L3RawTrackListItem		wxDataViewItem
-#define L3RawTrackListItems		wxDataViewItemArray
-#define L3RawTrackListEvent		wxDataViewEvent
-#define L3RawTrackListValue		L3CDListValue
+#define MyRawTrackListColumn	wxDataViewColumn*
+#define MyRawTrackListItem		wxDataViewItem
+#define MyRawTrackListItems		wxDataViewItemArray
+#define MyRawTrackListEvent		wxDataViewEvent
+#define MyRawTrackListValue		MyCDListValue
 #else
-#define L3RawTrackListColumn	long
-#define L3RawTrackListItem		long
-#define L3RawTrackListItems		wxArrayLong
-#define L3RawTrackListEvent		wxListEvent
-#define L3RawTrackListValue		L3CListValue
+#define MyRawTrackListColumn	long
+#define MyRawTrackListItem		long
+#define MyRawTrackListItems		wxArrayLong
+#define MyRawTrackListEvent		wxListEvent
+#define MyRawTrackListValue		MyCListValue
 #endif
 
 //////////////////////////////////////////////////////////////////////
 
 /// トラックリストコントロール
 #ifndef USE_LIST_CTRL_ON_TRACK_LIST
-class L3DiskRawTrackListCtrl : public L3CDListCtrl
+class UiDiskRawTrackListCtrl : public MyCDListCtrl
 #else
-class L3DiskRawTrackListCtrl : public L3CListCtrl
+class UiDiskRawTrackListCtrl : public MyCListCtrl
 #endif
 {
 public:
-	L3DiskRawTrackListCtrl(L3DiskFrame *parentframe, wxWindow *parent, L3DiskRawTrack *sub, wxWindowID id);
+	UiDiskRawTrackListCtrl(UiDiskFrame *parentframe, wxWindow *parent, UiDiskRawTrack *sub, wxWindowID id);
 	/// リストデータを設定
-	void SetListData(DiskD88Disk *disk, int pos, int row, int idx, L3RawTrackListValue *values);
+	void SetListData(DiskImageDisk *disk, int pos, int row, int idx, MyRawTrackListValue *values);
 	/// リストにデータを挿入
-	void InsertListData(DiskD88Disk *disk, int pos, int row, int idx);
+	void InsertListData(DiskImageDisk *disk, int pos, int row, int idx);
 	/// リストデータを更新
-	void UpdateListData(DiskD88Disk *disk, int pos, int row, int idx);
+	void UpdateListData(DiskImageDisk *disk, int pos, int row, int idx);
 
 #ifdef USE_LIST_CTRL_ON_TRACK_LIST
 	/// アイテムをソート
-	void SortDataItems(DiskD88Disk *disk, int side_number, int col);
+	void SortDataItems(DiskImageDisk *disk, int side_number, int col);
 	/// ソート用コールバック
 	static int wxCALLBACK Compare(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortdata);
 #endif
-	static int CompareOffset(DiskD88Disk *disk, int i1, int i2, int dir);
-	static int CompareNum(DiskD88Disk *disk, int i1, int i2, int dir);
+	static int CompareOffset(DiskImageDisk *disk, int i1, int i2, int dir);
+	static int CompareNum(DiskImageDisk *disk, int i1, int i2, int dir);
 };
 
 //////////////////////////////////////////////////////////////////////
 
 /// 左パネルのトラックリスト
-class L3DiskRawTrack : public L3DiskRawTrackListCtrl
+class UiDiskRawTrack : public UiDiskRawTrackListCtrl
 {
 private:
-	L3DiskRawPanel *parent;
-	L3DiskFrame *frame;
+	UiDiskRawPanel *parent;
+	UiDiskFrame *frame;
 
-	DiskD88Disk *disk;
-	int side_number;
+	DiskImageDisk *p_disk;
+	int m_side_number;
 
-	wxMenu *menuPopup;
+	MyMenu *menuPopup;
 
 	/// ファイルリスト作成（DnD, クリップボード用）
 	bool CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &file_object);
@@ -246,21 +247,21 @@ private:
 	void ReleaseFileObject(const wxString &tmp_dir_name);
 
 public:
-	L3DiskRawTrack(L3DiskFrame *parentframe, L3DiskRawPanel *parentwindow);
-	~L3DiskRawTrack();
+	UiDiskRawTrack(UiDiskFrame *parentframe, UiDiskRawPanel *parentwindow);
+	~UiDiskRawTrack();
 
 	/// @name event procedures
 	//@{
 	/// トラックリストを選択
-	void OnListItemSelected(L3RawTrackListEvent& event);
+	void OnListItemSelected(MyRawTrackListEvent& event);
 	/// トラックリストをダブルクリック
-	void OnListActivated(L3RawTrackListEvent& event);
+	void OnListActivated(MyRawTrackListEvent& event);
 	/// トラックリスト右クリック
-	void OnListContextMenu(L3RawTrackListEvent& event);
+	void OnListContextMenu(MyRawTrackListEvent& event);
 	/// トラックリスト右クリック
 	void OnContextMenu(wxContextMenuEvent& event);
 	/// カラムをクリック
-	void OnColumnClick(L3RawTrackListEvent &event);
+	void OnColumnClick(MyRawTrackListEvent &event);
 	/// トラックをエクスポート選択
 	void OnExportTrack(wxCommandEvent& event);
 	/// トラックにインポート選択
@@ -270,7 +271,7 @@ public:
 	/// サイドを逆転するチェック選択
 	void OnChangeReverseSide(wxCommandEvent& event);
 	/// トラックリストからドラッグ開始
-	void OnBeginDrag(L3RawTrackListEvent& event);
+	void OnBeginDrag(MyRawTrackListEvent& event);
 	/// ディスク上のID一括変更選択
 	void OnModifyIDonDisk(wxCommandEvent& event);
 	/// トラックのID一括変更選択
@@ -296,7 +297,7 @@ public:
 	/// 選択
 	void SelectData();
 	/// トラックリストをセット
-	void SetTracks(DiskD88Disk *newdisk, int newsidenum);
+	void SetTracks(DiskImageDisk *newdisk, int newsidenum);
 	/// トラックリストをセット
 	void SetTracks();
 	/// トラックリストを再セット
@@ -339,17 +340,17 @@ public:
 	void DeleteTracks();
 
 	/// ディスクを返す
-	DiskD88Disk *GetDisk() const { return disk; }
+	DiskImageDisk *GetDisk() const { return p_disk; }
 	/// 選択行のトラックを返す
-	DiskD88Track *GetSelectedTrack();
+	DiskImageTrack *GetSelectedTrack();
 	/// 指定行のトラックを返す
-	DiskD88Track *GetTrack(const L3RawTrackListItem &row);
+	DiskImageTrack *GetTrack(const MyRawTrackListItem &row);
 	/// 最初のトラックを返す
-	DiskD88Track *GetFirstTrack();
+	DiskImageTrack *GetFirstTrack();
 	/// トラックのセクタ１を得る
-	bool GetFirstSectorOnTrack(DiskD88Track **track, DiskD88Sector **sector);
+	bool GetFirstSectorOnTrack(DiskImageTrack **track, DiskImageSector **sector);
 	/// トラックの開始セクタ番号と終了セクタ番号を得る
-	bool GetFirstAndLastSectorNumOnTrack(const DiskD88Track *track, int &start_sector, int &end_sector);
+	bool GetFirstAndLastSectorNumOnTrack(const DiskImageTrack *track, int &start_sector, int &end_sector);
 
 	/// 次のサイドへ
 	void IncreaseSide();
@@ -380,87 +381,85 @@ public:
 	};
 
 	wxDECLARE_EVENT_TABLE();
-	wxDECLARE_NO_COPY_CLASS(L3DiskRawTrack);
+	wxDECLARE_NO_COPY_CLASS(UiDiskRawTrack);
 };
 
 //////////////////////////////////////////////////////////////////////
 
 #ifndef USE_LIST_CTRL_ON_SECTOR_LIST
 
-class L3DiskRawSector;
+class UiDiskRawSector;
 
 /// セクタリストの挙動を設定
-class L3DiskRawSectorListStoreModel : public wxDataViewListStore
+class UiDiskRawSectorListStoreModel : public wxDataViewListStore
 {
 private:
-	L3DiskRawSector *ctrl;
+	UiDiskRawSector *ctrl;
 public:
-	L3DiskRawSectorListStoreModel(wxWindow *parent);
+	UiDiskRawSectorListStoreModel(wxWindow *parent);
 
-	void SetControl(L3DiskRawSector *n_ctrl) { ctrl = n_ctrl; }
+	void SetControl(UiDiskRawSector *n_ctrl) { ctrl = n_ctrl; }
 
 	bool IsEnabledByRow(unsigned int row, unsigned int col) const;
 
 	int  Compare(const wxDataViewItem &item1, const wxDataViewItem &item2, unsigned int col, bool ascending) const;
 };
 
-#define L3RawSectorListColumn	wxDataViewColumn*
-#define L3RawSectorListItem		wxDataViewItem
-#define L3RawSectorListItems	wxDataViewItemArray
-#define L3RawSectorListEvent	wxDataViewEvent
-#define L3RawSectorListValue	L3CDListValue
+#define MyRawSectorListColumn	wxDataViewColumn*
+#define MyRawSectorListItem		wxDataViewItem
+#define MyRawSectorListItems	wxDataViewItemArray
+#define MyRawSectorListEvent	wxDataViewEvent
+#define MyRawSectorListValue	MyCDListValue
 #else
-#define L3RawSectorListColumn	long
-#define L3RawSectorListItem		long
-#define L3RawSectorListItems	wxArrayLong
-#define L3RawSectorListEvent	wxListEvent
-#define L3RawSectorListValue	L3CListValue
+#define MyRawSectorListColumn	long
+#define MyRawSectorListItem		long
+#define MyRawSectorListItems	wxArrayLong
+#define MyRawSectorListEvent	wxListEvent
+#define MyRawSectorListValue	MyCListValue
 #endif
 
 //////////////////////////////////////////////////////////////////////
 
 /// セクタリストコントロール
 #ifndef USE_LIST_CTRL_ON_SECTOR_LIST
-class L3DiskRawSectorListCtrl : public L3CDListCtrl
+class UiDiskRawSectorListCtrl : public MyCDListCtrl
 #else
-class L3DiskRawSectorListCtrl : public L3CListCtrl
+class UiDiskRawSectorListCtrl : public MyCListCtrl
 #endif
 {
 public:
-	L3DiskRawSectorListCtrl(L3DiskFrame *parentframe, wxWindow *parent, L3DiskRawSector *sub, wxWindowID id);
+	UiDiskRawSectorListCtrl(UiDiskFrame *parentframe, wxWindow *parent, UiDiskRawSector *sub, wxWindowID id);
 	/// リストデータを設定
-	void SetListData(DiskD88Sector *sector, int row, L3RawSectorListValue *values);
+	void SetListData(DiskImageSector *sector, int row, MyRawSectorListValue *values);
 	/// リストにデータを挿入
-	void InsertListData(DiskD88Sector *sector, int row, int idx);
+	void InsertListData(DiskImageSector *sector, int row, int idx);
 	/// リストデータを更新
-	void UpdateListData(DiskD88Sector *sector, int row, int idx);
+	void UpdateListData(DiskImageSector *sector, int row, int idx);
 
 #ifdef USE_LIST_CTRL_ON_SECTOR_LIST
 	/// アイテムをソート
-	void SortDataItems(DiskD88Track *track, int col);
+	void SortDataItems(DiskImageTrack *track, int col);
 	/// ソート用コールバック
 	static int wxCALLBACK Compare(wxIntPtr item1, wxIntPtr item2, wxIntPtr sortdata);
 #endif
-	static int CompareIDR(DiskD88Sectors *sectors, int i1, int i2, int dir);
-	static int CompareNum(DiskD88Sectors *sectors, int i1, int i2, int dir);
+	static int CompareIDR(DiskImageSectors *sectors, int i1, int i2, int dir);
+	static int CompareNum(DiskImageSectors *sectors, int i1, int i2, int dir);
 };
 
 //////////////////////////////////////////////////////////////////////
 
 /// 右パネルのセクタリスト
-class L3DiskRawSector : public L3DiskRawSectorListCtrl
+class UiDiskRawSector : public UiDiskRawSectorListCtrl
 {
 private:
-	L3DiskRawPanel *parent;
-	L3DiskFrame *frame;
+	UiDiskRawPanel *parent;
+	UiDiskFrame *frame;
 
-	wxMenu *menuPopup;
+	MyMenu *menuPopup;
 
-	DiskD88Track *track;
+	DiskImageTrack *p_track;
 
-//	L3SectorListItem selected_item;
-
-	bool initialized;
+	bool m_initialized;
 
 	/// ファイルリスト作成（DnD, クリップボード用）
 	bool CreateFileObject(wxString &tmp_dir_name, wxFileDataObject &file_object);
@@ -468,23 +467,23 @@ private:
 	void ReleaseFileObject(const wxString &tmp_dir_name);
 
 public:
-	L3DiskRawSector(L3DiskFrame *parentframe, L3DiskRawPanel *parent);
-	~L3DiskRawSector();
+	UiDiskRawSector(UiDiskFrame *parentframe, UiDiskRawPanel *parent);
+	~UiDiskRawSector();
 
 	/// @name event procedures
 	//@{
 	/// セクタリスト右クリック
-	void OnItemContextMenu(L3RawSectorListEvent& event);
+	void OnItemContextMenu(MyRawSectorListEvent& event);
 	/// 右クリック
 	void OnContextMenu(wxContextMenuEvent& event);
 	/// セクタリスト ダブルクリック
-	void OnItemActivated(L3RawSectorListEvent& event);
+	void OnItemActivated(MyRawSectorListEvent& event);
 	/// セクタリスト カラムをクリック
-	void OnColumnClick(L3RawSectorListEvent& event);
+	void OnColumnClick(MyRawSectorListEvent& event);
 	/// セクタリスト選択
-	void OnSelectionChanged(L3RawSectorListEvent& event);
+	void OnSelectionChanged(MyRawSectorListEvent& event);
 	/// セクタリストからドラッグ開始
-	void OnBeginDrag(L3RawSectorListEvent& event);
+	void OnBeginDrag(MyRawSectorListEvent& event);
 	/// セクタリスト エクスポート選択
 	void OnExportFile(wxCommandEvent& event);
 	/// セクタリスト インポート選択
@@ -519,22 +518,22 @@ public:
 	void ShowPopupMenu();
 
 	// セクタリスト選択
-	void SelectItem(DiskD88Sector *sector);
+	void SelectItem(DiskImageSector *sector);
 	// セクタリスト非選択
 	void UnselectItem();
 
 	/// セクタリストにデータをセット
-	void SetSectors(DiskD88Track *newtrack);
+	void SetSectors(DiskImageTrack *newtrack);
 	/// セクタリストを返す
-	DiskD88Sectors *GetSectors() const;
+	DiskImageSectors *GetSectors() const;
 	/// セクタリストをリフレッシュ
 	void RefreshSectors();
 	/// セクタリストをクリア
 	void ClearSectors();
 	/// 選択しているセクタを返す
-	DiskD88Sector *GetSelectedSector(int *pos = NULL);
+	DiskImageSector *GetSelectedSector(int *pos = NULL);
 	/// セクタを返す
-	DiskD88Sector *GetSector(const L3RawSectorListItem &item);
+	DiskImageSector *GetSector(const MyRawSectorListItem &item);
 
 	/// ファイルリストをドラッグ
 	bool DragDataSourceForExternal();
@@ -546,7 +545,7 @@ public:
 	/// エクスポートダイアログ表示
 	bool ShowExportDataFileDialog();
 	/// 指定したファイルにセクタのデータをエクスポート
-	bool ExportDataFile(const wxString &path, DiskD88Sector *sector);
+	bool ExportDataFile(const wxString &path, DiskImageSector *sector);
 	/// インポートダイアログ表示
 	bool ShowImportDataFileDialog();
 	/// セクタ情報プロパティダイアログ表示
@@ -594,5 +593,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _UIRAWDISK_H_ */
+#endif /* UIRAWDISK_H */
 

@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_AMIGA_H_
-#define _BASICDIRITEM_AMIGA_H_
+#ifndef BASICDIRITEM_AMIGA_H
+#define BASICDIRITEM_AMIGA_H
 
 #include "basicdiritem.h"
 #include <wx/dynarray.h>
@@ -143,7 +143,7 @@ private:
 	AmigaChain m_chain;
 
 	/// @brief ディレクトリ情報をアロケート
-	void			AllocData(DiskD88Sector *n_sector, wxUint8 *n_data);
+	void			AllocData(DiskImageSector *n_sector, wxUint8 *n_data);
 	/// @brief バッファをアロケート
 	void			AllocTemp();
 	/// @brief バッファを削除
@@ -197,12 +197,12 @@ private:
 
 public:
 	DiskBasicDirItemAmiga(DiskBasic *basic);
-	DiskBasicDirItemAmiga(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemAmiga(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemAmiga(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemAmiga(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 	~DiskBasicDirItemAmiga();
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
 
 	/// @brief header用にセクタを初期化
 	void			InitForHeaderBlock(wxUint32 parent_num);
@@ -376,4 +376,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_AMIGA_H_ */
+#endif /* BASICDIRITEM_AMIGA_H */

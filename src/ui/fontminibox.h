@@ -27,7 +27,7 @@ private:
 	wxArrayString mFontNames;
 	wxArrayString mFontSizes;
 
-	wxFont default_font;
+	wxFont mDefaultFont;
 
 	wxString mSelectedName;
 	int      mSelectedSize;

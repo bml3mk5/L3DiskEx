@@ -236,7 +236,7 @@ int DiskBasicTypeMZBase::GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeMZBase::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeMZBase::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->InvertUint8(basic->GetFillCodeOnFormat()));
 }

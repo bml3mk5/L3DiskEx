@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MZ_BASE_H_
-#define _BASICTYPE_MZ_BASE_H_
+#ifndef BASICTYPE_MZ_BASE_H
+#define BASICTYPE_MZ_BASE_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -66,7 +66,7 @@ public:
 	/// @name format
 	//@{
 	/// @brief セクタデータを指定コードで埋める
-	virtual void		FillSector(DiskD88Track *track, DiskD88Sector *sector);
+	virtual void		FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	//@}
 
 	/// @name delete
@@ -76,4 +76,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MZ_BASE_H_ */
+#endif /* BASICTYPE_MZ_BASE_H */

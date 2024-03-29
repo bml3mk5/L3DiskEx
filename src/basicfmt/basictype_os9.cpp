@@ -53,7 +53,7 @@ bool OS9AllocMap::AllocMap(DiskBasic *basic, wxUint32 n_map_start_lsn, wxUint32 
 
 	wxUint32 map_end_lsn = (end_lsn / sector_size / 8 / secs_per_bit) + 1;
 	for(wxUint32 map_lsn = map_start_lsn; map_lsn <= map_end_lsn && map_lsn <= 32 && bytes < map_bytes; map_lsn++) {
-		DiskD88Sector *sector = basic->GetManagedSector(map_lsn);
+		DiskImageSector *sector = basic->GetManagedSector(map_lsn);
 		if (!sector) {
 			// error
 			valid = false;
@@ -164,7 +164,7 @@ double DiskBasicTypeOS9::ParseParamOnDisk(bool is_formatting)
 	double valid_ratio = 1.0;
 
 	// Ident
-	DiskD88Sector *sector = basic->GetManagedSector(0);
+	DiskImageSector *sector = basic->GetManagedSector(0);
 	if (!sector) {
 		return -1.0;
 	}
@@ -304,7 +304,7 @@ bool DiskBasicTypeOS9::AssignRootDirectory(int start_sector, int end_sector, Dis
 	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
 	ditem->SetStartGroup(0, dir_fd_lsn);
 	DiskBasicDirItemOS9FD *fd = &ditem->GetFD();
-	DiskD88Sector *sector = basic->GetManagedSector(dir_fd_lsn);
+	DiskImageSector *sector = basic->GetManagedSector(dir_fd_lsn);
 	if (!sector) return false;
 	fd->Set(basic, sector, dir_fd_lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
 
@@ -323,7 +323,7 @@ bool DiskBasicTypeOS9::CalcGroupsOnRootDirectory(int start_sector, int end_secto
 
 	// root directory
 	wxUint32 dir_fd_lsn = GET_OS9_LSN(os9_ident->DD_DIR);
-	DiskD88Sector *sector = basic->GetManagedSector(dir_fd_lsn);
+	DiskImageSector *sector = basic->GetManagedSector(dir_fd_lsn);
 	if (!sector) {
 		return false;
 	}
@@ -372,13 +372,13 @@ bool DiskBasicTypeOS9::IsEmptyDirectory(bool is_root, const DiskBasicGroups &gro
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
 		int trk_num = gitem->track;
 		int sid_num = gitem->side;
-		DiskD88Track *track = basic->GetTrack(trk_num, sid_num);
+		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
 			break;
 		}
 		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && valid && !last; sec_num++) {
-			DiskD88Sector *sector = track->GetSector(sec_num);
+			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
 				valid = false;
@@ -398,7 +398,7 @@ bool DiskBasicTypeOS9::IsEmptyDirectory(bool is_root, const DiskBasicGroups &gro
 				nitem->SetDataPtr(index_number, gitem, sector, pos, buffer);
 				// FDセクタを調べる
 				wxUint32 start_nsl = nitem->GetStartGroup(0);
-				DiskD88Sector *fd_sector = basic->GetSectorFromGroup(start_nsl);
+				DiskImageSector *fd_sector = basic->GetSectorFromGroup(start_nsl);
 				if (fd_sector) {
 					directory_os9_fd_t *fd_buf = (directory_os9_fd_t *)fd_sector->GetSectorBuffer();
 					if (fd_buf) {
@@ -524,7 +524,7 @@ bool DiskBasicTypeOS9::PrepareToSaveFile(wxInputStream &istream, int &file_size,
 	if (lsn == INVALID_GROUP_NUMBER) {
 		return false;
 	}
-	DiskD88Sector *sector = basic->GetSectorFromGroup(lsn);
+	DiskImageSector *sector = basic->GetSectorFromGroup(lsn);
 	if (!sector) {
 		return false;
 	}
@@ -695,7 +695,7 @@ bool DiskBasicTypeOS9::PrepareToMakeDirectory(DiskBasicDirItem *item)
 		return false;
 	}
 	DiskBasicDirItemOS9 *ditem = (DiskBasicDirItemOS9 *)item;
-	DiskD88Sector *sector = basic->GetSectorFromGroup(lsn);
+	DiskImageSector *sector = basic->GetSectorFromGroup(lsn);
 
 	DiskBasicDirItemOS9FD *fd = &ditem->GetFD();
 	fd->Set(basic, sector, lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
@@ -736,7 +736,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskD88Sector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
@@ -774,7 +774,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 }
 
 /// セクタデータを指定コードで埋める
-void DiskBasicTypeOS9::FillSector(DiskD88Track *track, DiskD88Sector *sector)
+void DiskBasicTypeOS9::FillSector(DiskImageTrack *track, DiskImageSector *sector)
 {
 	sector->Fill(basic->GetFillCodeOnFormat());
 }
@@ -783,7 +783,7 @@ void DiskBasicTypeOS9::FillSector(DiskD88Track *track, DiskD88Sector *sector)
 bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// Ident
-	DiskD88Sector *sector = basic->GetManagedSector(0);
+	DiskImageSector *sector = basic->GetManagedSector(0);
 	if (!sector) return false;
 	os9_ident = (os9_ident_t *)sector->GetSectorBuffer();
 	if (!os9_ident) return false;

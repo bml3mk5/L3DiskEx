@@ -20,11 +20,11 @@ DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic)
 	: DiskBasicDirItem(basic)
 {
 }
-DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 }
-DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMZBase::DiskBasicDirItemMZBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 }

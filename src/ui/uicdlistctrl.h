@@ -15,25 +15,26 @@
 #include "uicommon.h"
 
 
-#define L3CDListItem		wxDataViewItem
-#define L3CDListItems		wxDataViewItemArray
-#define L3CDListEvent		wxDataViewEvent
+#define MyCDListItem		wxDataViewItem
+#define MyCDListItems		wxDataViewItemArray
+#define MyCDListEvent		wxDataViewEvent
 
+class wxMenu;
 class wxIcon;
-class L3DiskFrame;
+class UiDiskFrame;
 class Config;
 
 //////////////////////////////////////////////////////////////////////
 
 /// リストコントロール内の値
-class L3CDListValue
+class MyCDListValue
 {
 protected:
 	int row;
 	int icon;
 	wxString value;
 public:
-	L3CDListValue();
+	MyCDListValue();
 
 	void Set(long n_row, int n_icon, const wxString &n_value);
 	void Set(long n_row, const wxString &n_value);
@@ -45,7 +46,7 @@ public:
 //////////////////////////////////////////////////////////////////////
 
 /// リストのカラム情報
-class L3CDListColumn
+class MyCDListColumn
 {
 protected:
 	int idx;
@@ -56,7 +57,7 @@ protected:
 	int sort_dir;
 	wxDataViewColumn *id;
 public:
-	L3CDListColumn(int n_idx, const struct st_list_columns *n_info, int n_width);
+	MyCDListColumn(int n_idx, const struct st_list_columns *n_info, int n_width);
 
 	void	Set(int n_idx, const struct st_list_columns *n_info, int n_width);
 	int		GetIndex() const { return idx; }
@@ -74,41 +75,41 @@ public:
 	void	SetId(wxDataViewColumn *val) { id = val; }
 };
 
-WX_DEFINE_ARRAY(L3CDListColumn *, L3CDListColumns);
+WX_DEFINE_ARRAY(MyCDListColumn *, MyCDListColumns);
 
 //////////////////////////////////////////////////////////////////////
 
-WX_DEFINE_ARRAY(const wxIcon *, L3CDListIcons);
+WX_DEFINE_ARRAY(const wxIcon *, MyCDListIcons);
 
 /// リストコントロール
-class L3CDListCtrl : public wxDataViewListCtrl
+class MyCDListCtrl : public wxDataViewListCtrl
 {
 protected:
-	L3DiskFrame		*frame;
-	L3CDListColumns	 m_columns;
+	UiDiskFrame		*frame;
+	MyCDListColumns	 m_columns;
 	int				 m_idOnFirstColumn;
 	Config			*m_ini;
-	L3CDListIcons	 m_icons;
+	MyCDListIcons	 m_icons;
 	wxArrayInt		 m_selecting;
 
 	/// アイコンを設定
 	void AssignListIcons(const char ***icons);
 
 public:
-	L3CDListCtrl(L3DiskFrame *parentframe, wxWindow *parent, wxWindowID id,
+	MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID id,
 		const struct st_list_columns *columns,
 		Config *ini,
 		long style,
 		wxDataViewModel *model=NULL,
 		const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
-	virtual ~L3CDListCtrl();
+	virtual ~MyCDListCtrl();
 
 //	/// カラム幅を変えた
-//	void OnColumnEndDrag(L3CDListEvent& event);
+//	void OnColumnEndDrag(MyCDListEvent& event);
 	/// カラムを入れ替え
-	void OnColumnReordered(L3CDListEvent& event);
+	void OnColumnReordered(MyCDListEvent& event);
 	/// カラムをソート
-	void OnColumnSorted(L3CDListEvent& event);
+	void OnColumnSorted(MyCDListEvent& event);
 
 	/// リストにカラムを設定する
 	void InsertListColumns();
@@ -118,20 +119,20 @@ public:
 	/// 初期 カラムを設定
 	void InsertListColumn(int col);
 	/// カラムを挿入
-	void InsertListColumn(int col, int idx, L3CDListColumn *c);
+	void InsertListColumn(int col, int idx, MyCDListColumn *c);
 	/// カラムの幅
 	int  GetListColumnWidth(int col) const;
 	/// カラムを削除
 	void DeleteListColumn(int col);
 
 	/// データを挿入
-	void InsertListItem(long row, L3CDListValue *values, size_t count, wxUIntPtr data);
+	void InsertListItem(long row, MyCDListValue *values, size_t count, wxUIntPtr data);
 	/// データを更新
-	void UpdateListItem(long row, L3CDListValue *values, size_t count, wxUIntPtr data);
+	void UpdateListItem(long row, MyCDListValue *values, size_t count, wxUIntPtr data);
 
-//	int GetDirItemPos(const L3CDListItem &item) const;
+//	int GetDirItemPos(const MyCDListItem &item) const;
 	/// ファイル名テキストを設定
-	void SetListText(const L3CDListItem &item, int idx, const wxString &text);
+	void SetListText(const MyCDListItem &item, int idx, const wxString &text);
 	/// 選択している行の位置を返す
 	int  GetListSelectedRow() const;
 	/// アイテム位置を返す
@@ -139,33 +140,33 @@ public:
 	/// 選択している行数
 	int  GetListSelectedItemCount() const;
 	/// 選択している行アイテムを得る
-	L3CDListItem GetListSelection() const;
+	MyCDListItem GetListSelection() const;
 	/// 選択している行アイテムを得る
-	int  GetListSelections(L3CDListItems &arr) const;
+	int  GetListSelections(MyCDListItems &arr) const;
 	/// 全行を選択
 	void SelectAllListItem();
 	/// 行アイテムを選択
-	void SelectListItem(const L3CDListItem &item);
+	void SelectListItem(const MyCDListItem &item);
 	/// 行を選択
 	void SelectListRow(int row);
 	/// 全て非選択にする
 	void UnselectAllListItem();
 	/// 非選択にする
-	void UnselectListItem(const L3CDListItem &item);
+	void UnselectListItem(const MyCDListItem &item);
 	/// 指定した行が選択しているか
 	int  GetListSelected(int row) const;
 	/// 指定した行が選択しているか
 	void SetListSelected(int row, int val);
 	/// フォーカスしている行アイテムを得る
-	L3CDListItem GetListFocusedItem() const;
+	MyCDListItem GetListFocusedItem() const;
 	/// 行アイテムをフォーカス
-	void FocusListItem(const L3CDListItem &item);
+	void FocusListItem(const MyCDListItem &item);
 	/// アイテムを編集
-	void EditListItem(const L3CDListItem &item);
+	void EditListItem(const MyCDListItem &item);
 	/// リストを削除
 	bool DeleteAllListItems();
 	/// アイテムの固有データを返す
-	wxUIntPtr GetListItemData(const L3CDListItem &item) const;
+	wxUIntPtr GetListItemData(const MyCDListItem &item) const;
 	/// アイテムの固有データを返す
 	wxUIntPtr GetListItemDataByRow(long row) const;
 
@@ -176,31 +177,37 @@ public:
 	/// カラムの表示を変更
 	bool ShowColumn(int idx, bool show);
 	/// 表示位置のカラム情報を返す
-	L3CDListColumn *FindColumn(int col, int *n_idx, bool all = false) const;
+	MyCDListColumn *FindColumn(int col, int *n_idx, bool all = false) const;
 	/// 表示位置のカラム情報を返す
-	L3CDListColumn *FindColumn(wxDataViewColumn *col, int *n_idx, bool all = false) const;
+	MyCDListColumn *FindColumn(wxDataViewColumn *col, int *n_idx, bool all = false) const;
 
-	/// カラム用のポップアップメニューを作成する
-	void CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id);
+//	/// カラム用のポップアップメニューを作成する
+//	void CreateColumnPopupMenu(wxMenu* &menu, int menu_id, int menu_detail_id);
 	/// カラム情報を現在の並び順で返す
-	void GetListColumnsByCurrentOrder(L3CDListColumns &items) const;
+	void GetListColumnsByCurrentOrder(MyCDListColumns &items) const;
 	/// カラム入れ替えダイアログを表示
 	bool ShowListColumnRearrangeBox();
 
 	/// カラム番号ソート用
-	static int SortByColumn(L3CDListColumn **i1, L3CDListColumn **i2);
+	static int SortByColumn(MyCDListColumn **i1, MyCDListColumn **i2);
 
 	/// 現在のカラム位置を再取得
 	void ReorderColumns();
+
+	/// 指定した座標に行アイテムがあるか
+	bool HasItemAtPoint(int x, int y) const;
+	/// 指定した座標にある行アイテムを返す
+	MyCDListItem GetItemAtPoint(int x, int y) const;
 };
 
 //////////////////////////////////////////////////////////////////////
 
 /// カラム入れ替えボックス
-class L3CDListRearrangeBox : public wxRearrangeDialog
+class MyCDListRearrangeBox : public wxRearrangeDialog
 {
 public:
-	L3CDListRearrangeBox(L3CDListCtrl *parent, const wxArrayInt &order, const wxArrayString &items);
+	MyCDListRearrangeBox(MyCDListCtrl *parent, const wxArrayInt &order, const wxArrayString &items);
+
 };
 
 #endif /* _UICDLISTCTRL_H_ */

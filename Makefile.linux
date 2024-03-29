@@ -50,14 +50,15 @@ SRCDATA=$(DATADIR)/
 
 OBJS=	$(SRCDIR)/utils.o \
 	$(SRCDIR)/common.o \
-	$(SRCDIR)/diskd88.o \
-	$(SRCDIR)/diskparam.o \
 	$(SRCDIR)/charcodes.o \
 	$(SRCDIR)/config.o \
 	$(SRCDIR)/logging.o \
+	$(SRCDIR)/parambase.o \
 	$(SRCDIR)/result.o \
+	$(SRCBASICFMTDIR)/basiccategory.o \
 	$(SRCBASICFMTDIR)/basiccommon.o \
 	$(SRCBASICFMTDIR)/basicparam.o \
+	$(SRCBASICFMTDIR)/basictemplate.o \
 	$(SRCBASICFMTDIR)/basicerror.o \
 	$(SRCBASICFMTDIR)/basictype.o \
 	$(SRCBASICFMTDIR)/basictype_fat_base.o \
@@ -132,7 +133,10 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basicdiritem.o \
 	$(SRCBASICFMTDIR)/basicdir.o \
 	$(SRCBASICFMTDIR)/basicfmt.o \
-	$(SRCDISKIMGDIR)/diskd88creator.o \
+	$(SRCDISKIMGDIR)/diskparam.o \
+	$(SRCDISKIMGDIR)/diskimage.o \
+	$(SRCDISKIMGDIR)/diskd88.o \
+	$(SRCDISKIMGDIR)/diskimagecreator.o \
 	$(SRCDISKIMGDIR)/diskplainparser.o \
 	$(SRCDISKIMGDIR)/diskd88parser.o \
 	$(SRCDISKIMGDIR)/diskdskparser.o \
@@ -176,9 +180,12 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/uidiskattr.o \
 	$(SRCUIDIR)/uidisklist.o \
 	$(SRCUIDIR)/uifilelist.o \
+	$(SRCUIDIR)/uimainframe.o \
+	$(SRCUIDIR)/uimainprocess.o \
 	$(SRCUIDIR)/uirawdisk.o \
 	$(SRCUIDIR)/uifatarea.o \
 	$(SRCUIDIR)/uirpanel.o \
+	$(SRCUIDIR)/mymenu.o \
 	$(SRCDIR)/main.o
 
 EXE =$(BUILDDIR)/$(EXEFILE)

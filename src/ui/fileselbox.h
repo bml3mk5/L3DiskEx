@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _FILESELBOX_H_
-#define _FILESELBOX_H_
+#ifndef FILESELBOX_H
+#define FILESELBOX_H
 
 #include "../common.h"
 #include <wx/dialog.h>
@@ -42,5 +42,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _FILESELBOX_H_ */
+#endif /* FILESELBOX_H */
 

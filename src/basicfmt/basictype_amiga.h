@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_AMIGA_H_
-#define _BASICTYPE_AMIGA_H_
+#ifndef BASICTYPE_AMIGA_H
+#define BASICTYPE_AMIGA_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -263,4 +263,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_AMIGA_H_ */
+#endif /* BASICTYPE_AMIGA_H */

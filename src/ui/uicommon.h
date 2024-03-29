@@ -27,5 +27,12 @@ struct st_list_columns {
 	bool		sortable;	///< ソート可能か
 };
 
+
+/// 外部エディタ種類
+enum enEditorTypes {
+	EDITOR_TYPE_BINARY = 0,
+	EDITOR_TYPE_TEXT,
+};
+
 #endif /* _UICOMMON_H_ */
 

@@ -15,7 +15,9 @@
 #include <wx/menu.h>
 #include <wx/sizer.h>
 #include <wx/numformatter.h>
+#include "mymenu.h"
 #include "../main.h"
+#include "uimainframe.h"
 #include "fontminibox.h"
 #include "../utils.h"
 #include "../logging.h"
@@ -28,7 +30,7 @@ extern const char * fd_5inch_16_1_xpm[];
 //
 //
 //
-L3DiskBinDumpTextCtrl::L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id)
+UiDiskBinDumpTextCtrl::UiDiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id)
 #ifdef USE_RICH_TEXT_ON_BINDUMP
 	: wxRichTextCtrl(parent, id, wxT(""), wxDefaultPosition, wxDefaultSize, wxRE_MULTILINE | wxRE_READONLY)
 #else
@@ -41,15 +43,15 @@ L3DiskBinDumpTextCtrl::L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id)
 //
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskBinDumpFrame, wxFrame)
-	EVT_MENU(wxID_CLOSE, L3DiskBinDumpFrame::OnClose)
-	EVT_MENU(IDM_VIEW_INVERT, L3DiskBinDumpFrame::OnViewInvert)
-	EVT_MENU_RANGE(IDM_VIEW_CHAR_0, IDM_VIEW_CHAR_0 + 30, L3DiskBinDumpFrame::OnViewChar)
-	EVT_MENU_RANGE(IDM_VIEW_TEXT, IDM_VIEW_BINARY, L3DiskBinDumpFrame::OnViewTextBinary)
-	EVT_MENU(IDM_VIEW_FONT, L3DiskBinDumpFrame::OnViewFont)
+wxBEGIN_EVENT_TABLE(UiDiskBinDumpFrame, wxFrame)
+	EVT_MENU(wxID_CLOSE, UiDiskBinDumpFrame::OnClose)
+	EVT_MENU(IDM_VIEW_INVERT, UiDiskBinDumpFrame::OnViewInvert)
+	EVT_MENU_RANGE(IDM_VIEW_CHAR_0, IDM_VIEW_CHAR_0 + 30, UiDiskBinDumpFrame::OnViewChar)
+	EVT_MENU_RANGE(IDM_VIEW_TEXT, IDM_VIEW_BINARY, UiDiskBinDumpFrame::OnViewTextBinary)
+	EVT_MENU(IDM_VIEW_FONT, UiDiskBinDumpFrame::OnViewFont)
 wxEND_EVENT_TABLE()
 
-L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size)
+UiDiskBinDumpFrame::UiDiskBinDumpFrame(UiDiskFrame *parent, const wxString& title, const wxSize& size)
        : wxFrame(parent, -1, title, wxDefaultPosition, size, wxDEFAULT_FRAME_STYLE | wxFRAME_FLOAT_ON_PARENT)
 {
 	// icon
@@ -60,15 +62,15 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 #endif
 
 	// menu
-	menuFile = new wxMenu;
-	menuView = new wxMenu;
+	menuFile = new MyMenu;
+	menuView = new MyMenu;
 
 	menuFile->Append(wxID_CLOSE, _("&Close"));
 
 	menuView->AppendRadioItem(IDM_VIEW_BINARY, _("Binary"));
 	menuView->AppendRadioItem(IDM_VIEW_TEXT, _("Text"));
 	menuView->AppendSeparator();
-		wxMenu *sm = new wxMenu();
+		MyMenu *sm = new MyMenu();
 		const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("dump"));
 		if (choice) {
 			for(size_t i=0; i<choice->Count(); i++) {
@@ -83,7 +85,7 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 	menuView->Append(IDM_VIEW_FONT, _("&Font..."));
 
 	// menu bar
-	wxMenuBar *menuBar = new wxMenuBar;
+	MyMenuBar *menuBar = new MyMenuBar;
 	menuBar->Append( menuFile, _("&File") );
 	menuBar->Append( menuView, _("&View") );
 
@@ -92,23 +94,23 @@ L3DiskBinDumpFrame::L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& titl
 	// tool bar
 //	RecreateToolbar();
 
-	panel = new L3DiskBinDumpPanel(this, this);
+	panel = new UiDiskBinDumpPanel(this, this);
 
 	panel->SetClientSize(parent->GetClientSize());
 }
 
-L3DiskBinDumpFrame::~L3DiskBinDumpFrame()
+UiDiskBinDumpFrame::~UiDiskBinDumpFrame()
 {
-	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	UiDiskFrame *parent = (UiDiskFrame *)m_parent;
 	parent->BinDumpWindowClosed();
 }
 
-void L3DiskBinDumpFrame::OnClose(wxCommandEvent& WXUNUSED(event))
+void UiDiskBinDumpFrame::OnClose(wxCommandEvent& WXUNUSED(event))
 {
 	Close();
 }
 
-void L3DiskBinDumpFrame::OnViewInvert(wxCommandEvent& event)
+void UiDiskBinDumpFrame::OnViewInvert(wxCommandEvent& event)
 {
 	int id = event.GetId();
 	bool checked = event.IsChecked();
@@ -116,7 +118,7 @@ void L3DiskBinDumpFrame::OnViewInvert(wxCommandEvent& event)
 	panel->SetDataInvert(checked);
 }
 
-void L3DiskBinDumpFrame::OnViewChar(wxCommandEvent& event)
+void UiDiskBinDumpFrame::OnViewChar(wxCommandEvent& event)
 {
 	int id = event.GetId() - IDM_VIEW_CHAR_0;
 	bool checked = event.IsChecked();
@@ -126,7 +128,7 @@ void L3DiskBinDumpFrame::OnViewChar(wxCommandEvent& event)
 	panel->SetDataChar(name);
 }
 
-void L3DiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
+void UiDiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
 {
 	int id = event.GetId();
 	bool checked = event.IsChecked();
@@ -134,46 +136,46 @@ void L3DiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
 	panel->SetTextBinary(id - IDM_VIEW_TEXT);
 }
 
-void L3DiskBinDumpFrame::OnViewFont(wxCommandEvent& event)
+void UiDiskBinDumpFrame::OnViewFont(wxCommandEvent& event)
 {
 	ShowDataFontDialog();
 }
 
-L3DiskBinDump *L3DiskBinDumpFrame::GetDumpPanel() const
+UiDiskBinDump *UiDiskBinDumpFrame::GetDumpPanel() const
 {
 	return panel->GetDumpPanel();
 }
 
-void L3DiskBinDumpFrame::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+void UiDiskBinDumpFrame::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
-	L3DiskBinDump *dump = GetDumpPanel();
+	UiDiskBinDump *dump = GetDumpPanel();
 	if (dump) dump->SetDatas(trk, sid, sec, buf, len);
 }
 
-void L3DiskBinDumpFrame::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+void UiDiskBinDumpFrame::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
-	L3DiskBinDump *dump = GetDumpPanel();
+	UiDiskBinDump *dump = GetDumpPanel();
 	if (dump) dump->AppendDatas(trk, sid, sec, buf, len);
 }
 
-void L3DiskBinDumpFrame::ClearDatas()
+void UiDiskBinDumpFrame::ClearDatas()
 {
-	L3DiskBinDump *dump = GetDumpPanel();
+	UiDiskBinDump *dump = GetDumpPanel();
 	if (dump) dump->ClearDatas();
 }
 
-void L3DiskBinDumpFrame::SetTextBinary(int val)
+void UiDiskBinDumpFrame::SetTextBinary(int val)
 {
 	panel->SetTextBinary(val);
 }
 
-void L3DiskBinDumpFrame::SetDataInvert(bool val)
+void UiDiskBinDumpFrame::SetDataInvert(bool val)
 {
 	ToggleControl(IDM_VIEW_INVERT, val);
 	panel->SetDataInvert(val);
 }
 
-void L3DiskBinDumpFrame::SetDataChar(int sel)
+void UiDiskBinDumpFrame::SetDataChar(int sel)
 {
 	ToggleControl(IDM_VIEW_CHAR_0 + sel, true);
 
@@ -181,16 +183,16 @@ void L3DiskBinDumpFrame::SetDataChar(int sel)
 	panel->SetDataChar(name);
 }
 
-void L3DiskBinDumpFrame::SetDataFont(const wxFont &font)
+void UiDiskBinDumpFrame::SetDataFont(const wxFont &font)
 {
 	panel->SetDataFont(font);
-	L3DiskFrame *parent = (L3DiskFrame *)GetParent();
+	UiDiskFrame *parent = (UiDiskFrame *)GetParent();
 	parent->SetIniDumpFont(font);
 }
 
-void L3DiskBinDumpFrame::GetDefaultDataFont(wxFont &font)
+void UiDiskBinDumpFrame::GetDefaultDataFont(wxFont &font)
 {
-	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	UiDiskFrame *parent = (UiDiskFrame *)m_parent;
 	wxString name = parent->GetIniDumpFontName();
 	int size = parent->GetIniDumpFontSize();
 	if (size == 0) size = 10;
@@ -201,22 +203,22 @@ void L3DiskBinDumpFrame::GetDefaultDataFont(wxFont &font)
 	}
 }
 
-wxFont L3DiskBinDumpFrame::GetDefaultFont() const
+wxFont UiDiskBinDumpFrame::GetDefaultFont() const
 {
 	return wxFont(10, wxFONTFAMILY_MODERN, wxFONTSTYLE_NORMAL, wxFONTWEIGHT_NORMAL);
 }
 
-wxString L3DiskBinDumpFrame::GetDataFontName() const
+wxString UiDiskBinDumpFrame::GetDataFontName() const
 {
 	return panel->GetDataFontName();
 }
 
-int L3DiskBinDumpFrame::GetDataFontSize() const
+int UiDiskBinDumpFrame::GetDataFontSize() const
 {
 	return panel->GetDataFontSize();
 }
 
-void L3DiskBinDumpFrame::ToggleControl(int id, bool checked)
+void UiDiskBinDumpFrame::ToggleControl(int id, bool checked)
 {
 	wxMenuBar *menubar = GetMenuBar();
 	if (menubar) {
@@ -224,7 +226,7 @@ void L3DiskBinDumpFrame::ToggleControl(int id, bool checked)
 	}
 }
 
-void L3DiskBinDumpFrame::ShowDataFontDialog()
+void UiDiskBinDumpFrame::ShowDataFontDialog()
 {
 	FontMiniBox dlg(this, wxID_ANY, GetDefaultFont());
 	dlg.SetFontName(GetDataFontName());
@@ -239,14 +241,14 @@ void L3DiskBinDumpFrame::ShowDataFontDialog()
 //
 //
 //
-L3MemoryBuffer::L3MemoryBuffer(const L3MemoryBuffer &src)
+MyMemoryBuffer::MyMemoryBuffer(const MyMemoryBuffer &src)
 	: wxMemoryBuffer(src)
 {
 	track_number = 0;
 	side_number = 0;
 	sector_number = 1;
 }
-L3MemoryBuffer::L3MemoryBuffer(size_t size)
+MyMemoryBuffer::MyMemoryBuffer(size_t size)
 	: wxMemoryBuffer(size)
 {
 	track_number = 0;
@@ -257,7 +259,7 @@ L3MemoryBuffer::L3MemoryBuffer(size_t size)
 //
 //
 //
-L3DiskBinDumpPanel::L3DiskBinDumpPanel(L3DiskBinDumpFrame *parentframe, wxWindow *parentwindow)
+UiDiskBinDumpPanel::UiDiskBinDumpPanel(UiDiskBinDumpFrame *parentframe, wxWindow *parentwindow)
                 : wxSplitterWindow(parentwindow, wxID_ANY,
                                    wxDefaultPosition, wxDefaultSize,
                                    wxSP_THIN_SASH /* | wxSP_NO_XP_THEME */ )
@@ -268,42 +270,42 @@ L3DiskBinDumpPanel::L3DiskBinDumpPanel(L3DiskBinDumpFrame *parentframe, wxWindow
 	// resize only bottom window when resize parent window.
 	SetSashGravity(0.0);
 
-	attr = new L3DiskBinDumpAttr(frame, this);
-	dump = new L3DiskBinDump(frame, this);
+	attr = new UiDiskBinDumpAttr(frame, this);
+	dump = new UiDiskBinDump(frame, this);
 
 	wxSize sz = attr->GetSize();
 
 	SplitHorizontally(attr, dump, sz.y);
 }
 
-L3DiskBinDumpPanel::~L3DiskBinDumpPanel()
+UiDiskBinDumpPanel::~UiDiskBinDumpPanel()
 {
 }
 
-void L3DiskBinDumpPanel::SetTextBinary(int val)
+void UiDiskBinDumpPanel::SetTextBinary(int val)
 {
 	attr->SetTextBinary(val);
 	dump->SetTextBinary(val);
 }
-void L3DiskBinDumpPanel::SetDataInvert(bool val)
+void UiDiskBinDumpPanel::SetDataInvert(bool val)
 {
 	attr->SetDataInvert(val);
 	dump->SetDataInvert(val);
 }
-void L3DiskBinDumpPanel::SetDataChar(const wxString &name)
+void UiDiskBinDumpPanel::SetDataChar(const wxString &name)
 {
 	attr->SetDataChar(name);
 	dump->SetDataChar(name);
 }
-void L3DiskBinDumpPanel::SetDataFont(const wxFont &font)
+void UiDiskBinDumpPanel::SetDataFont(const wxFont &font)
 {
 	dump->SetDataFont(font);
 }
-wxString L3DiskBinDumpPanel::GetDataFontName() const
+wxString UiDiskBinDumpPanel::GetDataFontName() const
 {
 	return dump->GetDataFontName();
 }
-int L3DiskBinDumpPanel::GetDataFontSize() const
+int UiDiskBinDumpPanel::GetDataFontSize() const
 {
 	return dump->GetDataFontSize();
 }
@@ -312,15 +314,15 @@ int L3DiskBinDumpPanel::GetDataFontSize() const
 //
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskBinDumpAttr, wxPanel)
-	EVT_RADIOBUTTON(IDC_RADIO_TEXT, L3DiskBinDumpAttr::OnCheckTextBinary)
-	EVT_RADIOBUTTON(IDC_RADIO_BINARY, L3DiskBinDumpAttr::OnCheckTextBinary)
-	EVT_CHOICE(IDC_COMBO_CHAR_CODE, L3DiskBinDumpAttr::OnCheckChar)
-	EVT_CHECKBOX(IDC_CHECK_INVERT, L3DiskBinDumpAttr::OnCheckInvert)
-	EVT_BUTTON(IDC_BUTTON_FONT, L3DiskBinDumpAttr::OnClickButton)
+wxBEGIN_EVENT_TABLE(UiDiskBinDumpAttr, wxPanel)
+	EVT_RADIOBUTTON(IDC_RADIO_TEXT, UiDiskBinDumpAttr::OnCheckTextBinary)
+	EVT_RADIOBUTTON(IDC_RADIO_BINARY, UiDiskBinDumpAttr::OnCheckTextBinary)
+	EVT_CHOICE(IDC_COMBO_CHAR_CODE, UiDiskBinDumpAttr::OnCheckChar)
+	EVT_CHECKBOX(IDC_CHECK_INVERT, UiDiskBinDumpAttr::OnCheckInvert)
+	EVT_BUTTON(IDC_BUTTON_FONT, UiDiskBinDumpAttr::OnClickButton)
 wxEND_EVENT_TABLE()
 
-L3DiskBinDumpAttr::L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *parentwindow)
+UiDiskBinDumpAttr::UiDiskBinDumpAttr(UiDiskBinDumpFrame *parentframe, wxWindow *parentwindow)
                 : wxPanel(parentwindow)
 {
 	parent = parentwindow;
@@ -368,29 +370,29 @@ L3DiskBinDumpAttr::L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *
 	SetSizerAndFit(szrAll);
 }
 
-L3DiskBinDumpAttr::~L3DiskBinDumpAttr()
+UiDiskBinDumpAttr::~UiDiskBinDumpAttr()
 {
 }
 
-void L3DiskBinDumpAttr::OnCheckTextBinary(wxCommandEvent& event)
+void UiDiskBinDumpAttr::OnCheckTextBinary(wxCommandEvent& event)
 {
 	frame->SetTextBinary(event.GetId() - IDC_RADIO_TEXT);
 }
-void L3DiskBinDumpAttr::OnCheckChar(wxCommandEvent& event)
+void UiDiskBinDumpAttr::OnCheckChar(wxCommandEvent& event)
 {
 	int sel = event.GetSelection();
 	frame->SetDataChar(sel);
 }
-void L3DiskBinDumpAttr::OnCheckInvert(wxCommandEvent& event)
+void UiDiskBinDumpAttr::OnCheckInvert(wxCommandEvent& event)
 {
 	frame->SetDataInvert(event.IsChecked());
 }
-void L3DiskBinDumpAttr::OnClickButton(wxCommandEvent& event)
+void UiDiskBinDumpAttr::OnClickButton(wxCommandEvent& event)
 {
 	frame->ShowDataFontDialog();
 }
 
-void L3DiskBinDumpAttr::SetTextBinary(int val)
+void UiDiskBinDumpAttr::SetTextBinary(int val)
 {
 	switch(val) {
 	case 1:
@@ -401,11 +403,11 @@ void L3DiskBinDumpAttr::SetTextBinary(int val)
 		break;
 	}
 }
-void L3DiskBinDumpAttr::SetDataInvert(bool val)
+void UiDiskBinDumpAttr::SetDataInvert(bool val)
 {
 	chkInvert->SetValue(val);
 }
-void L3DiskBinDumpAttr::SetDataChar(const wxString &name)
+void UiDiskBinDumpAttr::SetDataChar(const wxString &name)
 {
 	int sel = gCharCodeChoices.IndexOf(wxT("dump"), name);
 	comCharCode->SetSelection(sel);
@@ -415,11 +417,11 @@ void L3DiskBinDumpAttr::SetDataChar(const wxString &name)
 //
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskBinDump, wxScrolledWindow)
-	EVT_SIZE(L3DiskBinDump::OnSize)
+wxBEGIN_EVENT_TABLE(UiDiskBinDump, wxScrolledWindow)
+	EVT_SIZE(UiDiskBinDump::OnSize)
 wxEND_EVENT_TABLE()
 
-L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwindow)
+UiDiskBinDump::UiDiskBinDump(UiDiskBinDumpFrame *parentframe, wxWindow *parentwindow)
        : wxScrolledWindow(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
 	parent   = parentwindow;
@@ -431,13 +433,13 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	wxFont font;
 	frame->GetDefaultDataFont(font);
 
-	txtHex = new L3DiskBinDumpTextCtrl(this, IDC_TXT_HEX);
+	txtHex = new UiDiskBinDumpTextCtrl(this, IDC_TXT_HEX);
 	txtHex->SetFont(font);
-	txtHex->Bind(wxEVT_MOUSEWHEEL, &L3DiskBinDump::OnMouseWheelOnChild, this);
+	txtHex->Bind(wxEVT_MOUSEWHEEL, &UiDiskBinDump::OnMouseWheelOnChild, this);
 
-	txtAsc = new L3DiskBinDumpTextCtrl(this, IDC_TXT_ASC);
+	txtAsc = new UiDiskBinDumpTextCtrl(this, IDC_TXT_ASC);
 	txtAsc->SetFont(font);
-	txtAsc->Bind(wxEVT_MOUSEWHEEL, &L3DiskBinDump::OnMouseWheelOnChild, this);
+	txtAsc->Bind(wxEVT_MOUSEWHEEL, &UiDiskBinDump::OnMouseWheelOnChild, this);
 
 	txt_height = 0;
 	text_binary = 1;
@@ -447,16 +449,16 @@ L3DiskBinDump::L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parentwi
 	parent->SetClientSize(min_x, min_y);
 }
 
-L3DiskBinDump::~L3DiskBinDump()
+UiDiskBinDump::~UiDiskBinDump()
 {
 	ClearBuffer();
 }
 
-void L3DiskBinDump::OnSize(wxSizeEvent& event)
+void UiDiskBinDump::OnSize(wxSizeEvent& event)
 {
 }
 
-void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
+void UiDiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
 {
 	wxPoint pt = GetViewStart();
 	int sx, sy;
@@ -468,18 +470,18 @@ void L3DiskBinDump::OnMouseWheelOnChild(wxMouseEvent& event)
 #endif
 }
 
-void L3DiskBinDump::ClearBuffer()
+void UiDiskBinDump::ClearBuffer()
 {
 	for(size_t i=0; i<buffers.Count(); i++) {
-		L3MemoryBuffer *p = buffers.Item(i);
+		MyMemoryBuffer *p = buffers.Item(i);
 		delete p;
 	}
 	buffers.Clear();
 }
 
-L3MemoryBuffer *L3DiskBinDump::AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+MyMemoryBuffer *UiDiskBinDump::AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
-	L3MemoryBuffer *p = new L3MemoryBuffer(len);
+	MyMemoryBuffer *p = new MyMemoryBuffer(len);
 	p->SetTrackNumber(trk);
 	p->SetSideNumber(sid);
 	p->SetSectorNumber(sec);
@@ -489,14 +491,14 @@ L3MemoryBuffer *L3DiskBinDump::AppendBuffer(int trk, int sid, int sec, const wxU
 }
 
 /// ダンプにデータを表示
-void L3DiskBinDump::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+void UiDiskBinDump::SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
 	ClearBuffer();
 	SetDatasMain(AppendBuffer(trk, sid, sec, buf, len));
 }
 
 /// ダンプにデータを表示
-void L3DiskBinDump::SetDatasMain(const L3MemoryBuffer *buf)
+void UiDiskBinDump::SetDatasMain(const MyMemoryBuffer *buf)
 {
 	switch(text_binary) {
 	case 1:
@@ -509,13 +511,13 @@ void L3DiskBinDump::SetDatasMain(const L3MemoryBuffer *buf)
 }
 
 /// ダンプにデータを表示（追記）
-void L3DiskBinDump::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
+void UiDiskBinDump::AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len)
 {
 	AppendDatasMain(AppendBuffer(trk, sid, sec, buf, len));
 }
 
 /// ダンプにデータを表示（追記）
-void L3DiskBinDump::AppendDatasMain(const L3MemoryBuffer *buf)
+void UiDiskBinDump::AppendDatasMain(const MyMemoryBuffer *buf)
 {
 	switch(text_binary) {
 	case 1:
@@ -528,7 +530,7 @@ void L3DiskBinDump::AppendDatasMain(const L3MemoryBuffer *buf)
 }
 
 /// バイナリダンプ時のデータ設定
-void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
+void UiDiskBinDump::SetDatasBinaryMain(const MyMemoryBuffer *buf, bool append)
 {
 	wxString str, stra;
 	wxSize sz, tz, cszH, cszA;
@@ -580,7 +582,7 @@ void L3DiskBinDump::SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append)
 }
 
 /// テキストダンプ時のデータ設定
-void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
+void UiDiskBinDump::SetDatasTextMain(const MyMemoryBuffer *buf, bool append)
 {
 	wxString str;
 	wxSize sz, tz, cszH;
@@ -622,7 +624,7 @@ void L3DiskBinDump::SetDatasTextMain(const L3MemoryBuffer *buf, bool append)
 /// テキストコントロールの幅を計算して設定する
 /// @param [in] pv       ビューポイント
 /// @param [in] def_rows 初期行数
-void L3DiskBinDump::CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows)
+void UiDiskBinDump::CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows)
 {
 	wxPoint pt;
 	wxSize hsz, asz, htz, atz;
@@ -676,7 +678,7 @@ void L3DiskBinDump::CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows)
 /// @param [in] ctrl テキストコントロール
 /// @param [in] rows 行数
 /// @param [in] str  文字列
-int L3DiskBinDump::CalcHeightOnTextCtrl(const L3DiskBinDumpTextCtrl *ctrl, int rows, const wxString &str)
+int UiDiskBinDump::CalcHeightOnTextCtrl(const UiDiskBinDumpTextCtrl *ctrl, int rows, const wxString &str)
 {
 	int yy = 0;
 	wxSize sz;
@@ -712,10 +714,10 @@ int L3DiskBinDump::CalcHeightOnTextCtrl(const L3DiskBinDumpTextCtrl *ctrl, int r
 	return yy;
 }
 
-void L3DiskBinDump::RefreshData()
+void UiDiskBinDump::RefreshData()
 {
 	for(size_t i=0; i<buffers.Count(); i++) {
-		L3MemoryBuffer *p = buffers.Item(i);
+		MyMemoryBuffer *p = buffers.Item(i);
 		if (i == 0) {
 			SetDatasMain(p);
 		} else {
@@ -724,7 +726,7 @@ void L3DiskBinDump::RefreshData()
 	}
 }
 
-void L3DiskBinDump::ClearDatas()
+void UiDiskBinDump::ClearDatas()
 {
 	ClearBuffer();
 
@@ -732,7 +734,7 @@ void L3DiskBinDump::ClearDatas()
 	txtAsc->Clear();
 }
 
-void L3DiskBinDump::SetTextBinary(int val)
+void UiDiskBinDump::SetTextBinary(int val)
 {
 	if (text_binary != val) {
 		wxSize cszH = txtHex->GetSize();
@@ -751,7 +753,7 @@ void L3DiskBinDump::SetTextBinary(int val)
 	}
 }
 
-void L3DiskBinDump::SetDataInvert(bool val)
+void UiDiskBinDump::SetDataInvert(bool val)
 {
 	if (data_invert != val) {
 		data_invert = val;
@@ -759,7 +761,7 @@ void L3DiskBinDump::SetDataInvert(bool val)
 	}
 }
 
-void L3DiskBinDump::SetDataChar(const wxString &name)
+void UiDiskBinDump::SetDataChar(const wxString &name)
 {
 	if (data_char != name) {
 		data_char = name;
@@ -768,7 +770,7 @@ void L3DiskBinDump::SetDataChar(const wxString &name)
 }
 
 /// フォントを設定
-void L3DiskBinDump::SetDataFont(const wxFont &font)
+void UiDiskBinDump::SetDataFont(const wxFont &font)
 {
 	wxPoint pv;
 
@@ -784,19 +786,19 @@ void L3DiskBinDump::SetDataFont(const wxFont &font)
 	RefreshData();
 }
 
-wxString L3DiskBinDump::GetDataFontName() const
+wxString UiDiskBinDump::GetDataFontName() const
 {
 	wxFont font = txtHex->GetFont();
 	return font.GetFaceName();
 }
-int L3DiskBinDump::GetDataFontSize() const
+int UiDiskBinDump::GetDataFontSize() const
 {
 	wxFont font = txtHex->GetFont();
 	return font.GetPointSize();
 }
 
 // スクロールバーを設定
-void L3DiskBinDump::SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py)
+void UiDiskBinDump::SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py)
 {
 	int ux, uy, px, py, sx, sy;
 	GetVirtualSize(&ux, &uy);

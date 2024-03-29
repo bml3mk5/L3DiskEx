@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_PA_H_
-#define _BASICTYPE_PA_H_
+#ifndef BASICTYPE_PA_H
+#define BASICTYPE_PA_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -56,4 +56,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_PA_H_ */
+#endif /* BASICTYPE_PA_H */

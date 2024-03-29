@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _RAWEXPBOX_H_
-#define _RAWEXPBOX_H_
+#ifndef RAWEXPBOX_H
+#define RAWEXPBOX_H
 
 #define RAWEXPBOX_TRANS \
 _("Required information entry is empty.") \
@@ -20,7 +20,7 @@ _("'%s' should only contain digits.")
 
 class wxTextCtrl;
 class wxCheckBox;
-class DiskD88Disk;
+class DiskImageDisk;
 
 /// Rawエクスポート＆インポートボックス
 class RawExpBox : public wxDialog
@@ -32,11 +32,11 @@ private:
 	wxCheckBox *chkInvData;
 	wxCheckBox *chkRevSide;
 
-	DiskD88Disk *disk;
-	int sel_side_num;
+	DiskImageDisk *p_disk;
+	int m_sel_side_num;
 
 public:
-	RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskD88Disk *disk, int sel_side_num
+	RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskImageDisk *disk, int sel_side_num
 		, int start_track_num, int start_side_num, int start_sector_num
 		, int end_track_num = -1, int end_side_num = -1, int end_sector_num = -1
 		, bool invert_data = false, bool reverse_side = false
@@ -73,5 +73,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _RAWEXPBOX_H_ */
+#endif /* RAWEXPBOX_H */
 

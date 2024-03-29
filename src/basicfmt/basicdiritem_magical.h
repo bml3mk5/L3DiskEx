@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MAGICAL_H_
-#define _BASICDIRITEM_MAGICAL_H_
+#ifndef BASICDIRITEM_MAGICAL_H
+#define BASICDIRITEM_MAGICAL_H
 
 #include "basicdiritem_xdos.h"
 
@@ -140,11 +140,11 @@ private:
 
 public:
 	DiskBasicDirItemMAGICAL(DiskBasic *basic);
-	DiskBasicDirItemMAGICAL(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMAGICAL(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -235,4 +235,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_MAGICAL_H_ */
+#endif /* BASICDIRITEM_MAGICAL_H */

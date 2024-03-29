@@ -1,29 +1,22 @@
-﻿/// @file diskd88.cpp
+﻿/// @file diskimage.cpp
 ///
-/// @brief D88ディスクイメージ入出力
+/// @brief ディスクイメージ入出力
 ///
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#include "diskd88.h"
+#include "diskimage.h"
 #include <wx/wfstream.h>
 #include <wx/xml/xml.h>
-#include "diskimg/diskparser.h"
-#include "diskimg/diskwriter.h"
-#include "diskimg/diskd88creator.h"
-#include "basicfmt/basicparam.h"
-#include "basicfmt/basicfmt.h"
+#include "diskparam.h"
+#include "diskparser.h"
+#include "diskwriter.h"
+#include "diskimagecreator.h"
+#include "../basicfmt/basicparam.h"
+#include "../basicfmt/basicfmt.h"
 
 
-/// disk density 0: 2D, 1: 2DD, 2: 2HD, 3: 1DD(unofficial)
-const struct st_disk_density gDiskDensity[] = {
-	{ 0x00, "2D" },
-	{ 0x10, "2DD" },
-	{ 0x20, "2HD" },
-	{ 0x30, "0x30 1DD" },
-	{ 0xff, NULL }
-};
-
+// ----------------------------------------------------------------------
 //
 //
 //
@@ -59,427 +52,37 @@ int IntHashMapUtil::MinValue(int src, int value)
 	return (src < value ? src : value);
 }
 
+// ----------------------------------------------------------------------
 //
 //
 //
-DiskD88Sector::DiskD88Sector()
+DiskImageSector::DiskImageSector(int n_num)
 {
-	num = 0;
-	header = NULL;
-	data = NULL;
-
-//	modified = false;
-	memset(&header_origin, 0, sizeof(header_origin));
-	data_origin = NULL;
+	m_num = n_num;
 }
 
-/// ファイルから読み込み用
-DiskD88Sector::DiskD88Sector(int n_num, d88_sector_header_t *n_header, wxUint8 *n_data)
+DiskImageSector::~DiskImageSector()
 {
-	num = n_num;
-	header = n_header;
-	data = n_data;
-
-//	modified = false;
-	header_origin = *n_header;
-	data_origin = new wxUint8[header->size];
-	memcpy(data_origin, data, header->size);
-}
-
-/// 新規作成用
-DiskD88Sector::DiskD88Sector(int track_number, int side_number, int sector_number, int sector_size, int number_of_sector, bool single_density, int status)
-{
-	num = sector_number;
-	header = new d88_sector_header_t;
-	memset(header, 0, sizeof(d88_sector_header_t));
-	header->id.c = (wxUint8)track_number;
-	header->id.h = (wxUint8)side_number;
-	header->id.r = (wxUint8)sector_number;
-//	if (single_density) sector_size = 128;
-	this->SetSectorSize(sector_size);
-	header->size = (wxUint16)sector_size;
-	header->secnums = (wxUint16)number_of_sector;
-	header->density = (single_density ? 0x40 : 0);
-	header->status = (status & 0xff);
-
-	data = new wxUint8[header->size];
-	memset(data, 0, header->size);
-	memset(&header_origin, 0xff, sizeof(header_origin));
-
-	data_origin = new wxUint8[header->size];
-	memset(data_origin, 0, header->size);
-
-//	modified = true;
-}
-
-DiskD88Sector::~DiskD88Sector()
-{
-	delete [] data_origin;
-	delete [] data;
-	delete header;
-}
-
-/// セクタのデータを置き換える
-/// セクタサイズは変更しない
-bool DiskD88Sector::Replace(DiskD88Sector *src_sector)
-{
-	if (!header || !data) {
-		return false;
-	}
-	wxUint8 *src_data = src_sector->data;
-	if (!src_data) {
-		// データなし
-		return false;
-	}
-	size_t sz = src_sector->GetSectorBufferSize() > GetSectorBufferSize() ? GetSectorBufferSize() : src_sector->GetSectorBufferSize();
-	if (sz > 0) {
-		memset(data, 0, GetSectorBufferSize());
-		memcpy(data, src_data, sz);
-//		SetModify();
-	}
-	return true;
-}
-
-/// セクタのデータを埋める
-/// @param[in] code : コード
-/// @param[in] len : 長さ
-/// @param[in] start : 開始位置
-/// @return false : 失敗
-bool DiskD88Sector::Fill(wxUint8 code, int len, int start)
-{
-	if (!header || !data) {
-		return false;
-	}
-	if (start < 0) {
-		start = (int)header->size - start;
-	}
-	if (start < 0 || start >= (int)header->size) {
-		return false;
-	}
-
-	if (len < 0) len = (int)header->size - start;
-	else if ((start + len) > (int)header->size) len = (int)header->size - start;
-	memset(&data[start], code, len);
-//	SetModify();
-	return true;
-}
-
-/// セクタのデータを上書き
-/// @param[in] buf : データ
-/// @param[in] len : 長さ
-/// @param[in] start : 開始位置
-/// @return false : 失敗
-bool DiskD88Sector::Copy(const void *buf, int len, int start)
-{
-	if (!header || !data) {
-		return false;
-	}
-	if (start < 0) {
-		start = (int)header->size - start;
-	}
-	if (len < 0 || start < 0 || start >= (int)header->size) {
-		return false;
-	}
-
-	if ((start + len) > (int)header->size) len = (int)header->size - start;
-	memcpy(&data[start], buf, len);
-//	SetModify();
-	return true;
-}
-
-/// セクタのデータに指定したバイト列があるか
-/// @param[in] buf : データ
-/// @param[in] len : 長さ
-/// @return -1:なし >=0:あり・その位置
-int DiskD88Sector::Find(const void *buf, size_t len)
-{
-	if (!header || !data) {
-		return -1;
-	}
-	int match = -1;
-	for(int pos = 0; pos < (GetSectorBufferSize() - (int)len); pos++) { 
-		if (memcmp(&data[pos], buf, len) == 0) {
-			match = pos;
-			break;
-		}
-	}
-	return match;
-}
-
-/// 指定位置のセクタデータを返す
-/// @param[in] pos : バッファ内の位置　負を指定すると末尾からの位置となる
-/// @return 値
-wxUint8	DiskD88Sector::Get(int pos) const
-{
-	if (!header || !data) {
-		return 0;
-	}
-	if (pos < 0) {
-		pos += GetSectorSize();
-	}
-	return data[pos];
-}
-
-/// 指定位置のセクタデータを返す
-/// @param[in] pos : バッファ内の位置　負を指定すると末尾からの位置となる
-/// @param[in] big_endian : ビッグエンディアンか
-/// @return 値
-wxUint16 DiskD88Sector::Get16(int pos, bool big_endian) const
-{
-	if (!header || !data) {
-		return 0;
-	}
-	if (pos < 0) {
-		pos += GetSectorSize();
-	}
-	return big_endian ? ((wxUint16)data[pos] << 8 | data[pos+1]) : ((wxUint16)data[pos+1] << 8 | data[pos]);
-}
-
-/// セクタサイズを変更
-/// @return 変更後のサイズ差分
-int DiskD88Sector::ModifySectorSize(int size)
-{
-	int diff = 0;
-	if (!header || !data) {
-		return diff;
-	}
-	if (size != header->size) {
-		diff = (int)header->size - size;
-
-		wxUint8 *newdata = new wxUint8[size];
-		memset(newdata, 0, size);
-		memcpy(newdata, data, size < header->size ? size : header->size);
-		delete [] data;
-		data = newdata;
-
-		newdata = new wxUint8[size];
-		memset(newdata, 0, size);
-		memcpy(newdata, data_origin, size < header->size ? size : header->size);
-		delete [] data_origin;
-		data_origin = newdata;
-
-		header->size = (wxUint16)size;
-		SetSectorSize(size);
-
-//		SetModify();
-	}
-	return diff;
-}
-
-/// 変更済みを設定
-void DiskD88Sector::SetModify()
-{
-//	modified = (memcmp(&header_origin, &header, sizeof(header)) != 0);
-//	if (!modified && data && data_origin) {
-//		modified = (memcmp(data_origin, data, header_origin.size) != 0);
-//	}
-}
-
-/// 変更されているか
-bool DiskD88Sector::IsModifiedBase() const
-{
-	if (!header || !data) {
-		return false;
-	}
-	bool mod = (memcmp(&header_origin, header, sizeof(d88_sector_header_t)) != 0);
-	if (!mod && data && data_origin) {
-		mod = (memcmp(data_origin, data, header_origin.size) != 0);
-	}
-	return mod;
-}
-
-/// 変更されているか
-bool DiskD88Sector::IsModified() const
-{
-//	if (modified) return true;
-	return IsModifiedBase();
-}
-
-/// 変更済みをクリア
-void DiskD88Sector::ClearModify()
-{
-	if (!header || !data) {
-		return;
-	}
-	memcpy(&header_origin, header, sizeof(d88_sector_header_t));
-	if (data && data_origin) {
-		memcpy(data_origin, data, header_origin.size);
-	}
-//	modified = false;
-}
-/// セクタ番号を設定
-void DiskD88Sector::SetSectorNumber(int val)
-{
-	num = val;
-	if (header) {
-		header->id.r = (wxUint8)val;
-	}
-}
-/// 削除マークがついているか
-bool DiskD88Sector::IsDeleted() const
-{
-	return (header && header->deleted != 0);
-}
-/// 削除マークの設定
-void DiskD88Sector::SetDeletedMark(bool val)
-{
-	if (header) {
-		header->deleted = (val ? 0x10 : 0);
-	}
-}
-/// 同じセクタか
-/// @param[in] sector_number セクタ番号
-/// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
-/// @param[in] deleted_mark  削除マーク
-/// @return セクタ or NULL
-bool DiskD88Sector::IsSameSector(int sector_number, int density, bool deleted_mark)
-{
-	return (sector_number == num
-		&& (density < 0 || (density == (IsSingleDensity() ? 1 : 0)))
-		&& deleted_mark == IsDeleted());
-}
-
-/// セクタサイズ
-int DiskD88Sector::GetSectorSize() const
-{
-	if (!header) {
-		return 0;
-	}
-	int sec = ConvIDNToSecSize(header->id.n);
-	if (sec > GetSectorBufferSize()) sec = GetSectorBufferSize(); 
-	return sec;
-}
-void DiskD88Sector::SetSectorSize(int val)
-{
-	if (header) {
-		header->id.n = ConvSecSizeToIDN(val);
-	}
-}
-
-/// セクタサイズ（バッファのサイズ）を返す
-int DiskD88Sector::GetSectorBufferSize() const
-{
-	return (header ? header->size : 0);
-}
-
-/// セクタサイズ（ヘッダ＋バッファのサイズ）を返す
-int DiskD88Sector::GetSize() const
-{
-	return (int)sizeof(d88_sector_header_t) + GetSectorBufferSize();
-}
-
-/// セクタデータへのポインタを返す
-wxUint8 *DiskD88Sector::GetSectorBuffer(int offset)
-{
-	return (data && offset < header->size ? &data[offset] : NULL);
-}
-
-/// セクタ数を返す
-wxUint16 DiskD88Sector::GetSectorsPerTrack() const
-{
-	return (header ? header->secnums : 0);
-}
-
-/// セクタ数を設定
-void DiskD88Sector::SetSectorsPerTrack(wxUint16 val)
-{
-	if (header) {
-		header->secnums = val;
-	}
-}
-
-/// セクタのステータスを返す
-wxUint8 DiskD88Sector::GetSectorStatus() const
-{
-	return (header ? header->status : 0);
-}
-
-/// セクタのステータスを設定
-void DiskD88Sector::SetSectorStatus(wxUint8 val)
-{
-	if (header) {
-		header->status = val;
-	}
-}
-
-/// ID Cを返す
-wxUint8	DiskD88Sector::GetIDC() const
-{
-	return (header ? header->id.c : 0);
-}
-/// ID Hを返す
-wxUint8	DiskD88Sector::GetIDH() const
-{
-	return (header ? header->id.h : 0);
-}
-/// ID Rを返す
-wxUint8	DiskD88Sector::GetIDR() const
-{
-	return (header ? header->id.r : 0);
-}
-/// ID Nを返す
-wxUint8	DiskD88Sector::GetIDN() const
-{
-	return (header ? header->id.n : 0);
-}
-
-/// ID Cを設定
-void DiskD88Sector::SetIDC(wxUint8 val)
-{
-	if (header) {
-		header->id.c = val;
-	}
-}
-/// ID Hを設定
-void DiskD88Sector::SetIDH(wxUint8 val)
-{
-	if (header) {
-		header->id.h = val;
-	}
-}
-/// ID Rを設定
-void DiskD88Sector::SetIDR(wxUint8 val)
-{
-	if (header) {
-		header->id.r = val;
-	}
-}
-/// ID Nを設定
-void DiskD88Sector::SetIDN(wxUint8 val)
-{
-	if (header) {
-		header->id.n = val;
-	}
-}
-
-/// 単密度か
-bool DiskD88Sector::IsSingleDensity()
-{
-	return (header && header->density == 0x40);
-}
-void DiskD88Sector::SetSingleDensity(bool val)
-{
-	if (header) {
-		header->density = (val ? 0x40 : 0);
-	}
-}
-
-int DiskD88Sector::Compare(DiskD88Sector *item1, DiskD88Sector *item2)
-{
-    return (item1->num - item2->num);
 }
 /// セクタ番号の比較
-int DiskD88Sector::CompareIDR(DiskD88Sector **item1, DiskD88Sector **item2)
+int DiskImageSector::Compare(DiskImageSector *item1, DiskImageSector *item2)
+{
+    return (item1->m_num - item2->m_num);
+}
+/// セクタ番号の比較
+int DiskImageSector::CompareIDR(DiskImageSector **item1, DiskImageSector **item2)
 {
     return ((int)(*item1)->GetIDR() - (int)(*item2)->GetIDR());
 }
-int DiskD88Sector::ConvIDNToSecSize(wxUint8 n)
+/// ID Nからセクタサイズを計算
+int DiskImageSector::ConvIDNToSecSize(wxUint8 n)
 {
 	int sec = 0;
 	if (n <= 3) sec = gSectorSizes[n];
 	return sec;
 }
-wxUint8 DiskD88Sector::ConvSecSizeToIDN(int size)
+/// セクタサイズからID Nを計算
+wxUint8 DiskImageSector::ConvSecSizeToIDN(int size)
 {
 	wxUint8 n = 1;
 	for(int i=0; gSectorSizes[i] != 0; i++) {
@@ -491,51 +94,52 @@ wxUint8 DiskD88Sector::ConvSecSizeToIDN(int size)
 	return n;
 }
 
+// ----------------------------------------------------------------------
 //
 //
 //
-DiskD88Track::DiskD88Track(DiskD88Disk *disk)
+DiskImageTrack::DiskImageTrack(DiskImageDisk *disk)
 {
 	parent = disk;
-	trk_num = 0;
-	sid_num = 0;
+	m_trk_num = 0;
+	m_sid_num = 0;
 //	offset  = 0;
 	sectors = NULL;
-	size    = 0;
-	interleave = 1;
+	m_size    = 0;
+	m_interleave = 1;
 
-	orig_sectors = 0;
+	m_orig_sectors = 0;
 
 	extra_data = NULL;
 	extra_size = 0;
 }
 
 /// @param [in] disk            ディスク
-/// @param [in] newtrknum       トラック番号
-/// @param [in] newsidnum       サイド番号
-/// @param [in] newoffpos       オフセットインデックス
-/// @param [in] newinterleave   インターリーブ
-DiskD88Track::DiskD88Track(DiskD88Disk *disk, int newtrknum, int newsidnum, int newoffpos, int newinterleave)
+/// @param [in] n_trk_num       トラック番号
+/// @param [in] n_sid_num       サイド番号
+/// @param [in] n_offset_pos    オフセットインデックス
+/// @param [in] n_interleave    インターリーブ
+DiskImageTrack::DiskImageTrack(DiskImageDisk *disk, int n_trk_num, int n_sid_num, int n_offset_pos, int n_interleave)
 {
 	parent = disk;
-	trk_num = newtrknum;
-	sid_num = newsidnum;
-	offset_pos = newoffpos;
+	m_trk_num = n_trk_num;
+	m_sid_num = n_sid_num;
+	m_offset_pos = n_offset_pos;
 	sectors = NULL;
-	size    = 0;
-	interleave = newinterleave;
+	m_size    = 0;
+	m_interleave = n_interleave;
 
-	orig_sectors = 0;
+	m_orig_sectors = 0;
 
 	extra_data = NULL;
 	extra_size = 0;
 }
 
-DiskD88Track::~DiskD88Track()
+DiskImageTrack::~DiskImageTrack()
 {
 	if (sectors) {
 		for(size_t i=0; i<sectors->Count(); i++) {
-			DiskD88Sector *p = sectors->Item(i);
+			DiskImageSector *p = sectors->Item(i);
 			delete p;
 		}
 		delete sectors;
@@ -545,24 +149,24 @@ DiskD88Track::~DiskD88Track()
 
 /// セクタを追加する
 /// @return セクタ数
-size_t DiskD88Track::Add(DiskD88Sector *newsec)
+size_t DiskImageTrack::Add(DiskImageSector *newsec)
 {
-	if (!sectors) sectors = new DiskD88Sectors;
+	if (!sectors) sectors = new DiskImageSectors;
 	sectors->Add(newsec);
-	orig_sectors = sectors->Count();
-	return orig_sectors;
+	m_orig_sectors = sectors->Count();
+	return m_orig_sectors;
 }
 
 /// トラック内のセクタデータを置き換える
 /// @param [in] src_track
 /// @return 0:正常 -1:エラー 1:置換できないセクタあり
-int DiskD88Track::Replace(DiskD88Track *src_track)
+int DiskImageTrack::Replace(DiskImageTrack *src_track)
 {
 	int rc = 0;
 	if (!sectors) return -1;
 	for(size_t i=0; i<sectors->Count(); i++) {
-		DiskD88Sector *tag_sector = sectors->Item(i);
-		DiskD88Sector *src_sector = src_track->GetSector(tag_sector->GetSectorNumber());
+		DiskImageSector *tag_sector = sectors->Item(i);
+		DiskImageSector *src_sector = src_track->GetSector(tag_sector->GetSectorNumber());
 		if (!src_sector) {
 			// セクタなし
 			continue;
@@ -582,12 +186,12 @@ int DiskD88Track::Replace(DiskD88Track *src_track)
 /// @param [in] sdensity 新規セクタが単密度か
 /// @param [in] sdensity 新規セクタのステータス(通常0)
 /// @return 0 正常
-int DiskD88Track::AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity, int status)
+int DiskImageTrack::AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity, int status)
 {
 	int rc = 0;
 
 	// 新規セクタ
-	DiskD88Sector *new_sector = new DiskD88Sector(
+	DiskImageSector *new_sector = NewImageSector(
 		trknum, sidnum, secnum, secsize, 1, sdensity, status
 	);
 	// 追加
@@ -602,13 +206,13 @@ int DiskD88Track::AddNewSector(int trknum, int sidnum, int secnum, int secsize, 
 
 /// トラック内の指定位置のセクタを削除する
 /// @param [in] pos : セクタ位置
-int DiskD88Track::DeleteSectorByIndex(int pos)
+int DiskImageTrack::DeleteSectorByIndex(int pos)
 {
 	int rc = 0;
 	if (!sectors || pos < 0 || pos >= (int)sectors->Count()) return -1;
 
 	int removed_size = 0;
-	DiskD88Sector *sector = sectors->Item(pos);
+	DiskImageSector *sector = sectors->Item(pos);
 	removed_size += sector->GetSize();
 	delete sector;
 	sectors->RemoveAt(pos);
@@ -625,14 +229,14 @@ int DiskD88Track::DeleteSectorByIndex(int pos)
 /// @param [in] start_sector_num : 開始セクタ番号
 /// @param [in] end_sector_num : 終了セクタ番号 -1なら全て
 /// @return 0:正常 -1:エラー
-int DiskD88Track::DeleteSectors(int start_sector_num, int end_sector_num)
+int DiskImageTrack::DeleteSectors(int start_sector_num, int end_sector_num)
 {
 	int rc = 0;
 	if (!sectors) return -1;
 	bool removed = false;
 	int  removed_size = 0;
 	for(size_t i=0; i<sectors->Count(); i++) {
-		DiskD88Sector *sector = sectors->Item(i);
+		DiskImageSector *sector = sectors->Item(i);
 		int num = sector->GetSectorNumber();
 		if (start_sector_num <= num && (num <= end_sector_num || end_sector_num < 0)) {
 			removed_size += sector->GetSize();
@@ -655,16 +259,16 @@ int DiskD88Track::DeleteSectors(int start_sector_num, int end_sector_num)
 }
 
 /// トラックサイズの再計算
-wxUint32 DiskD88Track::Shrink(bool trim_unused_data)
+wxUint32 DiskImageTrack::Shrink(bool trim_unused_data)
 {
 	wxUint32 newsize = 0;
 
 	size_t count = sectors ? sectors->Count() : 0;
 
 	for(size_t i=0; i<count; i++) {
-		DiskD88Sector *sector = sectors->Item(i);
+		DiskImageSector *sector = sectors->Item(i);
 		sector->SetSectorsPerTrack((wxUint16)count);
-		newsize += (wxUint32)sizeof(d88_sector_header_t);
+		newsize += (wxUint32)sector->GetHeaderSize();
 		if (trim_unused_data) {
 			newsize += sector->GetSectorSize();
 		} else {
@@ -680,14 +284,14 @@ wxUint32 DiskD88Track::Shrink(bool trim_unused_data)
 }
 
 /// トラックサイズの再計算&オフセット計算
-void DiskD88Track::ShrinkAndCalcOffsets(bool trim_unused_data)
+void DiskImageTrack::ShrinkAndCalcOffsets(bool trim_unused_data)
 {
 	Shrink(trim_unused_data);
 	parent->CalcOffsets();
 }
 
 /// 余りバッファ領域のサイズを増やす
-void DiskD88Track::IncreaseExtraDataSize(size_t size)
+void DiskImageTrack::IncreaseExtraDataSize(size_t size)
 {
 	if (size == 0) return;
 
@@ -700,7 +304,7 @@ void DiskD88Track::IncreaseExtraDataSize(size_t size)
 }
 
 /// 余りバッファ領域のサイズを減らす
-void DiskD88Track::DecreaseExtraDataSize(size_t size)
+void DiskImageTrack::DecreaseExtraDataSize(size_t size)
 {
 	if (size == 0) return;
 
@@ -717,7 +321,7 @@ void DiskD88Track::DecreaseExtraDataSize(size_t size)
 }
 
 /// インターリーブを計算して設定
-void DiskD88Track::CalcInterleave()
+void DiskImageTrack::CalcInterleave()
 {
 	if (!sectors) return;
 
@@ -732,7 +336,7 @@ void DiskD88Track::CalcInterleave()
 	int state = 0;
 	int intl = 0;
 	for(size_t sec_pos = 0; sec_pos < count; sec_pos++) {
-		DiskD88Sector *s = sectors->Item(sec_pos);
+		DiskImageSector *s = sectors->Item(sec_pos);
 		switch(state) {
 		case 1:
 			intl++;
@@ -756,7 +360,7 @@ void DiskD88Track::CalcInterleave()
 }
 
 /// セクタ数を返す
-int DiskD88Track::GetSectorsPerTrack() const
+int DiskImageTrack::GetSectorsPerTrack() const
 {
 	int cnt = 0;
 	if (sectors) {
@@ -769,12 +373,12 @@ int DiskD88Track::GetSectorsPerTrack() const
 /// @param[in] sector_number セクタ番号
 /// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
 /// @return セクタ or NULL
-DiskD88Sector *DiskD88Track::GetSector(int sector_number, int density)
+DiskImageSector *DiskImageTrack::GetSector(int sector_number, int density)
 {
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			if (s->IsSameSector(sector_number, density)) {
 				sector = s;
 				break;
@@ -785,9 +389,9 @@ DiskD88Sector *DiskD88Track::GetSector(int sector_number, int density)
 }
 
 /// 指定位置のセクタを返す
-DiskD88Sector *DiskD88Track::GetSectorByIndex(int pos)
+DiskImageSector *DiskImageTrack::GetSectorByIndex(int pos)
 {
-	DiskD88Sector *sector = NULL;
+	DiskImageSector *sector = NULL;
 	if (sectors && pos >= 0 && pos < (int)sectors->Count()) {
 		sector = sectors->Item(pos);
 	}
@@ -795,14 +399,14 @@ DiskD88Sector *DiskD88Track::GetSectorByIndex(int pos)
 }
 
 /// トラック内のもっともらしいID Cを返す
-wxUint8	DiskD88Track::GetMajorIDC() const
+wxUint8	DiskImageTrack::GetMajorIDC() const
 {
 	wxUint8 id = 0;
 	IntHashMap map;
 
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			IntHashMapUtil::IncleaseValue(map, s->GetIDC());
 		}
 		id = IntHashMapUtil::GetMaxKeyOnMaxValue(map);
@@ -811,14 +415,14 @@ wxUint8	DiskD88Track::GetMajorIDC() const
 }
 
 /// トラック内のもっともらしいID Hを返す
-wxUint8	DiskD88Track::GetMajorIDH() const
+wxUint8	DiskImageTrack::GetMajorIDH() const
 {
 	wxUint8 id = 0;
 	IntHashMap map;
 
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			IntHashMapUtil::IncleaseValue(map, s->GetIDH());
 		}
 		id = IntHashMapUtil::GetMaxKeyOnMaxValue(map);
@@ -827,11 +431,11 @@ wxUint8	DiskD88Track::GetMajorIDH() const
 }
 
 /// トラック内のすべてのID Cを変更
-void DiskD88Track::SetAllIDC(wxUint8 val)
+void DiskImageTrack::SetAllIDC(wxUint8 val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetIDC(val);
 //			sector->SetModify();
@@ -840,11 +444,11 @@ void DiskD88Track::SetAllIDC(wxUint8 val)
 }
 
 /// トラック内のすべてのID Hを変更
-void DiskD88Track::SetAllIDH(wxUint8 val)
+void DiskImageTrack::SetAllIDH(wxUint8 val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetIDH(val);
 //			sector->SetModify();
@@ -853,11 +457,11 @@ void DiskD88Track::SetAllIDH(wxUint8 val)
 }
 
 /// トラック内のすべてのID Rを変更
-void DiskD88Track::SetAllIDR(wxUint8 val)
+void DiskImageTrack::SetAllIDR(wxUint8 val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetIDR(val);
 //			sector->SetModify();
@@ -866,11 +470,11 @@ void DiskD88Track::SetAllIDR(wxUint8 val)
 }
 
 /// トラック内のすべてのID Nを変更
-void DiskD88Track::SetAllIDN(wxUint8 val)
+void DiskImageTrack::SetAllIDN(wxUint8 val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetIDN(val);
 //			sector->SetModify();
@@ -879,11 +483,11 @@ void DiskD88Track::SetAllIDN(wxUint8 val)
 }
 
 /// トラック内のすべての密度を変更
-void DiskD88Track::SetAllSingleDensity(bool val)
+void DiskImageTrack::SetAllSingleDensity(bool val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetSingleDensity(val);
 //			sector->SetModify();
@@ -892,11 +496,11 @@ void DiskD88Track::SetAllSingleDensity(bool val)
 }
 
 /// トラック内のすべてのセクタ数を変更
-void DiskD88Track::SetAllSectorsPerTrack(int val)
+void DiskImageTrack::SetAllSectorsPerTrack(int val)
 {
 	if (!sectors) return;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sector->SetSectorsPerTrack(val);
 //			sector->SetModify();
@@ -905,13 +509,13 @@ void DiskD88Track::SetAllSectorsPerTrack(int val)
 }
 
 /// トラック内のすべてのセクタサイズを変更
-void DiskD88Track::SetAllSectorSize(int val)
+void DiskImageTrack::SetAllSectorSize(int val)
 {
 	if (!sectors) return;
 
 	int sum = 0;
 	for(size_t pos=0; pos<sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		if (sector) {
 			sum += sector->ModifySectorSize(val);
 		}
@@ -927,7 +531,7 @@ void DiskD88Track::SetAllSectorSize(int val)
 }
 
 /// 余分なデータを設定する
-void DiskD88Track::SetExtraData(wxUint8 *buf, size_t size)
+void DiskImageTrack::SetExtraData(wxUint8 *buf, size_t size)
 {
 	delete extra_data;
 	extra_data = buf;
@@ -935,12 +539,12 @@ void DiskD88Track::SetExtraData(wxUint8 *buf, size_t size)
 }
 
 /// トラック内の最小セクタ番号を返す
-int DiskD88Track::GetMinSectorNumber() const
+int DiskImageTrack::GetMinSectorNumber() const
 {
 	int sector_number = 0x7fffffff;
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			if (sector_number > s->GetSectorNumber()) {
 				sector_number = s->GetSectorNumber();
 			}
@@ -950,12 +554,12 @@ int DiskD88Track::GetMinSectorNumber() const
 }
 
 /// トラック内の最大セクタ番号を返す
-int DiskD88Track::GetMaxSectorNumber() const
+int DiskImageTrack::GetMaxSectorNumber() const
 {
 	int sector_number = 0;
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			if (sector_number < s->GetSectorNumber()) {
 				sector_number = s->GetSectorNumber();
 			}
@@ -965,12 +569,12 @@ int DiskD88Track::GetMaxSectorNumber() const
 }
 
 /// トラック内の最大セクタサイズを返す
-int DiskD88Track::GetMaxSectorSize() const
+int DiskImageTrack::GetMaxSectorSize() const
 {
 	int sector_size = 0;
 	if (sectors) {
 		for(size_t pos=0; pos<sectors->Count(); pos++) {
-			DiskD88Sector *s = sectors->Item(pos);
+			DiskImageSector *s = sectors->Item(pos);
 			if (sector_size < s->GetSectorSize()) {
 				sector_size = s->GetSectorSize();
 			}
@@ -980,14 +584,14 @@ int DiskD88Track::GetMaxSectorSize() const
 }
 
 /// 変更されているか
-bool DiskD88Track::IsModified() const
+bool DiskImageTrack::IsModified() const
 {
 	if (!sectors) return false;
-	if (orig_sectors != sectors->Count()) return true;
+	if (m_orig_sectors != sectors->Count()) return true;
 
 	bool modified = false;
 	for(size_t sector_num = 0; sector_num < sectors->Count() && !modified; sector_num++) {
-		DiskD88Sector *sector = sectors->Item(sector_num);
+		DiskImageSector *sector = sectors->Item(sector_num);
 		if (!sector) continue;
 
 		modified = sector->IsModified();
@@ -999,22 +603,22 @@ bool DiskD88Track::IsModified() const
 }
 
 /// 変更済みをクリア
-void DiskD88Track::ClearModify()
+void DiskImageTrack::ClearModify()
 {
 	if (!sectors) return;
 	for(size_t sector_num = 0; sector_num < sectors->Count(); sector_num++) {
-		DiskD88Sector *sector = sectors->Item(sector_num);
+		DiskImageSector *sector = sectors->Item(sector_num);
 		if (!sector) continue;
 
 		sector->ClearModify();
 	}
-	orig_sectors = sectors->Count();
+	m_orig_sectors = sectors->Count();
 }
 
 /// トラック番号とサイド番号の比較
-int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
+int DiskImageTrack::Compare(DiskImageTrack *item1, DiskImageTrack *item2)
 {
-    return ((item1->trk_num - item2->trk_num) | (item1->sid_num - item2->sid_num));
+    return ((item1->m_trk_num - item2->m_trk_num) | (item1->m_sid_num - item2->m_sid_num));
 }
 
 /// インターリーブを考慮したセクタ番号リストを返す
@@ -1025,7 +629,7 @@ int DiskD88Track::Compare(DiskD88Track *item1, DiskD88Track *item2)
 ///
 /// interleave = 2 の時
 /// sector_nums[0] = sector_offset, sector_nums[2] = sector_offset + 1, sector_nums[4] = sector_offset + 2, ... となる
-bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset)
+bool DiskImageTrack::CalcSectorNumbersForInterleave(int interleave, size_t sectors_count, wxArrayInt &sector_nums, int sector_offset)
 {
 	sector_nums.SetCount(sectors_count, -1);
 	int sector_pos = 0;
@@ -1049,95 +653,87 @@ bool DiskD88Track::CalcSectorNumbersForInterleave(int interleave, size_t sectors
 	return !err;
 }
 
+// ----------------------------------------------------------------------
 //
 //
 //
-DiskD88Disk::DiskD88Disk(DiskD88File *file, int n_num) : DiskParam()
+
+/// @param[in] file ファイルイメージ
+/// @param[in] n_num ディスク番号
+DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num)
+	: DiskParam()
 {
-	this->parent = file;
-	this->num = n_num;
-	this->header = new d88_header_t;
-	memset(this->header, 0, sizeof(d88_header_t));
-	this->tracks = NULL;
-	this->offset_start = sizeof(d88_header_t);
+	parent = file;
+	m_num = n_num;
+	m_write_protect = false;
 
-	memset(&this->header_origin, 0, sizeof(this->header_origin));
+	tracks = NULL;
+	m_offset_start = 0;
 
-//	this->max_track_num = 0;
-//	this->buffer = NULL;
-//	this->buffer_size = 0;
-	this->param_changed = false;
+	m_param_changed = false;
 
-//	this->basic_param = NULL;
-	this->basics = new DiskBasics;
-
-	this->modified = false;
+	basics = new DiskBasics;
 }
 
-DiskD88Disk::DiskD88Disk(DiskD88File *file, const wxString &newname, int newnum, const DiskParam &param, bool write_protect) : DiskParam(param)
+/// @param[in] file ファイルイメージ
+/// @param[in] n_num ディスク番号
+/// @param[in] n_param ディスクパラメータ
+/// @param[in] n_diskname ディスク名
+/// @param[in] n_write_protect 書き込み禁止か
+DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num, const DiskParam &n_param, const wxString &n_diskname, bool n_write_protect)
+	: DiskParam(n_param)
 {
-	this->parent = file;
-	this->num = newnum;
-	this->header = new d88_header_t;
-	memset(this->header, 0, sizeof(d88_header_t));
-	this->tracks = NULL;
-	this->offset_start = sizeof(d88_header_t);
+	parent = file;
+	m_num = n_num;
+	m_name = n_diskname;
+	m_write_protect = n_write_protect;
 
-	memset(&this->header_origin, 0xff, sizeof(this->header_origin));
+	tracks = NULL;
+	m_offset_start = 0;
 
-	this->SetName(newname);
-	this->SetDensity(param.GetParamDensity());
-	this->SetWriteProtect(write_protect);
+	m_param_changed = false;
 
-	this->param_changed = false;
-
-//	this->basic_param = NULL;
-	this->basics = new DiskBasics;
-
-	this->modified = true;
+	basics = new DiskBasics;
 }
 
-/// @note n_header はnewで確保しておくこと
-DiskD88Disk::DiskD88Disk(DiskD88File *file, int n_num, d88_header_t *n_header) : DiskParam()
+/// @param[in] file ファイルイメージ
+/// @param[in] n_num ディスク番号
+/// @param[in] n_header ディスクヘッダ
+DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num, const DiskImageDiskHeader &n_header)
+	: DiskParam()
 {
-	this->parent = file;
-	this->num = n_num;
-	this->header = n_header;
-	this->tracks = NULL;
-	this->offset_start = sizeof(d88_header_t);
+	parent = file;
+	m_num = n_num;
+	m_name = n_header.GetName(false);
+	m_write_protect = n_header.IsWriteProtected();
 
-	this->header_origin = *n_header;
+	tracks = NULL;
+	m_offset_start = 0;
 
-	this->disk_density = n_header->disk_density;
+	m_param_changed = false;
 
-	this->param_changed = false;
-
-//	this->basic_param = NULL;
-	this->basics = new DiskBasics;
-
-	this->modified = false;
+	basics = new DiskBasics;
 }
 
-DiskD88Disk::~DiskD88Disk()
+DiskImageDisk::~DiskImageDisk()
 {
 	if (tracks) {
 		for(size_t i=0; i<tracks->Count(); i++) {
-			DiskD88Track *p = tracks->Item(i);
+			DiskImageTrack *p = tracks->Item(i);
 			delete p;
 		}
 		delete tracks;
 	}
 	delete basics;
-	delete header;
 }
 
 /// ディスクにトラックを追加
 /// @return トラック数
-size_t DiskD88Disk::Add(DiskD88Track *newtrk)
+size_t DiskImageDisk::Add(DiskImageTrack *newtrk)
 {
-//	if (!tracks) tracks = new DiskD88Tracks(DiskD88Track::Compare);
-//	return tracks->Add(new DiskD88Track(newtrk));
-	if (!tracks) tracks = new DiskD88Tracks;
+//	if (!tracks) tracks = new DiskImageTracks(DiskImageTrack::Compare);
+//	return tracks->Add(new DiskImageTrack(newtrk));
+	if (!tracks) tracks = new DiskImageTracks;
 	tracks->Add(newtrk);
 //	SetMaxTrackNumber(newtrk->GetTrackNumber());
 	return tracks->Count();
@@ -1147,12 +743,12 @@ size_t DiskD88Disk::Add(DiskD88Track *newtrk)
 /// @param [in] side_number : サイド番号
 /// @param [in] src_disk : 置換元のディスクイメージ
 /// @param [in] src_side_number : 置換元のディスクイメージのサイド番号
-int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_number)
+int DiskImageDisk::Replace(int side_number, DiskImageDisk *src_disk, int src_side_number)
 {
 	int rc = 0;
 	if (!tracks) return -1;
 	for(size_t i=0; i<tracks->Count(); i++) {
-		DiskD88Track *tag_track = tracks->Item(i);
+		DiskImageTrack *tag_track = tracks->Item(i);
 		int tag_side_number = tag_track->GetSideNumber();
 		if (side_number >= 0) {
 			// 指定したサイドだけ置き換える
@@ -1172,7 +768,7 @@ int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_nu
 				tag_side_number = src_side_number;
 			}
 		}
-		DiskD88Track *src_track = src_disk->GetTrack(tag_track->GetTrackNumber(), tag_side_number);
+		DiskImageTrack *src_track = src_disk->GetTrack(tag_track->GetTrackNumber(), tag_side_number);
 		if (!src_track) {
 			continue;
 		}
@@ -1184,17 +780,17 @@ int DiskD88Disk::Replace(int side_number, DiskD88Disk *src_disk, int src_side_nu
 
 /// ディスクにトラックを追加
 /// @param [in] side_number サイド番号 両面なら-1
-int DiskD88Disk::AddNewTrack(int side_number)
+int DiskImageDisk::AddNewTrack(int side_number)
 {
 	int rc = 0;
 
 	// 最大トラック＆サイド番号
-	DiskD88Track *src_track = NULL;
+	DiskImageTrack *src_track = NULL;
 	int trk_num = -1;
 	int sid_num = -1;
 	int max_sid_num = -1;
 	for(size_t pos = 0; pos < tracks->Count(); pos++) {
-		DiskD88Track *track = tracks->Item(pos);
+		DiskImageTrack *track = tracks->Item(pos);
 		if (track->GetTrackNumber() > trk_num && (side_number < 0 || side_number == track->GetSideNumber())) {
 			trk_num = track->GetTrackNumber();
 			sid_num = track->GetSideNumber();
@@ -1213,7 +809,7 @@ int DiskD88Disk::AddNewTrack(int side_number)
 	if (!src_track) {
 		return -1;
 	}
-	DiskD88Sectors *sectors = src_track->GetSectors();
+	DiskImageSectors *sectors = src_track->GetSectors();
 	if (!sectors) {
 		return -1;
 	}
@@ -1227,8 +823,9 @@ int DiskD88Disk::AddNewTrack(int side_number)
 	}
 
 	// 空きオフセットがあるか
+	int limit_pos = GetCreatableTracks();
 	int offset_pos = 0;
-	for(int pos = (side_number < 0 ? 0 : side_number); pos < DISKD88_MAX_TRACKS; pos += (side_number < 0 ? 1 : max_sid_num + 1)) {
+	for(int pos = (side_number < 0 ? 0 : side_number); pos < limit_pos; pos += (side_number < 0 ? 1 : max_sid_num + 1)) {
 		if (GetOffset(pos) == 0) {
 			offset_pos = pos;
 			break;
@@ -1239,8 +836,7 @@ int DiskD88Disk::AddNewTrack(int side_number)
 		return -1;
 	}
 
-	DiskD88Track *new_track = new DiskD88Track(
-		this,
+	DiskImageTrack *new_track = NewImageTrack(
 		trk_num,
 		sid_num,
 		offset_pos,
@@ -1249,13 +845,13 @@ int DiskD88Disk::AddNewTrack(int side_number)
 	// セクタを追加
 	wxUint32 trk_size = 0;
 	for(size_t pos = 0; pos < sectors->Count(); pos++) {
-		DiskD88Sector *sector = sectors->Item(pos);
+		DiskImageSector *sector = sectors->Item(pos);
 		// 新規セクタ
 		int sec_num = sector->GetIDR();
 		int sec_size = sector->GetSectorSize();
 		bool sdensity = sector->IsSingleDensity();
 
-		DiskD88Sector *new_sector = new DiskD88Sector(
+		DiskImageSector *new_sector = new_track->NewImageSector(
 			trk_num, sid_num, sec_num, sec_size, (int)sectors->Count(), sdensity
 		);
 		// 追加
@@ -1277,7 +873,7 @@ int DiskD88Disk::AddNewTrack(int side_number)
 /// @param [in] start_offset_pos : 削除開始トラック位置(0 ... 163)
 /// @param [in] end_offset_pos : 削除終了トラック位置(0 ... 163)
 /// @param [in] side_number : 特定のサイドのみ削除する場合 >= 0 , 全サイドの場合 = -1
-void DiskD88Disk::DeleteTracks(int start_offset_pos, int end_offset_pos, int side_number)
+void DiskImageDisk::DeleteTracks(int start_offset_pos, int end_offset_pos, int side_number)
 {
 //	size_t deleted_size = 0;
 
@@ -1285,7 +881,7 @@ void DiskD88Disk::DeleteTracks(int start_offset_pos, int end_offset_pos, int sid
 
 	bool removed = false;
 	for(size_t i=0; i<tracks->Count(); i++) {
-		DiskD88Track *track = tracks->Item(i);
+		DiskImageTrack *track = tracks->Item(i);
 		if (!track) continue;
 		int pos = track->GetOffsetPos();
 		if (pos < start_offset_pos) continue;
@@ -1314,11 +910,11 @@ void DiskD88Disk::DeleteTracks(int start_offset_pos, int end_offset_pos, int sid
 }
 
 /// トラックサイズ＆オフセットの再計算＆ディスクサイズ変更
-size_t DiskD88Disk::ShrinkTracks(bool trim_unused_data)
+size_t DiskImageDisk::ShrinkTracks(bool trim_unused_data)
 {
 	if (tracks) {
 		for(size_t i=0; i<tracks->Count(); i++) {
-			DiskD88Track *track = tracks->Item(i);
+			DiskImageTrack *track = tracks->Item(i);
 			if (!track) continue;
 			track->Shrink(trim_unused_data);
 		}
@@ -1327,24 +923,25 @@ size_t DiskD88Disk::ShrinkTracks(bool trim_unused_data)
 }
 
 /// オフセットの再計算＆ディスクサイズ変更
-size_t DiskD88Disk::CalcOffsets()
+size_t DiskImageDisk::CalcOffsets()
 {
 	size_t new_size = 0;
 
 	if (!tracks) return new_size;
 
 	// オフセットをクリア
-	for(int pos = 0; pos < DISKD88_MAX_TRACKS; pos++) {
+	int limit_pos = GetCreatableTracks();
+	for(int pos = 0; pos < limit_pos; pos++) {
 		SetOffset(pos, 0);
 	}
 
 	// 再計算
-	wxUint32 max_offset = offset_start;
+	wxUint32 max_offset = m_offset_start;
 	for(size_t i=0; i<tracks->Count(); i++) {
-		DiskD88Track *track = tracks->Item(i);
+		DiskImageTrack *track = tracks->Item(i);
 		if (!track) continue;
 		int pos = track->GetOffsetPos();
-		if (pos < 0 || pos >= DISKD88_MAX_TRACKS) continue;
+		if (pos < 0 || pos >= limit_pos) continue;
 		size_t size = track->GetSize();
 
 		if (size > 0) {
@@ -1363,14 +960,14 @@ size_t DiskD88Disk::CalcOffsets()
 }
 
 /// ディスクサイズ計算（ディスクヘッダ分を除く）
-size_t DiskD88Disk::CalcSizeWithoutHeader()
+size_t DiskImageDisk::CalcSizeWithoutHeader()
 {
 	size_t new_size = 0;
 
 	if (!tracks) return new_size;
 
 	for(size_t i=0; i<tracks->Count(); i++) {
-		DiskD88Track *track = tracks->Item(i);
+		DiskImageTrack *track = tracks->Item(i);
 		if (!track) continue;
 		new_size += track->GetSize();
 	}
@@ -1378,95 +975,51 @@ size_t DiskD88Disk::CalcSizeWithoutHeader()
 }
 
 /// 変更済みに設定
-void DiskD88Disk::SetModify()
+void DiskImageDisk::SetModify()
 {
-	modified = (memcmp(&header_origin, header, sizeof(d88_header_t)) != 0);
+}
+
+/// 変更されているか
+bool DiskImageDisk::IsModified()
+{
+	bool modified = false;
+	if (tracks) {
+		for(size_t track_num = 0; track_num < tracks->Count() && !modified; track_num++) {
+			DiskImageTrack *track = tracks->Item(track_num);
+			if (!track) continue;
+
+			modified = track->IsModified();
+			if (modified) {
+				break;
+			}
+		}
+	}
+	return modified;
 }
 
 /// 変更済みをクリア
-void DiskD88Disk::ClearModify()
+void DiskImageDisk::ClearModify()
 {
-	memcpy(&header_origin, header, sizeof(header_origin));
 	if (tracks) {
 		for(size_t track_num = 0; track_num < tracks->Count(); track_num++) {
-			DiskD88Track *track = tracks->Item(track_num);
+			DiskImageTrack *track = tracks->Item(track_num);
 			if (!track) continue;
 
 			track->ClearModify();
 		}
 	}
-	modified = false;
-}
-
-/// 変更されているか
-bool DiskD88Disk::IsModified()
-{
-	bool modified_sector = false;
-	if (!modified && tracks) {
-		for(size_t track_num = 0; track_num < tracks->Count() && !modified_sector; track_num++) {
-			DiskD88Track *track = tracks->Item(track_num);
-			if (!track) continue;
-
-			modified_sector = track->IsModified();
-			if (modified_sector) {
-				break;
-			}
-		}
-	}
-	return modified || modified_sector;
-}
-
-/// ディスク名を返す
-/// @param[in] real 名称が空白の時そのまま返すか
-/// @return ディスク名
-wxString DiskD88Disk::GetName(bool real) const
-{
-	wxString name(header ? (const char *)header->diskname : "");
-	if (!real && name.IsEmpty()) {
-		name = _("(no name)");
-	}
-	return name;
-}
-
-/// ディスク名を設定
-/// @param[in] val ディスク名
-void DiskD88Disk::SetName(const wxString &val)
-{
-	if (!header) return;
-
-	wxString name = val;
-	if (name == _("(no name)")) {
-		name.Empty();
-	}
-//	wxCSConv cs(wxFONTENCODING_CP932);
-//	wxCSConv cs2 = wxGet_wxConvLibc();
-	strncpy((char *)header->diskname, name.mb_str(), 16);
-	header->diskname[16] = 0;
-}
-
-/// ディスク名を設定
-/// @param[in] buf ディスク名
-/// @param[in] len 長さ
-void DiskD88Disk::SetName(const wxUint8 *buf, size_t len)
-{
-	if (!header) return;
-
-	if (len > 16) len = 16;
-	memcpy(header->diskname, buf, len);
-	if (len < 16) len++;
-	header->diskname[len] = 0;
 }
 
 /// 指定トラックを返す
 /// @param[in] track_number トラック番号（シリンダ）
 /// @param[in] side_number  サイド番号（ヘッド）
 /// @return トラック
-DiskD88Track *DiskD88Disk::GetTrack(int track_number, int side_number)
+DiskImageTrack *DiskImageDisk::GetTrack(int track_number, int side_number)
 {
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	if (tracks) {
 		for(size_t pos=0; pos<tracks->Count(); pos++) {
-			DiskD88Track *t = tracks->Item(pos);
+			DiskImageTrack *t = tracks->Item(pos);
 			if (t->GetTrackNumber() == track_number && t->GetSideNumber() == side_number) {
 				track = t;
 				break;
@@ -1479,9 +1032,9 @@ DiskD88Track *DiskD88Disk::GetTrack(int track_number, int side_number)
 /// 指定トラックを返す
 /// @param[in] index 位置
 /// @return トラック
-DiskD88Track *DiskD88Disk::GetTrack(int index)
+DiskImageTrack *DiskImageDisk::GetTrack(int index)
 {
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	if (tracks && index < (int)tracks->Count()) {
 		track = tracks->Item(index);
 	}
@@ -1491,12 +1044,12 @@ DiskD88Track *DiskD88Disk::GetTrack(int index)
 /// 指定オフセット値からトラックを返す
 /// @param[in] offset オフセット位置
 /// @return トラック
-DiskD88Track *DiskD88Disk::GetTrackByOffset(wxUint32 offset)
+DiskImageTrack *DiskImageDisk::GetTrackByOffset(wxUint32 offset)
 {
-	DiskD88Track *track = NULL;
+	DiskImageTrack *track = NULL;
 	if (tracks) {
 		for(size_t i=0; i<tracks->Count(); i++) {
-			DiskD88Track *t = tracks->Item(i);
+			DiskImageTrack *t = tracks->Item(i);
 			if (!t) continue;
 			int pos = t->GetOffsetPos();
 			if (GetOffset(pos) == offset) {
@@ -1514,16 +1067,16 @@ DiskD88Track *DiskD88Disk::GetTrackByOffset(wxUint32 offset)
 /// @param[in] sector_number セクタ番号（レコード）
 /// @param[in] density       密度で絞る 0:倍密度 1:単密度 -1:条件から除外
 /// @return セクタ
-DiskD88Sector *DiskD88Disk::GetSector(int track_number, int side_number, int sector_number, int density)
+DiskImageSector *DiskImageDisk::GetSector(int track_number, int side_number, int sector_number, int density)
 {
-	DiskD88Track *trk = GetTrack(track_number, side_number);
+	DiskImageTrack *trk = GetTrack(track_number, side_number);
 	if (!trk) return NULL;
 	return trk->GetSector(sector_number, density);
 }
 
 /// ディスクの中でもっともらしいパラメータを設定
 /// @return パラメータ
-const DiskParam *DiskD88Disk::CalcMajorNumber()
+const DiskParam *DiskImageDisk::CalcMajorNumber()
 {
 	IntHashMap sector_numbers_map[2];
 	IntHashMap sector_size_map;
@@ -1545,7 +1098,7 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	if (tracks) {
 		// トラックごとの各値を集計
 		for(size_t ti=0; ti<tracks->Count(); ti++) {
-			DiskD88Track *t = tracks->Item(ti);
+			DiskImageTrack *t = tracks->Item(ti);
 
 			int trk_num = t->GetTrackNumber();
 			int sid_num = t->GetSideNumber();
@@ -1582,11 +1135,11 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 				}
 			}
 			// 単密度か？
-			DiskD88Sectors *sectors = t->GetSectors();
+			DiskImageSectors *sectors = t->GetSectors();
 			if (sectors) {
 				DiskParticulars sis;
 				for(size_t si = 0; si < sectors->Count(); si++) {
-					DiskD88Sector *s = sectors->Item(si);
+					DiskImageSector *s = sectors->Item(si);
 					if (s && s->IsSingleDensity()) {
 						DiskParticular sd(t->GetTrackNumber(), t->GetSideNumber(), s->GetSectorNumber(), 1, s->GetSectorsPerTrack(), s->GetSectorSize());
 						sis.Add(sd);
@@ -1619,12 +1172,12 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 
 	bool disk_single_type = false;
 	if (tracks) {
-		if (sector_masize == 128 && side_number_max == 0 && max_track_number > track_number_max) {
+		if (sector_masize == 128 && side_number_max == 0 && m_max_track_number > track_number_max) {
 			// 単密度で両面タイプ
 			disk_single_type = true;
 			side_number_max++;
 			for(size_t ti=0; ti<tracks->Count(); ti++) {
-				DiskD88Track *t =tracks->Item(ti);
+				DiskImageTrack *t =tracks->Item(ti);
 				if (t->GetOffsetPos() & 1) {
 					// 奇数の場合はサイドを1にする
 					t->SetSideNumber(1);
@@ -1662,9 +1215,9 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	DiskParticulars ptracks;
 	if (tracks) {
 		for(size_t ti=0; ti<tracks->Count(); ti++) {
-			DiskD88Track *t =tracks->Item(ti);
+			DiskImageTrack *t =tracks->Item(ti);
 			if (!t) continue;
-			DiskD88Sectors *ss = t->GetSectors();
+			DiskImageSectors *ss = t->GetSectors();
 			if (!ss) continue;
 			if ((int)ss->Count() != sectors_per_track) {
 				ptracks.Add(DiskParticular(t->GetTrackNumber(), t->GetSideNumber(), -1, 1, (int)ss->Count(), t->GetMaxSectorSize()));
@@ -1701,135 +1254,9 @@ const DiskParam *DiskD88Disk::CalcMajorNumber()
 	return disk_param;
 }
 
-/// 書き込み禁止かどうかを返す
-/// @return true:書き込み禁止
-bool DiskD88Disk::IsWriteProtected() const
-{
-	return (!header || header->write_protect != 0);
-}
-
-/// 書き込み禁止かどうかを設定
-/// @param[in] val 書き込み禁止ならtrue
-void DiskD88Disk::SetWriteProtect(bool val)
-{
-	if (header) header->write_protect = (val ? 0x10 : 0);
-}
-
-/// 密度を返す
-/// @return 密度名称(2D,2HD)
-wxString DiskD88Disk::GetDensityText() const
-{
-	wxUint8 num = (header ? header->disk_density : 0);
-	int match = FindDensity(num);
-	return match >= 0 ? wxGetTranslation(gDiskDensity[match].name) : wxT("");
-}
-
-/// 密度を返す
-/// @return D88形式での密度の値(0x10, 0x20)
-int DiskD88Disk::GetDensity() const
-{
-	return (header ? header->disk_density : 0);
-}
-
-/// 密度を設定
-/// @param[in] val D88形式での密度の値(0x10, 0x20)
-void DiskD88Disk::SetDensity(int val)
-{
-	header->disk_density = val;
-}
-
-/// 密度を検索
-/// @param [in] val D88形式での密度の値
-int DiskD88Disk::FindDensity(int val)
-{
-	int match = -1;
-	for(int i=0; gDiskDensity[i].name != NULL; i++) {
-		if (gDiskDensity[i].val == val) {
-			match = i;
-			break;
-		}
-	}
-	return match;
-}
-
-/// ディスクサイズ（ヘッダサイズ含む）
-wxUint32 DiskD88Disk::GetSize() const
-{
-	return header ? header->disk_size : 0;
-}
-
-/// ディスクサイズ（ヘッダサイズ含む）を設定
-/// @param [in] val サイズ（ヘッダサイズ含む）
-void DiskD88Disk::SetSize(wxUint32 val)
-{
-	if (header) header->disk_size = val;
-}
-
-/// ディスクサイズ（ヘッダサイズを除く）
-wxUint32 DiskD88Disk::GetSizeWithoutHeader() const
-{
-	return (header ? header->disk_size - offset_start : 0);
-}
-
-/// @param [in] val サイズ（ヘッダサイズを除く）を設定
-void DiskD88Disk::SetSizeWithoutHeader(wxUint32 val)
-{
-	if (header) header->disk_size = (val + offset_start);
-}
-
-/// オフセット値を返す
-/// @param [in] num    トラック番号
-wxUint32 DiskD88Disk::GetOffset(int num) const
-{
-	if (!header || num < 0 || DISKD88_MAX_TRACKS <= num) return 0;
-	return header->offsets[num];
-}
-
-/// オフセット値を設定
-/// @param [in] num    トラック番号
-/// @param [in] offset 位置（ヘッダサイズ含む）
-void DiskD88Disk::SetOffset(int num, wxUint32 offset)
-{
-	if (!header || num < 0 || DISKD88_MAX_TRACKS <= num) return;
-	header->offsets[num] = offset;
-}
-
-/// ヘッダサイズを除いたオフセット値を設定
-/// @param [in] num    トラック番号
-/// @param [in] offset 位置（ヘッダサイズを除く）
-void DiskD88Disk::SetOffsetWithoutHeader(int num, wxUint32 offset)
-{
-	if (!header || num < 0 || DISKD88_MAX_TRACKS <= num) return;
-	header->offsets[num] = (offset + offset_start);
-}
-
-/// offset最小値 -> トラックデータの開始位置を返す
-wxUint32 DiskD88Disk::GetOffsetStart() const
-{
-	return offset_start;
-}
-
-/// offset最小値 -> トラックデータの開始位置を設定
-void DiskD88Disk::SetOffsetStart(wxUint32 val)
-{
-	offset_start = val;
-}
-
-/// 最大トラック番号 offsetがNULLでない最大位置を返す
-int DiskD88Disk::GetMaxTrackNumber() const
-{
-	return max_track_number;
-}
-
-/// 最大トラック番号 offsetがNULLでない最大位置を設定
-void DiskD88Disk::SetMaxTrackNumber(int pos)
-{
-	max_track_number = pos;
-}
-
 /// ディスクの内容を初期化する(0パディング)
 /// @param [in] selected_side >=0なら指定サイドのみ初期化
-bool DiskD88Disk::Initialize(int selected_side)
+bool DiskImageDisk::Initialize(int selected_side)
 {
 	if (!tracks) {
 		return false;
@@ -1837,7 +1264,7 @@ bool DiskD88Disk::Initialize(int selected_side)
 
 	bool rc = true;
 	for(size_t track_pos=0; track_pos<tracks->Count(); track_pos++) {
-		DiskD88Track *track = tracks->Item(track_pos);
+		DiskImageTrack *track = tracks->Item(track_pos);
 		if (selected_side >= 0) {
 			// サイド指定ありの時はそのサイドのみ初期化
 			if (selected_side != track->GetSideNumber()) {
@@ -1845,14 +1272,14 @@ bool DiskD88Disk::Initialize(int selected_side)
 			}
 		}
 
-		DiskD88Sectors *secs = track->GetSectors();
+		DiskImageSectors *secs = track->GetSectors();
 		if (!secs) {
 //			rc = false;
 			continue;
 		}
 
 		for(size_t sec_pos=0; sec_pos<secs->Count(); sec_pos++) {
-			DiskD88Sector *sec = secs->Item(sec_pos);
+			DiskImageSector *sec = secs->Item(sec_pos);
 			if (sec) {
 				sec->Fill(0);
 			}
@@ -1864,7 +1291,7 @@ bool DiskD88Disk::Initialize(int selected_side)
 /// ディスクのトラックを作り直す
 /// @param [in] param         パラメータ
 /// @param [in] selected_side >=0なら指定サイドのみ初期化
-bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
+bool DiskImageDisk::Rebuild(const DiskParam &param, int selected_side)
 {
 	if (selected_side >= 0) {
 		SetDiskParam(
@@ -1883,13 +1310,13 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 
 	DiskResult result;
 	wxString diskname;
-	DiskD88Creator cr(diskname, param, false, NULL, result);
+	DiskImageCreator cr(diskname, param, false, NULL, result);
 	bool rc = true;
 	int trk = param.GetTrackNumberBaseOnDisk();
 	int trks = param.GetTracksPerSide() + trk;
 	int sid = 0;
 	int sides = param.GetSidesPerDisk();
-	for(int pos=0; pos<DISKD88_MAX_TRACKS; pos++) {
+	for(int pos=0; pos<GetCreatableTracks(); pos++) {
 		if (selected_side >= 0) {
 			sid = selected_side;
 			// サイド指定ありの時はそのサイドのみ初期化
@@ -1899,7 +1326,7 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 		}
 
 		wxUint32 offset = GetOffset(pos);
-		DiskD88Track *track = GetTrackByOffset(offset);
+		DiskImageTrack *track = GetTrackByOffset(offset);
 		if (tracks && track) {
 			// トラック削除
 			tracks->Remove(track);
@@ -1931,19 +1358,19 @@ bool DiskD88Disk::Rebuild(const DiskParam &param, int selected_side)
 }
 
 /// ディスク番号を比較
-int DiskD88Disk::Compare(DiskD88Disk *item1, DiskD88Disk *item2)
+int DiskImageDisk::Compare(DiskImageDisk *item1, DiskImageDisk *item2)
 {
-    return (item1->num - item2->num);
+    return (item1->m_num - item2->m_num);
 }
 
 /// トラックが存在するか
-bool DiskD88Disk::ExistTrack(int side_number)
+bool DiskImageDisk::ExistTrack(int side_number)
 {
 	bool found = false;
-	DiskD88Tracks *tracks = GetTracks();
+	DiskImageTracks *tracks = GetTracks();
 	if (tracks) {
 		for(size_t num=0; num < tracks->Count(); num++) {
-			DiskD88Track *trk = tracks->Item(num);
+			DiskImageTrack *trk = tracks->Item(num);
 			if (!trk) continue;
 			if (side_number >= 0) {
 				if (side_number != trk->GetSideNumber()) continue;
@@ -1956,21 +1383,21 @@ bool DiskD88Disk::ExistTrack(int side_number)
 }
 
 /// DISK BASIC領域を確保
-void DiskD88Disk::AllocDiskBasics()
+void DiskImageDisk::AllocDiskBasics()
 {
 	basics->Add();
 	if (reversible) basics->Add();
 }
 
 /// DISK BASICを返す
-DiskBasic *DiskD88Disk::GetDiskBasic(int idx)
+DiskBasic *DiskImageDisk::GetDiskBasic(int idx)
 {
 	if (idx < 0) idx = 0;
 	return basics->Item(idx);
 }
 
 /// DISK BASICをクリア
-void DiskD88Disk::ClearDiskBasics()
+void DiskImageDisk::ClearDiskBasics()
 {
 	if (!basics) return;
 	for(size_t idx=0; idx<basics->Count(); idx++) {
@@ -1982,7 +1409,7 @@ void DiskD88Disk::ClearDiskBasics()
 }
 
 /// キャラクターコードマップ番号設定
-void DiskD88Disk::SetCharCode(const wxString &name)
+void DiskImageDisk::SetCharCode(const wxString &name)
 {
 	if (!basics) return;
 	for(size_t idx=0; idx<basics->Count(); idx++) {
@@ -1993,39 +1420,50 @@ void DiskD88Disk::SetCharCode(const wxString &name)
 	}
 }
 
+// ----------------------------------------------------------------------
 //
 //
 //
-DiskD88File::DiskD88File()
+DiskImageFile::DiskImageFile()
 {
+	p_image = NULL;
 	disks = NULL;
 	mods  = NULL;
 }
 
-DiskD88File::DiskD88File(const DiskD88File &src)
+DiskImageFile::DiskImageFile(const DiskImageFile &src)
 {
 	// cannot copy
 }
 
-DiskD88File::~DiskD88File()
+DiskImageFile::DiskImageFile(DiskImage &image)
+{
+	p_image = &image;
+	disks = NULL;
+	mods  = NULL;
+}
+
+DiskImageFile::~DiskImageFile()
 {
 	Clear();
 }
 
-size_t DiskD88File::Add(DiskD88Disk *newdsk, short mod_flags)
+/// ディスクを追加
+size_t DiskImageFile::Add(DiskImageDisk *newdsk, short mod_flags)
 {
-	if (!disks) disks = new DiskD88Disks;
+	if (!disks) disks = new DiskImageDisks;
 	if (!mods)  mods  = new wxArrayShort;
 	disks->Add(newdsk);
 	mods->Add(mod_flags);
 	return disks->Count();
 }
 
-void DiskD88File::Clear()
+/// 全ディスクを削除
+void DiskImageFile::Clear()
 {
 	if (disks) {
 		for(size_t i=0; i<disks->Count(); i++) {
-			DiskD88Disk *p = disks->Item(i);
+			DiskImageDisk *p = disks->Item(i);
 			delete p;
 		}
 		delete disks;
@@ -2036,15 +1474,17 @@ void DiskD88File::Clear()
 	}
 }
 
-size_t DiskD88File::Count() const
+/// ディスク数を返す
+size_t DiskImageFile::Count() const
 {
 	if (!disks) return 0;
 	return disks->Count();
 }
 
-bool DiskD88File::Delete(size_t idx)
+/// ディスクを削除
+bool DiskImageFile::Delete(size_t idx)
 {
-	DiskD88Disk *disk = GetDisk(idx);
+	DiskImageDisk *disk = GetDisk(idx);
 	if (!disk) return false;
 	delete disk;
 	disks->RemoveAt(idx);
@@ -2052,14 +1492,15 @@ bool DiskD88File::Delete(size_t idx)
 	return true;
 }
 
-DiskD88Disk *DiskD88File::GetDisk(size_t idx)
+/// ディスクを返す
+DiskImageDisk *DiskImageFile::GetDisk(size_t idx)
 {
 	if (!disks) return NULL;
 	if (idx >= disks->Count()) return NULL;
 	return disks->Item(idx);
 }
 
-bool DiskD88File::IsModified()
+bool DiskImageFile::IsModified()
 {
 	bool modified = false;
 	if (disks) {
@@ -2067,7 +1508,7 @@ bool DiskD88File::IsModified()
 			modified = (mods->Item(disk_num) != 0);
 			if (modified) break;
 
-			DiskD88Disk *disk = disks->Item(disk_num);
+			DiskImageDisk *disk = disks->Item(disk_num);
 			if (!disk) continue;
 
 			modified = disk->IsModified();
@@ -2077,13 +1518,13 @@ bool DiskD88File::IsModified()
 	return modified;
 }
 
-void DiskD88File::ClearModify()
+void DiskImageFile::ClearModify()
 {
 	if (disks) {
 		for(size_t disk_num = 0; disk_num < disks->Count(); disk_num++) {
 			mods->Item(disk_num) = MODIFY_NONE;
 
-			DiskD88Disk *disk = disks->Item(disk_num);
+			DiskImageDisk *disk = disks->Item(disk_num);
 			if (!disk) continue;
 
 			disk->ClearModify();
@@ -2091,39 +1532,18 @@ void DiskD88File::ClearModify()
 	}
 }
 
+// ======================================================================
 //
 //
 //
-DiskWriteOptions::DiskWriteOptions()
+DiskImage::DiskImage()
 {
-	trim_unused_data = false;
-}
-DiskWriteOptions::DiskWriteOptions(
-	bool n_trim_unused_data
-) {
-	trim_unused_data = n_trim_unused_data;
-}
-DiskWriteOptions::~DiskWriteOptions()
-{
+	p_file = NULL;
 }
 
-//
-//
-//
-DiskD88::DiskD88()
-{
-#ifdef DISKD88_USE_MEMORY_INPUT_STREAM
-	stream = NULL;
-#endif
-	file = NULL;
-}
-
-DiskD88::~DiskD88()
+DiskImage::~DiskImage()
 {
 	ClearFile();
-#ifdef DISKD88_USE_MEMORY_INPUT_STREAM
-	CloseStream();
-#endif
 }
 
 /// 新規作成
@@ -2134,13 +1554,13 @@ DiskD88::~DiskD88()
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::Create(const wxString &diskname, const DiskParam &param, bool write_protect, const wxString &basic_hint)
+int DiskImage::Create(const wxString &diskname, const DiskParam &param, bool write_protect, const wxString &basic_hint)
 {
-	result.Clear();
+	m_result.Clear();
 
 	NewFile(wxEmptyString);
-	file->SetBasicTypeHint(basic_hint);
-	DiskD88Creator cr(diskname, param, write_protect, file, result);
+	p_file->SetBasicTypeHint(basic_hint);
+	DiskImageCreator cr(diskname, param, write_protect, p_file, m_result);
 	int valid_disk = cr.Create();
 
 	// エラーあり
@@ -2159,14 +1579,14 @@ int DiskD88::Create(const wxString &diskname, const DiskParam &param, bool write
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::Add(const wxString &diskname, const DiskParam &param, bool write_protect, const wxString &basic_hint)
+int DiskImage::Add(const wxString &diskname, const DiskParam &param, bool write_protect, const wxString &basic_hint)
 {
-	if (!file) return 0;
+	if (!p_file) return 0;
 
-	result.Clear();
+	m_result.Clear();
 
-	file->SetBasicTypeHint(basic_hint);
-	DiskD88Creator cr(diskname, param, write_protect, file, result);
+	p_file->SetBasicTypeHint(basic_hint);
+	DiskImageCreator cr(diskname, param, write_protect, p_file, m_result);
 	int valid_disk = cr.Add();
 
 	return valid_disk;
@@ -2179,20 +1599,20 @@ int DiskD88::Add(const wxString &diskname, const DiskParam &param, bool write_pr
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::Add(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint)
+int DiskImage::Add(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint)
 {
 	// ファイル開いていない
-	if (!file) return 0;
+	if (!p_file) return 0;
 
-	result.Clear();
+	m_result.Clear();
 
 	wxFileInputStream fstream(filepath);
 	if (!fstream.IsOk()) {
-		result.SetError(DiskResult::ERR_CANNOT_OPEN);
+		m_result.SetError(DiskResult::ERR_CANNOT_OPEN);
 		return -1;
 	}
 
-	DiskParser ps(filepath, &fstream, file, result);
+	DiskParser ps(filepath, &fstream, p_file, m_result);
 	int valid_disk = ps.ParseAdd(file_format, param_hint);
 
 	return valid_disk;
@@ -2205,24 +1625,26 @@ int DiskD88::Add(const wxString &filepath, const wxString &file_format, const Di
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::Open(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint)
+int DiskImage::Open(const wxString &filepath, const wxString &file_format, const DiskParam &param_hint)
 {
-	result.Clear();
+	m_result.Clear();
 
 	// ファイルを開く
 	wxFileInputStream fstream(filepath);
 	if (!fstream.IsOk()) {
-		result.SetError(DiskResult::ERR_CANNOT_OPEN);
+		m_result.SetError(DiskResult::ERR_CANNOT_OPEN);
 		return -1;
 	}
 
 	NewFile(filepath);
-	DiskParser ps(filepath, &fstream, file, result);
+	DiskParser ps(filepath, &fstream, p_file, m_result);
 	int valid_disk = ps.Parse(file_format, param_hint);
 
-	// エラーあり
 	if (valid_disk < 0) {
+		// エラーあり
 		ClearFile();
+	} else {
+		SetFormatType(file_format);
 	}
 
 	return valid_disk;
@@ -2236,36 +1658,33 @@ int DiskD88::Open(const wxString &filepath, const wxString &file_format, const D
 /// @retval  0 問題なし
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::Check(const wxString &filepath, wxString &file_format, DiskParamPtrs &params, DiskParam &manual_param)
+int DiskImage::Check(const wxString &filepath, wxString &file_format, DiskParamPtrs &params, DiskParam &manual_param)
 {
-	result.Clear();
+	m_result.Clear();
 
 	// ファイルを開く
 	wxFileInputStream fstream(filepath);
 	if (!fstream.IsOk()) {
-		result.SetError(DiskResult::ERR_CANNOT_OPEN);
+		m_result.SetError(DiskResult::ERR_CANNOT_OPEN);
 		return -1;
 	}
 
-	DiskParser ps(filepath, &fstream, file, result);
+	DiskParser ps(filepath, &fstream, p_file, m_result);
 	return ps.Check(file_format, params, manual_param);
 }
 
 /// 閉じる
-void DiskD88::Close()
+void DiskImage::Close()
 {
-#ifdef DISKD88_USE_MEMORY_INPUT_STREAM
-	CloseStream();
-#endif
 	ClearFile();
-	filename.Clear();
+	m_filename.Clear();
 }
 
 /// ストリームの内容をファイルに保存できるか
 /// @param[in] file_format 保存ファイルのフォーマット
-int DiskD88::CanSave(const wxString &file_format)
+int DiskImage::CanSave(const wxString &file_format)
 {
-	DiskWriter dw(this, &result);
+	DiskWriter dw(this, &m_result);
 	return dw.CanSave(file_format);
 }
 /// ストリームの内容をファイルに保存
@@ -2274,9 +1693,9 @@ int DiskD88::CanSave(const wxString &file_format)
 /// @param[in] options     保存時のオプション
 /// @retval  0:正常
 /// @retval -1:エラー
-int DiskD88::Save(const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
+int DiskImage::Save(const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
-	DiskWriter dw(this, filepath, options, &result);
+	DiskWriter dw(this, filepath, options, &m_result);
 	return dw.Save(file_format);
 }
 /// ストリームの内容をファイルに保存
@@ -2287,20 +1706,20 @@ int DiskD88::Save(const wxString &filepath, const wxString &file_format, const D
 /// @param[in] options     保存時のオプション
 /// @retval  0:正常
 /// @retval -1:エラー
-int DiskD88::SaveDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
+int DiskImage::SaveDisk(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskWriteOptions &options)
 {
-	DiskWriter dw(this, filepath, options, &result);
+	DiskWriter dw(this, filepath, options, &m_result);
 	return dw.SaveDisk(disk_number, side_number, file_format);
 }
 
 /// ディスクを削除
 /// @param[in] disk_number ディスク番号
 /// @return true
-bool DiskD88::Delete(int disk_number)
+bool DiskImage::Delete(int disk_number)
 {
-	if (!file) return false;
-	file->Delete((size_t)disk_number);
-//	file->SetModify();
+	if (!p_file) return false;
+	p_file->Delete((size_t)disk_number);
+//	p_file->SetModify();
 	return true;
 }
 /// 置換元のディスクを解析
@@ -2314,19 +1733,19 @@ bool DiskD88::Delete(int disk_number)
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskD88File &src_file, DiskD88Disk* &tag_disk)
+int DiskImage::ParseForReplace(int disk_number, int side_number, const wxString &filepath, const wxString &file_format, const DiskParam &param_hint, DiskImageFile &src_file, DiskImageDisk* &tag_disk)
 {
-	if (!file) return 0;
+	if (!p_file) return 0;
 
-	result.Clear();
+	m_result.Clear();
 
 	wxFileInputStream fstream(filepath);
 	if (!fstream.IsOk()) {
-		result.SetError(DiskResult::ERR_CANNOT_OPEN);
+		m_result.SetError(DiskResult::ERR_CANNOT_OPEN);
 		return -1;
 	}
 
-	DiskParser ps(filepath, &fstream, &src_file, result);
+	DiskParser ps(filepath, &fstream, &src_file, m_result);
 	int valid_disk = ps.Parse(file_format, param_hint);
 
 	// エラーあり
@@ -2335,10 +1754,10 @@ int DiskD88::ParseForReplace(int disk_number, int side_number, const wxString &f
 	}
 
 	// ディスクを選択 
-	tag_disk = file->GetDisk(disk_number);
+	tag_disk = p_file->GetDisk(disk_number);
 	if (!tag_disk) {
-		result.SetError(DiskResult::ERR_NO_DATA);
-		return result.GetValid();
+		m_result.SetError(DiskResult::ERR_NO_DATA);
+		return m_result.GetValid();
 	}
 
 	return 0;
@@ -2352,24 +1771,24 @@ int DiskD88::ParseForReplace(int disk_number, int side_number, const wxString &f
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskD88::ReplaceDisk(int disk_number, int side_number, DiskD88Disk *src_disk, int src_side_number, DiskD88Disk *tag_disk)
+int DiskImage::ReplaceDisk(int disk_number, int side_number, DiskImageDisk *src_disk, int src_side_number, DiskImageDisk *tag_disk)
 {
-	if (!file) return 0;
+	if (!p_file) return 0;
 
-	result.Clear();
+	m_result.Clear();
 
 	int valid_disk = tag_disk->Replace(side_number, src_disk, src_side_number);
 	if (valid_disk != 0) {
-		result.SetError(DiskResult::ERR_REPLACE);
+		m_result.SetError(DiskResult::ERR_REPLACE);
 	}
 
 	return valid_disk;
 }
 
 /// ディスク名を設定
-bool DiskD88::SetDiskName(size_t disk_number, const wxString &newname)
+bool DiskImage::SetDiskName(size_t disk_number, const wxString &newname)
 {
-	DiskD88Disk *disk = GetDisk(disk_number);
+	DiskImageDisk *disk = GetDisk(disk_number);
 	if (!disk) return false;
 
 	if (disk->GetName() != newname) {
@@ -2380,109 +1799,133 @@ bool DiskD88::SetDiskName(size_t disk_number, const wxString &newname)
 	return false;
 }
 /// ディスク名を返す
-wxString DiskD88::GetDiskName(size_t disk_number, bool real) const
+wxString DiskImage::GetDiskName(size_t disk_number, bool real) const
 {
-	const DiskD88Disk *disk = GetDisk(disk_number);
+	const DiskImageDisk *disk = GetDisk(disk_number);
 	if (!disk) return wxEmptyString;
 	return disk->GetName(real);
 }
 
 /// ファイル構造体を作成
-void DiskD88::NewFile(const wxString &filepath)
+void DiskImage::NewFile(const wxString &filepath)
 {
-	if (file) {
-		delete file;
+	if (p_file) {
+		delete p_file;
 	}
-	file = new DiskD88File;
-	filename = filepath;
+	p_file = NewImageFile();
+	m_filename = filepath;
 }
 
 /// ファイル構造体をクリア
-void DiskD88::ClearFile()
+void DiskImage::ClearFile()
 {
-	delete file;
-	file = NULL;
+	delete p_file;
+	p_file = NULL;
 }
 /// ディスクを変更したか
-bool DiskD88::IsModified()
+bool DiskImage::IsModified()
 {
 	bool modified = false;
-	if (file) {
-		modified = file->IsModified();
+	if (p_file) {
+		modified = p_file->IsModified();
 	}
 	return modified;
 }
 /// ディスク枚数
-size_t DiskD88::CountDisks() const
+size_t DiskImage::CountDisks() const
 {
-	if (!file) return 0;
-	return file->Count();
+	if (!p_file) return 0;
+	return p_file->Count();
 }
 /// ディスク一覧を返す
-DiskD88Disks *DiskD88::GetDisks()
+DiskImageDisks *DiskImage::GetDisks()
 {
-	if (!file) return NULL;
-	return file->GetDisks();
+	if (!p_file) return NULL;
+	return p_file->GetDisks();
 }
 /// 指定した位置のディスクを返す
-DiskD88Disk *DiskD88::GetDisk(size_t index)
+DiskImageDisk *DiskImage::GetDisk(size_t index)
 {
-	if (!file) return NULL;
-	return file->GetDisk(index);
+	if (!p_file) return NULL;
+	return p_file->GetDisk(index);
 }
 /// 指定した位置のディスクを返す
-const DiskD88Disk *DiskD88::GetDisk(size_t index) const
+const DiskImageDisk *DiskImage::GetDisk(size_t index) const
 {
-	if (!file) return NULL;
-	return file->GetDisk(index);
+	if (!p_file) return NULL;
+	return p_file->GetDisk(index);
 }
 /// 指定した位置のディスクのタイプ
-int DiskD88::GetDiskTypeNumber(size_t index) const
+int DiskImage::GetDiskTypeNumber(size_t index) const
 {
-	if (!file) return -1;
-	DiskD88Disk *disk = file->GetDisk(index);
+	if (!p_file) return -1;
+	DiskImageDisk *disk = p_file->GetDisk(index);
 	if (!disk) return -1;
 	return gDiskTemplates.IndexOf(disk->GetDiskTypeName());
 }
 
 /// ファイル名を返す
-wxString DiskD88::GetFileName() const
+wxString DiskImage::GetFileName() const
 {
-	return filename.GetFullName();
+	return m_filename.GetFullName();
+}
+
+/// ファイル拡張子を返す
+wxString DiskImage::GetFileExt() const
+{
+	return m_filename.GetExt();
 }
 
 /// ファイル名ベースを返す
-wxString DiskD88::GetFileNameBase() const
+wxString DiskImage::GetFileNameBase() const
 {
-	return filename.GetName();
+	return m_filename.GetName();
 }
 
 /// ファイルパスを返す
-wxString DiskD88::GetFilePath() const
+wxString DiskImage::GetFilePath() const
 {
-	return filename.GetFullPath();
+	return m_filename.GetFullPath();
 }
 
 /// パスを返す
-wxString DiskD88::GetPath() const
+wxString DiskImage::GetPath() const
 {
-	return filename.GetPath();
+	return m_filename.GetPath();
 }
 
 /// ファイル名を設定
-void DiskD88::SetFileName(const wxString &path)
+void DiskImage::SetFileName(const wxString &path)
 {
-	filename = wxFileName(path);
+	m_filename = wxFileName(path);
+}
+
+/// ファイル拡張子を設定
+void DiskImage::SetFileExt(const wxString &ext)
+{
+	m_filename.SetExt(ext);
+}
+
+/// ファイルのフォーマット種類を返す
+const wxString &DiskImage::GetFormatType() const
+{
+	return m_format_type;
+}
+
+/// ファイルのフォーマット種類を設定
+void DiskImage::SetFormatType(const wxString &format_type)
+{
+	m_format_type = format_type;
 }
 
 /// DISK BASICが一致するか
-bool DiskD88::MatchDiskBasic(const DiskBasic *target)
+bool DiskImage::MatchDiskBasic(const DiskBasic *target)
 {
 	bool match = false;
-	DiskD88Disks *disks = GetDisks();
+	DiskImageDisks *disks = GetDisks();
 	if (!disks) return false;
 	for(size_t i = 0; i < disks->Count(); i++) {
-		DiskD88Disk *disk = disks->Item(i);
+		DiskImageDisk *disk = disks->Item(i);
 		DiskBasics *basics = disk->GetDiskBasics();
 		if (!basics) return false;
 		for(size_t j = 0; j < basics->Count(); j++) {
@@ -2496,13 +1939,13 @@ bool DiskD88::MatchDiskBasic(const DiskBasic *target)
 }
 
 /// DISK BASICの解析状態をクリア
-void DiskD88::ClearDiskBasicParseAndAssign(int disk_number, int side_number)
+void DiskImage::ClearDiskBasicParseAndAssign(int disk_number, int side_number)
 {
-	DiskD88Disk *disk = GetDisk(disk_number);
+	DiskImageDisk *disk = GetDisk(disk_number);
 	if (!disk) return;
 
-	if (file) {
-		file->SetBasicTypeHint(wxT(""));
+	if (p_file) {
+		p_file->SetBasicTypeHint(wxT(""));
 	}
 
 	DiskBasics *basics = disk->GetDiskBasics();
@@ -2511,30 +1954,30 @@ void DiskD88::ClearDiskBasicParseAndAssign(int disk_number, int side_number)
 }
 
 /// キャラクターコードマップ番号設定
-void DiskD88::SetCharCode(const wxString &name)
+void DiskImage::SetCharCode(const wxString &name)
 {
-	DiskD88Disks *disks = GetDisks();
+	DiskImageDisks *disks = GetDisks();
 	if (!disks) return;
 	for(size_t i = 0; i < disks->Count(); i++) {
-		DiskD88Disk *disk = disks->Item(i);
+		DiskImageDisk *disk = disks->Item(i);
 		disk->SetCharCode(name);
 	}
 }
 
 /// エラーメッセージ
-const wxArrayString &DiskD88::GetErrorMessage(int maxrow)
+const wxArrayString &DiskImage::GetErrorMessage(int maxrow)
 {
-	return result.GetMessages(maxrow);
+	return m_result.GetMessages(maxrow);
 }
 
 /// エラーメッセージを表示
-void  DiskD88::ShowErrorMessage()
+void  DiskImage::ShowErrorMessage()
 {
-	ResultInfo::ShowMessage(result.GetValid(), result.GetMessages());
+	ResultInfo::ShowMessage(m_result.GetValid(), m_result.GetMessages());
 }
 
 /// エラー警告メッセージを表示
-int DiskD88::ShowErrWarnMessage()
+int DiskImage::ShowErrWarnMessage()
 {
-	return ResultInfo::ShowErrWarnMessage(result.GetValid(), result.GetMessages(-1));
+	return ResultInfo::ShowErrWarnMessage(m_result.GetValid(), m_result.GetMessages(-1));
 }

@@ -12,7 +12,8 @@
 #include <wx/checkbox.h>
 #include <wx/sizer.h>
 #include "../main.h"
-#include "../diskd88.h"
+#include "uimainframe.h"
+#include "../diskimg/diskimage.h"
 #include "diskparambox.h"
 #include "../utils.h"
 
@@ -23,18 +24,20 @@
 #define TEXT_ATTR_SIZE 500
 
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskDiskAttr, wxPanel)
-	EVT_SIZE(L3DiskDiskAttr::OnSize)
-	EVT_BUTTON(IDC_BTN_CHANGE, L3DiskDiskAttr::OnButtonChange)
-	EVT_CHOICE(IDC_COM_DENSITY, L3DiskDiskAttr::OnComboDensity)
-	EVT_CHECKBOX(IDC_CHK_WPROTECT, L3DiskDiskAttr::OnCheckWriteProtect)
+wxBEGIN_EVENT_TABLE(UiDiskDiskAttr, wxPanel)
+	EVT_SIZE(UiDiskDiskAttr::OnSize)
+	EVT_BUTTON(IDC_BTN_CHANGE, UiDiskDiskAttr::OnButtonChange)
+	EVT_CHOICE(IDC_COM_DENSITY, UiDiskDiskAttr::OnComboDensity)
+	EVT_CHECKBOX(IDC_CHK_WPROTECT, UiDiskDiskAttr::OnCheckWriteProtect)
 wxEND_EVENT_TABLE()
 
-L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
+UiDiskDiskAttr::UiDiskDiskAttr(UiDiskFrame *parentframe, wxWindow *parentwindow)
        : wxPanel(parentwindow, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
 	parent   = parentwindow;
 	frame    = parentframe;
+
+	p_disk	 = NULL;
 
 	wxSizerFlags flagsW = wxSizerFlags().Expand().Border(wxALL, 2);
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
@@ -50,10 +53,9 @@ L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
 	szrButtons->Add(btnChange, flagsW);
 
 	size.x = 100;
-	comDensity = new wxChoice(this, IDC_COM_DENSITY, wxDefaultPosition, size);
-	for(int i=0; gDiskDensity[i].name != NULL; i++) {
-		comDensity->Append(wxGetTranslation(gDiskDensity[i].name));
-	}
+	wxArrayString densities;
+	frame->GetDiskImage().GetDensityNames(densities);
+	comDensity = new wxChoice(this, IDC_COM_DENSITY, wxDefaultPosition, size, densities);
 	comDensity->SetSelection(0);
 	szrButtons->Add(comDensity, flagsW);
 
@@ -74,11 +76,11 @@ L3DiskDiskAttr::L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parentwindow)
 
 	ClearData();
 }
-L3DiskDiskAttr::~L3DiskDiskAttr()
+UiDiskDiskAttr::~UiDiskDiskAttr()
 {
 }
 /// サイズ変更
-void L3DiskDiskAttr::OnSize(wxSizeEvent& event)
+void UiDiskDiskAttr::OnSize(wxSizeEvent& event)
 {
 	wxSize size = event.GetSize();
 	wxSize sizz = szrButtons->GetSize();
@@ -111,30 +113,30 @@ void L3DiskDiskAttr::OnSize(wxSizeEvent& event)
 	}
 }
 /// 変更ボタンを押した
-void L3DiskDiskAttr::OnButtonChange(wxCommandEvent& event)
+void UiDiskDiskAttr::OnButtonChange(wxCommandEvent& event)
 {
 	// パラメータを選択するダイアログを表示
 	ShowChangeDisk();
 }
 /// コンボボックスを変更した
-void L3DiskDiskAttr::OnComboDensity(wxCommandEvent& event)
+void UiDiskDiskAttr::OnComboDensity(wxCommandEvent& event)
 {
-	if (!disk) return;
-	disk->SetDensity(GetDiskDensity());
+	if (!p_disk) return;
+	p_disk->SetDensity(GetDiskDensity());
 }
 /// 書き込み禁止チェックボックスを押した
-void L3DiskDiskAttr::OnCheckWriteProtect(wxCommandEvent& event)
+void UiDiskDiskAttr::OnCheckWriteProtect(wxCommandEvent& event)
 {
-	if (!disk) return;
-	disk->SetWriteProtect(event.IsChecked());
+	if (!p_disk) return;
+	p_disk->SetWriteProtect(event.IsChecked());
 }
 
 /// パラメータを選択するダイアログを表示
-void L3DiskDiskAttr::ShowChangeDisk()
+void UiDiskDiskAttr::ShowChangeDisk()
 {
-	if (!disk) return;
+	if (!p_disk) return;
 
-	DiskParamBox dlg(this, wxID_ANY, DiskParamBox::CHANGE_DISK_PARAM, -1, disk, NULL, NULL, DiskParamBox::SHOW_TEMPLATE_ALL);
+	DiskParamBox dlg(this, wxID_ANY, frame->GetDiskImage(), DiskParamBox::CHANGE_DISK_PARAM, -1, p_disk, NULL, NULL, DiskParamBox::SHOW_TEMPLATE_ALL);
 	int sts = dlg.ShowModal();
 	if (sts == wxID_OK) {
 		DiskParam param;
@@ -143,15 +145,15 @@ void L3DiskDiskAttr::ShowChangeDisk()
 		if (titem) {
 			param = *titem;
 		}
-		disk->SetDiskParam(param);
-		disk->SetParamChanged(!param.MatchExceptName(disk->GetOriginalParam()));
-//		disk->SetName(dlg.GetDiskName());
-//		disk->SetDensity(dlg.GetDensity());
-//		disk->SetWriteProtect(dlg.IsWriteProtected());
-		disk->SetModify();
-		disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
+		p_disk->SetDiskParam(param);
+		p_disk->SetParamChanged(!param.MatchExceptName(p_disk->GetOriginalParam()));
+//		p_disk->SetName(dlg.GetDiskName());
+//		p_disk->SetDensity(dlg.GetDensity());
+//		p_disk->SetWriteProtect(dlg.IsWriteProtected());
+		p_disk->SetModify();
+		p_disk->GetFile()->SetBasicTypeHint(dlg.GetCategory());
 		// BASICタイプを初期化
-		disk->ClearDiskBasics();
+		p_disk->ClearDiskBasics();
 //		// ディスク名をセット
 //		frame->SetDiskListName(disk->GetName());
 //		// ディスク属性をセット
@@ -162,37 +164,37 @@ void L3DiskDiskAttr::ShowChangeDisk()
 }
 
 /// 情報を設定
-void L3DiskDiskAttr::SetAttr(DiskD88Disk *newdisk)
+void UiDiskDiskAttr::SetAttr(DiskImageDisk *newdisk)
 {
-	disk = newdisk;
-	if (!disk) return;
-	wxString desc = disk->GetDiskDescription();
-	if (disk->GetParamChanged()) {
+	p_disk = newdisk;
+	if (!p_disk) return;
+	wxString desc = p_disk->GetDiskDescription();
+	if (p_disk->GetParamChanged()) {
 		// ディスクを変更した時は元の情報も表示する
 		desc += wxT(" (");
 		desc += _("Original: ");
-		desc += disk->GetOriginalParam().GetDiskDescription();
+		desc += p_disk->GetOriginalParam().GetDiskDescription();
 		desc += wxT(")");
 	}
 	SetAttrText(desc);
 	btnChange->Enable(true);
-	SetDiskDensity(disk->GetDensity());
-	SetWriteProtect(disk->IsWriteProtected());
+	SetDiskDensity(p_disk->GetDensity());
+	SetWriteProtect(p_disk->IsWriteProtected());
 }
 /// 情報を設定
-void L3DiskDiskAttr::SetAttrText(const wxString &val)
+void UiDiskDiskAttr::SetAttrText(const wxString &val)
 {
 	txtAttr->SetValue(val);
 }
 #if 0
-void L3DiskDiskAttr::SetDiskDensity(const wxString &val)
+void UiDiskDiskAttr::SetDiskDensity(const wxString &val)
 {
 	comDensity->Enable(true);
 	comDensity->SetStringSelection(val);
 }
 #endif
 /// 密度を設定
-void L3DiskDiskAttr::SetDiskDensity(int val)
+void UiDiskDiskAttr::SetDiskDensity(int val)
 {
 	if (!comDensity) return;
 
@@ -202,7 +204,7 @@ void L3DiskDiskAttr::SetDiskDensity(int val)
 	} else {
 		comDensity->Enable(true);
 
-		int match = DiskD88Disk::FindDensity(val);
+		int match = frame->GetDiskImage().FindDensity(val);
 		if (match >= 0) {
 			// 選択肢にある
 			comDensity->SetSelection(match);
@@ -217,18 +219,12 @@ void L3DiskDiskAttr::SetDiskDensity(int val)
 	} 
 }
 /// 密度を返す
-int L3DiskDiskAttr::GetDiskDensity() const
+int UiDiskDiskAttr::GetDiskDensity() const
 {
 	if (!comDensity) return 0;
 
 	int val = comDensity->GetSelection();
-	int match = -1;
-	for(int i=0; gDiskDensity[i].name != NULL; i++) {
-		if (i == val) {
-			match = gDiskDensity[i].val;
-			break;
-		}
-	}
+	int match = frame->GetDiskImage().FindDensityByIndex(val);
 	if (match < 0) {
 		// 選択肢にない
 		wxString str = comDensity->GetStringSelection();
@@ -237,18 +233,18 @@ int L3DiskDiskAttr::GetDiskDensity() const
 	return match; 
 }
 /// 書き込み禁止を設定
-void L3DiskDiskAttr::SetWriteProtect(bool val, bool enable)
+void UiDiskDiskAttr::SetWriteProtect(bool val, bool enable)
 {
 	chkWprotect->Enable(enable);
 	chkWprotect->SetValue(val);
 }
 /// 書き込み禁止を返す
-bool L3DiskDiskAttr::GetWriteProtect() const
+bool UiDiskDiskAttr::GetWriteProtect() const
 {
 	return chkWprotect->GetValue();
 }
 /// 情報をクリア
-void L3DiskDiskAttr::ClearData()
+void UiDiskDiskAttr::ClearData()
 {
 	SetAttrText(wxEmptyString);
 	btnChange->Enable(false);
@@ -256,7 +252,7 @@ void L3DiskDiskAttr::ClearData()
 	SetWriteProtect(false, false);
 }
 /// フォントを設定
-void L3DiskDiskAttr::SetListFont(const wxFont &font)
+void UiDiskDiskAttr::SetListFont(const wxFont &font)
 {
 	txtAttr->SetFont(font);
 }

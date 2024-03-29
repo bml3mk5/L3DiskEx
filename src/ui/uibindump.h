@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _UIBINDUMP_H_
-#define _UIBINDUMP_H_
+#ifndef UIBINDUMP_H
+#define UIBINDUMP_H
 
 #include "../common.h"
 #include <wx/frame.h>
@@ -24,7 +24,7 @@
 #endif
 
 /// テキストコントロール
-class L3DiskBinDumpTextCtrl
+class UiDiskBinDumpTextCtrl
 #ifdef USE_RICH_TEXT_ON_BINDUMP
 	: public wxRichTextCtrl
 #else
@@ -32,29 +32,29 @@ class L3DiskBinDumpTextCtrl
 #endif
 {
 public:
-	L3DiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id); 
+	UiDiskBinDumpTextCtrl(wxWindow *parent, wxWindowID id); 
 };
 
-class wxMenu;
+class MyMenu;
 class wxCheckBox;
 class wxChoice;
 class wxRadioButton;
 class wxButton;
 
-class L3DiskFrame;
-class L3DiskBinDump;
-class L3DiskBinDumpAttr;
-class L3DiskBinDumpPanel;
+class UiDiskFrame;
+class UiDiskBinDump;
+class UiDiskBinDumpAttr;
+class UiDiskBinDumpPanel;
 
 /// バイナリダンプウィンドウ
-class L3DiskBinDumpFrame: public wxFrame
+class UiDiskBinDumpFrame: public wxFrame
 {
 private:
 	// gui
-	wxMenu *menuFile;
-	wxMenu *menuView;
+	MyMenu *menuFile;
+	MyMenu *menuView;
 
-	L3DiskBinDumpPanel *panel;
+	UiDiskBinDumpPanel *panel;
 
 	enum en_menu_id
 	{
@@ -67,8 +67,8 @@ private:
 	};
 
 public:
-    L3DiskBinDumpFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size);
-	~L3DiskBinDumpFrame();
+    UiDiskBinDumpFrame(UiDiskFrame *parent, const wxString& title, const wxSize& size);
+	~UiDiskBinDumpFrame();
 
 	void OnClose(wxCommandEvent& event);
 	void OnViewInvert(wxCommandEvent& event);
@@ -76,8 +76,8 @@ public:
 	void OnViewTextBinary(wxCommandEvent& event);
 	void OnViewFont(wxCommandEvent& event);
 
-	L3DiskBinDumpPanel *GetPanel() const { return panel; }
-	L3DiskBinDump *GetDumpPanel() const;
+	UiDiskBinDumpPanel *GetPanel() const { return panel; }
+	UiDiskBinDump *GetDumpPanel() const;
 
 	void SetDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 	void AppendDatas(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
@@ -100,7 +100,7 @@ public:
 };
 
 /// データバッファ
-class L3MemoryBuffer : public wxMemoryBuffer
+class MyMemoryBuffer : public wxMemoryBuffer
 {
 private:
 	int track_number;
@@ -108,8 +108,8 @@ private:
 	int sector_number;
 
 public:
-	L3MemoryBuffer(const L3MemoryBuffer &src);
-	L3MemoryBuffer(size_t size);
+	MyMemoryBuffer(const MyMemoryBuffer &src);
+	MyMemoryBuffer(size_t size);
 
 	const wxUint8 *GetByteData() const { return (const wxUint8 *)GetData(); }
 
@@ -121,23 +121,23 @@ public:
 	void SetSectorNumber(int val) { sector_number = val; }
 };
 
-WX_DEFINE_ARRAY(L3MemoryBuffer *, L3MemoryBuffers);
+WX_DEFINE_ARRAY(MyMemoryBuffer *, MyMemoryBuffers);
 
 /// バイナリダンプパネル
-class L3DiskBinDumpPanel : public wxSplitterWindow
+class UiDiskBinDumpPanel : public wxSplitterWindow
 {
 private:
 	wxWindow *parent;
-	L3DiskBinDumpFrame *frame;
+	UiDiskBinDumpFrame *frame;
 
-	L3DiskBinDumpAttr	*attr;
-	L3DiskBinDump		*dump;
+	UiDiskBinDumpAttr	*attr;
+	UiDiskBinDump		*dump;
 
 public:
-	L3DiskBinDumpPanel(L3DiskBinDumpFrame *parentframe, wxWindow *parent);
-	~L3DiskBinDumpPanel();
+	UiDiskBinDumpPanel(UiDiskBinDumpFrame *parentframe, wxWindow *parent);
+	~UiDiskBinDumpPanel();
 
-	L3DiskBinDump *GetDumpPanel() const { return dump; }
+	UiDiskBinDump *GetDumpPanel() const { return dump; }
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
@@ -148,11 +148,11 @@ public:
 };
 
 /// バイナリダンプ 属性表示部
-class L3DiskBinDumpAttr : public wxPanel
+class UiDiskBinDumpAttr : public wxPanel
 {
 private:
 	wxWindow *parent;
-	L3DiskBinDumpFrame *frame;
+	UiDiskBinDumpFrame *frame;
 
 	wxRadioButton *radText;
 	wxRadioButton *radBinary;
@@ -162,8 +162,8 @@ private:
 //	wxButton *btnFont;
 
 public:
-	L3DiskBinDumpAttr(L3DiskBinDumpFrame *parentframe, wxWindow *parent);
-	~L3DiskBinDumpAttr();
+	UiDiskBinDumpAttr(UiDiskBinDumpFrame *parentframe, wxWindow *parent);
+	~UiDiskBinDumpAttr();
 
 	enum {
 		IDC_RADIO_TEXT = 1,
@@ -186,16 +186,16 @@ public:
 };
 
 /// バイナリダンプ データ表示部
-class L3DiskBinDump : public wxScrolledWindow
+class UiDiskBinDump : public wxScrolledWindow
 {
 private:
 	wxWindow *parent;
-	L3DiskBinDumpFrame *frame;
+	UiDiskBinDumpFrame *frame;
 
-	L3DiskBinDumpTextCtrl *txtHex;
-	L3DiskBinDumpTextCtrl *txtAsc;
+	UiDiskBinDumpTextCtrl *txtHex;
+	UiDiskBinDumpTextCtrl *txtAsc;
 
-	L3MemoryBuffers buffers;
+	MyMemoryBuffers buffers;
 
 	int min_x;
 	int min_y;
@@ -207,20 +207,20 @@ private:
 
 	Utils::Dump dump;
 
-	void SetDatasMain(const L3MemoryBuffer *buf);
-	void AppendDatasMain(const L3MemoryBuffer *buf);
-	void SetDatasBinaryMain(const L3MemoryBuffer *buf, bool append);
-	void SetDatasTextMain(const L3MemoryBuffer *buf, bool append);
+	void SetDatasMain(const MyMemoryBuffer *buf);
+	void AppendDatasMain(const MyMemoryBuffer *buf);
+	void SetDatasBinaryMain(const MyMemoryBuffer *buf, bool append);
+	void SetDatasTextMain(const MyMemoryBuffer *buf, bool append);
 
 	void CalcWidthOnTextCtrl(const wxPoint &pv, int def_rows);
-	int CalcHeightOnTextCtrl(const L3DiskBinDumpTextCtrl *ctrl, int rows, const wxString &str);
+	int CalcHeightOnTextCtrl(const UiDiskBinDumpTextCtrl *ctrl, int rows, const wxString &str);
 
 public:
-	L3DiskBinDump(L3DiskBinDumpFrame *parentframe, wxWindow *parent);
-	~L3DiskBinDump();
+	UiDiskBinDump(UiDiskBinDumpFrame *parentframe, wxWindow *parent);
+	~UiDiskBinDump();
 
 	void ClearBuffer();
-	L3MemoryBuffer *AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
+	MyMemoryBuffer *AppendBuffer(int trk, int sid, int sec, const wxUint8 *buf, size_t len);
 
 	enum {
 		IDC_TXT_HEX = 1,
@@ -248,4 +248,4 @@ public:
 };
 
 
-#endif /* _UIBINDUMP_H_ */
+#endif /* UIBINDUMP_H */

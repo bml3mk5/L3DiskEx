@@ -7,18 +7,24 @@
 
 ## File Tree
 
-    README.md .............. This document
+    BUILD.md ............... This document
+    README.md .............. Notice
     Makefile.xxx ........... Makefile for each OS
-    VC++2008/
-     l3diskex.vcproj ....... Project file for VC++ 2008
-     l3diskex.vsprops ...... Property file for VC++ 2008
     VC++2010/
      l3diskex.vcxproj ...... Project file for VC++ 2010
-     l3diskex.props ........ Property file for VC++ 2010
      post_build.bat ........ Batch file for post build
-    Xcode/
+     wxwidgets.props ....... Property file for VC++ 2010
+    VC++2013/
+     l3diskex.vcxproj ...... Project file for VC++ 2013
+     post_build.bat ........ Batch file for post build
+     wxwidgets.props ....... Property file for VC++ 2013
+    VC++2015/
+     l3diskex.vcxproj ...... Project file for VC++ 2015
+     post_build.bat ........ Batch file for post build
+     wxwidgets.props ....... Property file for VC++ 2015
+    Xcode/ ................. Project files to build on Xcode
      l3diskex/
-      l3diskex.xcodeproj ... Project file for MacOSX Xcode
+      l3diskex.xcodeproj ... Project file for MacOS Xcode
     Eclipse/
      linux/
       l3diskex/ ............ Project file for Eclipse-CDT Linux
@@ -30,6 +36,7 @@
      ja/ ................... For Japanese
       l3diskex.po .......... Translated file
       l3diskex.mo .......... Compailed translation file
+    patch/ ................. Patches for wxWidgets
     src/ ................... Source files
      res/ .................. Resource files
     cp_exefile.bat ......... Copy binary files to bin folder
@@ -239,35 +246,41 @@
   * Modify WX_WIDGET_BASE, WX_WIDGET_DIR in Build Settings.
 
 
-## No warranty
+## Disclaimer
 
 * This is the free software. I have not abandoned the copyright.
-  And the author of each source code also have the copyright.
-* We are not responsible for any damage caused by this software.
+  And the author which created each source code also have the copyright.
+* No warranty: We are not responsible for any damage caused by this software.
 
 ------------------------------------------------------------------------------
 
   Sasaji (sasaji@s-sasaji.ddo.jp)
   http://s-sasaji.ddo.jp/bml3mk5/
-  (Twitter: http://twitter.com/bml3mk5)
+  (X(Twitter): https://twitter.com/bml3mk5)
 
 ------------------------------------------------------------------------------
 ------------------------------------------------------------------------------
 
 ## ファイル構成
 
-    README.md .............. このファイル
+    BUILD.md ............... このファイル
+    README.md .............. 概要
     Makefile.xxx ........... 各OSごとのmakeファイル
-    VC++2008/
-     l3diskex.vcproj ....... VC++ 2008用プロジェクトファイル
-     l3diskex.vsprops ...... VC++ 2008用プロパティファイル
     VC++2010/
      l3diskex.vcxproj ...... VC++ 2010用プロジェクトファイル
-     l3diskex.props ........ VC++ 2010用プロパティファイル
      post_build.bat ........ ビルド後処理用バッチファイル
-    Xcode/
+     wxwidgets.props ....... VC++ 2010用プロパティファイル
+    VC++2013/
+     l3diskex.vcxproj ...... VC++ 2013用プロジェクトファイル
+     post_build.bat ........ ビルド後処理用バッチファイル
+     wxwidgets.props ....... VC++ 2013用プロパティファイル
+    VC++2015/
+     l3diskex.vcxproj ...... VC++ 2015用プロジェクトファイル
+     post_build.bat ........ ビルド後処理用バッチファイル
+     wxwidgets.props ....... VC++ 2015用プロパティファイル
+    Xcode/ ................. Xcode用プロジェクトファイル
      l3diskex/
-      l3diskex.xcodeproj ... MacOSX Xcode用プロジェクト
+      l3diskex.xcodeproj ... MacOS Xcode用プロジェクト
     Eclipse/
      linux/
       l3diskex/ ............ Eclipse-CDT Linux用プロジェクト
@@ -279,6 +292,7 @@
      ja/ ................... 日本語用
       l3diskex.po .......... 翻訳ファイル
       l3diskex.mo .......... コンパイル済み翻訳ファイル
+    patch/ ................. wxWidgets用のパッチ
     src/ ................... ソースファイル
      res/ .................. リソースファイル
     cp_exefile.bat ......... binフォルダ下に実行ファイル＆リソースをコピー
@@ -522,7 +536,7 @@
 連絡先：
   Sasaji (sasaji@s-sasaji.ddo.jp)
   http://s-sasaji.ddo.jp/bml3mk5/
-  (Twitter: http://twitter.com/bml3mk5)
+  (X(Twitter): https://twitter.com/bml3mk5)
 
 ------------------------------------------------------------------------------
 

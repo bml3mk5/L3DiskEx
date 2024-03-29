@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICDIRITEM_MZ_FDOS_H_
-#define _BASICDIRITEM_MZ_FDOS_H_
+#ifndef BASICDIRITEM_MZ_FDOS_H
+#define BASICDIRITEM_MZ_FDOS_H
 
 #include "basicdiritem_mz_base.h"
 
@@ -63,7 +63,7 @@ class DiskBasicDirItemMZFDOSChain
 private:
 	DiskBasic		*basic;
 	wxUint32		secs_per_track;
-	DiskD88Sector	*sector;
+	DiskImageSector	*sector;
 	mz_fdos_chain_t	*chain;
 	bool			chain_ownmake;
 	wxUint32		map_size;
@@ -77,7 +77,7 @@ public:
 	void Dup(const DiskBasicDirItemMZFDOSChain &src);
 #endif
 	/// @brief ポインタをセット
-	void Set(DiskBasic *n_basic, DiskD88Sector *n_sector, mz_fdos_chain_t *n_chain);
+	void Set(DiskBasic *n_basic, DiskImageSector *n_sector, mz_fdos_chain_t *n_chain);
 	/// @brief メモリ確保
 	void Alloc();
 	/// @brief クリア
@@ -149,11 +149,11 @@ private:
 
 public:
 	DiskBasicDirItemMZFDOS(DiskBasic *basic);
-	DiskBasicDirItemMZFDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data);
-	DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	DiskBasicDirItemMZFDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
+	DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
 	/// @brief アイテムへのポインタを設定
-	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
+	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
 	/// @brief ディレクトリアイテムのチェック
 	virtual bool	Check(bool &last);
@@ -244,7 +244,7 @@ public:
 	void			AssignSeqNumber();
 
 	/// @brief チェイン情報にセクタをセット
-	virtual void	SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
+	virtual void	SetChainSector(DiskImageSector *sector, wxUint8 *data, const DiskBasicDirItem *pitem = NULL);
 	/// @brief チェイン情報にセクタをセット
 	void			SetChainUsedSector(int sector_pos, bool val);
 
@@ -274,4 +274,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICDIRITEM_MZ_FDOS_H_ */
+#endif /* BASICDIRITEM_MZ_FDOS_H */

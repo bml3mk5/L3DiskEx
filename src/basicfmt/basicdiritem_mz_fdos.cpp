@@ -80,7 +80,7 @@ void DiskBasicDirItemMZFDOSChain::Dup(const DiskBasicDirItemMZFDOSChain &src)
 }
 #endif
 /// ポインタをセット
-void DiskBasicDirItemMZFDOSChain::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, mz_fdos_chain_t *n_chain)
+void DiskBasicDirItemMZFDOSChain::Set(DiskBasic *n_basic, DiskImageSector *n_sector, mz_fdos_chain_t *n_chain)
 {
 	basic = n_basic;
 	sector = n_sector;
@@ -154,14 +154,14 @@ DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic)
 //		mem_invert(data, sizeof(directory_mz_fdos_t));	// invert
 //	}
 }
-DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMZBase(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 	chain.SetSectorsPerTrack(basic->GetSectorsPerTrackOnBasic());
 	chain.SetMapSize(basic->GetFatEndGroup());
 }
-DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMZBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -174,7 +174,7 @@ DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, cons
 	if (IsUsed()) {
 		wxUint32 grp = GetStartGroup(0);
 		if (grp != 0) {
-			DiskD88Sector *sector = basic->GetSectorFromGroup(grp);
+			DiskImageSector *sector = basic->GetSectorFromGroup(grp);
 			if (sector) {
 				chain.Set(basic, sector, (mz_fdos_chain_t *)sector->GetSectorBuffer());
 			}
@@ -191,7 +191,7 @@ DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, cons
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemMZFDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemMZFDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemMZBase::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -625,7 +625,7 @@ void DiskBasicDirItemMZFDOS::AssignSeqNumber()
 }
 
 /// チェイン情報にセクタをセット
-void DiskBasicDirItemMZFDOS::SetChainSector(DiskD88Sector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
+void DiskBasicDirItemMZFDOS::SetChainSector(DiskImageSector *sector, wxUint8 *data, const DiskBasicDirItem *pitem)
 {
 	chain.Set(basic, sector, (mz_fdos_chain_t *)data);
 }

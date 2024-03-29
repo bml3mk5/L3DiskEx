@@ -20,12 +20,12 @@ DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemFAT8(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemFAT8(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	// L3 2D
@@ -44,7 +44,7 @@ DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const Di
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemL32D::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemL32D::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemFAT8::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -249,7 +249,7 @@ wxString DiskBasicDirItemL32D::AddExtension(int file_type_1, const wxString &nam
 
 	int len = (int)name.Length();
 	wxString ext = name.Right(4);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(ext.Right(3));
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(ext.Right(3));
 	if (sa && ext.Left(1) == wxT(".")) {
 		len -= 4;
 		if (len >= 0) newname = name.Left(len);

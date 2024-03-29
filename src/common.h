@@ -10,7 +10,7 @@
 
 #include <wx/defs.h>
 #include <time.h>
-#include "version.h"
+//#include "version.h"
 
 
 #ifndef _MAX_PATH
@@ -36,10 +36,14 @@ void to_upper(void *, size_t);
 //#pragma warning(disable:4996)
 #endif
 
+#define mysnprintf _snprintf
+
 #else
 
 //#include "tchar.h"
 //#include "typedef.h"
+
+#define mysnprintf snprintf
 
 #if defined(__WXOSX__)
 
@@ -92,6 +96,8 @@ public:
 	bool IsValidTime() const;
 	/// 日時設定を無視する値か
 	bool Ignorable() const;
+	/// 日時の比較
+	static int Compare(const TM &tm1, const TM &tm2);
 
 	int AddYear(int val) { tm.tm_year += val; return tm.tm_year; }
 	int AddMonth(int val) { tm.tm_mon += val; return tm.tm_mon; }

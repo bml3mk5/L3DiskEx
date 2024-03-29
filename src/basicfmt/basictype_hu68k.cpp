@@ -33,7 +33,7 @@ double DiskBasicTypeHU68K::ParseParamOnDisk(bool is_formatting)
 	}
 	if (valid_ratio >= 0.0) {
 		// セクタ０
-		DiskD88Sector *sector = basic->GetSector(0, 0, 1);
+		DiskImageSector *sector = basic->GetSector(0, 0, 1);
 		if (!sector) {
 			return -1.0;
 		}
@@ -81,7 +81,7 @@ bool DiskBasicTypeHU68K::AdditionalProcessOnFormatted(const DiskBasicIdentifiedD
 
 	// ボリュームラベルを設定
 	int dir_start = basic->GetReservedSectors() + basic->GetNumberOfFats() * basic->GetSectorsPerFat();
-	DiskD88Sector *sec = basic->GetSectorFromSectorPos(dir_start);
+	DiskImageSector *sec = basic->GetSectorFromSectorPos(dir_start);
 	DiskBasicDirItem *ditem = dir->NewItem(sec, 0, sec->GetSectorBuffer());
 
 	ditem->SetFileNameStr(data.GetVolumeName());

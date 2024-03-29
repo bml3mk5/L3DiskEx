@@ -67,12 +67,12 @@ DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMZBase(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMZBase(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -89,7 +89,7 @@ DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, co
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemM68FDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemM68FDOS::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemMZBase::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -426,7 +426,7 @@ void DiskBasicDirItemM68FDOS::CalcAllGroups(int calc_flags, wxUint32 &group_num,
 {
 	if (NeedChainInData()) {
 		// セクタ末尾にある次のセクタ番号を得る
-		DiskD88Sector *sector = basic->GetSectorFromGroup(group_num);
+		DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 		if (!sector) {
 			// Why?
 			group_num = INVALID_GROUP_NUMBER;

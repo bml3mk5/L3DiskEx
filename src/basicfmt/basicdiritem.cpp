@@ -6,9 +6,12 @@
 ///
 
 #include "basicdiritem.h"
+#include <wx/stream.h>
 #include <wx/xml/xml.h>
 #include "basicfmt.h"
 #include "basictype.h"
+#include "../diskimg/diskparam.h"
+#include "../diskimg/diskimage.h"
 #include "../charcodes.h"
 #include "../config.h"
 
@@ -73,7 +76,7 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic)
 /// @param [in]  n_sector セクタ
 /// @param [in]  n_secpos セクタ内の位置
 /// @param [in]  n_data   セクタ内のディレクトリエントリ
-DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 {
 	this->basic = basic;
 	this->type = basic->GetType();
@@ -100,7 +103,7 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, DiskD88Sector *n_sector, in
 /// @param [in]  n_data   セクタ内のディレクトリエントリ
 /// @param [in]  n_next   次のセクタ
 /// @param [out] n_unuse  未使用か
-DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 {
 	this->basic = basic;
 	this->type = basic->GetType();
@@ -125,11 +128,9 @@ DiskBasicDirItem::~DiskBasicDirItem()
 		for(size_t i=0; i<m_children->Count(); i++) {
 			DiskBasicDirItem *child = m_children->Item(i);
 			delete child;
-			child = NULL;
 		}
 		m_children->Clear();
 		delete m_children;
-		m_children = NULL;
 	}
 }
 
@@ -140,7 +141,7 @@ DiskBasicDirItem::~DiskBasicDirItem()
 /// @param [in] n_secpos    セクタ内のディレクトリエントリの位置
 /// @param [in] n_data      ディレクトリアイテム
 /// @param [in] n_next      次のセクタ
-void DiskBasicDirItem::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItem::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	m_num = n_num;
 	m_position = n_secpos;
@@ -853,7 +854,7 @@ void DiskBasicDirItem::AddExtensionByFileAttr(int file_type, int mask, wxString 
 {
 	wxFileName fn(filename);
 	// 拡張子と属性で登録されているか
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), file_type, mask);
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), file_type, mask);
 	if (!sa) {
 		// 属性で登録されているか
 		sa = basic->GetAttributesByExtension().FindType(file_type, mask);
@@ -884,7 +885,7 @@ void DiskBasicDirItem::AddExtensionByFileAttr(int file_type, int mask, wxString 
 {
 	wxFileName fn(filename);
 	// 拡張子と属性で登録されているか
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), file_type, mask);
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), file_type, mask);
 	if (!sa) {
 		// 属性で登録されているか
 		sa = basic->GetAttributesByExtension().Find(file_type, mask, external);
@@ -919,7 +920,7 @@ bool DiskBasicDirItem::GetFileAttrName(int pos, const name_value_t *list, wxStri
 	if (pos >= 0) {
 		attr = wxGetTranslation(list[pos].name);
 	} else {
-		const L3Attribute *sa = basic->GetSpecialAttributes().FindValue(-pos);
+		const MyAttribute *sa = basic->GetSpecialAttributes().FindValue(-pos);
 		if (sa != NULL) {
 			attr = sa->GetName();
 		} else {
@@ -943,7 +944,7 @@ bool DiskBasicDirItem::GetFileAttrName(int pos, const name_value_t *list, wxStri
 bool DiskBasicDirItem::TrimExtensionByExtensionAttr(wxString &filename) const
 {
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		// 拡張子部分をとり除く
 		filename = fn.GetName();
@@ -964,7 +965,7 @@ bool DiskBasicDirItem::TrimExtensionByExtensionAttr(wxString &filename) const
 bool DiskBasicDirItem::TrimLastExtensionByExtensionAttr(wxString &filename) const
 {
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		// すでに拡張子があれば拡張子部分をとり除く
 		wxFileName sfn(fn.GetName());
@@ -1005,7 +1006,7 @@ bool DiskBasicDirItem::TrimLastExtensionByExtensionAttr(const wxString &filename
 		t1 = list[idx].value;
 		p1 = idx;
 	} else {
-		const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+		const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 		if (sa) {
 			match = true;
 			t1 = sa->GetType();
@@ -1049,7 +1050,7 @@ bool DiskBasicDirItem::IsContainAttrByExtension(const wxString &filename, const 
 		p1 = idx;
 	} else {
 		// ユーザ指定の属性か
-		const L3Attribute *sa = basic->GetSpecialAttributes().FindUpperCase(fn.GetExt());
+		const MyAttribute *sa = basic->GetSpecialAttributes().FindUpperCase(fn.GetExt());
 		if (sa) {
 			match = true;
 			t1 = sa->GetValue();
@@ -2070,9 +2071,9 @@ void DiskBasicDirItem::CreateChoiceForAttrDialog(DiskBasic *basic, const name_va
 			match_value = true;
 		}
 	}
-	const L3Attributes *attrs = &basic->GetSpecialAttributes();
+	const MyAttributes *attrs = &basic->GetSpecialAttributes();
 	for(size_t i=0; i<attrs->Count(); i++) {
-		const L3Attribute *attr = &attrs->Item(i);
+		const MyAttribute *attr = &attrs->Item(i);
 		wxString str;
 		str += attr->GetName();
 		str += wxString::Format(wxT(" 0x%02x"), attr->GetValue());
@@ -2101,7 +2102,7 @@ void DiskBasicDirItem::CreateChoiceForAttrDialog(DiskBasic *basic, const name_va
 int  DiskBasicDirItem::SelectChoiceForAttrDialog(DiskBasic *basic, int sel_pos, int end_pos, int unknown_pos)
 {
 	if (sel_pos < 0) {
-		const L3Attributes *attrs = &basic->GetSpecialAttributes();
+		const MyAttributes *attrs = &basic->GetSpecialAttributes();
 		int n_type = attrs->GetIndexByValue(-sel_pos);
 		if (n_type >= 0) {
 			sel_pos = n_type + end_pos;
@@ -2120,7 +2121,7 @@ int DiskBasicDirItem::CalcSpecialOriginalTypeFromPos(DiskBasic *basic, int pos, 
 	int val = -1;
 	if (pos >= end_pos) {
 		pos -= end_pos;
-		const L3Attributes *attrs = &basic->GetSpecialAttributes();
+		const MyAttributes *attrs = &basic->GetSpecialAttributes();
 		int count = (int)attrs->Count();
 		if (pos < count) {
 			val = attrs->GetValueByIndex(pos);
@@ -2135,7 +2136,7 @@ int DiskBasicDirItem::CalcSpecialFileTypeFromPos(DiskBasic *basic, int pos, int 
 	int t = 0;
 	if (pos >= end_pos) {
 		pos -= end_pos;
-		const L3Attributes *attrs = &basic->GetSpecialAttributes();
+		const MyAttributes *attrs = &basic->GetSpecialAttributes();
 		int count = (int)attrs->Count();
 		if (pos < count) {
 			t = attrs->GetTypeByIndex(pos);
@@ -2258,7 +2259,7 @@ void DirItemSectorBoundary::Clear()
 /// @param[in] item_size  アイテムサイズ
 /// @param[in] next       次のセクタ
 /// @return セクタまたぎがある場合true
-bool DirItemSectorBoundary::Set(DiskBasic *basic, DiskD88Sector *sector, int position, directory_t *item_data, size_t item_size, const SectorParam *next)
+bool DirItemSectorBoundary::Set(DiskBasic *basic, DiskImageSector *sector, int position, directory_t *item_data, size_t item_size, const SectorParam *next)
 {
 	if (!sector) return false;
 
@@ -2280,7 +2281,7 @@ bool DirItemSectorBoundary::Set(DiskBasic *basic, DiskD88Sector *sector, int pos
 		if (next) {
 			DiskBasicType *type = basic->GetType();
 			int nsector_pos = type->GetSectorPosFromNum(next->GetTrackNumber(), next->GetSideNumber(), next->GetSectorNumber());
-			DiskD88Sector *nsector = basic->GetSector(next->GetTrackNumber(), next->GetSideNumber(), next->GetSectorNumber());
+			DiskImageSector *nsector = basic->GetSector(next->GetTrackNumber(), next->GetSideNumber(), next->GetSectorNumber());
 			if (nsector) {
 				sptr = nsector->GetSectorBuffer();
 				ssize = nsector->GetSectorSize();

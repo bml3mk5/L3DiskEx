@@ -10,7 +10,7 @@
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 #include <wx/sizer.h>
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 
 
 DiskReplaceNumber::DiskReplaceNumber()
@@ -44,7 +44,7 @@ END_EVENT_TABLE()
 /// @param [in] side_number サイド番号 両面なら-1 片面だけなら 0 or 1
 /// @param [in] src_file    元となるディスクイメージ
 /// @param [in] tag_disk    置換先ターゲットディスク
-DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskD88File &src_file, DiskD88Disk &tag_disk)
+DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskImageFile &src_file, DiskImageDisk &tag_disk)
 	: wxDialog(parent, id, _("Replace data in a disk"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -62,7 +62,7 @@ DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number,
 	wxString str;
 	for(size_t idx = 0; idx < src_file.Count(); idx++) {
 		wxString sstr;
-		DiskD88Disk *disk = src_file.GetDisk(idx);
+		DiskImageDisk *disk = src_file.GetDisk(idx);
 		str = wxString::Format(_("[disk %d]"), (int)idx);
 		str += wxT(" ");
 		str += disk->GetDiskDescription();

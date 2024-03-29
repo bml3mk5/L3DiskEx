@@ -6,8 +6,9 @@
 ///
 
 #include "uifatarea.h"
+#include <wx/frame.h>
 #include <wx/dcclient.h>
-#include "../main.h"
+#include "uimainframe.h"
 #include "../basicfmt/basiccommon.h"
 
 
@@ -16,12 +17,12 @@
 //
 
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskFatAreaFrame, wxFrame)
-	EVT_MENU(wxID_CLOSE, L3DiskFatAreaFrame::OnClose)
-	EVT_MENU(wxID_EXIT,  L3DiskFatAreaFrame::OnQuit)
+wxBEGIN_EVENT_TABLE(UiDiskFatAreaFrame, wxFrame)
+	EVT_MENU(wxID_CLOSE, UiDiskFatAreaFrame::OnClose)
+	EVT_MENU(wxID_EXIT,  UiDiskFatAreaFrame::OnQuit)
 wxEND_EVENT_TABLE()
 
-L3DiskFatAreaFrame::L3DiskFatAreaFrame(L3DiskFrame *parent, const wxString& title, const wxSize& size)
+UiDiskFatAreaFrame::UiDiskFatAreaFrame(UiDiskFrame *parent, const wxString& title, const wxSize& size)
        : wxFrame(parent, wxID_ANY, title, wxDefaultPosition, size)
 {
 #if 0
@@ -46,55 +47,55 @@ L3DiskFatAreaFrame::L3DiskFatAreaFrame(L3DiskFrame *parent, const wxString& titl
 //	SetMenuBar( menuBar );
 
 	// panel
-	panel = new L3DiskFatAreaPanel(this);
+	panel = new UiDiskFatAreaPanel(this);
 
 	wxSize psz = panel->GetSize();
 	wxSize csz = GetClientSize();
 	SetClientSize(psz.x, csz.y > psz.y ? csz.y : psz.y); 
 }
 
-L3DiskFatAreaFrame::~L3DiskFatAreaFrame()
+UiDiskFatAreaFrame::~UiDiskFatAreaFrame()
 {
-	L3DiskFrame *parent = (L3DiskFrame *)m_parent;
+	UiDiskFrame *parent = (UiDiskFrame *)m_parent;
 	parent->FatAreaWindowClosed();
 }
 
-void L3DiskFatAreaFrame::OnClose(wxCommandEvent& WXUNUSED(event))
+void UiDiskFatAreaFrame::OnClose(wxCommandEvent& WXUNUSED(event))
 {
 	Close();
 }
 
-void L3DiskFatAreaFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
+void UiDiskFatAreaFrame::OnQuit(wxCommandEvent& WXUNUSED(event))
 {
 	Close();
 }
 
-void L3DiskFatAreaFrame::SetData(wxUint32 offset, const wxArrayInt *arr)
+void UiDiskFatAreaFrame::SetData(wxUint32 offset, const wxArrayInt *arr)
 {
 	panel->SetData(offset, arr);
 }
 
-void L3DiskFatAreaFrame::ClearData()
+void UiDiskFatAreaFrame::ClearData()
 {
 	panel->ClearData();
 }
 
-void L3DiskFatAreaFrame::SetGroup(wxUint32 group_num)
+void UiDiskFatAreaFrame::SetGroup(wxUint32 group_num)
 {
 	panel->SetGroup(group_num);
 }
 
-void L3DiskFatAreaFrame::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+void UiDiskFatAreaFrame::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	panel->SetGroup(group_items, extra_group_nums);
 }
 
-void L3DiskFatAreaFrame::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+void UiDiskFatAreaFrame::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	panel->UnsetGroup(group_items, extra_group_nums);
 }
 
-void L3DiskFatAreaFrame::ClearGroup()
+void UiDiskFatAreaFrame::ClearGroup()
 {
 	panel->ClearGroup();
 }
@@ -103,12 +104,12 @@ void L3DiskFatAreaFrame::ClearGroup()
 // メインパネル
 //
 // Attach Event
-wxBEGIN_EVENT_TABLE(L3DiskFatAreaPanel, wxScrolled<wxPanel>)
-	EVT_PAINT(L3DiskFatAreaPanel::OnPaint)
-	EVT_SIZE(L3DiskFatAreaPanel::OnSize)
+wxBEGIN_EVENT_TABLE(UiDiskFatAreaPanel, wxScrolled<wxPanel>)
+	EVT_PAINT(UiDiskFatAreaPanel::OnPaint)
+	EVT_SIZE(UiDiskFatAreaPanel::OnSize)
 wxEND_EVENT_TABLE()
 
-L3DiskFatAreaPanel::L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent)
+UiDiskFatAreaPanel::UiDiskFatAreaPanel(UiDiskFatAreaFrame *parent)
 	: wxScrolled<wxPanel>(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 //	: wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize)
 {
@@ -156,11 +157,11 @@ L3DiskFatAreaPanel::L3DiskFatAreaPanel(L3DiskFatAreaFrame *parent)
 	brush_extra = wxBrush(wxColor(0xff, 0, 0xff));
 }
 
-L3DiskFatAreaPanel::~L3DiskFatAreaPanel()
+UiDiskFatAreaPanel::~UiDiskFatAreaPanel()
 {
 }
 
-void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
+void UiDiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 {
 	wxPaintDC dc(this);
 	DoPrepareDC(dc);
@@ -249,12 +250,12 @@ void L3DiskFatAreaPanel::OnPaint(wxPaintEvent& event)
 	SetVirtualSize(size.x, y);
 }
 
-void L3DiskFatAreaPanel::OnSize(wxSizeEvent& event)
+void UiDiskFatAreaPanel::OnSize(wxSizeEvent& event)
 {
 	Refresh(true);
 }
 
-void L3DiskFatAreaPanel::SetData(wxUint32 offset, const wxArrayInt *arr)
+void UiDiskFatAreaPanel::SetData(wxUint32 offset, const wxArrayInt *arr)
 {
 	if (arr) {
 		this->offset = offset;
@@ -263,13 +264,13 @@ void L3DiskFatAreaPanel::SetData(wxUint32 offset, const wxArrayInt *arr)
 	}
 }
 
-void L3DiskFatAreaPanel::ClearData()
+void UiDiskFatAreaPanel::ClearData()
 {
 	datas.Empty();
 	Refresh(true);
 }
 
-void L3DiskFatAreaPanel::SetGroupBase(wxUint32 group_num, int highlight)
+void UiDiskFatAreaPanel::SetGroupBase(wxUint32 group_num, int highlight)
 {
 	wxUint32 pos = (group_num + offset);
 	if (pos < (wxUint32)datas.Count()) {
@@ -279,7 +280,7 @@ void L3DiskFatAreaPanel::SetGroupBase(wxUint32 group_num, int highlight)
 	}
 }
 
-void L3DiskFatAreaPanel::UnsetGroupBase(wxUint32 group_num)
+void UiDiskFatAreaPanel::UnsetGroupBase(wxUint32 group_num)
 {
 	wxUint32 pos = (group_num + offset);
 	if (pos < (wxUint32)datas.Count()) {
@@ -289,7 +290,7 @@ void L3DiskFatAreaPanel::UnsetGroupBase(wxUint32 group_num)
 	}
 }
 
-void L3DiskFatAreaPanel::ClearGroupBase()
+void UiDiskFatAreaPanel::ClearGroupBase()
 {
 	for(size_t pos = 0; pos < datas.Count(); pos++) {
 		int val = datas.Item(pos);
@@ -298,13 +299,13 @@ void L3DiskFatAreaPanel::ClearGroupBase()
 	}
 }
 
-void L3DiskFatAreaPanel::SetGroup(wxUint32 group_num)
+void UiDiskFatAreaPanel::SetGroup(wxUint32 group_num)
 {
 	SetGroupBase(group_num, 0x10000);
 	Refresh(false);
 }
 
-void L3DiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+void UiDiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	for(size_t n = 0; n < group_items.Count(); n++) {
 		SetGroupBase(group_items.Item(n).group, 0x10000);
@@ -315,7 +316,7 @@ void L3DiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxAr
 	Refresh(false);
 }
 
-void L3DiskFatAreaPanel::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
+void UiDiskFatAreaPanel::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	for(size_t n = 0; n < group_items.Count(); n++) {
 		UnsetGroupBase(group_items.Item(n).group);
@@ -326,7 +327,7 @@ void L3DiskFatAreaPanel::UnsetGroup(const DiskBasicGroups &group_items, const wx
 	Refresh(false);
 }
 
-void L3DiskFatAreaPanel::ClearGroup()
+void UiDiskFatAreaPanel::ClearGroup()
 {
 	ClearGroupBase();
 	Refresh(false);

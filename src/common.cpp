@@ -232,3 +232,15 @@ bool TM::Ignorable() const
 		|| tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61
 	));
 }
+/// 日時の比較
+int TM::Compare(const TM &tm1, const TM &tm2)
+{
+	int cmp;
+	cmp = (tm1.GetYear() - tm2.GetYear()); if (cmp) return cmp;
+	cmp = (tm1.GetMonth() - tm2.GetMonth()); if (cmp) return cmp;
+	cmp = (tm1.GetDay() - tm2.GetDay()); if (cmp) return cmp;
+	cmp = (tm1.GetHour() - tm2.GetHour()); if (cmp) return cmp;
+	cmp = (tm1.GetMinute() - tm2.GetMinute()); if (cmp) return cmp;
+	cmp = (tm1.GetSecond() - tm2.GetSecond());
+	return cmp;
+}

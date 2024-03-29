@@ -160,7 +160,7 @@ double DiskBasicTypeC1541::ParseParamOnDisk(bool is_formatting)
 	sector_map.CreateSectorSkewMap(basic);
 
 	// BAM
-	DiskD88Sector *sector = basic->GetManagedSector(0);
+	DiskImageSector *sector = basic->GetManagedSector(0);
 	if (!sector) {
 		return -1.0;
 	}
@@ -262,7 +262,7 @@ bool DiskBasicTypeC1541::CalcGroupsOnRootDirectory(int start_sector, int end_sec
 	int sector_pos = GetSectorPosFromNumS(mng_trk_num, basic->GetDirStartSector());
 
 	while(valid && limit >= 0) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(sector_pos, trk_num, sid_num);
 		if (!sector) {
 			valid = false;
 			break;
@@ -310,7 +310,7 @@ bool DiskBasicTypeC1541::CalcGroupsOnRootDirectory(int start_sector, int end_sec
 int DiskBasicTypeC1541::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, int &file_size, int &size_remain, DiskBasicError &errinfo)
 {
 	for(size_t i=0; i<group_items.Count(); i++) {
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos(group_items.Item(i).group);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Item(i).group);
 		sector->Fill(0, sector->GetSectorSize() - 2, 2);
 	}
 
@@ -512,7 +512,7 @@ int DiskBasicTypeC1541::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 {
 //	myLog.SetDebug("DiskBasicTypeC1541::AllocateGroups {");
 
-	int file_size = 0;
+//	int file_size = 0;
 	int groups = 0;
 
 	int rc = 0;
@@ -550,7 +550,7 @@ int DiskBasicTypeC1541::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 		}
 		chain_idx++;
 
-		file_size += bytes_per_group;
+//		file_size += bytes_per_group;
 		groups++;
 		remain -= bytes_per_group;
 		limit--;
@@ -575,7 +575,7 @@ int DiskBasicTypeC1541::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 int DiskBasicTypeC1541::ChainGroups(wxUint32 group_num, wxUint32 append_group_num)
 {
 	// 現在のセクタに次のセクタへのポインタをセット
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(group_num);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_num);
 	if (!sector) {
 		// why?
 		return -1;
@@ -598,7 +598,7 @@ int DiskBasicTypeC1541::ChainGroups(wxUint32 group_num, wxUint32 append_group_nu
 int DiskBasicTypeC1541::ChainLastGroup(wxUint32 group_num, int remain)
 {
 	// 現在のセクタに残りサイズをセット
-	DiskD88Sector *sector = basic->GetSectorFromSectorPos(group_num);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_num);
 	if (!sector) {
 		// why?
 		return -1;
@@ -780,7 +780,7 @@ bool DiskBasicTypeC1541::IsRootDirectory(wxUint32 group_num)
 /// フォーマット時セクタデータを埋めた後の個別処理
 bool DiskBasicTypeC1541::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
-	DiskD88Sector *sector;
+	DiskImageSector *sector;
 
 	// 可変数セクタなのでトラックごとのセクタ数を集計
 	sector_map.Create(basic);
@@ -930,7 +930,7 @@ void DiskBasicTypeC1541::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 		}
 		int track_num = 0;
 		int side_num = 0;
-		DiskD88Sector *sector = basic->GetSectorFromSectorPos((int)group_num, track_num, side_num);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos((int)group_num, track_num, side_num);
 		if (!sector) {
 			return;
 		}

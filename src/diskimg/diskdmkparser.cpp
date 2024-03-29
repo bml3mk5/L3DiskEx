@@ -6,9 +6,8 @@
 ///
 
 #include "diskdmkparser.h"
-#include "diskd88parser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "fileparam.h"
 #include "diskresult.h"
 
@@ -56,11 +55,11 @@ typedef struct st_trs_dmk_sector_id {
 //
 // TRS-80 DMK形式をD88形式にする
 //
-DiskDmkParser::DiskDmkParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskDmkParser::DiskDmkParser(DiskImageFile *file, short mod_flags, DiskResult *result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
+	p_file = file;
+	m_mod_flags = mod_flags;
+	p_result = result;
 }
 
 DiskDmkParser::~DiskDmkParser()
@@ -127,13 +126,13 @@ bool DiskDmkParser::FindDataMark(wxInputStream &istream, int sector_size, bool d
 }
 
 /// セクタデータの作成
-wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int flags, DiskD88Track *track)
+wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int flags, DiskImageTrack *track)
 {
 	trs_dmk_sector_id_t id;
 
 	size_t len = istream.Read(&id, sizeof(id)).LastRead();
 	if (len != sizeof(id)) {
-		result->SetError(DiskResult::ERRV_SECTORS_HEADER, 0);
+		p_result->SetError(DiskResult::ERRV_SECTORS_HEADER, 0);
 		return 0;
 	}
 
@@ -144,7 +143,7 @@ wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int
 
 	if (sector_size > 7) {
 		// セクタサイズが大きすぎる
-		result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, 0, track_number, side_number, sector_number, sector_size, sector_size);
+		p_result->SetError(DiskResult::ERRV_SECTOR_SIZE_SECTOR, 0, track_number, side_number, sector_number, sector_size, sector_size);
 		return 0;
 	}
 
@@ -153,11 +152,11 @@ wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int
 	// データの開始位置をさがす
 	int deleted = 0;
 	if (!FindDataMark(istream, sector_size, (flags & DMK_IDAM_DENSITY) != 0, deleted)) {
-		result->SetError(DiskResult::ERRV_NO_SECTOR, 0, sector_number, track_number, side_number);
+		p_result->SetError(DiskResult::ERRV_NO_SECTOR, 0, sector_number, track_number, side_number);
 		return 0;
 	}
 
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, false);
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, false);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -166,18 +165,18 @@ wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int
 	len = istream.Read(buf, siz).LastRead();
 	if (len < (size_t)siz) {
 		// ファイルデータが足りない
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 	}
 
 	sector->SetDeletedMark(deleted != 0);
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + siz;
+	return (wxUint32)sector->GetSize();
 }
 
 /// トラックデータの作成
-wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int offset_pos, wxUint32 offset, DiskD88Disk *disk)
+wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int offset_pos, wxUint32 offset, DiskImageDisk *disk)
 {
 	trs_dmk_track_t track_header;
 
@@ -185,7 +184,7 @@ wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int o
 
 	size_t len = istream.Read(&track_header, sizeof(track_header)).LastRead();
 	if (len != sizeof(track_header)) {
-		result->SetError(DiskResult::ERR_NO_TRACK, 0);
+		p_result->SetError(DiskResult::ERR_NO_TRACK, 0);
 		return 0;
 	}
 
@@ -198,10 +197,10 @@ wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int o
 		num_of_sectors++;
 	}
 
-	DiskD88Track *track = new DiskD88Track(disk, 0, 0, offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(0, 0, offset_pos, 1);
 
 	wxUint32 d88_track_size = 0;
-	for(int pos = 0; pos < num_of_sectors && result->GetValid() >= 0; pos++) {
+	for(int pos = 0; pos < num_of_sectors && p_result->GetValid() >= 0; pos++) {
 		int ptr = wxUINT16_SWAP_ON_BE(track_header.ptr[pos]);
 		wxFileOffset next_offset = (ptr & DMK_IDAM_OFFSET);
 		// move position in file
@@ -212,7 +211,7 @@ wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int o
 			, (ptr & ~DMK_IDAM_OFFSET), track);
 	}
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブの計算
 		track->CalcInterleave();
 
@@ -245,32 +244,33 @@ wxUint32 DiskDmkParser::ParseTrack(wxInputStream &istream, int track_size, int o
 /// ディスクの解析
 wxUint32 DiskDmkParser::ParseDisk(wxInputStream &istream)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file, 0);
+	DiskImageDisk *disk = p_file->NewImageDisk(0);
 
 	trs_dmk_header_t header;
 	size_t len = istream.Read(&header, sizeof(header)).LastRead();
 	if (len != sizeof(header)) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 		return 0;
 	}
 
 //	disk->SetName(header.creator, sizeof(header.creator));
 	int max_tracks = header.num_of_tracks;
 
-	wxUint32 d88_offset = (int)sizeof(d88_header_t);
+	wxUint32 d88_offset = disk->GetOffsetStart();	// header size
 	int d88_offset_pos = 0;
+	int limit_offset_pos = disk->GetCreatableTracks();
 	for(int pos = 0; pos < 204 && pos < max_tracks; pos++) {
 		d88_offset += ParseTrack(istream
 			, wxUINT16_SWAP_ON_BE(header.track_length)
 			, d88_offset_pos, d88_offset, disk); 
 		d88_offset_pos++;
-		if (d88_offset_pos >= DISKD88_MAX_TRACKS) {
-			result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
+		if (d88_offset_pos >= limit_offset_pos) {
+			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
 		}
 	}
 	disk->SetSize(d88_offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
@@ -278,12 +278,17 @@ wxUint32 DiskDmkParser::ParseDisk(wxInputStream &istream)
 		}
 		disk->SetWriteProtect(header.write_protected == 0xff);
 
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
 
 	return d88_offset;
+}
+
+int DiskDmkParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+{
+	return -1;
 }
 
 /// TRS-80 DMKファイルかどうかをチェック
@@ -322,11 +327,12 @@ int DiskDmkParser::Check(wxInputStream &istream)
 
 /// TRS-80 DMKファイルを解析
 /// @param [in] istream    解析対象データ
+/// @param [in] disk_param パラメータ通常不要
 /// @retval  0 正常
 /// @retval -1 エラーあり
 /// @retval  1 警告あり
-int DiskDmkParser::Parse(wxInputStream &istream)
+int DiskDmkParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	ParseDisk(istream);
-	return result->GetValid();
+	return p_result->GetValid();
 }

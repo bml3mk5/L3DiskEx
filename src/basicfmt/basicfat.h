@@ -5,14 +5,13 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICFAT_H_
-#define _BASICFAT_H_
+#ifndef BASICFAT_H
+#define BASICFAT_H
 
 #include "../common.h"
 #include <wx/string.h>
 #include <wx/dynarray.h>
 #include "basiccommon.h"
-#include "../diskd88.h"
 
 
 //////////////////////////////////////////////////////////////////////
@@ -298,4 +297,4 @@ public:
 	DiskBasicFatBuffer	 *GetDiskBasicFatBuffer(size_t idx, size_t subidx);
 };
 
-#endif /* _BASICFAT_H_ */
+#endif /* BASICFAT_H */

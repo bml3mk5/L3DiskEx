@@ -76,7 +76,7 @@ void DiskBasicDirItemOS9FD::Dup(const DiskBasicDirItemOS9FD &src)
 }
 #endif
 /// ポインタをセット
-void DiskBasicDirItemOS9FD::Set(DiskBasic *n_basic, DiskD88Sector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd)
+void DiskBasicDirItemOS9FD::Set(DiskBasic *n_basic, DiskImageSector *n_sector, wxUint32 n_mylsn, directory_os9_fd_t *n_fd)
 {
 	basic = n_basic;
 	sector = n_sector;
@@ -191,12 +191,12 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic)
 	m_data.Alloc();
 	fd.Alloc();
 }
-DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItem(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItem(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	m_data.Attach(n_data);
@@ -207,7 +207,7 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const Disk
 	if (IsUsed()) {
 		wxUint32 lsn = GET_OS9_LSN(((directory_os9_t *)n_data)->DE_LSN);
 		if (lsn != 0) {
-			DiskD88Sector *sector = basic->GetSectorFromGroup(lsn);
+			DiskImageSector *sector = basic->GetSectorFromGroup(lsn);
 			if (sector) {
 				fd.Set(basic, sector, lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
 			}
@@ -228,7 +228,7 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const Disk
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemOS9::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemOS9::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -660,7 +660,7 @@ void DiskBasicDirItemOS9::GetExtraGroups(wxArrayInt &arr) const
 /// @param [in] lsn    セクタのLSN
 /// @param [in] data   セクタ内のバッファ
 /// @param [in] pitem  コピー元のアイテム
-void DiskBasicDirItemOS9::SetChainSector(DiskD88Sector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem)
+void DiskBasicDirItemOS9::SetChainSector(DiskImageSector *sector, wxUint32 lsn, wxUint8 *data, const DiskBasicDirItem *pitem)
 {
 	fd.Set(basic, sector, lsn, (directory_os9_fd_t *)sector->GetSectorBuffer());
 	fd.Clear();
@@ -791,7 +791,7 @@ int DiskBasicDirItemOS9::ConvOriginalTypeFromFileName(const wxString &filename) 
 	t1 |= FILETYPE_MASK_OS9_USER_READ;
 	// 拡張子で実行属性を付ける
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), FILE_TYPE_BINARY_MASK, FILE_TYPE_BINARY_MASK);
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt(), FILE_TYPE_BINARY_MASK, FILE_TYPE_BINARY_MASK);
 	if (sa) {
 		// 実行属性を付ける
 		t1 |= FILETYPE_MASK_OS9_PUBLIC_EXEC;

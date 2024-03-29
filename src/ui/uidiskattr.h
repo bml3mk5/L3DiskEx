@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _UIDISKATTR_H_
-#define _UIDISKATTR_H_
+#ifndef UIDISKATTR_H
+#define UIDISKATTR_H
 
 #include "../common.h"
 #include <wx/string.h>
@@ -19,15 +19,15 @@ class wxChoice;
 class wxCheckBox;
 class wxBoxSizer;
 
-class L3DiskFrame;
-class DiskD88Disk;
+class UiDiskFrame;
+class DiskImageDisk;
 
 /// 右パネルの属性
-class L3DiskDiskAttr : public wxPanel
+class UiDiskDiskAttr : public wxPanel
 {
 private:
 	wxWindow *parent;
-	L3DiskFrame *frame;
+	UiDiskFrame *frame;
 
 	wxTextCtrl *txtAttr;
 	wxButton   *btnChange;
@@ -35,11 +35,11 @@ private:
 	wxCheckBox *chkWprotect;
 	wxBoxSizer *szrButtons;
 
-	DiskD88Disk *disk;
+	DiskImageDisk *p_disk;
 
 public:
-	L3DiskDiskAttr(L3DiskFrame *parentframe, wxWindow *parent);
-	~L3DiskDiskAttr();
+	UiDiskDiskAttr(UiDiskFrame *parentframe, wxWindow *parent);
+	~UiDiskDiskAttr();
 
 	void OnSize(wxSizeEvent& event);
 	void OnButtonChange(wxCommandEvent& event);
@@ -47,7 +47,7 @@ public:
 	void OnCheckWriteProtect(wxCommandEvent& event);
 
 	void ShowChangeDisk();
-	void SetAttr(DiskD88Disk *newdisk);
+	void SetAttr(DiskImageDisk *newdisk);
 
 	void SetAttrText(const wxString &val);
 //	void SetDiskDensity(const wxString &val);
@@ -69,5 +69,5 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _UIDISKATTR_H_ */
+#endif /* UIDISKATTR_H */
 

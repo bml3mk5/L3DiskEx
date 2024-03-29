@@ -44,7 +44,7 @@ double DiskBasicTypeL32D::CheckFat(bool is_formatting)
 	double valid_ratio = DiskBasicTypeFAT8::CheckFat(is_formatting);
 	if (valid_ratio >= 0.0) {
 		// FAT先頭エリアのチェック
-		DiskD88Sector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
+		DiskImageSector *sector = basic->GetManagedSector(basic->GetFatStartSector() - 1);
 		if (!sector) {
 			valid_ratio = -1.0;
 		} else if (!(sector->Get(0) == 0 || sector->Get(0) == 0xff)) {

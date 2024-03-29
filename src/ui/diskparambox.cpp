@@ -16,8 +16,11 @@
 #include <wx/sizer.h>
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
+#include "uimainframe.h"
+#include "../basicfmt/basictemplate.h"
 #include "../basicfmt/basicparam.h"
-#include "../diskd88.h"
+#include "../basicfmt/basiccategory.h"
+#include "../diskimg/diskimage.h"
 
 
 const char *gNumberingSector[] = {
@@ -43,7 +46,16 @@ BEGIN_EVENT_TABLE(DiskParamBox, wxDialog)
 	EVT_BUTTON(wxID_OK, DiskParamBox::OnOK)
 END_EVENT_TABLE()
 
-DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, int select_number, DiskD88Disk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags)
+/// @param[in] parent    親ウィンドウ
+/// @param[in] id        ウィンドウID
+/// @param[in] image     ディスクイメージ インターフェース
+/// @param[in] ope_flags どういう操作か
+/// @param[in] select_number 選択番号
+/// @param[in] disk      ディスクイメージ
+/// @param[in] params    ディスクパラメータ
+/// @param[in] manual_param 手動設定でのパラメータ
+/// @param[in] show_flags 表示フラグ
+DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, OpeFlags ope_flags, int select_number, DiskImageDisk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags)
 	: wxDialog(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -51,11 +63,14 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, 
 //	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxLEFT | wxTOP | wxBOTTOM, 4).Border(wxRIGHT, 8);
 	wxSize size;
 	long style = 0;
-	this->ope_flags = ope_flags;
-	this->show_flags = show_flags;
-	this->disk_params = params;
-	this->manual_param = manual_param;
-	this->now_manual_setting = false;
+
+	p_image = &image;
+	m_ope_flags = ope_flags;
+	m_show_flags = show_flags;
+	p_disk_params = params;
+	p_manual_param = manual_param;
+	now_manual_setting = false;
+
 	wxTextValidator validigits(wxFILTER_EMPTY | wxFILTER_DIGITS);
 	wxTextValidator valialpha(wxFILTER_ASCII);
 	bool use_template = ((show_flags & SHOW_TEMPLATE_ALL) != 0);
@@ -231,10 +246,9 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, 
 		txtDiskName->SetMaxLength(16);
 		hbox->Add(txtDiskName, 0);
 
-		comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize);
-		for(int i=0; gDiskDensity[i].name != NULL; i++) {
-			comDensity->Append(wxGetTranslation(gDiskDensity[i].name));
-		}
+		wxArrayString densities;
+		p_image->GetDensityNames(densities);
+		comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize, densities);
 		comDensity->SetSelection(0);
 		hbox->Add(comDensity, flagsH);
 		chkWprotect = new wxCheckBox(this, IDC_CHK_WPROTECT, _("Write Protect"));
@@ -314,7 +328,7 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, OpeFlags ope_flags, 
 	}
 }
 
-int DiskParamBox::FindTemplate(DiskD88Disk *disk)
+int DiskParamBox::FindTemplate(DiskImageDisk *disk)
 {
 	int idx = gDiskTemplates.IndexOf(disk->GetDiskTypeName());
 	if (idx < 0) {
@@ -350,11 +364,11 @@ bool DiskParamBox::ValidateAllParam()
 	int sid = GetSidesPerDisk();
 	int sec = GetSectorsPerTrack();
 	int inl = GetInterleave();
-	if (disk_params) {
+	if (p_disk_params) {
 		if (comTemplate) {
 			int i = comTemplate->GetSelection();
-			if (i < ((int)disk_params->Count() - 1)) {
-				if (disk_params->Item(i) == NULL) {
+			if (i < ((int)p_disk_params->Count() - 1)) {
+				if (p_disk_params->Item(i) == NULL) {
 					return false;
 				}
 			}
@@ -369,9 +383,10 @@ bool DiskParamBox::ValidateAllParam()
 			}
 		}
 	}
-	if (trk * sid > DISKD88_MAX_TRACKS) {
+	int limit_tracks = p_image->GetCreatableTracks();
+	if (trk * sid > limit_tracks) {
 		if (!msg.IsEmpty()) msg += wxT("\n");
-		msg += wxString::Format(_("Track x side size should be less equal %d."), DISKD88_MAX_TRACKS);
+		msg += wxString::Format(_("Track x side size should be less equal %d."), limit_tracks);
 		valid = 1;	// warning
 	}
 	if (trk < 1 || 82 < trk) {
@@ -396,7 +411,7 @@ bool DiskParamBox::ValidateAllParam()
 	}
 	if (valid > 0) {
 		if (!msg.IsEmpty()) msg += wxT("\n\n");
-		switch(ope_flags) {
+		switch(m_ope_flags) {
 		case ADD_NEW_DISK:
 		case CREATE_NEW_DISK:
 			msg += _("Are you sure to create a disk forcely?");
@@ -424,16 +439,16 @@ void DiskParamBox::OnCategoryChanged(wxCommandEvent& event)
 	int pos = event.GetSelection();
 	if (pos <= 0) {
 		// All items
-		type_names.Clear();
+		m_type_names.Clear();
 	} else {
-		gDiskBasicTemplates.FindTypeNames(pos - 1, type_names);
+		gDiskBasicTemplates.FindTypeNames(pos - 1, m_type_names);
 	}
 	SetTemplateValues(pos <= 0);
 }
 
 void DiskParamBox::SetTemplateValues(bool all)
 {
-	if (disk_params != NULL && manual_param == NULL) SetTemplateValuesFromParams();
+	if (p_disk_params != NULL && p_manual_param == NULL) SetTemplateValuesFromParams();
 	else SetTemplateValuesFromGlobals(all);
 }
 
@@ -447,12 +462,15 @@ void DiskParamBox::SetTemplateValuesFromGlobals(bool all)
 	if (all) {
 		SetTemplateValuesFromGlobalsSub(-1);
 	} else {
+		// 推奨データ候補
 		SetTemplateValuesFromGlobalsSub(1);
 		if (comTemplate->GetCount() > 0) {
 			wxString str = wxT("----------");
 			comTemplate->Append(str, (void *)-1);
 		}
+		// 一般データ候補
 		SetTemplateValuesFromGlobalsSub(0);
+		// minorな候補
 		SetTemplateValuesFromGlobalsSub(2);
 	}
 	comTemplate->Append(_("Manual Setting"));
@@ -467,10 +485,10 @@ void DiskParamBox::SetTemplateValuesFromGlobalsSub(int flags)
 {
 	for(size_t i=0; i < gDiskTemplates.Count(); i++) {
 		const DiskParam *item = gDiskTemplates.ItemPtr(i);
-		if (type_names.Count() > 0) {
+		if (m_type_names.Count() > 0) {
 			const DiskParamName *match = NULL;
-			for(size_t n=0; n<type_names.Count(); n++) {
-				match = item->FindBasicType(type_names.Item(n), flags);
+			for(size_t n=0; n<m_type_names.Count(); n++) {
+				match = item->FindBasicType(m_type_names.Item(n), flags);
 				if (match) {
 					break;
 				}
@@ -490,11 +508,11 @@ void DiskParamBox::SetTemplateValuesFromGlobalsSub(int flags)
 /// @note disk_params パラメータリスト
 void DiskParamBox::SetTemplateValuesFromParams()
 {
-	if (!comTemplate || !disk_params) return;
+	if (!comTemplate || !p_disk_params) return;
 
 	comTemplate->Clear();
-	for(size_t i=0; i < disk_params->Count(); i++) {
-		const DiskParam *item = disk_params->Item(i);
+	for(size_t i=0; i < p_disk_params->Count(); i++) {
+		const DiskParam *item = p_disk_params->Item(i);
 		wxString str;
 		int num;
 		if (item) {
@@ -531,7 +549,7 @@ void DiskParamBox::OnSingleChanged(wxCommandEvent& event)
 /// 指定位置のコントロールをセット
 void DiskParamBox::SetParamOfIndex(size_t index)
 {
-	if (disk_params != NULL && manual_param == NULL) SetParamOfIndexFromParams(index);
+	if (p_disk_params != NULL && p_manual_param == NULL) SetParamOfIndexFromParams(index);
 	else SetParamOfIndexFromGlobals(index);
 }
 
@@ -545,24 +563,24 @@ void DiskParamBox::SetParamOfIndexFromGlobals(size_t index)
 		if (item) SetParamFromTemplate(item);
 	} else {
 		SetParamForManual();
-		if (manual_param) {
-			SetParamToControl(manual_param);
+		if (p_manual_param) {
+			SetParamToControl(p_manual_param);
 		}
 	}
-	if (txtDiskName) txtDiskName->Enable((show_flags & SHOW_DISKLABEL_ALL) != 0);
-	if (chkWprotect) chkWprotect->Enable((show_flags & SHOW_DISKLABEL_ALL) != 0);
+	if (txtDiskName) txtDiskName->Enable((m_show_flags & SHOW_DISKLABEL_ALL) != 0);
+	if (chkWprotect) chkWprotect->Enable((m_show_flags & SHOW_DISKLABEL_ALL) != 0);
 }
 
 /// パラメータリストから一致するディスクを得てコントロールにセット
 void DiskParamBox::SetParamOfIndexFromParams(size_t index)
 {
 	if (index < (comTemplate->GetCount() - 1)) {
-		const DiskParam *item = disk_params->Item(index);
+		const DiskParam *item = p_disk_params->Item(index);
 		if (item) SetParamFromTemplate(item);
 	} else {
 		SetParamForManual();
-		if (manual_param) {
-			SetParamToControl(manual_param);
+		if (p_manual_param) {
+			SetParamToControl(p_manual_param);
 		}
 	}
 }
@@ -593,14 +611,14 @@ void DiskParamBox::SetParamFromTemplate(const DiskParam *item)
 }
 
 /// ディスクの情報を各コントロールに設定
-void DiskParamBox::SetParamFromDisk(const DiskD88Disk *disk)
+void DiskParamBox::SetParamFromDisk(const DiskImageDisk *disk)
 {
 	now_manual_setting = false;
 
 	SetParamToControl(disk);
 	if (txtDiskName) txtDiskName->SetValue(disk->GetName(true));
 	if (chkWprotect) chkWprotect->SetValue(disk->IsWriteProtected());
-	if (comDensity) comDensity->SetSelection(disk->FindDensity(disk->GetDensity()));
+	if (comDensity) comDensity->SetSelection(p_image->FindDensity(disk->GetDensity()));
 
 	txtTracks->Enable(false);
 	txtSides->Enable(false);
@@ -628,7 +646,7 @@ void DiskParamBox::SetParamForManual()
 	comSecSize->Enable(true);
 	txtSecIntl->Enable(true);
 	comNumbSec->Enable(true);
-	if (comDensity) comDensity->Enable((show_flags & SHOW_DISKLABEL_ALL) != 0);
+	if (comDensity) comDensity->Enable((m_show_flags & SHOW_DISKLABEL_ALL) != 0);
 	txtFirstTrack->Enable(true);
 	txtFirstSector->Enable(true);
 	radSingle[0]->Enable(true);
@@ -666,7 +684,7 @@ void DiskParamBox::SetParamToControl(const DiskParam *item)
 /// パラメータを得る
 bool DiskParamBox::GetParam(DiskParam &param)
 {
-	if (disk_params != NULL && manual_param == NULL) return GetParamFromParams(param);
+	if (p_disk_params != NULL && p_manual_param == NULL) return GetParamFromParams(param);
 	else return GetParamFromGlobals(param);
 }
 
@@ -675,7 +693,7 @@ void DiskParamBox::SetDensity(int val)
 {
 	if (!comDensity) return;
 
-	int match = DiskD88Disk::FindDensity(val);
+	int match = p_image->FindDensity(val);
 	if (match >= 0) {
 		// 選択肢にある
 		comDensity->SetSelection(match);
@@ -749,7 +767,7 @@ bool DiskParamBox::GetParamFromParams(DiskParam &param)
 {
 	size_t index = 0;
 	if (comTemplate && (index = comTemplate->GetSelection()) < (comTemplate->GetCount() - 1)) {
-		param = *disk_params->Item(index);
+		param = *p_disk_params->Item(index);
 		return true;
 	} else {
 		// manual
@@ -818,14 +836,16 @@ void DiskParamBox::GetParamForManual(DiskParam &param)
 	);
 }
 
+#if 0
 /// パラメータをディスクにセット
-bool DiskParamBox::GetParamToDisk(DiskD88Disk &disk)
+bool DiskParamBox::GetParamToDisk(DiskImageDisk &disk)
 {
 	disk.SetName(txtDiskName ? txtDiskName->GetValue() : wxT(""));
 	disk.SetDensity(comDensity ? comDensity->GetSelection() : 0);
 	disk.SetWriteProtect(chkWprotect ? chkWprotect->GetValue() : false);
 	return true;
 }
+#endif
 
 /// 選択したカテゴリタイプを返す
 wxString DiskParamBox::GetCategory() const
@@ -834,8 +854,7 @@ wxString DiskParamBox::GetCategory() const
 	if (comCategory) {
 		int num = comCategory->GetSelection();
 		if (num > 0) {
-			const DiskBasicCategories *categories = &gDiskBasicTemplates.GetCategories();
-			str = categories->Item(num-1).GetBasicTypeName();
+			str = gDiskBasicTemplates.GetCategoryName(num-1);
 		}
 	}
 	return str;
@@ -919,7 +938,7 @@ int DiskParamBox::GetDensity() const
 /// @return 0x00:2D 0x10:2DD 0x20:2HD
 wxUint8 DiskParamBox::GetDensityValue() const
 {
-	return gDiskDensity[GetDensity()].val;
+	return p_image->GetDensity(GetDensity());
 }
 
 /// ディスク書き込み禁止か

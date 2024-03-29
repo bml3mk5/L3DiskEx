@@ -7,7 +7,7 @@
 
 #include "diskplainparser.h"
 #include <wx/stream.h>
-#include "../diskd88.h"
+#include "diskimage.h"
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
@@ -16,11 +16,9 @@
 //
 //
 //
-DiskPlainParser::DiskPlainParser(DiskD88File *file, short mod_flags, DiskResult *result)
+DiskPlainParser::DiskPlainParser(DiskImageFile *file, short mod_flags, DiskResult *result)
+	: DiskImageParser(file, mod_flags, result)
 {
-	this->file = file;
-	this->mod_flags = mod_flags;
-	this->result = result;
 }
 
 DiskPlainParser::~DiskPlainParser()
@@ -28,11 +26,14 @@ DiskPlainParser::~DiskPlainParser()
 }
 
 /// インターリーブの解析
-void DiskPlainParser::ParseInterleave(DiskD88Track *track, int interleave, int sector_offset)
+/// @param[in] track         トラック
+/// @param[in] interleave    インターリーブ
+/// @param[in] sector_offset セクタオフセット
+void DiskPlainParser::ParseInterleave(DiskImageTrack *track, int interleave, int sector_offset)
 {
 	if (!track) return;
 
-	DiskD88Sectors *sectors = track->GetSectors();
+	DiskImageSectors *sectors = track->GetSectors();
 	if (!sectors) {
 		return;
 	}
@@ -40,17 +41,17 @@ void DiskPlainParser::ParseInterleave(DiskD88Track *track, int interleave, int s
 
 	wxArrayInt sector_nums;
 	for(size_t idx = 0; idx < count; idx++) {
-		DiskD88Sector *sector = sectors->Item(idx);
+		DiskImageSector *sector = sectors->Item(idx);
 		sector_nums.Add(sector->GetSectorNumber());
 	}
 
 	wxArrayInt sector_idxs;
-	if (!DiskD88Track::CalcSectorNumbersForInterleave(interleave, count, sector_idxs, 0)) {
+	if (!DiskImageTrack::CalcSectorNumbersForInterleave(interleave, count, sector_idxs, 0)) {
 		return;
 	}
 
 	for(size_t idx = 0; idx < count; idx++) {
-		DiskD88Sector *sector = sectors->Item(idx);
+		DiskImageSector *sector = sectors->Item(idx);
 		if (sector) {
 			sector->SetSectorNumber(sector_nums.Item(sector_idxs.Item(idx)));
 		}
@@ -60,7 +61,18 @@ void DiskPlainParser::ParseInterleave(DiskD88Track *track, int interleave, int s
 }
 
 /// セクタデータの解析
-wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool single_density, bool is_dummy, DiskD88Track *track)
+/// @param[in] istream           入力ディスクイメージ
+/// @param[in] disk_number       ディスク番号
+/// @param[in] disk_param        ディスクパラメータ
+/// @param[in] track_number      トラック番号
+/// @param[in] side_number       サイド番号
+/// @param[in] sector_number     セクタ番号
+/// @param[in] sector_nums       セクタ数
+/// @param[in] sector_size       セクタサイズ
+/// @param[in] is_dummy          ダミーセクタか(0でパディングするか)
+/// @param[in,out] track         トラック
+/// @return 作成したセクタのサイズ（ヘッダ含む）
+wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool is_dummy, DiskImageTrack *track)
 {
 	// 特殊なセクタにするか
 	const wxUint8 *sector_id = NULL;
@@ -70,7 +82,10 @@ wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, c
 		}
 	}
 
-	DiskD88Sector *sector = new DiskD88Sector(track_number, side_number, sector_number, sector_size, sector_nums, single_density);
+	// 単密度か
+	bool single_density = disk_param->FindSingleDensity(track_number, side_number, sector_number, sector_size);
+
+	DiskImageSector *sector = track->NewImageSector(track_number, side_number, sector_number, sector_size, sector_nums, single_density);
 	track->Add(sector);
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -93,13 +108,23 @@ wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, c
 	sector->ClearModify();
 
 	// このセクタデータのサイズを返す
-	return (wxUint32)sizeof(d88_sector_header_t) + siz;
+	return (wxUint32)sector->GetSize();
 }
 
 /// トラックデータの解析
-wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxUint32 offset, int disk_number, const DiskParam *disk_param, int track_number, int side_number, bool is_dummy_side, DiskD88Disk *disk)
+/// @param[in] istream           入力ディスクイメージ
+/// @param[in] offset_pos        オフセット位置(index)
+/// @param[in] offset            オフセットバイト
+/// @param[in] disk_number       ディスク番号
+/// @param[in] disk_param        ディスクパラメータ
+/// @param[in] track_number      トラック番号
+/// @param[in] side_number       サイド番号
+/// @param[in] is_dummy_side     ダミーサイドか
+/// @param[in,out] disk          ディスク
+/// @return 作成したトラックのサイズ
+wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxUint32 offset, int disk_number, const DiskParam *disk_param, int track_number, int side_number, bool is_dummy_side, DiskImageDisk *disk)
 {
-	DiskD88Track *track = new DiskD88Track(disk, track_number, side_number, offset_pos, 1);
+	DiskImageTrack *track = disk->NewImageTrack(track_number, side_number, offset_pos, 1);
 	disk->SetMaxTrackNumber(track_number);
 
 	int sector_nums = disk_param->GetSectorsPerTrack();
@@ -108,8 +133,8 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 	// 特殊なトラックならセクタ番号＆サイズを得る
 	disk_param->FindParticularTrack(track_number, side_number, sector_nums, sector_size);
 
-	// 単密度か
-	bool single_density = disk_param->FindSingleDensity(track_number, side_number, &sector_nums, &sector_size);
+	// トラック全体が単密度の場合はセクタ数とサイズを得る
+	disk_param->FindSingleDensity(track_number, side_number, &sector_nums, &sector_size);
 
 	wxUint32 track_size = 0;
 	int sector_offset = disk_param->GetSectorNumberBaseOnDisk();
@@ -119,10 +144,10 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 		sector_offset += side_number * sector_nums;
 	}
 
-	for(int sector_number = 0; sector_number < sector_nums && result->GetValid() >= 0; sector_number++) {
-		track_size += ParseSector(istream, disk_number, disk_param, track_number, side_number, sector_number + sector_offset, sector_nums, sector_size, single_density, is_dummy_side, track);
+	for(int sector_number = 0; sector_number < sector_nums && p_result->GetValid() >= 0; sector_number++) {
+		track_size += ParseSector(istream, disk_number, disk_param, track_number, side_number, sector_number + sector_offset, sector_nums, sector_size, is_dummy_side, track);
 	}
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// インターリーブ
 		ParseInterleave(track, disk_param->GetInterleave(), sector_offset);
 		// トラックサイズ設定
@@ -139,9 +164,13 @@ wxUint32 DiskPlainParser::ParseTrack(wxInputStream &istream, int offset_pos, wxU
 }
 
 /// ディスクデータの解析
+/// @param[in] istream           入力ディスクイメージ
+/// @param[in] disk_number       ディスク番号
+/// @param[in] disk_param        ディスクパラメータ
+/// @return オフセット
 wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param)
 {
-	DiskD88Disk *disk = new DiskD88Disk(file, disk_number);
+	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);
 
 	// パラメータの計算値がディスクサイズの２倍なら
 	// 表面にのみデータをセットする
@@ -150,12 +179,12 @@ wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, con
 		dummy_side = 1;
 	}
 
-	wxUint32 offset = (int)sizeof(d88_header_t);
+	wxUint32 offset = (int)disk->GetOffsetStart();
 	int offset_pos = 0;
 	int track_num = disk_param->GetTrackNumberBaseOnDisk();
 	int tracks_per_side = disk_param->GetTracksPerSide() + track_num;
-	for(; track_num < tracks_per_side && result->GetValid() >= 0; track_num++) {
-		for(int side_num = 0; side_num < disk_param->GetSidesPerDisk() && result->GetValid() >= 0; side_num++) {
+	for(; track_num < tracks_per_side && p_result->GetValid() >= 0; track_num++) {
+		for(int side_num = 0; side_num < disk_param->GetSidesPerDisk() && p_result->GetValid() >= 0; side_num++) {
 			// トラック作成
 			offset += ParseTrack(istream, offset_pos, offset, disk_number, disk_param, track_num, side_num, side_num == dummy_side, disk); 
 			offset_pos++;
@@ -168,13 +197,13 @@ wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, con
 	}
 	disk->SetSize(offset);
 
-	if (result->GetValid() >= 0) {
+	if (p_result->GetValid() >= 0) {
 		// ディスクを追加
 		const DiskParam *disk_param = disk->CalcMajorNumber();
 		if (disk_param) {
 			disk->SetDensity(disk_param->GetParamDensity());
 		}
-		file->Add(disk, mod_flags);
+		p_file->Add(disk, m_mod_flags);
 	} else {
 		delete disk;
 	}
@@ -192,19 +221,23 @@ int DiskPlainParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 {
 	/// パラメータ
 	if (!disk_param) {
-		result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
-		return result->GetValid();
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+		return p_result->GetValid();
 	}
 
 	ParseDisk(istream
 		, 0
 		, disk_param);
 
-	return result->GetValid();
+	return p_result->GetValid();
+}
+
+int DiskPlainParser::Check(wxInputStream &istream)
+{
+	return -1;
 }
 
 /// チェック
-/// @param [in] dp            ディスクパーサ
 /// @param [in] istream       解析対象データ
 /// @param [in] disk_hints    ディスクパラメータヒント("2D"など)
 /// @param [in] disk_param    ディスクパラメータ disk_hints指定時はNullable
@@ -212,7 +245,7 @@ int DiskPlainParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 /// @param [out] manual_param 候補がないときのパラメータヒント
 /// @retval 1 選択ダイアログ表示
 /// @retval 0 正常（候補が複数ある時はダイアログ表示）
-int DiskPlainParser::Check(DiskParser &dp, wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
+int DiskPlainParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param)
 {
 	int rc = 0;
 	int stream_size = (int)istream.GetLength();

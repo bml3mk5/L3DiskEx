@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_MSX_H_
-#define _BASICTYPE_MSX_H_
+#ifndef BASICTYPE_MSX_H
+#define BASICTYPE_MSX_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -48,4 +48,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_MSX_H_ */
+#endif /* BASICTYPE_MSX_H */

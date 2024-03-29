@@ -5,8 +5,8 @@
 /// @author Copyright (c) Sasaji. All rights reserved.
 ///
 
-#ifndef _BASICTYPE_SDOS_H_
-#define _BASICTYPE_SDOS_H_
+#ifndef BASICTYPE_SDOS_H
+#define BASICTYPE_SDOS_H
 
 #include "../common.h"
 #include "basiccommon.h"
@@ -85,7 +85,7 @@ public:
 	/// @brief フォーマットできるか
 	virtual bool	SupportFormatting() const { return false; }
 	/// @brief セクタデータを指定コードで埋める
-	virtual void	FillSector(DiskD88Track *track, DiskD88Sector *sector);
+	virtual void	FillSector(DiskImageTrack *track, DiskImageSector *sector);
 	/// @brief セクタデータを埋めた後の個別処理
 	virtual bool	AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data);
 	//@}
@@ -109,4 +109,4 @@ public:
 	//@}
 };
 
-#endif /* _BASICTYPE_SDOS_H_ */
+#endif /* BASICTYPE_SDOS_H */

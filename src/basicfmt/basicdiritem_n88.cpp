@@ -42,12 +42,12 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic)
 {
 	m_data.Alloc();
 }
-DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data)
+DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemFAT8(basic, n_sector, n_secpos, n_data)
 {
 	m_data.Attach(n_data);
 }
-DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
+DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemFAT8(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
 	// n88
@@ -67,7 +67,7 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int n_num, const Disk
 /// @param [in]  n_secpos   セクタ内のディレクトリエントリの位置
 /// @param [in]  n_data     ディレクトリアイテム
 /// @param [out] n_next     次のセクタ
-void DiskBasicDirItemN88::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskD88Sector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
+void DiskBasicDirItemN88::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next)
 {
 	DiskBasicDirItemFAT8::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
@@ -247,7 +247,7 @@ void DiskBasicDirItemN88::TakeAddressesInFile()
 	}
 
 	DiskBasicGroupItem *item = &m_groups.Item(0);
-	DiskD88Sector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
 	if (!sector) return;
 
 	bool is_bigendian = basic->IsBigEndian();
@@ -342,7 +342,7 @@ int DiskBasicDirItemN88::ConvFileTypeFromFileName(const wxString &filename) cons
 	int ftype = 0;
 	// 拡張子で属性を設定する
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		ftype = sa->GetType();
 	} else {
@@ -357,7 +357,7 @@ int DiskBasicDirItemN88::ConvOriginalTypeFromFileName(const wxString &filename) 
 	int t1 = 0;
 	// 拡張子で属性を設定する
 	wxFileName fn(filename);
-	const L3Attribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
+	const MyAttribute *sa = basic->GetAttributesByExtension().FindUpperCase(fn.GetExt());
 	if (sa) {
 		t1 = ConvFileType1(sa->GetType());
 	} else {

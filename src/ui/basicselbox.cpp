@@ -11,11 +11,11 @@
 #include <wx/textctrl.h>
 #include <wx/stattext.h>
 #include <wx/sizer.h>
-//#include <wx/numformatter.h>
 #include "intnamevalid.h"
 #include "../basicfmt/basicfmt.h"
+#include "../basicfmt/basictemplate.h"
 #include "../basicfmt/basicparam.h"
-#include "../diskd88.h"
+#include "../diskimg/diskimage.h"
 #include "../utils.h"
 
 
@@ -136,7 +136,7 @@ BEGIN_EVENT_TABLE(BasicSelBox, wxDialog)
 	EVT_BUTTON(wxID_OK, BasicSelBox::OnOK)
 END_EVENT_TABLE()
 
-BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, DiskBasic *basic, int show_flags)
+BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskImageDisk *disk, DiskBasic *basic, int show_flags)
 	: wxDialog(parent, id, _("Select BASIC Type"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 	, VolumeCtrl()
 {
@@ -144,7 +144,7 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
-	this->disk = disk;
+	p_disk = disk;
 
 	comBasic = new wxListBox(this, IDC_LIST_BASIC, wxDefaultPosition, wxDefaultSize);
 	szrAll->Add(comBasic, flags);
@@ -158,7 +158,6 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskD88Disk *disk, Dis
 	int pos = 0;
 	for(size_t n = 0; n < params.Count(); n++) {
 		const DiskBasicParam *param = params.Item(n);
-//		if (param == disk->GetDiskBasicParam()) {
 		if (param->GetBasicTypeName() == basic->GetBasicTypeName()) {
 			cur_num = pos;
 		} else if (param->GetBasicCategoryName() == category) {
