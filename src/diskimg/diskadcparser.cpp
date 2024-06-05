@@ -18,10 +18,11 @@
 typedef struct st_adc_header {
 	wxUint8  label_length;
 	wxUint8  label[63];
-	wxUint32 data_size;		// BE
-	wxUint32 post_size;		// BE
-
-	wxUint8  unknown[12];
+	wxUint32 data_size;			// BE
+	wxUint32 resource_size;		// BE
+	wxUint32 create_date;
+	wxUint32 modify_date;
+	wxUint8  unknown[4];
 } adc_header_t;
 #pragma pack()
 
@@ -90,7 +91,7 @@ int DiskADCParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 	}
 	// ファイルサイズが一致するか
 	wxUint32 data_size = wxUINT32_SWAP_ON_LE(header.data_size);
-	wxUint32 file_size = (wxUint32)sizeof(header) + data_size + wxUINT32_SWAP_ON_LE(header.post_size);
+	wxUint32 file_size = (wxUint32)sizeof(header) + data_size + wxUINT32_SWAP_ON_LE(header.resource_size);
 	if (file_size != (wxUint32)istream.GetLength()) {
 		// not disk
 		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
@@ -111,6 +112,7 @@ int DiskADCParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 		sectors_per_track = 16;
 		sector_size = 256;
 	} else if (data_size <= 819200) {
+		// Apple 2DD 800K
 		sides_per_disk = 2;
 		tracks_per_side = 80;
 		sectors_per_track = 12;
@@ -118,11 +120,17 @@ int DiskADCParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 		for(int i=16, n=sectors_per_track-1; i<tracks_per_side; i+=16, n--) {
 			pt.Add(DiskParticular(i, -1, -1, 16, n, 512));
 		}
+	} else if (data_size <= 1474560) {
+		// 2HD 1440K
+		sides_per_disk = 2;
+		tracks_per_side = 80;
+		sectors_per_track = 18;
+		sector_size = 512;
 	}
 
 	// ディスクテンプレートから探す
 	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, 1, 0, 0, 0
+		, 1, 0, 0, 0, 0
 		, sd, pt);
 	if (param) {
 		disk_params.Add(param);

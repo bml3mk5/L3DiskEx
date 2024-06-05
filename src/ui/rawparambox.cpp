@@ -20,8 +20,8 @@ BEGIN_EVENT_TABLE(RawParamBox, wxDialog)
 	EVT_BUTTON(wxID_OK, RawParamBox::OnOK)
 END_EVENT_TABLE()
 
-RawParamBox::RawParamBox(wxWindow* parent, wxWindowID id, int type, int value, int maxvalue)
-	: wxDialog(parent, id, _("Modify Parameter"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+RawParamBox::RawParamBox(wxWindow* parent, wxWindowID id, const wxString &title, int type, int value, int maxvalue)
+	: wxDialog(parent, id, title, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
 	long style = 0;
@@ -37,7 +37,7 @@ RawParamBox::RawParamBox(wxWindow* parent, wxWindowID id, int type, int value, i
 	typenames.Add(wxT("ID N"));
 	typenames.Add(_("NumOfSectors"));
 	typenames.Add(_("SectorSize"));
-	const int maxlens[] = { 2, 1, 2, 2, 3, 4 };
+	const int maxlens[] = { 3, 3, 3, 3, 3, 4 };
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 

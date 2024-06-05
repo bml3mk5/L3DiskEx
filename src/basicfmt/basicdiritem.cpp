@@ -785,9 +785,16 @@ wxString DiskBasicDirItem::RemakeFileNameAndExtStr(const wxString &filepath) con
 {
 	wxString newname;
 	wxFileName fn(filepath);
-	size_t nl, el;
+	size_t nl = 0;
+	size_t el = 0;
 
-	GetFileNamePos(0, nl);
+	for(int num=0; num<2; num++) {
+		size_t n = 0;
+		if (!GetFileNamePos(num, n) || n == 0) {
+			break;
+		}
+		nl += n;
+	}
 	GetFileExtPos(el);
 
 	if (el == 0) {
@@ -1948,15 +1955,21 @@ void DiskBasicDirItem::WriteFileDateTime(const wxString &path) const
 	pCre = HasCreateDateTime() ? &dtCre : NULL;
 	if (pAcc) {
 		GetFileAccessDateTime(tm);
-		pAcc->Set(*tm);
+//		pAcc->Set(*tm);
+		tm.AdjustDateTime();
+		pAcc->Set(tm.GetDay(), (wxDateTime::Month)tm.GetMonth(), tm.GetYear() + 1900, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 	}
 	if (pMod) {
 		GetFileModifyDateTime(tm);
-		pMod->Set(*tm);
+//		pMod->Set(*tm);
+		tm.AdjustDateTime();
+		pMod->Set(tm.GetDay(), (wxDateTime::Month)tm.GetMonth(), tm.GetYear() + 1900, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 	}
 	if (pCre) {
 		GetFileCreateDateTime(tm);
-		pCre->Set(*tm);
+//		pCre->Set(*tm);
+		tm.AdjustDateTime();
+		pCre->Set(tm.GetDay(), (wxDateTime::Month)tm.GetMonth(), tm.GetYear() + 1900, tm.GetHour(), tm.GetMinute(), tm.GetSecond());
 	}
 	if (pCre && !pMod) {
 		pMod = pCre;

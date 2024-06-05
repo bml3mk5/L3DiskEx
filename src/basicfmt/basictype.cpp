@@ -1314,6 +1314,7 @@ void DiskBasicType::GetNumFromSectorPos(int sector_pos, int &track_num, int &sid
 	side_num = basic->GetReversedSideNumber(side_num);
 
 	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBaseOnDisk();
 
 	if (div_num)  *div_num = 0;
@@ -1382,11 +1383,12 @@ int  DiskBasicType::GetSectorPosFromNum(int track_num, int side_num, int sector_
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
+
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
-
-	track_num -= basic->GetTrackNumberBaseOnDisk();
-	sector_num -= basic->GetSectorNumberBaseOnDisk();
 
 	if (selected_side >= 0) {
 		// 1S

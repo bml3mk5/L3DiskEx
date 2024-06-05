@@ -38,10 +38,13 @@ DiskImageCreator::~DiskImageCreator()
 wxUint32 DiskImageCreator::CreateSector(int track_number, int side_number, int sector_number, int sector_size, int sectors_per_track, DiskImageTrack *track)
 {
 	// 特殊なセクタにするか
-	const wxUint8 *sector_id = NULL;
+	const wxUint16 *sector_id = NULL;
 	if (p_param->FindParticularSector(track_number, side_number, sector_number, sector_size, &sector_id)) {
-		if (sector_id[2] > 0) {
-			sector_number = sector_id[2];
+		if (sector_id[1] & TrackParam::ID_IS_VALID) {
+			side_number = (sector_id[1] & ~TrackParam::ID_IS_VALID);
+		}
+		if (sector_id[2] & TrackParam::ID_IS_VALID) {
+			sector_number = (sector_id[2] & ~TrackParam::ID_IS_VALID);
 		}
 	}
 	// 単密度にするか
@@ -118,8 +121,9 @@ wxUint32 DiskImageCreator::CreateDisk(int disk_number, short mod_flags)
 	// create tracks
 	size_t create_size = 0;
 	int track_num = p_param->GetTrackNumberBaseOnDisk();
-	int side_num = 0;
+	int side_num = p_param->GetSideNumberBaseOnDisk();
 	int tracks_per_side = p_param->GetTracksPerSide() + track_num;
+	int sides_per_disk = p_param->GetSidesPerDisk() + side_num;
 
 	for(int pos = 0; p_result->GetValid() >= 0; pos++) {
 		disk->SetOffsetWithoutHeader(pos, (wxUint32)create_size);
@@ -128,9 +132,9 @@ wxUint32 DiskImageCreator::CreateDisk(int disk_number, short mod_flags)
 		create_size += CreateTrack(track_num, side_num, pos, disk->GetOffset(pos), disk);
 
 		side_num++;
-		if (side_num >= p_param->GetSidesPerDisk()) {
+		if (side_num >= sides_per_disk) {
 			track_num++;
-			side_num = 0;
+			side_num = p_param->GetSideNumberBaseOnDisk();
 		}
 		if (track_num >= tracks_per_side) {
 			break;

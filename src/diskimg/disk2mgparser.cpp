@@ -160,7 +160,7 @@ int Disk2MGParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 
 	// ディスクテンプレートから探す
 	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, 1, 0, 0, 0
+		, 1, 0, 0, 0, 0
 		, sd, pt);
 	if (param) {
 		disk_params.Add(param);

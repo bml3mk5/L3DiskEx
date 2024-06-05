@@ -221,6 +221,8 @@ public:
 	void OnPasteDataToDisk(wxCommandEvent& event);
 	/// メニュー ディレクトリ作成選択
 	void OnMakeDirectoryOnDisk(wxCommandEvent& event);
+	/// メニュー ファイル編集選択
+	void OnEditFileOnDisk(wxCommandEvent& event);
 	/// メニュー プロパティ選択
 	void OnPropertyOnDisk(wxCommandEvent& event);
 
@@ -400,6 +402,8 @@ public:
 	void PasteDataToDisk();
 	/// ディスクにディレクトリを作成
 	void MakeDirectoryOnDisk();
+	/// ファイル編集
+	void EditFileOnDisk(enEditorTypes editor_type);
 	/// ファイルのプロパティ
 	void PropertyOnDisk();
 	/// ディスクを初期化
@@ -655,6 +659,8 @@ public:
 		IDM_COPY_DATA,
 		IDM_PASTE_DATA,
 		IDM_MAKE_DIRECTORY_ON_DISK,
+		IDM_EDIT_FILE_BINARY,
+		IDM_EDIT_FILE_TEXT,
 		IDM_PROPERTY_DATA,
 
 		IDM_BASIC_MODE,

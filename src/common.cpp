@@ -232,6 +232,17 @@ bool TM::Ignorable() const
 		|| tm.tm_mday == 0 || tm.tm_mday > 31 || tm.tm_hour > 24 || tm.tm_min > 61
 	));
 }
+/// 有効でない日時を初期値にする
+bool TM::AdjustDateTime()
+{
+	if (tm.tm_sec < 0 || tm.tm_sec >= 60) tm.tm_sec = 0;
+	if (tm.tm_min < 0 || tm.tm_min >= 60) tm.tm_min = 0;
+	if (tm.tm_hour < 0 || tm.tm_hour >= 24) tm.tm_hour = 0;
+	if (tm.tm_mday <= 0 || tm.tm_mday > 31) tm.tm_mday = 1;
+	if (tm.tm_mon < 0 || tm.tm_mon >= 12) tm.tm_mon = 0;
+	if (tm.tm_year < 0) tm.tm_year = 0;
+	return true;
+}
 /// 日時の比較
 int TM::Compare(const TM &tm1, const TM &tm2)
 {

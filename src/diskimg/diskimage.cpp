@@ -43,6 +43,10 @@ int IntHashMapUtil::GetMaxKeyOnMaxValue(IntHashMap &hash_map)
 	}
 	return key_result;
 }
+int IntHashMapUtil::GetKeyCount(IntHashMap &hash_map)
+{
+	return (int)hash_map.size();
+}
 int IntHashMapUtil::MaxValue(int src, int value)
 {
 	return (src > value ? src : value);
@@ -1085,6 +1089,7 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 
 	int track_number_min = 0x7fffffff;
 	int track_number_max = 0;
+	int side_number_min = 0x7fffffff;
 	int side_number_max = 0;
 
 	int sector_number_max_side0 = 0;
@@ -1107,14 +1112,20 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 			track_number_min = IntHashMapUtil::MinValue(track_number_min, trk_num);
 			// トラック番号の最大値
 			track_number_max = IntHashMapUtil::MaxValue(track_number_max, trk_num);
-			if (sid_num < 16) {
+
+			if (trk_num > 0) {
+				// サイド番号の最小値
+				side_number_min = IntHashMapUtil::MinValue(side_number_min, sid_num);
 				// サイド番号の最大値
 				side_number_max = IntHashMapUtil::MaxValue(side_number_max, sid_num);
 			}
+
 			// セクタサイズはディスク内で最も使用されているサイズ
 			IntHashMapUtil::IncleaseValue(sector_size_map, t->GetMaxSectorSize());
 			// インターリーブはディスク内で最も使用されているもの
 			IntHashMapUtil::IncleaseValue(interleave_map, t->GetInterleave());
+
+			sid_num &= 0x7f;
 
 			// セクタ数
 			if (sid_num >= 0 && sid_num < 2) {
@@ -1155,14 +1166,12 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 	sector_masize = IntHashMapUtil::GetMaxKeyOnMaxValue(sector_size_map);
 	interleave_max = IntHashMapUtil::GetMaxKeyOnMaxValue(interleave_map);
 
-//	// サイド番号のチェック
-//	if (side_number_max > 1) {
-//		side_number_max = 1;
-//	}
+	// サイド番号のチェック
+	sides_per_disk = side_number_max + 1 - side_number_min;
 
 	// トラック番号のチェック
 	if (tracks) {
-		int track_count = ((int)tracks->Count() + side_number_max) / (side_number_max + 1);
+		int track_count = ((int)tracks->Count() + sides_per_disk - 1) / sides_per_disk;
 		// 実際に存在するトラック数よりトラック番号がかなり大きい場合
 		// 最大トラック番号をトラック数にする
 		if (track_number_max > (track_count + 4)) {
@@ -1176,6 +1185,7 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 			// 単密度で両面タイプ
 			disk_single_type = true;
 			side_number_max++;
+			sides_per_disk++;
 			for(size_t ti=0; ti<tracks->Count(); ti++) {
 				DiskImageTrack *t =tracks->Item(ti);
 				if (t->GetOffsetPos() & 1) {
@@ -1187,10 +1197,10 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 	}
 
 	// 単密度の同じパラメータをまとめる
-	DiskParticular::UniqueTracks(track_number_max - track_number_min + 1, side_number_max + 1, disk_single_type, singles);
+	DiskParticular::UniqueTracks(track_number_max - track_number_min + 1, sides_per_disk, disk_single_type, singles);
 
 	// ディスク内で最も多く使われているセクタ数を調べる
-	sides_per_disk = side_number_max + 1;
+//	sides_per_disk = side_number_max + 1;
 	tracks_per_side = tracks ? (track_number_max - track_number_min + 1) : 0;
 	sector_size = (int)sector_masize;
 	interleave = (int)interleave_max;
@@ -1229,7 +1239,7 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 
 	// メディアのタイプ
 	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, interleave, track_number_min, sector_number_min_side0, numbering_sector
+		, interleave, track_number_min, side_number_min, sector_number_min_side0, numbering_sector
 		, singles, ptracks);
 	if (disk_param != NULL) {
 		SetDiskTypeName(disk_param->GetDiskTypeName());
@@ -1237,6 +1247,7 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 		SetBasicTypes(disk_param->GetBasicTypes());
 		SetSingles(singles);
 		SetTrackNumberBaseOnDisk(disk_param->GetTrackNumberBaseOnDisk());
+		SetSideNumberBaseOnDisk(disk_param->GetSideNumberBaseOnDisk());
 		SetSectorNumberBaseOnDisk(disk_param->GetSectorNumberBaseOnDisk());
 		VariableSectorsPerTrack(disk_param->IsVariableSectorsPerTrack());
 		SetParamDensity(disk_param->GetParamDensity());

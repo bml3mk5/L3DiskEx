@@ -533,10 +533,10 @@
 
 ------------------------------------------------------------------------------
 
-連絡先：
-  Sasaji (sasaji@s-sasaji.ddo.jp)
-  http://s-sasaji.ddo.jp/bml3mk5/
-  (X(Twitter): https://twitter.com/bml3mk5)
+連絡先：Sasaji (sasaji@s-sasaji.ddo.jp)
+ *             http://s-sasaji.ddo.jp/bml3mk5/
+ * GitHub:     https://github.com/bml3mk5/L3DiskEx
+ * X(Twitter): https://x.com/bml3mk5
 
 ------------------------------------------------------------------------------
 

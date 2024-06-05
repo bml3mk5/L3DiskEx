@@ -19,6 +19,7 @@
 MyCTreeCtrl::MyCTreeCtrl(wxWindow *parentwindow, wxWindowID id)
 	: wxTreeCtrl(parentwindow, id, wxDefaultPosition, wxDefaultSize, wxTR_EDIT_LABELS | wxTR_NO_LINES | wxTR_HAS_BUTTONS | wxTR_TWIST_BUTTONS)
 {
+	m_selecting = false;
 }
 
 /// アイコンを追加
@@ -34,7 +35,12 @@ void MyCTreeCtrl::AssignTreeIcons(const char ***icons)
 /// ツリーアイテムを選択
 void MyCTreeCtrl::SelectTreeNode(const MyCTreeItem &node)
 {
-	SelectItem(node);
+	// イベント中に発生するイベントで再帰的に呼ばれる場合は無視する
+	if (!m_selecting) {
+		m_selecting = true;
+		SelectItem(node);
+		m_selecting = false;
+	}
 }
 
 /// ツリーノードが子供を持つか

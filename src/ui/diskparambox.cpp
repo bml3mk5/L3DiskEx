@@ -179,6 +179,14 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 
 	hbox->AddSpacer(16);
 
+	hbox->Add(new wxStaticText(this, wxID_ANY, _("First Side Number")), flags);
+	size.x = 40; size.y = -1;
+	txtFirstSide = new wxTextCtrl(this, IDC_TEXT_FIRST_SIDE, wxEmptyString, wxDefaultPosition, size, style, validigits);
+	txtFirstSide->SetMaxLength(2);
+	hbox->Add(txtFirstSide, 0);
+
+	hbox->AddSpacer(16);
+
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("First Sector Number")), flags);
 	size.x = 40; size.y = -1;
 	txtFirstSector = new wxTextCtrl(this, IDC_TEXT_FIRST_SECTOR, wxEmptyString, wxDefaultPosition, size, style, validigits);
@@ -601,6 +609,7 @@ void DiskParamBox::SetParamFromTemplate(const DiskParam *item)
 	comNumbSec->Enable(false);
 	if (comDensity) comDensity->Enable(false);
 	txtFirstTrack->Enable(false);
+	txtFirstSide->Enable(false);
 	txtFirstSector->Enable(false);
 	radSingle[0]->Enable(false);
 	radSingle[1]->Enable(false);
@@ -627,6 +636,7 @@ void DiskParamBox::SetParamFromDisk(const DiskImageDisk *disk)
 	txtSecIntl->Enable(false);
 	comNumbSec->Enable(false);
 	txtFirstTrack->Enable(false);
+	txtFirstSide->Enable(false);
 	txtFirstSector->Enable(false);
 	radSingle[0]->Enable(false);
 	radSingle[1]->Enable(false);
@@ -648,6 +658,7 @@ void DiskParamBox::SetParamForManual()
 	comNumbSec->Enable(true);
 	if (comDensity) comDensity->Enable((m_show_flags & SHOW_DISKLABEL_ALL) != 0);
 	txtFirstTrack->Enable(true);
+	txtFirstSide->Enable(true);
 	txtFirstSector->Enable(true);
 	radSingle[0]->Enable(true);
 	radSingle[1]->Enable(true);
@@ -669,6 +680,7 @@ void DiskParamBox::SetParamToControl(const DiskParam *item)
 	txtSecIntl->SetValue(wxString::Format(wxT("%d"), item->GetInterleave()));
 	comNumbSec->SetSelection(item->GetNumberingSector());
 	txtFirstTrack->SetValue(wxString::Format(wxT("%d"), item->GetTrackNumberBaseOnDisk()));
+	txtFirstSide->SetValue(wxString::Format(wxT("%d"), item->GetSideNumberBaseOnDisk()));
 	txtFirstSector->SetValue(wxString::Format(wxT("%d"), item->GetSectorNumberBaseOnDisk()));
 
 	txtDiskSize->SetValue(wxNumberFormatter::ToString((long)item->CalcDiskSize()));
@@ -826,6 +838,7 @@ void DiskParamBox::GetParamForManual(DiskParam &param)
 		GetDensityValue(),
 		GetInterleave(),
 		GetFirstTrackNumber(),
+		GetFirstSideNumber(),
 		GetFirstSectorNumber(),
 		dummy.IsVariableSectorsPerTrack(),
 		sd,
@@ -910,6 +923,14 @@ int DiskParamBox::GetFirstTrackNumber() const
 {
 	long val = 0;
 	txtFirstTrack->GetValue().ToLong(&val);
+	return (int)val;
+}
+
+/// 最初のサイド番号を返す
+int DiskParamBox::GetFirstSideNumber() const
+{
+	long val = 0;
+	txtFirstSide->GetValue().ToLong(&val);
 	return (int)val;
 }
 

@@ -54,7 +54,7 @@ class DiskD88Parser : public DiskImageParser
 {
 private:
 	void	 PreParseSectors(wxInputStream &istream, int disk_number, int &track_number, int &side_number, int &sector_nums, int &sector_size);
-	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskImageTrack *track);
+	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, DiskImageTrack *track);
 	wxUint32 ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskImageDisk *disk);
 	wxUint32 ParseDisk(wxInputStream &istream, size_t start_pos, int disk_number);
 

@@ -658,7 +658,7 @@ void DiskBasicTypeFLEX::GetNumFromSectorPos(int sector_pos, int &track_num, int 
 		track_num = trksid_num / sides_per_disk;
 		side_num = trksid_num % sides_per_disk;
 	}
-	sector_num = ((sector_pos % groups_per_track) / groups_per_sector) + 1;
+	sector_num = ((sector_pos % groups_per_track) / groups_per_sector);
 	if (div_num) *div_num = ((sector_pos % groups_per_track) % groups_per_sector);
 
 	if (numbering_sector == 1) {
@@ -668,6 +668,10 @@ void DiskBasicTypeFLEX::GetNumFromSectorPos(int sector_pos, int &track_num, int 
 
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
+
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBase();
 
 	if (div_nums) *div_nums = groups_per_sector;
 }
@@ -712,21 +716,25 @@ int  DiskBasicTypeFLEX::GetSectorPosFromNum(int track_num, int side_num, int sec
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
+
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
 
 	if (selected_side >= 0) {
 		// 1S
 		sector_pos = track_num * groups_per_track;
-		sector_pos += ((sector_num - 1) * div_nums + div_num);
+		sector_pos += (sector_num * div_nums + div_num);
 	} else {
 		// 2D, 2HD
 		sector_pos = track_num * sides_per_disk * groups_per_track;
 		if (numbering_sector == 1) {
-			sector_pos += ((sector_num - 1) * div_nums + div_num);
+			sector_pos += (sector_num * div_nums + div_num);
 		} else {
 			sector_pos += (side_num % sides_per_disk) * groups_per_track;
-			sector_pos += ((sector_num - 1) * div_nums + div_num);
+			sector_pos += (sector_num * div_nums + div_num);
 		}
 	}
 

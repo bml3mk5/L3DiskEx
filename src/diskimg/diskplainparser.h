@@ -31,7 +31,7 @@ protected:
 	void ParseInterleave(DiskImageTrack *track, int interleave, int sector_offset);
 	wxUint32 ParseSector(wxInputStream &istream, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool is_dummy, DiskImageTrack *track);
 	wxUint32 ParseTrack(wxInputStream &istream, int offset_pos, wxUint32 offset, int disk_number, const DiskParam *disk_param, int track_number, int side_number, bool is_dummy_side, DiskImageDisk *disk);
-	wxUint32 ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param);
+	virtual wxUint32 ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param);
 
 	void CalcParamFromSize(int disk_size, DiskParam &disk_param);
 

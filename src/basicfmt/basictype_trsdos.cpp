@@ -594,6 +594,7 @@ void DiskBasicTypeTRSDOS::GetNumFromSectorPos(int sector_pos, int &track_num, in
 	side_num = basic->GetReversedSideNumber(side_num);
 
 	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 
 	if (div_num)  *div_num = 0;
@@ -636,6 +637,7 @@ int  DiskBasicTypeTRSDOS::GetSectorPosFromNum(int track_num, int side_num, int s
 //	int sector_pos;
 
 	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	// マッピング

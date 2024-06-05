@@ -112,7 +112,7 @@ int DiskFDIParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 	// ディスクテンプレートから探す
 	DiskParam dummy;
 	const DiskParam *param = gDiskTemplates.FindStrict(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
-		, 1, dummy.GetTrackNumberBaseOnDisk(), dummy.GetSectorNumberBaseOnDisk(), 0
+		, 1, dummy.GetTrackNumberBaseOnDisk(), dummy.GetSideNumberBaseOnDisk(), dummy.GetSectorNumberBaseOnDisk(), 0
 		, dummy.GetSingles(), dummy.GetParticularTracks());
 	if (param) {
 		disk_params.Add(param);

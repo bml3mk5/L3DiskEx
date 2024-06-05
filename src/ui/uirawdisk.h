@@ -141,6 +141,9 @@ public:
 	/// セクタのプロパティダイアログ表示
 	bool ShowSectorAttr();
 
+	/// セクタを編集
+	void EditSector();
+
 	/// ファイル名
 	wxString MakeFileName(DiskImageSector *sector);
 	/// ファイル名
@@ -274,6 +277,10 @@ public:
 	void OnBeginDrag(MyRawTrackListEvent& event);
 	/// ディスク上のID一括変更選択
 	void OnModifyIDonDisk(wxCommandEvent& event);
+	/// 偶数トラックのID一括変更選択
+	void OnModifyIDonEvenTracks(wxCommandEvent& event);
+	/// 奇数トラックのID一括変更選択
+	void OnModifyIDonOddTracks(wxCommandEvent& event);
 	/// トラックのID一括変更選択
 	void OnModifyIDonTrack(wxCommandEvent& event);
 	/// ディスク上の密度一括変更選択
@@ -327,8 +334,8 @@ public:
 	bool ShowImportTrackRangeDialog(const wxString &path, int st_trk = -1, int st_sid = 0, int st_sec = 1);
 	/// 指定したファイルから指定した範囲にトラックデータをインポート
 	bool ImportTrackDataFile(const wxString &path, int st_trk, int st_sid, int st_sec, int ed_trk, int ed_sid, int ed_sec, bool inv_data, bool rev_side);
-	/// ディスク全体のIDを変更
-	void ModifyIDonDisk(int type_num);
+	/// ディスク全体または偶数奇数トラックのIDを一括変更
+	void ModifyIDonDisk(int type_num, int even_odd);
 	/// ディスク上の密度を一括変更
 	void ModifyDensityOnDisk();
 	/// トラック情報を表示
@@ -347,7 +354,7 @@ public:
 	DiskImageTrack *GetTrack(const MyRawTrackListItem &row);
 	/// 最初のトラックを返す
 	DiskImageTrack *GetFirstTrack();
-	/// トラックのセクタ１を得る
+	/// トラックの最初のセクタを得る
 	bool GetFirstSectorOnTrack(DiskImageTrack **track, DiskImageSector **sector);
 	/// トラックの開始セクタ番号と終了セクタ番号を得る
 	bool GetFirstAndLastSectorNumOnTrack(const DiskImageTrack *track, int &start_sector, int &end_sector);
@@ -368,6 +375,10 @@ public:
 		IDM_MODIFY_ID_R_DISK,
 		IDM_MODIFY_ID_N_DISK,
 		IDM_MODIFY_DENSITY_DISK,
+		IDM_MODIFY_ID_C_EVEN_TRACKS,
+		IDM_MODIFY_ID_H_EVEN_TRACKS,
+		IDM_MODIFY_ID_C_ODD_TRACKS,
+		IDM_MODIFY_ID_H_ODD_TRACKS,
 		IDM_MODIFY_ID_C_TRACK,
 		IDM_MODIFY_ID_H_TRACK,
 		IDM_MODIFY_ID_R_TRACK,

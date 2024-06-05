@@ -205,6 +205,7 @@ void UiDiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItem *i
 	int		 staddr =	item->GetStartAddress();	// 開始アドレス
 	int		 edaddr = 	item->GetEndAddress();		// 終了アドレス
 	int		 exaddr = 	item->GetExecuteAddress();	// 実行アドレス
+	int		 number =	item->GetNumber();			// 番号
 
 	values[LISTCOL_NAME].Set(row, icon, filename);
 	values[LISTCOL_ATTR].Set(row, attr);
@@ -220,7 +221,8 @@ void UiDiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItem *i
 	if (staddr >= 0 && edaddr < 0) edaddr = staddr + size - (size > 0 ? 1 : 0);
 	values[LISTCOL_EDADDR].Set(row, staddr >= 0 && edaddr >= 0 ? wxString::Format(wxT("%x"), edaddr) : wxT("--"));
 	values[LISTCOL_EXADDR].Set(row, exaddr >= 0 ? wxString::Format(wxT("%x"), exaddr) : wxT("--"));
-	values[LISTCOL_NUM].Set(row, wxString::Format(wxT("%d"), num));
+//	values[LISTCOL_NUM].Set(row, wxString::Format(wxT("%d"), num));
+	values[LISTCOL_NUM].Set(row, wxString::Format(wxT("%d"), number));
 }
 
 /// リストにデータを挿入
@@ -445,7 +447,8 @@ int UiDiskFileListCtrl::CompareDate(DiskBasicDirItems *items, int i1, int i2, in
 }
 int UiDiskFileListCtrl::CompareNum(DiskBasicDirItems *items, int i1, int i2, int dir)
 {
-	return (i1 - i2) * dir;
+//	return (i1 - i2) * dir;
+	return (items->Item(i1)->GetNumber() - items->Item(i2)->GetNumber()) * dir;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -988,13 +991,16 @@ void UiDiskFileList::ShowPopupMenu()
 
 	menuPopup->Enable(IDM_MAKE_DIRECTORY, opened && frame->CanMakeDirectory(m_current_basic));
 
-	opened = (opened && (listCtrl->GetListSelectedItemCount() > 0));
+	int cnt = listCtrl->GetListSelectedItemCount();
+	opened = (opened && cnt > 0);
 	menuPopup->Enable(IDM_EXPORT_FILE, opened);
 	menuPopup->Enable(IDM_DELETE_FILE, opened);
 	menuPopup->Enable(IDM_COPY_FILE, opened);
 
-	opened = (opened && (listCtrl->GetListSelectedRow() != wxNOT_FOUND));
+	opened = (opened && cnt == 1 && (listCtrl->GetListSelectedRow() != wxNOT_FOUND));
 	menuPopup->Enable(IDM_RENAME_FILE, opened);
+	menuPopup->Enable(IDM_EDIT_FILE_BINARY, opened);
+	menuPopup->Enable(IDM_EDIT_FILE_TEXT, opened);
 	menuPopup->Enable(IDM_PROPERTY, opened);
 
 	PopupMenu(menuPopup);
@@ -1159,7 +1165,9 @@ bool UiDiskFileList::SelectItem(const MyFileListItem &selected_item, int count)
 	if (count == 1) {
 		// ダンプリストをセット
 		frame->SetBinDumpData(sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetSectorBuffer(), sector->GetSectorSize(), m_current_basic->GetCharCode(), m_current_basic->IsDataInverted());
+	}
 
+	if (count <= 2) {
 		// メニューを更新
 		frame->UpdateMenuAndToolBarFileList(this);
 	}
@@ -1183,7 +1191,7 @@ void UiDiskFileList::UnselectItem(const MyFileListItem &deselected_item, int cou
 	frame->UnsetFatAreaGroup(ditem->GetGroups(), extra_group_nums);
 
 	// メニューを更新
-	if (count == 0) {
+	if (count <= 1) {
 		frame->UpdateMenuAndToolBarFileList(this);
 	}
 }
@@ -2016,13 +2024,14 @@ bool UiDiskFileList::ChangeBasicType()
 	int sts = dlg.ShowModal();
 
 	if (sts == wxID_OK) {
-		if (dlg.IsChangedBasic()) {
+		bool forcely = dlg.WillOpenForcely();
+		if (dlg.IsChangedBasic() || forcely) {
 			ClearFiles();
-			m_current_basic->ClearParseAndAssign();
+			m_current_basic->ClearParseAndAssign(forcely);
 			frame->RefreshDiskListOnSelectedSide(dlg.GetBasicParam());
-		} else {
-			dlg.CommitData();
-			RefreshFiles();
+//		} else {
+//			dlg.CommitData();
+//			RefreshFiles();
 		}
 	}
 	return (sts == wxID_OK);
@@ -2087,7 +2096,12 @@ void UiDiskFileList::ShowMakeDirectoryDialog()
 			// リスト更新
 			RefreshFiles();
 			// 左パネルのツリーを更新
-			frame->RefreshAllDirectoryNodesOnDiskList(disk, m_current_basic->GetSelectedSide(), m_current_basic->GetCurrentDirectory());
+			DiskBasicDirItem *curr_dir = m_current_basic->GetCurrentDirectory();
+			if (curr_dir) {
+				// 更新させるためカレントディレクトリを未確定にする
+				curr_dir->ValidDirectory(false);
+			}
+			frame->RefreshAllDirectoryNodesOnDiskList(disk, m_current_basic->GetSelectedSide(), curr_dir);
 		}
 	}
 

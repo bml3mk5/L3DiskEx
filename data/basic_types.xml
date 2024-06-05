@@ -1268,6 +1268,26 @@
 		<Description>N88 BASIC (5inch 2D)</Description>
 		<Description lang="ja">N88 BASIC (5インチ2D)</Description>
 	</DiskBasicType>
+	<DiskBasicType name="N88-2DD" type="5" category="N88">
+		<SectorsPerGroup>16</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>16</SectorsPerTrack>
+		<ManagedTrackNumber>40</ManagedTrackNumber>
+		<NumberOfFATs>3</NumberOfFATs>
+		<FATSideNumber>0</FATSideNumber>
+		<FATStartSector>14</FATStartSector>
+		<FATEndSector>14</FATEndSector>
+		<FATStartPosition>0</FATStartPosition>
+		<FATEndGroup>159</FATEndGroup>
+		<ReservedGroups>
+			<Group>80</Group>
+		</ReservedGroups>
+		<DirStartSector>1</DirStartSector>
+		<DirEndSector>12</DirEndSector>
+		<FillCodeOnFormat>0x40</FillCodeOnFormat>
+		<Description>N88 BASIC (2DD)</Description>
+		<Description lang="ja">N88 BASIC (2DD)</Description>
+	</DiskBasicType>
 	<DiskBasicType name="N88-2HD" type="5" category="N88">
 		<SectorsPerGroup>26</SectorsPerGroup>
 		<SidesPerDisk>2</SidesPerDisk>

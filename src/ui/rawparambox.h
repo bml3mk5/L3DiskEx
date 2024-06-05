@@ -32,7 +32,7 @@ private:
 	wxChoice   *comValue;
 
 public:
-	RawParamBox(wxWindow* parent, wxWindowID id, int type, int value, int maxvalue);
+	RawParamBox(wxWindow* parent, wxWindowID id, const wxString &title, int type, int value, int maxvalue);
 
 	enum {
 		IDC_TEXT_VALUE = 1,

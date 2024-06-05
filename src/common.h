@@ -96,6 +96,8 @@ public:
 	bool IsValidTime() const;
 	/// 日時設定を無視する値か
 	bool Ignorable() const;
+	/// 有効でない日時を初期値にする
+	bool AdjustDateTime();
 	/// 日時の比較
 	static int Compare(const TM &tm1, const TM &tm2);
 

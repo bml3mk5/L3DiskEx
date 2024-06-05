@@ -311,12 +311,16 @@ void DiskBasicTypeFROST::GetNumFromSectorPos(int sector_pos, int &track_num, int
 	int trksid_num = sector_pos / groups_per_track;
 	track_num = trksid_num / sides_per_disk;
 	side_num = trksid_num % sides_per_disk;
-	sector_num = ((sector_pos % groups_per_track) / grps_per_sec) + 1;
+	sector_num = ((sector_pos % groups_per_track) / grps_per_sec);
 	if (div_num) *div_num = ((sector_pos % groups_per_track) % grps_per_sec);
 
 	if (sector_num * grps_per_sec > groups_per_track) {
 		grps_per_sec = grps_per_sec - (sector_num * grps_per_sec - groups_per_track);
 	}
+
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBaseOnDisk();
 
 	if (div_nums) *div_nums = grps_per_sec;
 }
@@ -335,9 +339,13 @@ int  DiskBasicTypeFROST::GetSectorPosFromNum(int track_num, int side_num, int se
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBaseOnDisk();
+
 	// 2D, 2HD
 	sector_pos = (track_num * sides_per_disk + side_num) * groups_per_track;
-	sector_pos += ((sector_num - 1) * div_nums + div_num);
+	sector_pos += (sector_num * div_nums + div_num);
 
 	return sector_pos;
 }

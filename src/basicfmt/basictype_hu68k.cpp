@@ -33,7 +33,7 @@ double DiskBasicTypeHU68K::ParseParamOnDisk(bool is_formatting)
 	}
 	if (valid_ratio >= 0.0) {
 		// セクタ０
-		DiskImageSector *sector = basic->GetSector(0, 0, 1);
+		DiskImageSector *sector = basic->GetSector(0, basic->GetSideNumberBaseOnDisk(), 1);
 		if (!sector) {
 			return -1.0;
 		}

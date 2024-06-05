@@ -573,11 +573,12 @@ void DiskBasicTypeAppleDOS::GetNumFromSectorPos(int sector_pos, int &track_num, 
 		sector_num += (side_num * sectors_per_track);
 	}
 
-	track_num += basic->GetTrackNumberBaseOnDisk();
-	sector_num += basic->GetSectorNumberBase();
-
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
+
+	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
+	sector_num += basic->GetSectorNumberBase();
 
 	if (div_nums) *div_nums = groups_per_sector;
 }
@@ -623,11 +624,12 @@ int  DiskBasicTypeAppleDOS::GetSectorPosFromNum(int track_num, int side_num, int
 	int sides_per_disk = basic->GetSidesPerDiskOnBasic();
 	int sector_pos;
 
+	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
+	sector_num -= basic->GetSectorNumberBase();
+
 	// サイド番号を逆転するか
 	side_num = basic->GetReversedSideNumber(side_num);
-
-	track_num -= basic->GetTrackNumberBaseOnDisk();
-	sector_num -= basic->GetSectorNumberBase();
 
 	if (selected_side >= 0) {
 		// 1S

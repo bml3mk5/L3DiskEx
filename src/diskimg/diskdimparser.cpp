@@ -18,14 +18,15 @@
 typedef struct st_dim_dsk_header {
 	wxUint8  type;
 	wxUint8  tracks[0xaa];
-	wxUint8  ident[13];
-	wxUint8  unknown[0x48];
-	wxUint8  checkh;
-	wxUint8  checkl;
+	wxUint8  ident[15];
+	wxUint8  date[4];
+	wxUint8  time[4];
+	wxUint8  comments[0x3d];
+	wxUint8  overtrack;
 } dim_dsk_header_t;
 #pragma pack()
 
-#define DISK_DIM_HEADER "DIFC HEADER  "
+#define DISK_DIM_HEADER "DIFC HEADER  \0\0"
 
 //
 //
@@ -37,6 +38,64 @@ DiskDIMParser::DiskDIMParser(DiskImageFile *file, short mod_flags, DiskResult *r
 
 DiskDIMParser::~DiskDIMParser()
 {
+}
+
+/// ディスクデータの解析
+/// @param[in] istream           入力ディスクイメージ
+/// @param[in] disk_number       ディスク番号
+/// @param[in] disk_param        ディスクパラメータ
+/// @return オフセット
+wxUint32 DiskDIMParser::ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param)
+{
+	dim_dsk_header_t header;
+	size_t len = istream.Read(&header, sizeof(header)).LastRead();
+	if (len != sizeof(header)) {
+		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
+		return 0;
+	}
+
+	istream.SeekI(0x100);
+
+	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);
+
+	// パラメータの計算値がディスクサイズの２倍なら
+	// 表面にのみデータをセットする
+	int dummy_side = -1;
+	if ((int)istream.GetLength() * 2 <= disk_param->CalcDiskSize()) {
+		dummy_side = disk_param->GetSideNumberBaseOnDisk() + 1;
+	}
+
+	wxUint32 offset = (int)disk->GetOffsetStart();
+	int offset_pos = 0;
+	int track_num = disk_param->GetTrackNumberBaseOnDisk();
+	int tracks_per_side = disk_param->GetTracksPerSide() + track_num;
+	int side_num_st = disk_param->GetSideNumberBaseOnDisk();
+	int side_num_ed = disk_param->GetSidesPerDisk() + side_num_st;
+	for(; track_num < tracks_per_side && p_result->GetValid() >= 0; track_num++) {
+		for(int side_num = side_num_st; side_num < side_num_ed && p_result->GetValid() >= 0; side_num++) {
+			bool is_dummy_track = (side_num == dummy_side);
+			if (header.tracks[offset_pos] == 0) {
+				// トラック情報がないので、ダミーのトラックを作成する
+				is_dummy_track = true;
+			}
+			offset += ParseTrack(istream, offset_pos, offset, disk_number, disk_param, track_num, side_num, is_dummy_track, disk); 
+			offset_pos++;
+		}
+	}
+	disk->SetSize(offset);
+
+	if (p_result->GetValid() >= 0) {
+		// ディスクを追加
+		const DiskParam *disk_param = disk->CalcMajorNumber();
+		if (disk_param) {
+			disk->SetDensity(disk_param->GetParamDensity());
+		}
+		p_file->Add(disk, m_mod_flags);
+	} else {
+		delete disk;
+	}
+
+	return offset;
 }
 
 /// DIMファイルを解析
@@ -54,16 +113,12 @@ int DiskDIMParser::Parse(wxInputStream &istream, const DiskParam *disk_param)
 
 	istream.SeekI(0);
 
-	dim_dsk_header_t header;
-	size_t len = istream.Read(&header, sizeof(header)).LastRead();
-	if (len != sizeof(header)) {
-		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, 0);
-		return p_result->GetValid();
-	}
 
-	istream.SeekI(0x100);
+	ParseDisk(istream
+		, 0
+		, disk_param);
 
-	return DiskPlainParser::Parse(istream, disk_param);
+	return p_result->GetValid();
 }
 
 /// チェック
@@ -86,7 +141,7 @@ int DiskDIMParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 		return p_result->GetValid();
 	}
 	// ヘッダ文字列チェック
-	if (memcmp(header.ident, DISK_DIM_HEADER, sizeof(DISK_DIM_HEADER)) != 0) {
+	if (memcmp(header.ident, DISK_DIM_HEADER, sizeof(header.ident)) != 0) {
 		// not disk
 		return -1;
 	}
@@ -97,20 +152,21 @@ int DiskDIMParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 	int sectors_per_track = 8;
 
 	// トラック数を数える
-	int tracks_per_side = 0;
+	int max_tracks = 0;
 	for(size_t n=0; n<sizeof(header.tracks); n++) {
-		if (header.tracks[n] == 0) break;
-		tracks_per_side++;
+		if (header.tracks[n] != 0) {
+			max_tracks = (int)(n+1);
+		}
 	}
-	if (tracks_per_side == 0) {
-		tracks_per_side = 144;
+	if (max_tracks == 0) {
+		max_tracks = 144;
 	}
 
 	// セクタ数
-	int secs_per_trk_mod = (stream_size / sector_size) % tracks_per_side;
+	int secs_per_trk_mod = (stream_size / sector_size) % max_tracks;
 	if (secs_per_trk_mod == 0) {
 		// decide
-		sectors_per_track = (stream_size / sector_size) / tracks_per_side;
+		sectors_per_track = (stream_size / sector_size) / max_tracks;
 	} else {
 		for(int i=8; i<10; i++) {
 			if (((stream_size / sector_size) % i) == 0) {
@@ -120,27 +176,31 @@ int DiskDIMParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 		}
 	}
 
-	tracks_per_side /= sides_per_disk;
+	int tracks_per_side = (max_tracks / sides_per_disk);
 
 	// ディスクテンプレートから探す
 	DiskParam dummy;
 
 	if (disk_hints != NULL) {
 		// パラメータヒントあり
-
-		// 優先順位の高い候補
-		for(size_t i=0; i<disk_hints->Count(); i++) {
-			int kind = disk_hints->Item(i).GetKind();
-			if (kind != header.type) {
-				continue;
-			}
-			wxString hint = disk_hints->Item(i).GetHint();
-			const DiskParam *param = gDiskTemplates.Find(hint);
-			if (param) {
-				int disk_size_hint = param->CalcDiskSize();
-				if (stream_size == disk_size_hint) {
+		for(int retry = 0; retry < 2 &&  disk_params.Count() == 0; retry++) {
+			// 優先順位の高い候補を追加
+			for(size_t i=0; i<disk_hints->Count(); i++) {
+				int kind = disk_hints->Item(i).GetKind();
+				if (kind != header.type) {
+					continue;
+				}
+				wxString hint = disk_hints->Item(i).GetHint();
+				const DiskParam *param = gDiskTemplates.Find(hint);
+				if (param) {
 					// ファイルサイズが一致
-					disk_params.Add(param);
+					// or トラック数が一致
+					// or リトライ時
+					if (stream_size == param->CalcDiskSize()
+					 || tracks_per_side == param->GetTracksPerSide()
+					 || retry > 0) {
+						 disk_params.Add(param);
+					}
 				}
 			}
 		}

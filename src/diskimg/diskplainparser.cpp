@@ -75,10 +75,13 @@ void DiskPlainParser::ParseInterleave(DiskImageTrack *track, int interleave, int
 wxUint32 DiskPlainParser::ParseSector(wxInputStream &istream, int disk_number, const DiskParam *disk_param, int track_number, int side_number, int sector_number, int sector_nums, int sector_size, bool is_dummy, DiskImageTrack *track)
 {
 	// 特殊なセクタにするか
-	const wxUint8 *sector_id = NULL;
+	const wxUint16 *sector_id = NULL;
 	if (disk_param->FindParticularSector(track_number, side_number, sector_number, sector_size, &sector_id)) {
-		if (sector_id[2] > 0) {
-			sector_number = sector_id[2];
+		if (sector_id[1] & TrackParam::ID_IS_VALID) {
+			side_number = (sector_id[1] & ~TrackParam::ID_IS_VALID);
+		}
+		if (sector_id[2] & TrackParam::ID_IS_VALID) {
+			sector_number = (sector_id[2] & ~TrackParam::ID_IS_VALID);
 		}
 	}
 
@@ -176,15 +179,17 @@ wxUint32 DiskPlainParser::ParseDisk(wxInputStream &istream, int disk_number, con
 	// 表面にのみデータをセットする
 	int dummy_side = -1;
 	if ((int)istream.GetLength() * 2 <= disk_param->CalcDiskSize()) {
-		dummy_side = 1;
+		dummy_side = disk_param->GetSideNumberBaseOnDisk() + 1;
 	}
 
 	wxUint32 offset = (int)disk->GetOffsetStart();
 	int offset_pos = 0;
 	int track_num = disk_param->GetTrackNumberBaseOnDisk();
 	int tracks_per_side = disk_param->GetTracksPerSide() + track_num;
+	int side_num_st = disk_param->GetSideNumberBaseOnDisk();
+	int side_num_ed = disk_param->GetSidesPerDisk() + side_num_st;
 	for(; track_num < tracks_per_side && p_result->GetValid() >= 0; track_num++) {
-		for(int side_num = 0; side_num < disk_param->GetSidesPerDisk() && p_result->GetValid() >= 0; side_num++) {
+		for(int side_num = side_num_st; side_num < side_num_ed && p_result->GetValid() >= 0; side_num++) {
 			// トラック作成
 			offset += ParseTrack(istream, offset_pos, offset, disk_number, disk_param, track_num, side_num, side_num == dummy_side, disk); 
 			offset_pos++;

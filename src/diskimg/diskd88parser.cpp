@@ -128,13 +128,13 @@ void DiskD88Parser::PreParseSectors(wxInputStream &istream, int disk_number, int
 }
 
 /// セクタデータの解析
-wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int sector_nums, int sector_size, DiskImageTrack *track)
+wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, DiskImageTrack *track)
 {
 	DiskD88SectorHeader sector_header;
 	sector_header.Alloc();
 	size_t header_size = istream.Read((void *)sector_header.GetHeader(), sector_header.GetHeaderSize()).LastRead();
 
-	//	d88_sector_header_t *sector_header = new d88_sector_header_t;
+//	d88_sector_header_t *sector_header = new d88_sector_header_t;
 //	size_t header_size = istream.Read((void *)sector_header, sizeof(d88_sector_header_t)).LastRead();
 			
 	// track number is same ?
@@ -142,8 +142,8 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 		p_result->SetWarn(DiskResult::ERRV_ID_TRACK, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
 	}
 	// side number is valid ?
-	if (sector_header.GetIDH() > 1) {
-		p_result->SetWarn(DiskResult::ERRV_ID_SIDE, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
+	if (sector_header.GetIDH() != side_number) {
+		p_result->SetWarn(DiskResult::ERRV_ID_SIDE, disk_number, side_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
 	}
 	int sector_number = sector_header.GetIDR();
 	// sector number is valid ?
@@ -206,7 +206,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 	// sectors
 	wxUint32 sector_total_size = 0;
 	for(int sec_pos = 0; sec_pos < sector_nums && p_result->GetValid() >= 0; sec_pos++) {
-		sector_total_size += ParseSector(istream, disk_number, track_number, sector_nums, sector_size, track);
+		sector_total_size += ParseSector(istream, disk_number, track_number, side_number, sector_nums, sector_size, track);
 	}
 
 	// sector number is valid ?

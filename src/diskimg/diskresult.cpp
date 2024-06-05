@@ -56,7 +56,7 @@ const char *gDiskResultMsgs[] = {
 	//	ERRV_ID_TRACK  v:5
 	wxTRANSLATE("[Disk%d] Unmatch id C and track number %d. id[C:%d H:%d R:%d]"),
 	//	ERRV_ID_SIDE  v:5
-	wxTRANSLATE("[Disk%d] Invalid id H in track %d. id[C:%d H:%d R:%d]"),
+	wxTRANSLATE("[Disk%d] Unmatch id H and side %d in track %d. id[C:%d H:%d R:%d]"),
 	//	ERRV_ID_SECTOR  v:6
 	wxTRANSLATE("[Disk%d] Invalid id R in track %d. id[C:%d H:%d R:%d] num of sector:%d"),
 	// ERRV_TRACKS_HEADER v:2

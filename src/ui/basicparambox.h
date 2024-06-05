@@ -30,10 +30,11 @@ class BasicParamBox : public wxDialog, public VolumeCtrl
 private:
 	DiskBasic *basic;
 	DiskBasicParamPtrs params;
-	int show_flags;
+	int  m_show_flags;
 
 	wxChoice	*comBasic;
-	int selected_basic;
+	int  m_selected_basic;
+	bool m_open_forcely;
 
 public:
 	BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &caption, DiskImageDisk *disk, DiskBasic *basic, int show_flags);
@@ -42,6 +43,7 @@ public:
 		IDC_TEXT_BASIC = 1,
 		IDC_LIST_BASIC,
 		IDC_VOLUME_CTRL,
+		IDC_BUTTON_FORCE,
 	};
 
 	enum en_show_flags {
@@ -56,10 +58,12 @@ public:
 
 	// event procedures
 	void OnOK(wxCommandEvent& event);
+	void OnOKForcely(wxCommandEvent& event);
 
 	// properties
 	bool IsChangedBasic() const;
 	const DiskBasicParam *GetBasicParam() const;
+	bool WillOpenForcely() const;
 
 	wxDECLARE_EVENT_TABLE();
 };

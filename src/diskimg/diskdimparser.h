@@ -29,6 +29,7 @@ class DiskDIMParser : public DiskPlainParser
 {
 private:
 //	void CalcParamFromSize(int disk_size, DiskParam &disk_param);
+	wxUint32 ParseDisk(wxInputStream &istream, int disk_number, const DiskParam *disk_param);
 
 public:
 	DiskDIMParser(DiskImageFile *file, short mod_flags, DiskResult *result);

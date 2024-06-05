@@ -40,9 +40,9 @@ class DiskBasicDirItemOS9FD
 private:
 	DiskBasic			*basic;
 	DiskImageSector		*sector;
-	directory_os9_fd_t	*fd;
-	wxUint32			mylsn;
-	bool				fd_ownmake;
+	directory_os9_fd_t	*p_fd;
+	wxUint32			m_mylsn;
+	bool				m_fd_ownmake;
 	union {
 		os9_date_t	date;
 		os9_cdate_t	cdate;
@@ -66,17 +66,21 @@ public:
 	/// @brief FDをクリア
 	void Clear();
 	/// @brief 有効か
-	bool IsValid() const { return (fd != NULL); }
+	bool IsValid() const;
 	/// @brief FDへのポインタを返す
-	const directory_os9_fd_t *GetFD() const { return fd; }
+	const directory_os9_fd_t *GetFD() const;
 	/// @brief 自分のLSNを返す
-	wxUint32 GetMyLSN() const { return mylsn; }
+	wxUint32 GetMyLSN() const { return m_mylsn; }
 	/// @brief 自分のLSNを設定
-	void SetMyLSN(wxUint32 val) { mylsn = val; }
+	void SetMyLSN(wxUint32 val) { m_mylsn = val; }
 	/// @brief 属性を返す
 	wxUint8 GetATT() const;
 	/// @brief 属性をセット
 	void SetATT(wxUint8 val);
+	/// @brief ユーザIDを返す
+	wxUint16 GetOWN() const;
+	/// @brief ユーザIDをセット
+	void SetOWN(wxUint16 val);
 	/// @brief セグメントのLSNを返す
 	wxUint32 GetLSN(int idx) const;
 	/// @brief セグメントのセクタ数を返す
@@ -126,6 +130,11 @@ private:
 	/// @brief File Descriptorエリアのポインタ
 	DiskBasicDirItemOS9FD fd;
 
+	/// @brief ユーザID(プロパティダイアログ用)
+	wxUint8 m_owner_id;
+	/// @brief グループID(プロパティダイアログ用)
+	wxUint8 m_group_id;
+
 	/// @brief ファイル名を格納する位置を返す
 	virtual wxUint8 *GetFileNamePos(int num, size_t &size, size_t &len) const;
 	/// @brief 属性１を返す
@@ -135,6 +144,10 @@ private:
 	/// @brief 使用しているアイテムか
 	virtual bool	CheckUsed(bool unuse);
 
+	/// @brief ユーザIDを返す
+	int				GetUserID() const;
+	/// @brief ユーザIDのセット
+	void			SetUserID(int val);
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int				GetFileType1Pos();
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定

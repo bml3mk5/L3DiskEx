@@ -112,12 +112,12 @@ bool TrackParam::operator==(const TrackParam &dst) const
 	);
 }
 /// IDをセット
-void TrackParam::SetID(int idx, wxUint8 val)
+void TrackParam::SetID(int idx, wxUint16 val)
 {
 	if (idx >= 0 && idx < 4) id[idx] = val;
 }
 /// IDを返す
-wxUint8 TrackParam::GetID(int idx) const
+wxUint16 TrackParam::GetID(int idx) const
 {
 	if (idx >= 0 && idx < 4) return id[idx];
 	else return 0;
@@ -451,6 +451,7 @@ DiskParam &DiskParam::operator=(const DiskParam &src)
 /// @param[in] n_disk_density          0x00:2D 0x10:2DD 0x20:2HD
 /// @param[in] n_interleave            セクタの間隔
 /// @param[in] n_track_number_base     開始トラック番号
+/// @param[in] n_side_number_base      開始サイド番号
 /// @param[in] n_sector_number_base    開始セクタ番号
 /// @param[in] n_variable_secs_per_trk セクタ数がトラックごとに異なるか
 /// @param[in] n_singles               単密度にするトラック
@@ -469,6 +470,7 @@ void DiskParam::SetDiskParam(const wxString &n_type_name
 	, int n_disk_density
 	, int n_interleave
 	, int n_track_number_base
+	, int n_side_number_base
 	, int n_sector_number_base
 	, bool n_variable_secs_per_trk
 	, const DiskParticulars &n_singles
@@ -488,6 +490,7 @@ void DiskParam::SetDiskParam(const wxString &n_type_name
 	disk_density = n_disk_density;
 	interleave = n_interleave;
 	track_number_base = n_track_number_base;
+	side_number_base = n_side_number_base;
 	sector_number_base = n_sector_number_base;
 	variable_secs_per_trk = n_variable_secs_per_trk;
 //	if (density < 0 || 2 < density) density = 0;
@@ -541,6 +544,7 @@ void DiskParam::SetDiskParam(const DiskParam &src)
 	disk_density = src.disk_density;
 	interleave = src.interleave;
 	track_number_base = src.track_number_base;
+	side_number_base = src.side_number_base;
 	sector_number_base = src.sector_number_base;
 	variable_secs_per_trk = src.variable_secs_per_trk;
 	singles = src.singles;
@@ -563,6 +567,7 @@ void DiskParam::ClearDiskParam()
 	disk_density		 = 0;
 	interleave			 = 1;
 	track_number_base	 = 0;	// IBM format は 0 始まり
+	side_number_base	 = 0;	// IBM format は 0 始まり
 	sector_number_base	 = 1;	// IBM format は 1 始まり
 	variable_secs_per_trk = false;
 	singles.Empty();
@@ -578,13 +583,14 @@ void DiskParam::ClearDiskParam()
 /// @param[in] n_sector_size        セクタサイズ
 /// @param[in] n_interleave         インターリーブ
 /// @param[in] n_track_number_base  開始トラック番号
+/// @param[in] n_side_number_base   開始サイド番号
 /// @param[in] n_sector_number_base 開始セクタ番号
 /// @param[in] n_numbering_sector   連番セクタか
 /// @param[in] n_singles            単密度
 /// @param[in] n_ptracks            特殊なトラック
 /// @return true:一致する
 bool DiskParam::Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size
-	, int n_interleave, int n_track_number_base, int n_sector_number_base, int n_numbering_sector
+	, int n_interleave, int n_track_number_base, int n_side_number_base, int n_sector_number_base, int n_numbering_sector
 	, const DiskParticulars &n_singles, const DiskParticulars &n_ptracks)
 {
 	bool match = (sides_per_disk == n_sides_per_disk)
@@ -593,6 +599,7 @@ bool DiskParam::Match(int n_sides_per_disk, int n_tracks_per_side, int n_sectors
 		&& (sector_size == n_sector_size)
 		&& (interleave == n_interleave)
 		&& (track_number_base == n_track_number_base)
+		&& (side_number_base == n_side_number_base)
 		&& (sector_number_base == n_sector_number_base)
 		&& (numbering_sector == n_numbering_sector)
 		&& (singles == n_singles)
@@ -628,6 +635,7 @@ bool DiskParam::Match(const DiskParam &param)
 		&& (sector_size == param.sector_size)
 		&& (interleave == param.interleave)
 		&& (track_number_base == param.track_number_base)
+		&& (side_number_base == param.side_number_base)
 		&& (sector_number_base == param.sector_number_base)
 		&& (numbering_sector == param.numbering_sector)
 		&& (singles == param.singles);
@@ -646,6 +654,7 @@ bool DiskParam::MatchExceptName(const DiskParam &param)
 		&& (sector_size == param.sector_size)
 		&& (interleave == param.interleave)
 		&& (track_number_base == param.track_number_base)
+		&& (side_number_base == param.side_number_base)
 		&& (sector_number_base == param.sector_number_base)
 		&& (numbering_sector == param.numbering_sector)
 		&& (singles == param.singles)
@@ -872,7 +881,7 @@ bool DiskParam::FindParticularTrack(int track_num, int side_num, int &sectors_pe
 /// @param[in] sector_size セクタサイズ
 /// @param[out] sector_id   C,H,R,Nの入った配列を返す
 /// @return true / false
-bool DiskParam::FindParticularSector(int track_num, int side_num, int sector_num, int &sector_size, const wxUint8 **sector_id) const
+bool DiskParam::FindParticularSector(int track_num, int side_num, int sector_num, int &sector_size, const wxUint16 **sector_id) const
 {
 	const DiskParticular *match = NULL;
 	for(size_t i=0; i<psectors.Count(); i++) {
@@ -1018,6 +1027,8 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 					p.SetInterleave(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "TrackNumberBase") {
 					p.SetTrackNumberBaseOnDisk(Utils::ToInt(str));
+				} else if (itemnode->GetName() == "SideNumberBase") {
+					p.SetSideNumberBaseOnDisk(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "SectorNumberBase") {
 					p.SetSectorNumberBaseOnDisk(Utils::ToInt(str));
 				} else if (itemnode->GetName() == "VariableSectorsPerTrack") {
@@ -1215,9 +1226,13 @@ bool DiskTemplates::LoadParticularSector(const wxXmlNode *node, DiskParticular &
 	if (!str.IsEmpty()) {
 		d.SetSectorSize(Utils::ToInt(str));
 	}
+	str = node->GetAttribute("id_h");
+	if (!str.IsEmpty()) {
+		d.SetID(1, (wxUint16)Utils::ToInt(str) | TrackParam::ID_IS_VALID);
+	}
 	str = node->GetAttribute("id_r");
 	if (!str.IsEmpty()) {
-		d.SetID(2, (wxUint8)Utils::ToInt(str));
+		d.SetID(2, (wxUint16)Utils::ToInt(str) | TrackParam::ID_IS_VALID);
 	}
 	wxXmlNode *cnode = node->GetChildren();
 	while(cnode) {
@@ -1293,20 +1308,21 @@ const DiskParam *DiskTemplates::Find(const wxString &n_type_name) const
 /// @param[in] n_sector_size       セクタサイズ
 /// @param[in] n_interleave        インターリーブ
 /// @param[in] n_track_number_base  開始トラック番号
+/// @param[in] n_side_number_base   開始サイド番号
 /// @param[in] n_sector_number_base 開始セクタ番号
 /// @param[in] n_numbering_sector  セクタ採番方法
 /// @param[in] n_singles           単密度情報
 /// @param[in] n_ptracks           特殊トラック
 /// @return ディスクパラメータ or NULL
 const DiskParam *DiskTemplates::FindStrict(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size
-	, int n_interleave, int n_track_number_base, int n_sector_number_base, int n_numbering_sector
+	, int n_interleave, int n_track_number_base, int n_side_number_base, int n_sector_number_base, int n_numbering_sector
 	, const DiskParticulars &n_singles, const DiskParticulars &n_ptracks) const
 {
 	DiskParam *match_item = NULL;
 	bool m = false;
 	for(size_t i=0; i<params.Count(); i++) {
 		DiskParam *item = &params[i];
-		m = item->Match(n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_interleave, n_track_number_base, n_sector_number_base, n_numbering_sector, n_singles, n_ptracks);
+		m = item->Match(n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_interleave, n_track_number_base, n_side_number_base, n_sector_number_base, n_numbering_sector, n_singles, n_ptracks);
 		if (m) {
 			match_item = item;
 			break;
@@ -1322,16 +1338,17 @@ const DiskParam *DiskTemplates::FindStrict(int n_sides_per_disk, int n_tracks_pe
 /// @param[in] n_sector_size       セクタサイズ
 /// @param[in] n_interleave        インターリーブ
 /// @param[in] n_track_number_base  開始トラック番号
+/// @param[in] n_side_number_base   開始サイド番号
 /// @param[in] n_sector_number_base 開始セクタ番号
 /// @param[in] n_numbering_sector  セクタ採番方法
 /// @param[in] n_singles           単密度情報
 /// @param[in] n_ptracks           特殊トラック
 /// @return ディスクパラメータ or NULL
 const DiskParam *DiskTemplates::Find(int n_sides_per_disk, int n_tracks_per_side, int n_sectors_per_track, int n_sector_size
-	, int n_interleave, int n_track_number_base, int n_sector_number_base, int n_numbering_sector
+	, int n_interleave, int n_track_number_base, int n_side_number_base, int n_sector_number_base, int n_numbering_sector
 	, const DiskParticulars &n_singles, const DiskParticulars &n_ptracks) const
 {
-	const DiskParam *match_item = FindStrict(n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_interleave, n_track_number_base, n_sector_number_base, n_numbering_sector, n_singles, n_ptracks);
+	const DiskParam *match_item = FindStrict(n_sides_per_disk, n_tracks_per_side, n_sectors_per_track, n_sector_size, n_interleave, n_track_number_base, n_side_number_base, n_sector_number_base, n_numbering_sector, n_singles, n_ptracks);
 	if (!match_item) {
 		bool last = false;
 		bool m = false;

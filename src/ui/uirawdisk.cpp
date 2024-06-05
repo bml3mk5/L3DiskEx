@@ -251,6 +251,12 @@ bool UiDiskRawPanel::ShowSectorAttr()
 	return rpanel->ShowSectorAttr();
 }
 
+/// セクタを編集
+void UiDiskRawPanel::EditSector()
+{
+	return rpanel->EditSector();
+}
+
 /// ファイル名を生成
 /// @param[in] sector セクタ
 /// @return ファイル名
@@ -524,6 +530,9 @@ wxBEGIN_EVENT_TABLE(UiDiskRawTrack, UiDiskRawTrackListCtrl)
 	EVT_MENU(IDM_MODIFY_ID_N_DISK, UiDiskRawTrack::OnModifyIDonDisk)
 	EVT_MENU(IDM_MODIFY_DENSITY_DISK, UiDiskRawTrack::OnModifyDensityOnDisk)
 
+	EVT_MENU(IDM_MODIFY_ID_H_EVEN_TRACKS, UiDiskRawTrack::OnModifyIDonEvenTracks)
+	EVT_MENU(IDM_MODIFY_ID_H_ODD_TRACKS, UiDiskRawTrack::OnModifyIDonOddTracks)
+
 	EVT_MENU(IDM_MODIFY_ID_C_TRACK, UiDiskRawTrack::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_ID_H_TRACK, UiDiskRawTrack::OnModifyIDonTrack)
 	EVT_MENU(IDM_MODIFY_ID_N_TRACK, UiDiskRawTrack::OnModifyIDonTrack)
@@ -627,7 +636,19 @@ void UiDiskRawTrack::OnBeginDrag(MyRawTrackListEvent& event)
 /// ディスク上のID一括変更選択
 void UiDiskRawTrack::OnModifyIDonDisk(wxCommandEvent& event)
 {
-	ModifyIDonDisk(event.GetId() - IDM_MODIFY_ID_C_DISK);
+	ModifyIDonDisk(event.GetId() - IDM_MODIFY_ID_C_DISK, -1);
+}
+
+/// 偶数トラックのID一括変更選択
+void UiDiskRawTrack::OnModifyIDonEvenTracks(wxCommandEvent& event)
+{
+	ModifyIDonDisk(event.GetId() - IDM_MODIFY_ID_C_EVEN_TRACKS, 0);
+}
+
+/// 奇数トラックのID一括変更選択
+void UiDiskRawTrack::OnModifyIDonOddTracks(wxCommandEvent& event)
+{
+	ModifyIDonDisk(event.GetId() - IDM_MODIFY_ID_C_ODD_TRACKS, 1);
 }
 
 /// トラックのID一括変更選択
@@ -819,6 +840,9 @@ void UiDiskRawTrack::MakePopupMenu()
 	menuPopup->Append(IDM_MODIFY_ID_N_DISK, _("Modify All N On This Disk"));
 	menuPopup->Append(IDM_MODIFY_DENSITY_DISK, _("Modify All Density On This Disk"));
 	menuPopup->AppendSeparator();
+	menuPopup->Append(IDM_MODIFY_ID_H_EVEN_TRACKS, _("Modify All H On Even Tracks"));
+	menuPopup->Append(IDM_MODIFY_ID_H_ODD_TRACKS, _("Modify All H On Odd Tracks"));
+	menuPopup->AppendSeparator();
 	menuPopup->Append(IDM_MODIFY_ID_C_TRACK, _("Modify All C On This Track"));
 	menuPopup->Append(IDM_MODIFY_ID_H_TRACK, _("Modify All H On This Track"));
 	menuPopup->Append(IDM_MODIFY_ID_N_TRACK, _("Modify All N On This Track"));
@@ -849,6 +873,9 @@ void UiDiskRawTrack::ShowPopupMenu()
 	menuPopup->Enable(IDM_MODIFY_ID_H_DISK, opened);
 	menuPopup->Enable(IDM_MODIFY_ID_N_DISK, opened);
 	menuPopup->Enable(IDM_MODIFY_DENSITY_DISK, opened);
+
+	menuPopup->Enable(IDM_MODIFY_ID_H_EVEN_TRACKS, opened);
+	menuPopup->Enable(IDM_MODIFY_ID_H_ODD_TRACKS, opened);
 
 	menuPopup->Enable(IDM_APPEND_TRACK, opened);
 
@@ -998,16 +1025,20 @@ bool UiDiskRawTrack::ShowExportTrackDialog()
 	if (!p_disk) return false;
 
 	DiskImageTrack *track = GetSelectedTrack();
-	DiskImageSector *sector = NULL;
-	if (!GetFirstSectorOnTrack(&track, &sector)) {
+//	DiskImageSector *sector = NULL;
+//	if (!GetFirstSectorOnTrack(&track, &sector)) {
+//		return false;
+//	}
+	int st_sec, ed_sec;
+	if (!GetFirstAndLastSectorNumOnTrack(track, st_sec, ed_sec)) {
 		return false;
 	}
 
 	wxString caption = _("Export data from track");
 
 	RawExpBox dlg(this, wxID_ANY, caption, p_disk, m_side_number
-		, track->GetTrackNumber(), track->GetSideNumber(), sector->GetSectorNumber()
-		, -1, -1, -1
+		, track->GetTrackNumber(), track->GetSideNumber(), st_sec
+		, -1, -1, ed_sec
 		, parent->InvertData(), parent->ReverseSide()
 	);
 	int sts = dlg.ShowModal();
@@ -1269,56 +1300,79 @@ bool UiDiskRawTrack::ImportTrackDataFile(const wxString &path, int st_trk, int s
 	return true;
 }
 
-/// ディスク全体のIDを変更
+/// ディスク全体または偶数奇数トラックのIDを一括変更
 /// @param [in] type_num  1:ID H  3:ID N
-void UiDiskRawTrack::ModifyIDonDisk(int type_num)
+/// @param [in] even_odd  -1:All Tracks 0:Even Tracks 1:Odd Tracks
+void UiDiskRawTrack::ModifyIDonDisk(int type_num, int even_odd)
 {
 	if (!p_disk) return;
 
 	DiskImageTrack *track = NULL;
 	DiskImageSector *sector = NULL;
+	if (even_odd >= 0) {
+		track = p_disk->GetTrack(even_odd & 1);
+	}
 	if (!GetFirstSectorOnTrack(&track, &sector)) {
 		return;
 	}
 
+	wxString title;
 	int value = 0;
-	int maxvalue = 1;
+	int maxvalue = 255;
 	switch(type_num) {
 	case 1:
+		title = _("Modify ID H on %s.");
 		value = sector->GetIDH();
 		break;
 	case 3:
+		title = _("Modify ID N on %s.");
 		value = sector->GetIDN();
 		maxvalue = DiskImageSector::ConvSecSizeToIDN(sector->GetSectorBufferSize());
 		break;
 	}
+	if (even_odd >= 0) {
+		if (even_odd & 1) {
+			title = wxString::Format(title, _("odd tracks"));
+		} else {
+			title = wxString::Format(title, _("even tracks"));
+		}
+	} else {
+		title = wxString::Format(title, _("the disk"));
+	}
 
-	RawParamBox dlg(this, wxID_ANY, type_num, value, maxvalue);
+	RawParamBox dlg(this, wxID_ANY, title, type_num, value, maxvalue);
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
 		int newvalue = dlg.GetValue();
-		if (value != newvalue) {
-			DiskImageTracks *tracks = p_disk->GetTracks();
-			if (tracks) {
-				for(size_t num=0; num < tracks->Count(); num++) {
-					track = tracks->Item(num);
-					if (!track) continue;
-					if (m_side_number >= 0) {
-						if (m_side_number != track->GetSideNumber()) continue;
-					}
-					switch(type_num) {
-					case 1:
-						track->SetAllIDH(newvalue);
-						break;
-					case 3:
-						track->SetAllIDN(newvalue);
-						break;
-					}
+		DiskImageTracks *tracks = p_disk->GetTracks();
+		if (tracks) {
+			size_t start = 0;
+			size_t step = 1;
+			if (even_odd >= 0) {
+				// for even or odd tracks
+				start = (even_odd & 1);
+				step = 2;
+			}
+			for(size_t num=start; num < tracks->Count(); num+=step) {
+				track = tracks->Item(num);
+				if (!track) continue;
+				if (m_side_number >= 0) {
+					// 片面の場合
+					if (m_side_number != track->GetSideNumber()) continue;
+				}
+				switch(type_num) {
+				case 1:
+					track->SetAllIDH(newvalue & 0xff);
+					track->SetSideNumber(newvalue);
+					break;
+				case 3:
+					track->SetAllIDN(newvalue & 0xff);
+					break;
 				}
 			}
-			// セクタリストクリア
-			parent->ClearSectorListData();
 		}
+		// リストを更新
+		parent->RefreshAllData();
 	}
 }
 
@@ -1346,6 +1400,7 @@ void UiDiskRawTrack::ModifyDensityOnDisk()
 					track = tracks->Item(num);
 					if (!track) continue;
 					if (m_side_number >= 0) {
+						// 片面の場合
 						if (m_side_number != track->GetSideNumber()) continue;
 					}
 					track->SetAllSingleDensity(newsdensity);
@@ -1456,14 +1511,14 @@ DiskImageTrack *UiDiskRawTrack::GetFirstTrack()
 	return track;
 }
 
-/// トラックのセクタ１を得る
+/// トラックの最初のセクタを得る
 /// @param [in,out] track  トラック NULLのときは最初のトラックのセクタ１
 /// @param [out]    sector セクタ１
 bool UiDiskRawTrack::GetFirstSectorOnTrack(DiskImageTrack **track, DiskImageSector **sector)
 {
 	if (!track || !sector) return false;
 	if (!(*track)) *track = GetFirstTrack();
-	if (*track) *sector = (*track)->GetSector(1);
+	if (*track) *sector = (*track)->GetSectorByIndex(0);
 	if (!(*sector)) {
 		*track = NULL;
 		return false;
@@ -2346,26 +2401,30 @@ void UiDiskRawSector::ModifyIDonTrack(int type_num)
 	DiskImageSector *sector = p_track->GetSectorByIndex(0);
 	if (!sector) return;
 
+	wxString title;
 	int value = 0;
-	int maxvalue = 82;
+	int maxvalue = 255;
 	switch(type_num) {
 		case RawParamBox::TYPE_IDC:
+			title = _("Modify ID C on the track.");
 			value = sector->GetIDC();
 			break;
 		case RawParamBox::TYPE_IDH:
+			title = _("Modify ID H on the track.");
 			value = sector->GetIDH();
-			maxvalue = 1;
 			break;
 		case RawParamBox::TYPE_IDN:
+			title = _("Modify ID N on the track.");
 			value = sector->GetIDN();
 			maxvalue = DiskImageSector::ConvSecSizeToIDN(sector->GetSectorBufferSize());
 			break;
 		case RawParamBox::TYPE_NUM_OF_SECTORS:
+			title = _("Modify number of sector on the track.");
 			value = sector->GetSectorsPerTrack();
 			break;
 	}
 
-	RawParamBox dlg(this, wxID_ANY, type_num, value, maxvalue);
+	RawParamBox dlg(this, wxID_ANY, title, type_num, value, maxvalue);
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
 		int newvalue = dlg.GetValue();
@@ -2374,9 +2433,11 @@ void UiDiskRawSector::ModifyIDonTrack(int type_num)
 			switch(type_num) {
 				case RawParamBox::TYPE_IDC:
 					p_track->SetAllIDC(newvalue);
+					p_track->SetTrackNumber(newvalue);
 					break;
 				case RawParamBox::TYPE_IDH:
 					p_track->SetAllIDH(newvalue);
+					p_track->SetSideNumber(newvalue);
 					break;
 				case RawParamBox::TYPE_IDN:
 					p_track->SetAllIDN(newvalue);
@@ -2433,7 +2494,7 @@ void UiDiskRawSector::ModifySectorSizeOnTrack()
 	int value = sector->GetSectorSize();
 	int maxvalue = 2048;
 
-	RawParamBox dlg(this, wxID_ANY, RawParamBox::TYPE_SECTOR_SIZE, value, maxvalue);
+	RawParamBox dlg(this, wxID_ANY, _("Modify sector size on the track."), RawParamBox::TYPE_SECTOR_SIZE, value, maxvalue);
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
 		int newvalue = dlg.GetValue();

@@ -23,6 +23,9 @@
 class MyCTreeCtrl: public wxTreeCtrl
 {
 protected:
+	/// 選択処理中
+	bool m_selecting;
+
 	/// アイコンを追加
 	void AssignTreeIcons(const char ***icons);
 

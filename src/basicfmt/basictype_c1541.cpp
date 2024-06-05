@@ -703,6 +703,7 @@ void DiskBasicTypeC1541::GetNumFromSectorPos(int sector_pos, int &track_num, int
 	side_num = basic->GetReversedSideNumber(side_num);
 
 	track_num += basic->GetTrackNumberBaseOnDisk();
+	side_num += basic->GetSideNumberBaseOnDisk();
 	sector_num += basic->GetSectorNumberBase();
 
 	if (div_num)  *div_num = 0;
@@ -740,6 +741,7 @@ int  DiskBasicTypeC1541::GetSectorPosFromNum(int track_num, int side_num, int se
 	int sectors_per_track = basic->GetSectorsPerTrackOnBasic();
 
 	track_num -= basic->GetTrackNumberBaseOnDisk();
+	side_num -= basic->GetSideNumberBaseOnDisk();
 	sector_num -= basic->GetSectorNumberBase();
 
 	int sector_pos = sector_map.GetSectorPosFromNum(track_num, sector_num, sectors_per_track);

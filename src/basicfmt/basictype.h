@@ -239,7 +239,7 @@ public:
 	/// @brief ルートディレクトリをアサイン
 	virtual bool	AssignRootDirectory(int start_sector, int end_sector, DiskBasicGroups &group_items, DiskBasicDirItem *dir_item);
 	/// @brief ディレクトリのチェック
-	double			CheckDirectory(bool is_root, const DiskBasicGroups &group_items);
+	virtual double	CheckDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリが空か
 	virtual bool	IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_items);
 	/// @brief ディレクトリをアサイン

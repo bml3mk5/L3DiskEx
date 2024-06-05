@@ -364,6 +364,11 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 	item->InitializeForAttrDialog(this, show_flags, &user_data);
 
 	ChangedType1();
+
+	// 新規ファイルorディレクトリの時フォーカスを名前入力位置に移動
+	if ((show_flags & (INTNAME_NEW_FILE | INTNAME_SHOW_TEXT | INTNAME_SPECIFY_FILE_NAME)) == (INTNAME_NEW_FILE | INTNAME_SHOW_TEXT | INTNAME_SPECIFY_FILE_NAME)) {
+		txtIntName->SetFocus();
+	}
 }
 
 /// スタティックテキストを作成する

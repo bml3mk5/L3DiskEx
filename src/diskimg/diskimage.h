@@ -35,6 +35,7 @@ class IntHashMapUtil
 public:
 	static void IncleaseValue(IntHashMap &hash_map, int key);
 	static int GetMaxKeyOnMaxValue(IntHashMap &hash_map);
+	static int GetKeyCount(IntHashMap &hash_map);
 	static int MaxValue(int src, int value);
 	static int MinValue(int src, int value);
 };

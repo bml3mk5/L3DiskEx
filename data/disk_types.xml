@@ -1084,6 +1084,7 @@
 			<Type>MZHU-2DD</Type>
 			<Type>MZHU-2DD-INV</Type>
 			<Type p="major">MZ-2DD</Type>
+			<Type>N88-2DD</Type>
 			<Type>N66-1DD</Type>
 			<Type>OS9-2DD</Type>
 			<Type>OS9-2DD-16</Type>
@@ -1542,9 +1543,6 @@
 		<SectorSize>1024</SectorSize>
 		<Density>0x20</Density>
 		<Interleave>1</Interleave>
-		<DiskBasicTypes>
-			<Type>HU68K-2HDE</Type>
-		</DiskBasicTypes>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 	</DiskType>
@@ -1564,6 +1562,23 @@
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, SectorBase10 [9SCFMT]</Description>
 		<Description lang="ja"> セクタ基準10 [9SCFMT]</Description>
+	</DiskType>
+	<DiskType name="2HD-80-9-1-2HDE">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>80</TracksPerSide>
+		<SectorsPerTrack>9</SectorsPerTrack>
+		<SideNumberBase>128</SideNumberBase>
+		<SectorSize>1024</SectorSize>
+		<ParticularSector track="0" side="128" sector="1" size="1024" id_h="0" />
+		<Density>0x20</Density>
+		<Interleave>1</Interleave>
+		<DiskBasicTypes>
+			<Type>HU68K-2HDE</Type>
+		</DiskBasicTypes>
+		<DensityName>2HD</DensityName>
+		<DensityName lang="ja">2HD</DensityName>
+		<Description>, SideNumber128 [2HDE]</Description>
+		<Description lang="ja"> サイド番号128 [2HDE]</Description>
 	</DiskType>
 	<DiskType name="2HD-80-15-1">
 		<SidesPerDisk>2</SidesPerDisk>

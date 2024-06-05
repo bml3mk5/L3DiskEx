@@ -62,6 +62,7 @@ private:
 	wxTextCtrl *txtSecIntl;
 	wxChoice   *comNumbSec;
 	wxTextCtrl *txtFirstTrack;
+	wxTextCtrl *txtFirstSide;
 	wxTextCtrl *txtFirstSector;
 	wxTextCtrl *txtDiskSize;
 
@@ -104,6 +105,7 @@ public:
 		IDC_TEXT_INTERLEAVE,
 		IDC_COMBO_NUMBSEC,
 		IDC_TEXT_FIRST_TRACK,
+		IDC_TEXT_FIRST_SIDE,
 		IDC_TEXT_FIRST_SECTOR,
 		IDC_TEXT_DISKSIZE,
 		IDC_TEXT_DISKNAME,
@@ -149,6 +151,7 @@ public:
 	int GetInterleave() const;
 	int GetNumberingSector() const;
 	int GetFirstTrackNumber() const;
+	int GetFirstSideNumber() const;
 	int GetFirstSectorNumber() const;
 	wxString GetDiskName() const;
 	int GetDensity() const;
