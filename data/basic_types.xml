@@ -546,6 +546,21 @@
 		</FileNameCharacters>
 		<RequireFileName>true</RequireFileName>
 	</DiskBasicFormat>
+	<DiskBasicFormat type="41" name="MACHFS">
+		<FillCodeOnFormat>0x00</FillCodeOnFormat>
+		<FillCodeOnDir>0x00</FillCodeOnDir>
+		<DeleteCodeOnDir>0x00</DeleteCodeOnDir>
+		<FileNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>\"\\/:*?|</InvalidCharSet>
+		</FileNameCharacters>
+		<AttributesByExtension>
+			<Random name="RES" />
+		</AttributesByExtension>
+		<RequireFileName>true</RequireFileName>
+		<TextTerminateCode>0x00</TextTerminateCode>
+	</DiskBasicFormat>
 	<DiskBasicFormat type="51" name="DOS80">
 		<SectorsPerGroup>4</SectorsPerGroup>
 		<GroupFinalCode>0xf1</GroupFinalCode>
@@ -936,6 +951,21 @@
 		<JumpBoot type="string">\xeb\xfe\x90</JumpBoot>
 		<OEMName type="string">LOVERS</OEMName>
 		<Description>L-os Angeles (2D)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="PCDOS-1D-8" type="3" category="MSDOS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>1</SidesPerDisk>
+		<SectorsPerTrack>8</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<ReservedSectors>1</ReservedSectors>
+		<NumberOfFATs>2</NumberOfFATs>
+		<SectorsPerFAT>1</SectorsPerFAT>
+		<FATStartPosition>0</FATStartPosition>
+		<DirEntryCount>64</DirEntryCount>
+		<MediaID>0xfe</MediaID>
+		<JumpBoot type="string">\xeb\x2f\x14</JumpBoot>
+		<OEMName type="string">FAT12</OEMName>
+		<Description>IBM PC-DOS 1.0 (1D 8sectors)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="MSDOS-1D-8" type="3" category="MSDOS">
 		<SectorsPerGroup>2</SectorsPerGroup>
@@ -1688,7 +1718,18 @@
 		<ManagedTrackNumber>0</ManagedTrackNumber>
 		<DirStartSector>5</DirStartSector>
 		<DirEndSector>26</DirEndSector>
-		<Description>FLEX (2HD)</Description>
+		<Description>FLEX (2HD, 26sectors)</Description>
+		<Description lang="ja">FLEX (2HD, 26セクタ)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="FLEX-2HD-S15" type="8" category="FLEX">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack start="0" tracks="1">15</SectorsPerTrack>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<ManagedTrackNumber>0</ManagedTrackNumber>
+		<DirStartSector>5</DirStartSector>
+		<DirEndSector>15</DirEndSector>
+		<Description>FLEX (2HD, 26sectors)</Description>
+		<Description lang="ja">FLEX (2HD, 26セクタ)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="FLEX-2HD-18X2" type="8" category="FLEX">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -2397,6 +2438,21 @@
 		<DirEndSector>1</DirEndSector>
 		<FastFileSystem type="bool">true</FastFileSystem>
 		<Description>AROS for PC (FFS)(2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MACHFS-2DD" type="41" category="MACHFS">
+		<!-- Mac 800K 2DD -->
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack start="0" tracks="16">12</SectorsPerTrack>
+		<SectorsPerTrack start="16" tracks="16">11</SectorsPerTrack>
+		<SectorsPerTrack start="32" tracks="16">10</SectorsPerTrack>
+		<SectorsPerTrack start="48" tracks="16">9</SectorsPerTrack>
+		<SectorsPerTrack start="64" tracks="16">8</SectorsPerTrack>
+		<Description>Mac HFS (2DD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="MACHFS-2HD" type="41" category="MACHFS">
+		<SidesPerDisk>2</SidesPerDisk>
+		<SectorsPerTrack>18</SectorsPerTrack>
+		<Description>Mac HFS (2HD)</Description>
 	</DiskBasicType>
 	<DiskBasicType name="DOS80-1D" type="51" category="DOS80">
 		<SidesPerDisk>1</SidesPerDisk>

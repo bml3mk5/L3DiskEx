@@ -188,7 +188,7 @@ int DiskImageTrack::Replace(DiskImageTrack *src_track)
 /// @param [in] secnum   新規セクタのセクタ番号(ID R)
 /// @param [in] secsize  新規セクタのセクタサイズ(128,256,512,1024,2048)
 /// @param [in] sdensity 新規セクタが単密度か
-/// @param [in] sdensity 新規セクタのステータス(通常0)
+/// @param [in] status   新規セクタのステータス(通常0)
 /// @return 0 正常
 int DiskImageTrack::AddNewSector(int trknum, int sidnum, int secnum, int secsize, bool sdensity, int status)
 {
@@ -674,6 +674,7 @@ DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num)
 	tracks = NULL;
 	m_offset_start = 0;
 
+	p_temp_param = NULL;
 	m_param_changed = false;
 
 	basics = new DiskBasics;
@@ -695,6 +696,7 @@ DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num, const DiskParam &n_
 	tracks = NULL;
 	m_offset_start = 0;
 
+	p_temp_param = NULL;
 	m_param_changed = false;
 
 	basics = new DiskBasics;
@@ -714,6 +716,7 @@ DiskImageDisk::DiskImageDisk(DiskImageFile *file, int n_num, const DiskImageDisk
 	tracks = NULL;
 	m_offset_start = 0;
 
+	p_temp_param = NULL;
 	m_param_changed = false;
 
 	basics = new DiskBasics;
@@ -1132,8 +1135,8 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 				IntHashMapUtil::IncleaseValue(sector_numbers_map[sid_num], t->GetSectorsPerTrack());
 			}
 
-			if (trk_num > 0 && sid_num < 2) {
-				// トラック0は除く
+			if (trk_num > 0 && trk_num <= 10 && sid_num < 2) {
+				// トラック1-10で判定
 
 				// セクタ番号の最大と最小
 				int sec_num_max = t->GetMaxSectorNumber();
@@ -1229,6 +1232,11 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 			if (!t) continue;
 			DiskImageSectors *ss = t->GetSectors();
 			if (!ss) continue;
+			// 単密度リストに含まれている場合は除外
+			if (singles.FindTrackSide(t->GetTrackNumber(), t->GetSideNumber()) >= 0) {
+				continue;
+			}
+			// セクタ数が異なるか
 			if ((int)ss->Count() != sectors_per_track) {
 				ptracks.Add(DiskParticular(t->GetTrackNumber(), t->GetSideNumber(), -1, 1, (int)ss->Count(), t->GetMaxSectorSize()));
 			}
@@ -1241,6 +1249,7 @@ const DiskParam *DiskImageDisk::CalcMajorNumber()
 	const DiskParam *disk_param = gDiskTemplates.Find(sides_per_disk, tracks_per_side, sectors_per_track, sector_size
 		, interleave, track_number_min, side_number_min, sector_number_min_side0, numbering_sector
 		, singles, ptracks);
+	SetTemplateParam(disk_param);
 	if (disk_param != NULL) {
 		SetDiskTypeName(disk_param->GetDiskTypeName());
 		Reversible(disk_param->IsReversible());

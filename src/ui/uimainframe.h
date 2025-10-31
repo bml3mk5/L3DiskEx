@@ -36,6 +36,7 @@ class UiDiskFileDropTarget;
 class UiDiskRawPanel;
 class UiDiskBinDumpFrame;
 class UiDiskFatAreaFrame;
+class LoggingBox;
 
 class DiskImage;
 class DiskImageFile;
@@ -75,9 +76,13 @@ public:
 	void Append(int count);
 	void Increase();
 	void Finish(const wxString &message);
+	/// 現在のカウント値を返す
 	int Current() const { return m_current; }
+	/// 最大値を返す
 	int Count() const { return m_count; }
+	/// 未使用か
 	bool IsIdle() const { return (m_using == 0); }
+	/// カウント完了したか
 	bool IsFinished() const { return (m_using == 3); }
 	wxString GetCurrentMessage() const;
 };
@@ -129,6 +134,7 @@ private:
 	UiDiskPanel *panel;
 	UiDiskBinDumpFrame *bindump_frame;
 	UiDiskFatAreaFrame *fatarea_frame;
+	LoggingBox *p_loggingbox;
 
 	/// DISKイメージ
 	DiskImage *p_image;
@@ -241,8 +247,12 @@ public:
 	void OnOpenBinDump(wxCommandEvent& event);
 	/// 使用状況ウィンドウ選択
 	void OnOpenFatArea(wxCommandEvent& event);
+	/// ログウィンドウ選択
+	void OnOpenLogging(wxCommandEvent& event);
 	/// ファイルリストの列選択
 	void OnChangeColumnsOfFileList(wxCommandEvent& event);
+	/// ファイルリストの列の幅をデフォルトに戻す選択
+	void OnResetAllColumnWidthOfFileList(wxCommandEvent& event);
 	/// フォント変更選択
 	void OnChangeFont(wxCommandEvent& event);
 
@@ -318,6 +328,8 @@ public:
 
 	/// ファイルリストの列を変更
 	void ChangeColumnsOfFileList();
+	/// ファイルリストの列の幅をデフォルトに戻す
+	void ResetAllColumnWidthOfFileList();
 
 	/// 選択しているModeメニュー BASICかRAW DISKか
 	int GetSelectedMode();
@@ -571,6 +583,16 @@ public:
 	void FatAreaWindowClosed();
 	//@}
 
+	/// @name ログウィンドウ
+	//@{
+	/// ログウィンドウを開く
+	void OpenLoggingWindow();
+	/// ログウィンドウを閉じる
+	void CloseLoggingWindow();
+	/// ログウィンドウを閉じる時にウィンドウ側から呼ばれるコールバック
+	void LoggingWindowClosed();
+	//@}
+
 	/// @name 設定ファイル
 	//@{
 	/// 最近使用したパスを取得
@@ -670,7 +692,9 @@ public:
 
 		IDM_WINDOW_BINDUMP,
 		IDM_WINDOW_FATAREA,
+		IDM_WINDOW_LOGGING,
 		IDM_FILELIST_COLUMN,
+		IDM_FILELIST_RESET_COLS,
 		IDM_CHANGE_FONT,
 
 		IDM_CONFIGURE,

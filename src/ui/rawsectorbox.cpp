@@ -21,7 +21,7 @@ BEGIN_EVENT_TABLE(RawSectorBox, wxDialog)
 	EVT_BUTTON(wxID_OK, RawSectorBox::OnOK)
 END_EVENT_TABLE()
 
-RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int hide_flags)
+RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int rcrc, int ccrc, int hide_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
@@ -78,6 +78,28 @@ RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	hbox->Add(txtStatus, flags);
 
 	szrAll->Add(hbox, flags);
+
+	if ((hide_flags & SECTORBOX_HIDE_SECTOR_NUMS) == 0) {
+		wxSize ssize(64, -1);
+		wxString str;
+		str = rcrc >= 0 ? wxString::Format(wxT("%04x"), rcrc) : wxT("----");
+		hbox = new wxBoxSizer(wxHORIZONTAL);
+		hbox->Add(new wxStaticText(this, wxID_ANY, _("CRC in disk")), flags);
+		txtRCRC = new wxTextCtrl(this, IDC_TEXT_RCRC, str, wxDefaultPosition, ssize, style, anvalidate);
+		txtRCRC->Enable(false);
+		hbox->Add(txtRCRC, flags);
+
+		szrAll->Add(hbox, flags);
+
+		str = ccrc >= 0 ? wxString::Format(wxT("%04x"), ccrc) : wxT("----");
+		hbox = new wxBoxSizer(wxHORIZONTAL);
+		hbox->Add(new wxStaticText(this, wxID_ANY, _("Calculated CRC")), flags);
+		txtCCRC = new wxTextCtrl(this, IDC_TEXT_CCRC, str, wxDefaultPosition, ssize, style, anvalidate);
+		txtCCRC->Enable(false);
+		hbox->Add(txtCCRC, flags);
+
+		szrAll->Add(hbox, flags);
+	}
 
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
 	szrAll->Add(szrButtons, flags);

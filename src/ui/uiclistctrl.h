@@ -50,17 +50,20 @@ protected:
 	const struct st_list_columns *info;
 	wxString label;
 	int width;
+	int default_width;
 	int sort_dir;
 public:
-	MyCListColumn(int n_idx, const struct st_list_columns *n_info, int n_width);
+	MyCListColumn(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width);
 
-	void	Set(int n_idx, const struct st_list_columns *n_info, int n_width);
+	void	Set(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width);
 	int		GetIndex() const { return idx; }
 	int		GetColumn() const { return col; }
 	void	SetColumn(int val) { col = val; }
 	bool	HaveIcon() const;
 	int		GetWidth() const { return width; }
 	void	SetWidth(int val) { width = val; }
+	int		GetDefaultWidth() const { return default_width; }
+	void	SetDefaultWidth(int val) { default_width = val; }
 	const wxString &GetText() const { return label; }
 	wxListColumnFormat GetAlign() const;
 	bool	IsSortable() const;
@@ -157,6 +160,8 @@ public:
 	void InsertListColumn(int col, int idx, MyCListColumn *c);
 	/// カラムの幅
 	int  GetListColumnWidth(int col) const;
+	/// カラムの幅をセット
+	void SetListColumnWidth(int col, int w);
 	/// カラムを削除
 	void DeleteListColumn(int col);
 
@@ -216,6 +221,8 @@ public:
 	void GetListColumnsByCurrentOrder(MyCListColumns &items) const;
 	/// カラム入れ替えダイアログを表示
 	bool ShowListColumnRearrangeBox();
+	/// 全てのカラムの幅をデフォルトに戻す
+	void ResetAllListColumnWidth();
 
 	/// カラム番号ソート用
 	static int SortByColumn(MyCListColumn **i1, MyCListColumn **i2);

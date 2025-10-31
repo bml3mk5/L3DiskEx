@@ -192,7 +192,7 @@ wxUint32 DiskBasicTypeFROST::FindContinuousArea(wxUint32 group_size)
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeFROST::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
-	int groups = 0; 
+//	int groups = 0;
 
 	// FAT
 	int  rc = 0;
@@ -239,7 +239,7 @@ int DiskBasicTypeFROST::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 		group_num = next_group_num;
 
 		sizeremain -= bytes_per_group;
-		groups++;
+//		groups++;
 
 		limit--;
 	}

@@ -658,6 +658,23 @@ void DiskBasicTypeFLEX::GetNumFromSectorPos(int sector_pos, int &track_num, int 
 		track_num = trksid_num / sides_per_disk;
 		side_num = trksid_num % sides_per_disk;
 	}
+
+	// sector_pos は groups_per_track 基準で計算しているので、セクタ数が異なるとサイド番号がずれる
+	NumSectorsParam *sp = basic->SectorsPerTrackOnBasicList().FindByTrackNumber(track_num);
+	if (sp) {
+		// トラックのセクタ数が異なる場合サイドを再計算
+		sectors_per_track = sp->GetSectorsPerTrack();
+		groups_per_track = groups_per_sector * sectors_per_track;
+		trksid_num = sector_pos / groups_per_track;
+		if (selected_side >= 0) {
+			// 1S
+			side_num = selected_side;
+		} else {
+			// 2D, 2HD
+			side_num = trksid_num % sides_per_disk;
+		}
+	}
+
 	sector_num = ((sector_pos % groups_per_track) / groups_per_sector);
 	if (div_num) *div_num = ((sector_pos % groups_per_track) % groups_per_sector);
 

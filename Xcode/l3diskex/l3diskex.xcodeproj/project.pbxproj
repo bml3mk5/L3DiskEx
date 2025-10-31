@@ -37,6 +37,8 @@
 		D9A41AD12496560000DA423E /* diskadcparser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9A41ACE2496560000DA423E /* diskadcparser.cpp */; };
 		D9BA0A952821848D002C8CD9 /* basicdiritem_m68fdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92AF347276F7D0500DB1B7B /* basicdiritem_m68fdos.cpp */; };
 		D9BA0A962821848D002C8CD9 /* basictype_m68fdos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D92AF349276F7D0500DB1B7B /* basictype_m68fdos.cpp */; };
+		D9C1D64D2BCBBD0F00D4C8B0 /* basictype_hfs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C1D64A2BCBBD0F00D4C8B0 /* basictype_hfs.cpp */; };
+		D9C1D64E2BCBBD0F00D4C8B0 /* basicdiritem_hfs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C1D64B2BCBBD0F00D4C8B0 /* basicdiritem_hfs.cpp */; };
 		D9C49E8E1BF1BDB100831032 /* charcodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E7E1BF1BDB100831032 /* charcodes.cpp */; };
 		D9C49E911BF1BDB100831032 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E811BF1BDB100831032 /* config.cpp */; };
 		D9C49E9A1BF1BDB100831032 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9C49E8A1BF1BDB100831032 /* main.cpp */; };
@@ -175,6 +177,8 @@
 		D9D50B3B248FDA190075885C /* basicdiritem_c1541.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D50B37248FDA190075885C /* basicdiritem_c1541.cpp */; };
 		D9D50B3C248FDA190075885C /* basictype_c1541.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D50B39248FDA190075885C /* basictype_c1541.cpp */; };
 		D9D50B3F248FDA2D0075885C /* diskg64parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D50B3D248FDA2D0075885C /* diskg64parser.cpp */; };
+		D9D890562EAF3D5700408CCB /* mydialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D890552EAF3D5700408CCB /* mydialog.cpp */; };
+		D9D890572EAF3D5700408CCB /* loggingbox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9D890532EAF3D5700408CCB /* loggingbox.cpp */; };
 		D9DDCE982B59704F00590D15 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D9DDCE972B59704F00590D15 /* QuartzCore.framework */; };
 		D9DDDE65248796EF00312CAE /* basicdiritem_prodos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9DDDE61248796EF00312CAE /* basicdiritem_prodos.cpp */; };
 		D9DDDE66248796EF00312CAE /* basictype_prodos.cpp in Sources */ = {isa = PBXBuildFile; fileRef = D9DDDE63248796EF00312CAE /* basictype_prodos.cpp */; };
@@ -264,6 +268,10 @@
 		D9A41ACD2496560000DA423E /* disk2mgparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = disk2mgparser.h; sourceTree = "<group>"; };
 		D9A41ACE2496560000DA423E /* diskadcparser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskadcparser.cpp; sourceTree = "<group>"; };
 		D9A41ACF2496560000DA423E /* diskadcparser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskadcparser.h; sourceTree = "<group>"; };
+		D9C1D6492BCBBD0F00D4C8B0 /* basictype_hfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_hfs.h; sourceTree = "<group>"; };
+		D9C1D64A2BCBBD0F00D4C8B0 /* basictype_hfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basictype_hfs.cpp; sourceTree = "<group>"; };
+		D9C1D64B2BCBBD0F00D4C8B0 /* basicdiritem_hfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_hfs.cpp; sourceTree = "<group>"; };
+		D9C1D64C2BCBBD0F00D4C8B0 /* basicdiritem_hfs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_hfs.h; sourceTree = "<group>"; };
 		D9C49E571BF1BCA200831032 /* l3diskex.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = l3diskex.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D9C49E7A1BF1BD8700831032 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = ../../src/res/Info.plist; sourceTree = "<group>"; };
 		D9C49E7E1BF1BDB100831032 /* charcodes.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = charcodes.cpp; path = ../../src/charcodes.cpp; sourceTree = SOURCE_ROOT; };
@@ -517,6 +525,10 @@
 		D9D50B3A248FDA190075885C /* basictype_c1541.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basictype_c1541.h; sourceTree = "<group>"; };
 		D9D50B3D248FDA2D0075885C /* diskg64parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = diskg64parser.cpp; sourceTree = "<group>"; };
 		D9D50B3E248FDA2D0075885C /* diskg64parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = diskg64parser.h; sourceTree = "<group>"; };
+		D9D890522EAF3D5700408CCB /* loggingbox.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = loggingbox.h; sourceTree = "<group>"; };
+		D9D890532EAF3D5700408CCB /* loggingbox.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = loggingbox.cpp; sourceTree = "<group>"; };
+		D9D890542EAF3D5700408CCB /* mydialog.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mydialog.h; sourceTree = "<group>"; };
+		D9D890552EAF3D5700408CCB /* mydialog.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = mydialog.cpp; sourceTree = "<group>"; };
 		D9DDCE972B59704F00590D15 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
 		D9DDDE61248796EF00312CAE /* basicdiritem_prodos.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = basicdiritem_prodos.cpp; sourceTree = "<group>"; };
 		D9DDDE62248796EF00312CAE /* basicdiritem_prodos.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = basicdiritem_prodos.h; sourceTree = "<group>"; };
@@ -705,6 +717,8 @@
 				D9C4CF5C24275964004521A2 /* basicdiritem_fp.h */,
 				D9C4CF5D24275964004521A2 /* basicdiritem_frost.cpp */,
 				D9C4CF5E24275964004521A2 /* basicdiritem_frost.h */,
+				D9C1D64B2BCBBD0F00D4C8B0 /* basicdiritem_hfs.cpp */,
+				D9C1D64C2BCBBD0F00D4C8B0 /* basicdiritem_hfs.h */,
 				D9C4CF5F24275964004521A2 /* basicdiritem_hu68k.cpp */,
 				D9C4CF6024275964004521A2 /* basicdiritem_hu68k.h */,
 				D9C4CF6124275964004521A2 /* basicdiritem_l31s.cpp */,
@@ -787,6 +801,8 @@
 				D9C4CFA024275965004521A2 /* basictype_fp.h */,
 				D9C4CFA124275965004521A2 /* basictype_frost.cpp */,
 				D9C4CFA224275965004521A2 /* basictype_frost.h */,
+				D9C1D64A2BCBBD0F00D4C8B0 /* basictype_hfs.cpp */,
+				D9C1D6492BCBBD0F00D4C8B0 /* basictype_hfs.h */,
 				D9C4CFA324275965004521A2 /* basictype_hu68k.cpp */,
 				D9C4CFA424275965004521A2 /* basictype_hu68k.h */,
 				D9C4CFA524275965004521A2 /* basictype_l31s.cpp */,
@@ -897,61 +913,65 @@
 		D9C4CF48242758A4004521A2 /* ui */ = {
 			isa = PBXGroup;
 			children = (
-				D9C4D03624275985004521A2 /* basicparambox.cpp */,
 				D9C4D03724275985004521A2 /* basicparambox.h */,
-				D9C4D03824275985004521A2 /* basicselbox.cpp */,
+				D9C4D03624275985004521A2 /* basicparambox.cpp */,
 				D9C4D03924275985004521A2 /* basicselbox.h */,
-				D9C4D03A24275985004521A2 /* configbox.cpp */,
+				D9C4D03824275985004521A2 /* basicselbox.cpp */,
 				D9C4D03B24275985004521A2 /* configbox.h */,
-				D9C4D03C24275985004521A2 /* diskparambox.cpp */,
+				D9C4D03A24275985004521A2 /* configbox.cpp */,
 				D9C4D03D24275985004521A2 /* diskparambox.h */,
-				D9C4D03E24275985004521A2 /* diskreplacebox.cpp */,
+				D9C4D03C24275985004521A2 /* diskparambox.cpp */,
 				D9C4D03F24275985004521A2 /* diskreplacebox.h */,
-				D9C4D04024275985004521A2 /* fileselbox.cpp */,
+				D9C4D03E24275985004521A2 /* diskreplacebox.cpp */,
 				D9C4D04124275986004521A2 /* fileselbox.h */,
-				D9C4D04224275986004521A2 /* fontminibox.cpp */,
+				D9C4D04024275985004521A2 /* fileselbox.cpp */,
 				D9C4D04324275986004521A2 /* fontminibox.h */,
-				D9C4D04424275986004521A2 /* intnamebox.cpp */,
+				D9C4D04224275986004521A2 /* fontminibox.cpp */,
 				D9C4D04524275986004521A2 /* intnamebox.h */,
-				D9DDDE672487971800312CAE /* intnamevalid.cpp */,
+				D9C4D04424275986004521A2 /* intnamebox.cpp */,
 				D9DDDE682487971800312CAE /* intnamevalid.h */,
-				D924DDF2295311FB0063100E /* mymenu.cpp */,
+				D9DDDE672487971800312CAE /* intnamevalid.cpp */,
+				D9D890522EAF3D5700408CCB /* loggingbox.h */,
+				D9D890532EAF3D5700408CCB /* loggingbox.cpp */,
+				D9D890542EAF3D5700408CCB /* mydialog.h */,
+				D9D890552EAF3D5700408CCB /* mydialog.cpp */,
 				D924DDF1295311FB0063100E /* mymenu.h */,
-				D9C4D04624275986004521A2 /* rawexpbox.cpp */,
+				D924DDF2295311FB0063100E /* mymenu.cpp */,
 				D9C4D04724275986004521A2 /* rawexpbox.h */,
-				D9C4D04824275986004521A2 /* rawparambox.cpp */,
+				D9C4D04624275986004521A2 /* rawexpbox.cpp */,
 				D9C4D04924275986004521A2 /* rawparambox.h */,
-				D9C4D04A24275986004521A2 /* rawsectorbox.cpp */,
+				D9C4D04824275986004521A2 /* rawparambox.cpp */,
 				D9C4D04B24275986004521A2 /* rawsectorbox.h */,
-				D9C4D04C24275986004521A2 /* rawtrackbox.cpp */,
+				D9C4D04A24275986004521A2 /* rawsectorbox.cpp */,
 				D9C4D04D24275986004521A2 /* rawtrackbox.h */,
-				D9C4D04E24275986004521A2 /* uibindump.cpp */,
+				D9C4D04C24275986004521A2 /* rawtrackbox.cpp */,
 				D9C4D04F24275986004521A2 /* uibindump.h */,
-				D9C4D05024275986004521A2 /* uicdlistctrl.cpp */,
+				D9C4D04E24275986004521A2 /* uibindump.cpp */,
 				D9C4D05124275986004521A2 /* uicdlistctrl.h */,
-				D9C4D05224275986004521A2 /* uicdtreectrl.cpp */,
+				D9C4D05024275986004521A2 /* uicdlistctrl.cpp */,
 				D9C4D05324275986004521A2 /* uicdtreectrl.h */,
-				D9C4D05424275986004521A2 /* uiclistctrl.cpp */,
+				D9C4D05224275986004521A2 /* uicdtreectrl.cpp */,
 				D9C4D05524275986004521A2 /* uiclistctrl.h */,
+				D9C4D05424275986004521A2 /* uiclistctrl.cpp */,
 				D9C4D05624275986004521A2 /* uicommon.h */,
-				D9C4D05724275986004521A2 /* uictreectrl.cpp */,
 				D9C4D05824275986004521A2 /* uictreectrl.h */,
-				D9C4D05924275986004521A2 /* uidiskattr.cpp */,
+				D9C4D05724275986004521A2 /* uictreectrl.cpp */,
 				D9C4D05A24275986004521A2 /* uidiskattr.h */,
-				D9C4D05B24275986004521A2 /* uidisklist.cpp */,
+				D9C4D05924275986004521A2 /* uidiskattr.cpp */,
 				D9C4D05C24275986004521A2 /* uidisklist.h */,
-				D9C4D05D24275986004521A2 /* uifatarea.cpp */,
+				D9C4D05B24275986004521A2 /* uidisklist.cpp */,
 				D9C4D05E24275986004521A2 /* uifatarea.h */,
-				D9C4D05F24275986004521A2 /* uifilelist.cpp */,
+				D9C4D05D24275986004521A2 /* uifatarea.cpp */,
 				D9C4D06024275986004521A2 /* uifilelist.h */,
-				D981CC562B6410AB00658BC3 /* uimainframe.cpp */,
+				D9C4D05F24275986004521A2 /* uifilelist.cpp */,
 				D981CC582B6410AB00658BC3 /* uimainframe.h */,
-				D981CC572B6410AB00658BC3 /* uimainprocess.cpp */,
+				D981CC562B6410AB00658BC3 /* uimainframe.cpp */,
 				D981CC592B6410AB00658BC3 /* uimainprocess.h */,
-				D9C4D06124275986004521A2 /* uirawdisk.cpp */,
+				D981CC572B6410AB00658BC3 /* uimainprocess.cpp */,
 				D9C4D06224275986004521A2 /* uirawdisk.h */,
-				D9C4D06324275986004521A2 /* uirpanel.cpp */,
+				D9C4D06124275986004521A2 /* uirawdisk.cpp */,
 				D9C4D06424275986004521A2 /* uirpanel.h */,
+				D9C4D06324275986004521A2 /* uirpanel.cpp */,
 			);
 			path = ui;
 			sourceTree = "<group>";
@@ -1100,6 +1120,7 @@
 				D9C4CFD524275965004521A2 /* basicdiritem_l31s.cpp in Sources */,
 				D99171C1213296F10086F44F /* common.cpp in Sources */,
 				D9DDDE692487971800312CAE /* intnamevalid.cpp in Sources */,
+				D9C1D64E2BCBBD0F00D4C8B0 /* basicdiritem_hfs.cpp in Sources */,
 				D9C4CFED24275965004521A2 /* basictype_falcom.cpp in Sources */,
 				D9C4CFE324275965004521A2 /* basicdiritem_x1hu.cpp in Sources */,
 				D9C4D00224275965004521A2 /* basictype_pa.cpp in Sources */,
@@ -1117,6 +1138,8 @@
 				D9C4D07124275986004521A2 /* uibindump.cpp in Sources */,
 				D9C4D07624275986004521A2 /* uidiskattr.cpp in Sources */,
 				D9C4CFE624275965004521A2 /* basicerror.cpp in Sources */,
+				D9D890562EAF3D5700408CCB /* mydialog.cpp in Sources */,
+				D9D890572EAF3D5700408CCB /* loggingbox.cpp in Sources */,
 				D924DDF3295311FB0063100E /* mymenu.cpp in Sources */,
 				D978992A294AF63F00C4FE28 /* parambase.cpp in Sources */,
 				D9C4D06F24275986004521A2 /* rawsectorbox.cpp in Sources */,
@@ -1124,6 +1147,7 @@
 				D9C4CFE124275965004521A2 /* basicdiritem_sdos.cpp in Sources */,
 				D9C4D00324275965004521A2 /* basictype_sdos.cpp in Sources */,
 				D9C4CFDD24275965004521A2 /* basicdiritem_mz_fdos.cpp in Sources */,
+				D9C1D64D2BCBBD0F00D4C8B0 /* basictype_hfs.cpp in Sources */,
 				D9C4CFD324275965004521A2 /* basicdiritem_frost.cpp in Sources */,
 				D9C4CFE824275965004521A2 /* basicfmt.cpp in Sources */,
 				D9C4CFCB24275965004521A2 /* basicdiritem_cdos.cpp in Sources */,

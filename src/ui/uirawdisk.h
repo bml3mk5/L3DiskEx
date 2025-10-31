@@ -58,6 +58,8 @@ enum en_sector_list_columns {
 	SECTORCOL_SECTORS,
 	SECTORCOL_SIZE,
 	SECTORCOL_STATUS,
+	SECTORCOL_RCRC,
+	SECTORCOL_CCRC,
 #ifndef USE_LIST_CTRL_ON_SECTOR_LIST
 	SECTORCOL_DUMMY,
 #endif
@@ -354,7 +356,7 @@ public:
 	DiskImageTrack *GetTrack(const MyRawTrackListItem &row);
 	/// 最初のトラックを返す
 	DiskImageTrack *GetFirstTrack();
-	/// トラックの最初のセクタを得る
+	/// トラックのセクタ１を得る
 	bool GetFirstSectorOnTrack(DiskImageTrack **track, DiskImageSector **sector);
 	/// トラックの開始セクタ番号と終了セクタ番号を得る
 	bool GetFirstAndLastSectorNumOnTrack(const DiskImageTrack *track, int &start_sector, int &end_sector);

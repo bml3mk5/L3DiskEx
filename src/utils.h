@@ -185,6 +185,9 @@ bool	IsPowerOfTwo(wxUint32 val, int digit);
 /// @brief CRC32を計算する
 wxUint32 CRC32(wxUint8 *data, int size);
 
+/// @brief CRC16-CCITTを1バイト分計算する
+wxUint16 CRC16(wxUint8 data, wxUint16 crc);
+
 }; /* namespace Utils */
 
 #endif /* DISKUTILS_H */

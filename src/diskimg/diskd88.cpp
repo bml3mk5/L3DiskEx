@@ -13,6 +13,7 @@
 #include "diskimagecreator.h"
 #include "../basicfmt/basicparam.h"
 #include "../basicfmt/basicfmt.h"
+#include "../utils.h"
 
 
 /// disk density 0: 2D, 1: 2DD, 2: 2HD, 3: 1DD(unofficial)
@@ -22,6 +23,19 @@ const struct st_disk_density gDiskDensity[] = {
 	{ 0x20, "2HD" },
 	{ 0x30, "0x30 1DD" },
 	{ 0xff, NULL }
+};
+
+static const wxUint8 *c_ibm_mfm_ids[] = {
+	(const wxUint8 *)"\xa1\xa1\xa1\xfe",	// address mark
+	(const wxUint8 *)"\xa1\xa1\xa1\xfb",	// data mark
+	(const wxUint8 *)"\xa1\xa1\xa1\xf8",	// deleted data mark
+	NULL
+};
+
+static const wxUint8 *c_ibm_fm_ids[] = {
+	(const wxUint8 *)"\xfe",	// address mark
+	(const wxUint8 *)"\xfb",	// data mark
+	(const wxUint8 *)"\xf8",	// deleted data mark
 };
 
 // ----------------------------------------------------------------------
@@ -205,6 +219,8 @@ DiskD88Sector::DiskD88Sector()
 {
 	data = NULL;
 	data_origin = NULL;
+
+	m_rec_crc = -1;
 }
 
 /// ファイルから読み込み用
@@ -217,6 +233,8 @@ DiskD88Sector::DiskD88Sector(int n_num, const DiskImageSectorHeader &n_header, w
 	m_header_origin.New(n_header);
 	data_origin = new wxUint8[m_header.GetSize()];
 	memcpy(data_origin, data, m_header.GetSize());
+
+	m_rec_crc = -1;
 }
 
 /// 新規作成用
@@ -234,6 +252,8 @@ DiskD88Sector::DiskD88Sector(int track_number, int side_number, int sector_numbe
 
 	data_origin = new wxUint8[m_header.GetSize()];
 	memset(data_origin, 0, m_header.GetSize());
+
+	m_rec_crc = -1;
 
 //	modified = true;
 }
@@ -568,6 +588,47 @@ bool DiskD88Sector::IsSingleDensity()
 void DiskD88Sector::SetSingleDensity(bool val)
 {
 	m_header.SetDensity(val ? 0x40 : 0);
+}
+
+/// CRCを返す
+int DiskD88Sector::GetRecordedCRC() const
+{
+	return m_rec_crc;
+}
+
+/// CRCを設定
+void DiskD88Sector::SetRecordedCRC(wxUint16 crc)
+{
+	m_rec_crc = crc;
+}
+
+/// CRCを計算する
+int DiskD88Sector::CalculateCRC()
+{
+	wxUint16 crc = 0xffff;
+	const wxUint8 *p;
+	if (m_header.GetDensity()) {
+		p = m_header.GetDeleted() ? c_ibm_fm_ids[2] : c_ibm_fm_ids[1];
+		crc = Utils::CRC16(*p, crc);
+	} else {
+		p = m_header.GetDeleted() ? c_ibm_mfm_ids[2] : c_ibm_mfm_ids[1];
+		for(int i=0; i<4; i++) {
+			crc = Utils::CRC16(*p, crc);
+			p++;
+		}
+	}
+	//
+	int ssiz = 128 << m_header.GetIDN();
+	if (ssiz > (int)m_header.GetSize()) ssiz = (int)m_header.GetSize();
+	p = GetSectorBuffer();
+	if (!p || ssiz <= 0) {
+		return -1;
+	}
+	for(int i=0; i<ssiz; i++) {
+		crc = Utils::CRC16(*p, crc);
+		p++;
+	}
+	return crc;
 }
 
 // ----------------------------------------------------------------------

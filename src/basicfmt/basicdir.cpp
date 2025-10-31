@@ -36,6 +36,7 @@
 #include "basicdiritem_amiga.h"
 #include "basicdiritem_m68fdos.h"
 #include "basicdiritem_trsdos.h"
+#include "basicdiritem_hfs.h"
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../diskimg/diskimage.h"
@@ -109,6 +110,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem()
 		break;
 	case FORMAT_TYPE_FP:
 		item = new DiskBasicDirItemFP(basic);
+		break;
+	case FORMAT_TYPE_MACHFS:
+		item = new DiskBasicDirItemHFS(basic);
 		break;
 	case FORMAT_TYPE_DOS80:
 		item = new DiskBasicDirItemDOS80(basic);
@@ -234,6 +238,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(DiskImageSector *n_sector, int n_pos, wx
 	case FORMAT_TYPE_FP:
 		item = new DiskBasicDirItemFP(basic, n_sector, n_pos, n_data);
 		break;
+	case FORMAT_TYPE_MACHFS:
+		item = new DiskBasicDirItemHFS(basic, n_sector, n_pos, n_data);
+		break;
 	case FORMAT_TYPE_DOS80:
 		item = new DiskBasicDirItemDOS80(basic, n_sector, n_pos, n_data);
 		break;
@@ -358,6 +365,9 @@ DiskBasicDirItem *DiskBasicDir::NewItem(int n_num, const DiskBasicGroupItem *n_g
 		break;
 	case FORMAT_TYPE_FP:
 		item = new DiskBasicDirItemFP(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
+		break;
+	case FORMAT_TYPE_MACHFS:
+		item = new DiskBasicDirItemHFS(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);
 		break;
 	case FORMAT_TYPE_DOS80:
 		item = new DiskBasicDirItemDOS80(basic, n_num, n_gitem, n_sector, n_pos, n_data, n_next, n_unuse);

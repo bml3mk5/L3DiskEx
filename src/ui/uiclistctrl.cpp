@@ -38,17 +38,18 @@ void MyCListValue::Set(long n_row, const wxString &n_value)
 //
 // リストのカラム情報
 //
-MyCListColumn::MyCListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
+MyCListColumn::MyCListColumn(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width)
 {
-	Set(n_idx, n_info, n_width);
+	Set(n_idx, n_info, n_default_width, n_width);
 }
 
-void MyCListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
+void MyCListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width)
 {
 	idx = n_idx;
 	col = n_idx;
 	info = n_info;
 	width = n_width;
+	default_width = n_default_width;
 	sort_dir = 0;
 	label = wxGetTranslation(n_info->label);
 }
@@ -227,7 +228,7 @@ MyCListCtrl::MyCListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID 
 	for(int idx=0; columns[idx].name != NULL; idx++) {
 		const struct st_list_columns *c = &columns[idx];
 		int w =	ini ? ini->GetListColumnWidth(idx) : -1;
-		m_columns.Add(new MyCListColumn(idx, c, w >= 0 ? w : c->width));
+		m_columns.Add(new MyCListColumn(idx, c, c->width, w >= 0 ? w : c->width));
 		m_indexes.Add(-1);
 	}
 
@@ -404,6 +405,12 @@ void MyCListCtrl::InsertListColumn(int col, int idx, MyCListColumn *c)
 int MyCListCtrl::GetListColumnWidth(int col) const
 {
 	return GetColumnWidth(col);
+}
+
+/// カラムの幅をセット
+void MyCListCtrl::SetListColumnWidth(int col, int w)
+{
+	SetColumnWidth(col, w);
 }
 
 /// カラムを削除
@@ -779,6 +786,16 @@ bool MyCListCtrl::ShowListColumnRearrangeBox()
 	return true;
 }
 
+/// 全てのカラムの幅をデフォルトに戻す
+void MyCListCtrl::ResetAllListColumnWidth()
+{
+	int column_count = (int)m_columns.Count();
+	for(int idx = 0; idx < column_count; idx++) {
+		MyCListColumn *c = m_columns.Item(idx);
+		SetListColumnWidth(c->GetColumn(), c->GetDefaultWidth());
+	}
+}
+
 /// カラム番号ソート用
 int MyCListCtrl::SortByColumn(MyCListColumn **i1, MyCListColumn **i2)
 {
@@ -791,7 +808,6 @@ int MyCListCtrl::SortByColumn(MyCListColumn **i1, MyCListColumn **i2)
 	if (n == 0) n = (*i1)->GetIndex() - (*i2)->GetIndex();
 	return n;
 }
-
 
 /// ソート方向を返す
 int MyCListCtrl::GetColumnSortDir(int idx) const

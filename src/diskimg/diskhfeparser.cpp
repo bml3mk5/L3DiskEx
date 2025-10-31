@@ -14,11 +14,29 @@
 #define DISK_HFE_HEADER "HXCPICFE"
 #define DISK_HFE_HEADV3 "HXCHFEV3"
 
-#define ISOIBM_MFM_ENCODING		0x00
-#define AMIGA_MFM_ENCODING		0x01
-#define ISOIBM_FM_ENCODING		0x02
-#define EMU_FM_ENCODING			0x03
-#define UNKNOWN_ENCODING		0xFF
+#define ISOIBM_MFM_ENCODING              0x00
+#define AMIGA_MFM_ENCODING               0x01
+#define ISOIBM_FM_ENCODING               0x02
+#define EMU_FM_ENCODING                  0x03
+#define TYCOM_FM_ENCODING                0x04
+#define MEMBRAIN_MFM_ENCODING            0x05
+#define APPLEII_GCR1_ENCODING            0x06
+#define APPLEII_GCR2_ENCODING            0x07
+#define APPLEII_HDDD_A2_GCR1_ENCODING    0x08
+#define APPLEII_HDDD_A2_GCR2_ENCODING    0x09
+#define ARBURGDAT_ENCODING               0x0A
+#define ARBURGSYS_ENCODING               0x0B
+#define AED6200P_MFM_ENCODING            0x0C
+#define NORTHSTAR_HS_MFM_ENCODING        0x0D
+#define HEATHKIT_HS_FM_ENCODING          0x0E
+#define DEC_RX02_M2FM_ENCODING           0x0F
+#define APPLEMAC_GCR_ENCODING            0x10
+#define QD_MO5_ENCODING                  0x11
+#define C64_GCR_ENCODING                 0x12
+#define VICTOR9K_GCR_ENCODING            0x13
+#define MICRALN_HS_FM_ENCODING           0x14
+#define CENTURION_MFM_ENCODING           0x15
+#define UNKNOWN_ENCODING                 0xFF
 
 #pragma pack(1)
 /// HxC HFE header (512bytes) (LE)
@@ -157,7 +175,8 @@ int RunLengthLimitedParser::SetSectorData(wxUint8 *indata, bool single, bool del
 	for(int i=0; i<siz; i++) {
 		buf[i] = DecodeData(&indata[i * unit]);
 	}
-
+	wxUint16 crc = ((wxUint16)DecodeData(&indata[siz * unit]) << 8) | DecodeData(&indata[(siz + 1) * unit]);
+	sector->SetRecordedCRC(crc);
 	sector->SetSingleDensity(single);
 	sector->SetDeletedMark(deleted);
 	sector->ClearModify();
@@ -411,7 +430,7 @@ bool FormatMFMParser::GetData()
 	return found;
 }
 /// データをデコード(MFM)
-/// @param [in] data 解析対象データ(2bytes)
+/// @param [in] indata 解析対象データ(2bytes)
 /// @return デコード後のデータ
 wxUint8 FormatMFMParser::DecodeData(const wxUint8 *indata)
 {
@@ -600,7 +619,7 @@ bool FormatFMParser::GetData()
 	return found;
 }
 /// データをデコード(FM)
-/// @param [in] data 解析対象データ(4bytes)
+/// @param [in] indata 解析対象データ(4bytes)
 /// @return デコード後のデータ
 wxUint8 FormatFMParser::DecodeData(const wxUint8 *indata)
 {
@@ -641,6 +660,9 @@ DiskHfeParser::~DiskHfeParser()
 wxUint32 DiskHfeParser::ParseTracks(wxInputStream &istream, int track_number, int sides, int file_offset, int track_size, wxUint8 encoding[2], int &d88_offset_pos, wxUint32 d88_offset, DiskImageDisk *disk)
 {
 	int track_blocks = (track_size / 512);
+	if ((track_size % 512) > 0) {
+		track_blocks++;
+	}
 
 	wxUint8 *buffers[2];
 	buffers[0] = new wxUint8[track_blocks * 256];
@@ -745,6 +767,7 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 		return 0;
 	}
 
+	// parse each track
 	for(int track = 0; track < tracks; track++) {
 		wxUint8 encoding[2];
 		encoding[0] = header.encoding;
@@ -752,15 +775,24 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 		if (track == 0 && header.track0s0_encode_enable == 0) encoding[0] = header.track0s0_encode;
 		if (track == 0 && header.track0s1_encode_enable == 0) encoding[1] = header.track0s1_encode;
 
+		int track_offset = wxUINT16_SWAP_ON_BE(track_offset_list.at[track].offset);
+		int track_size = wxUINT16_SWAP_ON_BE(track_offset_list.at[track].track_len);
+
+		if (track_offset >= 65535 || track_size >= 65535) {
+			continue;
+		}
+
+		track_offset *= 512;
+
 		d88_offset = ParseTracks(istream
 			, track, sides
-			, wxUINT16_SWAP_ON_BE(track_offset_list.at[track].offset) * 512
-			, wxUINT16_SWAP_ON_BE(track_offset_list.at[track].track_len)
+			, track_offset
+			, track_size
 			, encoding
 			, d88_offset_pos, d88_offset, disk);
 
 		if (d88_offset_pos >= disk->GetCreatableTracks()) {
-			p_result->SetError(DiskResult::ERRV_OVERFLOW_SIZE, 0, d88_offset);
+			p_result->SetWarn(DiskResult::ERRV_OVERFLOW_OFFSET, 0, d88_offset_pos, d88_offset, d88_offset);
 		}
 	}
 	// 最大トラック番号設定
@@ -790,10 +822,10 @@ int DiskHfeParser::Check(wxInputStream &istream, const DiskTypeHints *disk_hints
 	return -1;
 }
 
-static const char *hfe_type_msgs[] = {
-	wxTRANSLATE("IBM MFM"), wxTRANSLATE("Amiga MFM"), wxTRANSLATE("IBM FM"), wxTRANSLATE("EMU FM"), wxTRANSLATE("unknown"), NULL
-
-};
+//static const char *hfe_type_msgs[] = {
+//	wxTRANSLATE("IBM MFM"), wxTRANSLATE("Amiga MFM"), wxTRANSLATE("IBM FM"), wxTRANSLATE("EMU FM"), wxTRANSLATE("unknown"), NULL
+//
+//};
 
 /// HxC HFEファイルかどうかをチェック
 /// @param [in,out] istream    解析対象データ
@@ -819,13 +851,7 @@ int DiskHfeParser::Check(wxInputStream &istream)
 
 	// format
 	if (header.encoding != ISOIBM_MFM_ENCODING && header.encoding != ISOIBM_FM_ENCODING) {
-		wxString msg;
-		if (header.encoding <= 3) {
-			msg = wxString(hfe_type_msgs[header.encoding]);
-		} else {
-			msg = wxString(hfe_type_msgs[4]);
-		}
-		p_result->SetError(DiskResult::ERRV_UNSUPPORTED_TYPE, 0, msg.t_str());
+		p_result->SetError(DiskResult::ERRV_UNSUPPORTED_TRACK_TYPE, 0, header.encoding);
 		return p_result->GetValid();
 	}
 

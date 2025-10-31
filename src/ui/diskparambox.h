@@ -80,7 +80,8 @@ private:
 	const DiskParam *p_manual_param;
 	bool now_manual_setting;
 
-	wxArrayString m_type_names;
+	wxArrayString m_basic_type_names;	///< 指定したカテゴリにマッチするBASIC種類(DiskBasicTypeのnameプロパティ)
+	wxString	  m_category_name;		///< 指定したカテゴリ名
 
 	int FindTemplate(DiskImageDisk *disk);
 	void SetParamFromTemplate(const DiskParam *item);
@@ -144,6 +145,7 @@ public:
 	bool GetParam(DiskParam &param);
 //	bool GetParamToDisk(DiskImageDisk &disk);
 	wxString GetCategory() const;
+	wxString GetBasicCategory() const;
 	int GetTracksPerSide() const;
 	int GetSidesPerDisk() const;
 	int GetSectorsPerTrack() const;

@@ -37,6 +37,7 @@ protected:
 	bool		mIgnoreDateTime;	///< インポートやプロパティ変更時に日時を無視するか
 	bool		mCurrentDateImport;	///< インポート時に現在日時を設定するか
 	bool		mShowInterDirItem;	///< プロパティで内部データをリストで表示するか
+	bool		mCheckSideNumber;	///< オープン時サイド番号をチェックするか
 	int			mDirDepth;			///< 一度に処理できるディレクトリの深さ
 	int			mWindowWidth;		///< ウィンドウ幅
 	int			mWindowHeight;		///< ウィンドウ高さ
@@ -88,6 +89,8 @@ public:
 	bool			IsSetCurrentDateImport() const { return mCurrentDateImport; }
 	void			ShowInterDirItem(bool val) { mShowInterDirItem = val; }
 	bool			DoesShowInterDirItem() const { return mShowInterDirItem; }
+	void			CheckSideNumber(bool val) { mCheckSideNumber = val; }
+	bool			DoesCheckSideNumber() const { return mCheckSideNumber; }
 	void			SetDirDepth(int val) { mDirDepth = val; }
 	int				GetDirDepth() const { return mDirDepth; }
 	void			SetWindowWidth(int val) { mWindowWidth = val; }

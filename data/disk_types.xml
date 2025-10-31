@@ -12,6 +12,9 @@
 		<DiskBasicTypes>
 			<Type>TRSD23-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>TANDY-TRS-80</Category>
+		</Categories>
 		<DensityName>1S</DensityName>
 		<Description>[TRS-80 model I]</Description>
 	</DiskType>
@@ -27,6 +30,9 @@
 		<DiskBasicTypes>
 			<Type>TRSD23-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>TANDY-TRS-80</Category>
+		</Categories>
 		<DensityName>1S</DensityName>
 		<Description>[TRS-80 model I]</Description>
 	</DiskType>
@@ -42,6 +48,9 @@
 		<DiskBasicTypes>
 			<Type>L3-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>1S x2(has sideA/B)</DensityName>
 		<DensityName lang="ja">1S x2(AB面あり)</DensityName>
 		<Description></Description>
@@ -59,6 +68,9 @@
 		<DiskBasicTypes>
 			<Type p="major">L3-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>1S x2(has sideA/B)</DensityName>
 		<DensityName lang="ja">1S x2(AB面あり)</DensityName>
 		<Description>[LEVEL-3 3inch]</Description>
@@ -75,6 +87,9 @@
 		<DiskBasicTypes>
 			<Type>L3-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>1S</DensityName>
 		<DensityName lang="ja">1S</DensityName>
 		<Description></Description>
@@ -91,6 +106,9 @@
 		<DiskBasicTypes>
 			<Type>L3-1S</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>1S</DensityName>
 		<DensityName lang="ja">1S</DensityName>
 		<Description>[LEVEL-3 5inch]</Description>
@@ -203,6 +221,7 @@
 		<Interleave>1</Interleave>
 		<DiskBasicTypes>
 			<Type>MSDOS-1D-8</Type>
+			<Type>PCDOS-1D-8</Type>
 			<Type>CPM86-1D-512-2</Type>
 			<Type>CPM86-1D-512-4</Type>
 			<Type>CPM86-1D-AT</Type>
@@ -221,6 +240,9 @@
 		<DiskBasicTypes>
 			<Type>CPMTRS-1D-512-4</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>TANDY-TRS-80</Category>
+		</Categories>
 		<DensityName>1D</DensityName>
 		<Description>[TRS-80 model III]</Description>
 	</DiskType>
@@ -295,6 +317,9 @@
 			<Type>TRSD13-1D</Type>
 			<Type>CPMTRS-1D-256-2</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>TANDY-TRS-80</Category>
+		</Categories>
 		<DensityName>1D</DensityName>
 		<Description>[TRS-80 model III]</Description>
 	</DiskType>
@@ -309,6 +334,9 @@
 			<Type>TRSD13-1D</Type>
 			<Type>CPMTRS-1D-256-2</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>TANDY-TRS-80</Category>
+		</Categories>
 		<DensityName>1D</DensityName>
 		<Description>[TRS-80 model III]</Description>
 	</DiskType>
@@ -451,6 +479,9 @@
 		<DiskBasicTypes>
 			<Type>FROST-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Last sector is 512bytes, Track0 and side0 is 16sectors [Frost-DOS]</Description>
@@ -504,6 +535,9 @@
 		<DiskBasicTypes>
 			<Type>CDOS2-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Track0 and side0 is 10sectors [CDOS II]</Description>
@@ -551,6 +585,10 @@
 			<Type p="major">MAGICAL-2D</Type>
 			<Type p="major">XDOS-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Track0 and side0 is 16sectors [X-DOS/Magical DOS]</Description>
@@ -592,6 +630,12 @@
 			<Type>CPMX1-2D</Type>
 			<Type>CPMEP-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+			<Category>FUJITSU-FM</Category>
+			<Category>NEC-PC-88</Category>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>[general]</Description>
@@ -625,6 +669,9 @@
 			<Type>PA-2D</Type>
 			<Type>L3S1-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Track0 and side0 is single density</Description>
@@ -667,6 +714,9 @@
 			<Type>CPM88-2D</Type>
 			<Type>CPMX1-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>[FM (F-BASIC,OS-9)]</Description>
@@ -711,6 +761,9 @@
 			<Type>FLEX-1D-S1</Type>
 			<Type>OS9-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>[X1 CP/M]</Description>
@@ -737,6 +790,9 @@
 			<Type>CPM88-2D</Type>
 			<Type>CPMX1-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>[MB-S1/10,20]</Description>
@@ -769,6 +825,9 @@
 		<DiskBasicTypes>
 			<Type p="major">L3S1-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Track0 and side0 is single density [LEVEL-3]</Description>
@@ -786,6 +845,9 @@
 		<DiskBasicTypes>
 			<Type>FLEX-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Track0 and side0 is single density [LEVEL-3 FLEX]</Description>
@@ -802,6 +864,9 @@
 		<DiskBasicTypes>
 			<Type>FLEX-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>[FM FLEX]</Description>
@@ -853,6 +918,9 @@
 		<DiskBasicTypes>
 			<Type p="major">FROST-2D</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2D</DensityName>
 		<DensityName lang="ja">2D</DensityName>
 		<Description>, Last sector is 512bytes, Track0 and side0 is 16sectors [Frost-DOS]</Description>
@@ -1012,6 +1080,9 @@
 		<DiskBasicTypes>
 			<Type>CDOS2-2DD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>, Track0 and side0 is 10sectors [CDOS II]</Description>
@@ -1029,6 +1100,10 @@
 			<Type>MAGICAL-2DD</Type>
 			<Type>XDOS-2DD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>, Track0 and side0 is 16sectors [X-DOS/Magical DOS]</Description>
@@ -1065,6 +1140,7 @@
 		<ParticularTrack track="64" side="ALL" tracks="16" sectors="8" size="512" />
 		<DiskBasicTypes>
 			<Type>PRODOS-2DD</Type>
+			<Type>MACHFS-2DD</Type>
 		</DiskBasicTypes>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
@@ -1092,6 +1168,10 @@
 			<Type>TFDOS-2DD</Type>
 			<Type>CPMMZ-2DD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>FUJITSU-FM</Category>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>[general]</Description>
@@ -1112,6 +1192,9 @@
 			<Type>MZ-2DD</Type>
 			<Type>OS9-2DD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
 		<DensityName>2DD</DensityName>
 		<DensityName lang="ja">2DD</DensityName>
 		<Description>[FM]</Description>
@@ -1190,6 +1273,9 @@
 			<Type p="major">MAGICAL-2HD</Type>
 			<Type>XDOS-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 and side0 is single density [Magical DOS]</Description>
@@ -1207,6 +1293,9 @@
 			<Type p="major">XDOS-2HD</Type>
 			<Type>MAGICAL-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X1</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 and side0 is single density [X-DOS]</Description>
@@ -1326,6 +1415,11 @@
 			<Type>CPMSORD-2HD</Type>
 			<Type>CPMS1-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+			<Category>FUJITSU-FM</Category>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 and side0 is single density [general(MB-S1 etc.)]</Description>
@@ -1341,12 +1435,37 @@
 		<Interleave>1</Interleave>
 		<SingleDensity track="0" side="ALL" sectors="15" size="256" />
 		<DiskBasicTypes>
-			<Type>FLEX-2HD</Type>
+			<Type>FLEX-2HD-S15</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
-		<Description>, Track0 is single density [Level3/S1 FLEX]</Description>
-		<Description lang="ja">トラック0は単密度 [レベル3/S1 FLEX]</Description>
+		<Description>, Track0 is single density [Level3/S1/FM FLEX]</Description>
+		<Description lang="ja">トラック0は単密度 [レベル3/S1/FM FLEX]</Description>
+	</DiskType>
+	<DiskType name="2HD-77-26-14-S0-FL">
+		<SidesPerDisk>2</SidesPerDisk>
+		<TracksPerSide>77</TracksPerSide>
+		<SectorsPerTrack>26</SectorsPerTrack>
+		<SectorSize>256</SectorSize>
+		<NumberingSector>track</NumberingSector>
+		<Density>0x20</Density>
+		<Interleave>14</Interleave>
+		<SingleDensity track="0" side="ALL" sectors="15" size="256" />
+		<DiskBasicTypes>
+			<Type>FLEX-2HD-S15</Type>
+		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
+		<DensityName>2HD/8inch2D</DensityName>
+		<DensityName lang="ja">2HD/8インチ2D</DensityName>
+		<Description>, Track0 is single density [Level3/S1/FM FLEX]</Description>
+		<Description lang="ja">トラック0は単密度 [レベル3/S1/FM FLEX]</Description>
 	</DiskType>
 	<DiskType name="2HD-77-26-2-S0">
 		<SidesPerDisk>2</SidesPerDisk>
@@ -1385,6 +1504,9 @@
 			<Type>CPMS1-2HD</Type>
 			<Type>N88-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>HITACHI-L3S1</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 and side0 is single density [MB-S1 OS-9]</Description>
@@ -1405,6 +1527,10 @@
 			<Type p="major">X1HU-2HD-2D</Type>
 			<Type>OS9-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X1</Category>
+			<Category>SHARP-X68K</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>[general]</Description>
@@ -1455,6 +1581,9 @@
 			<Type>L3S1-2HD</Type>
 			<Type>OS9-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>FUJITSU-FM</Category>
+		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
 		<Description>, Track0 and side0 is single density [FM(F-BASIC,OS-9 etc.)]</Description>
@@ -1473,6 +1602,9 @@
 			<Type p="major">MSDFM-2HD</Type>
 			<Type>CDOS2-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X68K</Category>
+		</Categories>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>[PC-9801 DOS/Human68k]</Description>
@@ -1490,6 +1622,9 @@
 		<DiskBasicTypes>
 			<Type>HU68K-9SC2</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X68K</Category>
+		</Categories>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, SectorBase10 [9SCFMT]</Description>
@@ -1531,6 +1666,9 @@
 		<DiskBasicTypes>
 			<Type>CDOS2-2HD</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>NEC-PC-88</Category>
+		</Categories>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, Track0 and side0 is a particular [CDOS II]</Description>
@@ -1558,6 +1696,9 @@
 		<DiskBasicTypes>
 			<Type>HU68K-9SC2</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X68K</Category>
+		</Categories>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, SectorBase10 [9SCFMT]</Description>
@@ -1575,6 +1716,9 @@
 		<DiskBasicTypes>
 			<Type>HU68K-2HDE</Type>
 		</DiskBasicTypes>
+		<Categories>
+			<Category>SHARP-X68K</Category>
+		</Categories>
 		<DensityName>2HD</DensityName>
 		<DensityName lang="ja">2HD</DensityName>
 		<Description>, SideNumber128 [2HDE]</Description>
@@ -1606,6 +1750,7 @@
 			<Type p="major">MSDOS-2HD</Type>
 			<Type>AROS-O-PC-2HD</Type>
 			<Type>AROS-F-PC-2HD</Type>
+			<Type>MACHFS-2HD</Type>
 			<Type>CPM86-2HD-AT</Type>
 			<Type>CPM86-1HD-AT</Type>
 		</DiskBasicTypes>

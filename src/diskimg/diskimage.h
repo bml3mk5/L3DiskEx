@@ -138,6 +138,13 @@ public:
 	/// 単密度かを設定
 	virtual void	SetSingleDensity(bool val) {}
 
+	/// CRCを返す
+	virtual int		GetRecordedCRC() const { return -1; }
+	/// CRCを計算する
+	virtual int		CalculateCRC() { return -1; }
+	/// CRCを設定
+	virtual void 	SetRecordedCRC(wxUint16 crc) {}
+
 	/// 変更されているか
 	virtual bool	IsModified() const { return false; }
 	/// 変更済みを設定
@@ -282,6 +289,9 @@ public:
 	/// 変更済みをクリア
 	virtual void	ClearModify();
 
+	/// ディスクを返す
+	virtual DiskImageDisk *GetDisk() const { return parent; }
+
 	/// トラック番号とサイド番号の比較
 	static int Compare(DiskImageTrack *item1, DiskImageTrack *item2);
 	/// インターリーブを考慮したセクタ番号リストを返す
@@ -323,6 +333,7 @@ protected:
 	DiskImageTracks *tracks;
 	int m_max_track_number;
 
+	const DiskParam *p_temp_param;	///< 解析でテンプレートがあった場合セット
 	DiskParam orig_param;		///< 解析したパラメータ
 	bool m_param_changed;		///< ディスクパラメータを変更したか
 
@@ -439,6 +450,11 @@ public:
 
 	/// トラックが存在するか
 	virtual bool	ExistTrack(int side_number);
+
+	/// テンプレートパラメータを設定
+	virtual void	SetTemplateParam(const DiskParam *val) { p_temp_param = val; }
+	/// テンプレートパラメータを返す
+	virtual const DiskParam *GetTemplateParam() const { return p_temp_param; }
 
 	/// 変更前パラメータを設定
 	virtual void	SetOriginalParam(const DiskParam &val) { orig_param = val; }

@@ -267,15 +267,19 @@ int DiskTD0Parser::ParseDisk(wxInputStream &istream, int disk_number)
 		return p_result->GetValid();
 	}
 
-	td0_comment_header_t h_comment;
-	len = istream.Read(&h_comment, sizeof(h_comment)).LastRead();
-	if (len != sizeof(h_comment)) {
-		p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
-		return p_result->GetValid();
-	}
+	// コメントヘッダ
+	bool has_comment = ((h_image.stepping & 0x80) != 0);
+	if (has_comment) {
+		td0_comment_header_t h_comment;
+		len = istream.Read(&h_comment, sizeof(h_comment)).LastRead();
+		if (len != sizeof(h_comment)) {
+			p_result->SetError(DiskResult::ERRV_DISK_TOO_SMALL, disk_number);
+			return p_result->GetValid();
+		}
 
-	int comment_length = wxUINT16_SWAP_ON_BE(h_comment.data_length);
-	istream.SeekI(comment_length, wxFromCurrent);
+		int comment_length = wxUINT16_SWAP_ON_BE(h_comment.data_length);
+		istream.SeekI(comment_length, wxFromCurrent);
+	}
 
 	// ディスク作成
 	DiskImageDisk *disk = p_file->NewImageDisk(disk_number);

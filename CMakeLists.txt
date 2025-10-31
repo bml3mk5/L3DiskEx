@@ -55,6 +55,7 @@ add_executable(${PROJECT_NAME}
 	${SRCBASICFMTDIR}/basictype_hu68k.cpp
 	${SRCBASICFMTDIR}/basictype_falcom.cpp
 	${SRCBASICFMTDIR}/basictype_apledos.cpp
+	${SRCBASICFMTDIR}/basictype_hfs.cpp
 	${SRCBASICFMTDIR}/basictype_prodos.cpp
 	${SRCBASICFMTDIR}/basictype_c1541.cpp
 	${SRCBASICFMTDIR}/basictype_amiga.cpp
@@ -88,6 +89,7 @@ add_executable(${PROJECT_NAME}
 	${SRCBASICFMTDIR}/basicdiritem_losa.cpp
 	${SRCBASICFMTDIR}/basicdiritem_falcom.cpp
 	${SRCBASICFMTDIR}/basicdiritem_apledos.cpp
+	${SRCBASICFMTDIR}/basicdiritem_hfs.cpp
 	${SRCBASICFMTDIR}/basicdiritem_prodos.cpp
 	${SRCBASICFMTDIR}/basicdiritem_c1541.cpp
 	${SRCBASICFMTDIR}/basicdiritem_amiga.cpp
@@ -131,6 +133,7 @@ add_executable(${PROJECT_NAME}
 	${SRCUIDIR}/fontminibox.cpp
 	${SRCUIDIR}/intnamebox.cpp
 	${SRCUIDIR}/intnamevalid.cpp
+	${SRCUIDIR}/loggingbox.cpp
 	${SRCUIDIR}/rawparambox.cpp
 	${SRCUIDIR}/rawexpbox.cpp
 	${SRCUIDIR}/rawsectorbox.cpp
@@ -149,6 +152,7 @@ add_executable(${PROJECT_NAME}
 	${SRCUIDIR}/uifatarea.cpp
 	${SRCUIDIR}/uirpanel.cpp
 	${SRCUIDIR}/mymenu.cpp
+	${SRCUIDIR}/mydialog.cpp
 	${SRCDIR}/main.cpp
 )
 

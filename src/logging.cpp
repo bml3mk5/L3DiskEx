@@ -7,7 +7,7 @@
 
 #include "logging.h"
 #include <wx/wx.h>
-#include <wx/ffile.h>
+#include <wx/file.h>
 #include <wx/filename.h>
 #include <wx/dir.h>
 #include <wx/datetime.h>
@@ -21,16 +21,16 @@ MyLogging myLog;
 //
 MyLogging::MyLogging()
 {
-	file = NULL;
+	p_file = NULL;
 #ifdef _DEBUG
-	log_level = MyLog_Debug;
+	m_log_level = MyLog_Debug;
 #else
-	log_level = MyLog_Info;
+	m_log_level = MyLog_Info;
 #endif
 }
 MyLogging::~MyLogging()
 {
-	delete file;
+	delete p_file;
 }
 bool MyLogging::Open(const wxString &file_path, const wxString &file_base_name, const wxString &file_ext)
 {
@@ -40,29 +40,45 @@ bool MyLogging::Open(const wxString &file_path, const wxString &file_base_name, 
 	int seq_next = (seq_num + 1) % 10;
 
 	// 過去のログファイルを削除
-	wxString filename = file_path;
-	filename += file_base_name;
+	wxString fullpath = file_path;
+	wxString filename;
+	filename = file_base_name;
 	filename += wxString::Format(wxT("%d"), seq_next);
 	filename += file_ext;
+	fullpath += filename;
 
-	if (wxFileExists(filename)) {
-		wxRemoveFile(filename);
+	if (wxFileExists(fullpath)) {
+		wxRemoveFile(fullpath);
 	}
 
-	filename = file_path;
-	filename += file_base_name;
+	// 新規作成
+	fullpath = file_path;
+	filename = file_base_name;
 	filename += wxString::Format(wxT("%d"), seq_num);
 	filename += file_ext;
-	file = new wxFFile(filename, wxT("w"));
+	fullpath += filename;
+	p_file = new wxFile(fullpath, wxFile::write);
 
-	return file->IsOpened();
+	bool rc = p_file->IsOpened();
+	if (rc) {
+		m_file_path = fullpath;
+
+		// 一度閉じて再度RWで開く
+		p_file->Close();
+		p_file->Open(fullpath, wxFile::read_write);
+
+		SetInfo(wxT("Opened ") + filename);
+	} else {
+		m_file_path.Clear();
+	}
+	return rc;
 }
 void MyLogging::Close()
 {
-	if (file) {
-		file->Close();
-		delete file;
-		file = NULL;
+	if (p_file) {
+		p_file->Close();
+		delete p_file;
+		p_file = NULL;
 	}
 }
 int MyLogging::FindFile(const wxString &file_path, const wxString &file_base_name, const wxString &file_ext)
@@ -100,7 +116,7 @@ int MyLogging::FindFile(const wxString &file_path, const wxString &file_base_nam
 }
 void MyLogging::SetMessage(int level, const wxString &msg)
 {
-	if (!file || level > log_level) return;
+	if (!p_file || level > m_log_level) return;
 
 	wxDateTime ndt = wxDateTime::Now();
 	wxString mmsg;
@@ -112,8 +128,8 @@ void MyLogging::SetMessage(int level, const wxString &msg)
 	mmsg += msg;
 	mmsg += wxT("\n");
 
-	file->Write(mmsg);
-	file->Flush();
+	p_file->Write(mmsg);
+	p_file->Flush();
 }
 void MyLogging::SetMessage(int level, const char *format, ...)
 {
@@ -126,7 +142,7 @@ void MyLogging::SetMessage(int level, const char *format, ...)
 }
 void MyLogging::SetMessageV(int level, const char *format, va_list ap)
 {
-	if (!file || level > log_level) return;
+	if (!p_file || level > m_log_level) return;
 
 	wxDateTime ndt = wxDateTime::Now();
 	wxString mmsg;
@@ -138,8 +154,34 @@ void MyLogging::SetMessageV(int level, const char *format, va_list ap)
 	mmsg += wxString::FormatV(format, ap);
 	mmsg += wxT("\n");
 
-	file->Write(mmsg);
-	file->Flush();
+	p_file->Write(mmsg);
+	p_file->Flush();
+}
+void MyLogging::SetMessage(int level, const wchar_t *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+
+	SetMessageV(level, format, ap);
+
+	va_end(ap);
+}
+void MyLogging::SetMessageV(int level, const wchar_t *format, va_list ap)
+{
+	if (!p_file || level > m_log_level) return;
+
+	wxDateTime ndt = wxDateTime::Now();
+	wxString mmsg;
+
+	mmsg = ndt.FormatISODate();
+	mmsg += wxT(" ");
+	mmsg += ndt.FormatISOTime();
+	mmsg += wxT(" ");
+	mmsg += wxString::FormatV(format, ap);
+	mmsg += wxT("\n");
+
+	p_file->Write(mmsg);
+	p_file->Flush();
 }
 void MyLogging::SetError(const wxString &msg)
 {
@@ -158,6 +200,19 @@ void MyLogging::SetErrorV(const char *format, va_list ap)
 {
 	SetMessageV(MyLog_Error, format, ap);
 }
+void MyLogging::SetError(const wchar_t *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+
+	SetMessageV(MyLog_Error, format, ap);
+
+	va_end(ap);
+}
+void MyLogging::SetErrorV(const wchar_t *format, va_list ap)
+{
+	SetMessageV(MyLog_Error, format, ap);
+}
 void MyLogging::SetInfo(const wxString &msg)
 {
 	SetMessage(MyLog_Info, msg);
@@ -172,6 +227,19 @@ void MyLogging::SetInfo(const char *format, ...)
 	va_end(ap);
 }
 void MyLogging::SetInfoV(const char *format, va_list ap)
+{
+	SetMessageV(MyLog_Info, format, ap);
+}
+void MyLogging::SetInfo(const wchar_t *format, ...)
+{
+	va_list ap;
+	va_start(ap, format);
+
+	SetMessageV(MyLog_Info, format, ap);
+
+	va_end(ap);
+}
+void MyLogging::SetInfoV(const wchar_t *format, va_list ap)
 {
 	SetMessageV(MyLog_Info, format, ap);
 }
@@ -197,4 +265,31 @@ void MyLogging::SetDebugV(const char *format, va_list ap)
 #ifdef _DEBUG
 	SetMessageV(MyLog_Debug, format, ap);
 #endif
+}
+void MyLogging::SetDebug(const wchar_t *format, ...)
+{
+#ifdef _DEBUG
+	va_list ap;
+	va_start(ap, format);
+
+	SetMessageV(MyLog_Debug, format, ap);
+
+	va_end(ap);
+#endif
+}
+void MyLogging::SetDebugV(const wchar_t *format, va_list ap)
+{
+#ifdef _DEBUG
+	SetMessageV(MyLog_Debug, format, ap);
+#endif
+}
+
+bool MyLogging::GetLog(wxString &text)
+{
+	if (!p_file) return false;
+
+	p_file->Seek(0);
+	bool rc = p_file->ReadAll(&text);
+	p_file->SeekEnd();
+	return rc;
 }

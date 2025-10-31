@@ -35,6 +35,7 @@ Params::Params()
 #else
 	mShowInterDirItem = false;
 #endif
+	mCheckSideNumber = false;
 	mDirDepth = 20;
 	mWindowWidth = 1000;
 	mWindowHeight = 600;
@@ -179,6 +180,8 @@ void Config::Load()
 	ini->Read(wxT("SetCurrentDateTimeWhenImport"), &mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Read(wxT("ShowInterDirItem"), &mShowInterDirItem);
+	// オープン時サイド番号をチェックするか
+	ini->Read(wxT("CheckSideNumber"), &mCheckSideNumber);
 	// 一度に処理できるディレクトリの深さ
 	ival = 0;
 	ini->Read(wxT("DirectoriesDepth"), &ival);
@@ -266,6 +269,8 @@ void Config::Save()
 	ini->Write(wxT("SetCurrentDateTimeWhenImport"), mCurrentDateImport);
 	// プロパティで内部データをリストで表示するか
 	ini->Write(wxT("ShowInterDirItem"), mShowInterDirItem);
+	// オープン時サイド番号をチェックするか
+	ini->Write(wxT("CheckSideNumber"), mCheckSideNumber);
 	// 一度に処理できるディレクトリの深さ
 	ini->Write(wxT("DirectoriesDepth"), mDirDepth);
 	// ウィンドウ幅

@@ -167,6 +167,13 @@ wxUint32 DiskDmkParser::ParseSector(wxInputStream &istream, int sector_nums, int
 		// ファイルデータが足りない
 		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
 	}
+	wxUint8 crc[2];
+	len = istream.Read(crc, 2).LastRead();
+	if (len < 2) {
+		// ファイルデータが足りない
+		p_result->SetError(DiskResult::ERRV_INVALID_DISK, 0);
+	}
+	sector->SetRecordedCRC(((wxUint16)crc[0] << 8) | crc[1]); 
 
 	sector->SetDeletedMark(deleted != 0);
 	sector->ClearModify();

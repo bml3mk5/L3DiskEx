@@ -1,8 +1,11 @@
 # ![](l3diskex_icon.png) L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2024 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2025 All Rights Reserved.
+
+<a href="#ja">日本語</a> <a href="#en">English</a>
 
 ------------------------------------------------------------------------------
+<a name="ja"></a>
 
 ### L3ディスクエクスプローラは、レトロPC用に作成されたフロッピーディスクイメージ内部のファイルにアクセスするためのアプリケーションです。
 
@@ -31,6 +34,7 @@ OS-9 Level I/II /
 CP/M Ver.2.2 /
 アップル DOS 3.3 /
 アップル ProDOS 8/16 /
+アップル Macintosh HFS (※読み出しのみ) /
 コモドール 1541 DOS (Commodore 64) /
 コモドール Amiga DOS / AROS /
 ソード M68 KDOS (FDOS) /
@@ -45,7 +49,20 @@ S-DOS / Sn88-DOS /
 L-os Angeles /
 MDOS
 
+
+#### ハードディスクイメージにアクセスしたいなら[こちら(ベータ版)](https://github.com/bml3mk5/DiFinder/releases)
+
 ------------------------------------------------------------------------------
+
+## 免責事項
+
+* これはフリーソフトです。ただし著作権は放棄していません。
+  ソースコードを作成した各々の作者にも著作権があります。
+* 無保証: このソフトを使用したいかなる損害も一切保証しません。
+
+------------------------------------------------------------------------------
+<a name="en"></a>
+
 ### L3 Disk Explorer is an application in order to access to files in a floppy disk image for retro computer and operating system.
 
 ### [Downloads](https://github.com/bml3mk5/L3DiskEx/releases)
@@ -71,6 +88,7 @@ OS-9 Level I/II /
 CP/M Ver.2.2 /
 Apple DOS 3.3 /
 Apple ProDOS 8/16 /
+Apple Macintosh HFS (* Read only) /
 Commodore 1541 DOS (Commodore 64) /
 Commodore Amiga DOS / AROS /
 SORD M68 KDOS (FDOS) /
@@ -85,21 +103,21 @@ S-DOS / Sn88-DOS /
 L-os Angeles /
 MDOS
 
+
+#### You can access to files in a hard disk image: [Here(beta version)](https://github.com/bml3mk5/DiFinder/releases)
+
 ------------------------------------------------------------------------------
 
-## Disclaimer 免責事項
+## Disclaimer
 
 * This is the free software. I have not abandoned the copyright.
   And each author which created the source code also have the copyright.
-* これはフリーソフトです。ただし著作権は放棄していません。
-  ソースコードを作成した各々の作者にも著作権があります。
 * No warranty: We are not responsible for any damage caused by this software.
-* 無保証: このソフトを使用したいかなる損害も一切保証しません。
 
 ------------------------------------------------------------------------------
 
  MailTo: Sasaji (sasaji@s-sasaji.ddo.jp)
- *             http://s-sasaji.ddo.jp/bml3mk5/
+ * My WebPage: http://s-sasaji.ddo.jp/bml3mk5/
  * GitHub:     https://github.com/bml3mk5/L3DiskEx
  * X(Twitter): https://x.com/bml3mk5
 

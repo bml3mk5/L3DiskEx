@@ -31,7 +31,7 @@ void DiskBasicTypeMZBase::GetUsableDiskSize(int &disk_size, int &group_size) con
 /// @param [in] wrote 書込み操作を行った後か
 void DiskBasicTypeMZBase::CalcDiskFreeSize(bool wrote)
 {
-	int used = 0;
+//	int used = 0;
 	fat_availability.Empty();
 
 	// 使用済みかチェック
@@ -39,13 +39,13 @@ void DiskBasicTypeMZBase::CalcDiskFreeSize(bool wrote)
 	int fsts;
 	for(wxUint32 gnum = 0; gnum <= basic->GetFatEndGroup(); gnum++) {
 		if (gnum < data_start_group) {
-			used++;
+//			used++;
 			fsts = FAT_AVAIL_SYSTEM;
 		} else if (!IsUsedGroupNumber(gnum)) {
 			grps++;
 			fsts = FAT_AVAIL_FREE;
 		} else {
-			used++;
+//			used++;
 			fsts = FAT_AVAIL_USED;
 		}
 		fat_availability.Add(fsts, 0, 0);

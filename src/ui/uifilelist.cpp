@@ -246,7 +246,6 @@ void UiDiskFileListCtrl::InsertListData(DiskBasic *basic, const DiskBasicDirItem
 /// @param [in] row     行番号
 /// @param [in] num     ディレクトリアイテムの位置
 /// @param [in] data    ディレクトリアイテムの位置
-/// @return 行番号
 void UiDiskFileListCtrl::UpdateListData(DiskBasic *basic, const DiskBasicDirItem *item, long row, int num, wxUIntPtr data)
 {
 	MyFileListValue values[LISTCOL_END];
@@ -491,8 +490,8 @@ wxBEGIN_EVENT_TABLE(UiDiskFileList, wxPanel)
 
 	EVT_CONTEXT_MENU(UiDiskFileList::OnContextMenu)
 
-	EVT_MENU_RANGE(IDM_COLUMN_0, IDM_COLUMN_0 + LISTCOL_END - 1, UiDiskFileList::OnListColumnChange)
-//	EVT_MENU(IDM_COLUMN_DETAIL, UiDiskFileList::OnListColumnDetail)
+	EVT_MENU(IDM_COLUMN_DETAIL, UiDiskFileList::OnListColumnDetail)
+	EVT_MENU(IDM_COLUMN_RESET, UiDiskFileList::OnListColumnReset)
 #endif
 
 	EVT_BUTTON(IDC_BTN_CHANGE, UiDiskFileList::OnButtonChange)
@@ -529,21 +528,21 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	MyFileListItem_Unset(m_dragging_item);
 
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
-	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-	szrButtons = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer *szrHed = new wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer *szrBtn = new wxBoxSizer(wxHORIZONTAL);
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 2);
 
 	wxSize size(TEXT_ATTR_SIZE, -1);
 	textAttr = new wxTextCtrl(this, IDC_TEXT_ATTR, wxT(""), wxDefaultPosition, size, wxTE_READONLY | wxTE_LEFT);
-	hbox->Add(textAttr, wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, 2));
+	szriTxt = szrHed->Add(textAttr, wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, 2));
 
 	size.x = 60;
 	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, size);
 	btnChange->Enable(false);
-	szrButtons->Add(btnChange, flags);
+	szrBtn->Add(btnChange, flags);
 
 	lblCharCode = new wxStaticText(this, wxID_ANY, _("Charactor Code"));
-	szrButtons->Add(lblCharCode,  wxSizerFlags().Center().Border(wxBOTTOM | wxTOP, 2).Border(wxLEFT | wxRIGHT, 8));
+	szrBtn->Add(lblCharCode,  wxSizerFlags().Center().Border(wxBOTTOM | wxTOP, 2).Border(wxLEFT | wxRIGHT, 8));
 	comCharCode = new wxChoice(this, IDC_COMBO_CHAR_CODE, wxDefaultPosition, wxDefaultSize);
 	const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("main"));
 	if (choice) {
@@ -552,10 +551,10 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 			comCharCode->Append( map->GetDescription() );
 		}
 	}
-	szrButtons->Add(comCharCode, flags);
+	szrBtn->Add(comCharCode, flags);
 
-	hbox->Add(szrButtons);
-	vbox->Add(hbox);
+	szriBtn = szrHed->Add(szrBtn);
+	szriHed = vbox->Add(szrHed);
 
 	wxFont font;
 	frame->GetDefaultListFont(font);
@@ -563,7 +562,7 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	listCtrl = new UiDiskFileListCtrl(parentframe, this, IDC_VIEW_LIST);
 	textAttr->SetFont(font);
 	listCtrl->SetFont(font);
-	vbox->Add(listCtrl, wxSizerFlags().Expand().Border(wxALL, 1));
+	szriLst = vbox->Add(listCtrl, wxSizerFlags().Expand().Border(wxALL, 1));
 
 	SetSizerAndFit(vbox);
 	Layout();
@@ -572,7 +571,7 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	MakePopupMenu();
 
 	// popup on list column header
-	menuColumnPopup = NULL;
+	MakeColumnPopupMenu();
 
 	// key
 	listCtrl->Bind(wxEVT_CHAR, &UiDiskFileList::OnChar, this);
@@ -610,47 +609,39 @@ void UiDiskFileList::OnSize(wxSizeEvent& event)
 		event.Skip();
 		return;
 	}
-	
-	wxSize size = event.GetSize();
-	if (size.x < 32) return;
+	if (!GetSizer()) {
+		event.Skip();
+		return;
+	}
 
-	// BASIC情報の右側のボタン群のサイズ
-	wxSize sizz = szrButtons->GetSize();
-	if (sizz.x == 0) return;
+	wxSize szCli = GetClientSize();
+	if (szCli.x < 32) return;
+
+	// コントロールのサイズを計算
+	wxSize szTxt = szriTxt->CalcMin();
+	wxSize szBtn = szriBtn->CalcMin();
+	wxSize szHed = szriHed->CalcMin();
+	wxSize szLst = szriLst->CalcMin();
 
 	// ファイルリストのサイズを変更
-	wxPoint listpt = listCtrl->GetPosition();
-	listCtrl->SetSize(size.x - listpt.x, size.y - listpt.y);
+	wxPoint ptLst(0, szHed.GetHeight());
+	szLst.SetWidth(szCli.GetWidth());
+	szLst.SetHeight(szCli.GetHeight() - szHed.GetHeight());
 
-	int pos_x = size.x - sizz.x;
-	if (pos_x < 0) return;
-
-	// BASIC情報の右側のボタン群をウィンドウ右づめで配置する
-
-	wxPoint bp;
-	bp = btnChange->GetPosition();
-
-	pos_x -= bp.x;
-
-	wxSize tz = textAttr->GetSize();
-	tz.x += pos_x;
-	if (tz.x < TEXT_ATTR_SIZE) return;
-
-	textAttr->SetSize(tz);
-
-	bp.x += pos_x;
-
-	wxSizerItemList *slist = &szrButtons->GetChildren();
-	wxSizerItemList::iterator it;
-	for(it = slist->begin(); it != slist->end(); it++) {
-		wxSizerItem *item = *it;
-		if (item->IsWindow()) {
-			wxWindow *win = item->GetWindow();
-			bp = win->GetPosition();
-			bp.x += pos_x;
-			win->SetPosition(bp);
-		}
+	// テキストエリアのサイズを変更
+	szTxt.SetWidth(szCli.GetWidth() - szBtn.GetWidth());
+	int text_attr_size = FromDIP(TEXT_ATTR_SIZE);
+	if (szTxt.GetWidth() < text_attr_size) {
+		// 最小サイズ
+		szTxt.SetWidth(text_attr_size);
 	}
+
+	// コントロールの再配置
+	wxPoint pt;
+	szriTxt->SetDimension(pt, szTxt);
+	pt.x += szTxt.GetWidth();
+	szriBtn->SetDimension(pt, szBtn);
+	szriLst->SetDimension(ptLst, szLst);
 }
 
 #ifdef USE_LIST_CTRL_ON_FILE_LIST
@@ -930,6 +921,7 @@ void UiDiskFileList::OnChangeCharCode(wxCommandEvent& event)
 	frame->ChangeCharCode(name);
 }
 
+#if 0
 /// リストのカラムを変更
 /// @param[in] event コマンドイベント
 void UiDiskFileList::OnListColumnChange(wxCommandEvent& event)
@@ -941,21 +933,21 @@ void UiDiskFileList::OnListColumnChange(wxCommandEvent& event)
 		RefreshFiles();
 	}
 }
+#endif
 
-#if 0
 /// リストのカラム詳細設定
 /// @param[in] event コマンドイベント
 void UiDiskFileList::OnListColumnDetail(wxCommandEvent& WXUNUSED(event))
 {
 	ShowListColumnDialog();
 }
-/// リストのカラム詳細設定
+
+/// リストのカラム幅リセット
 /// @param[in] event コマンドイベント
-void UiDiskFileList::OnListColumnDetail(MyFileListEvent& WXUNUSED(event))
+void UiDiskFileList::OnListColumnReset(wxCommandEvent& WXUNUSED(event))
 {
-	ShowListColumnDialog();
+	ResetAllListColumnWidth();
 }
-#endif
 
 ////////////////////////////////////////
 
@@ -1006,17 +998,20 @@ void UiDiskFileList::ShowPopupMenu()
 	PopupMenu(menuPopup);
 }
 
+/// リストカラムのポップアップメニュー作成
+void UiDiskFileList::MakeColumnPopupMenu()
+{
+	menuColumnPopup = new MyMenu;
+	menuColumnPopup->Append(IDM_COLUMN_DETAIL, _("Columns of File &List..."));
+	menuColumnPopup->Append(IDM_COLUMN_RESET, _("&Reset Width of File List"));
+}
+
 /// リストカラムのポップアップメニュー表示
 void UiDiskFileList::ShowColumnPopupMenu()
 {
-//	listCtrl->CreateColumnPopupMenu(menuColumnPopup, IDM_COLUMN_0, IDM_COLUMN_DETAIL);
-//
-//	PopupMenu(menuColumnPopup);
+	if (!menuColumnPopup) return;
 
-	// ダイアログを表示する
-	if (listCtrl->ShowListColumnRearrangeBox()) {
-		RefreshFiles();
-	}
+	PopupMenu(menuColumnPopup);
 }
 
 /// BASIC種類テキストボックスに設定
@@ -2060,6 +2055,14 @@ void UiDiskFileList::ShowListColumnDialog()
 		// リストを更新
 		RefreshFiles();
 	}
+}
+
+/// カラムの幅をデフォルトに戻す
+void UiDiskFileList::ResetAllListColumnWidth()
+{
+	listCtrl->ResetAllListColumnWidth();
+	// リストを更新
+	RefreshFiles();
 }
 
 /// ディレクトリ作成ダイアログ

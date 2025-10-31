@@ -216,6 +216,7 @@
 	<FileType ext="img">
 		<Format type="cqmimg" />
 		<Format type="dskstr" />
+		<Format type="adc" />
 		<Format type="plain">
 			<DiskTypeHint>2D-40-16-1</DiskTypeHint>
 			<DiskTypeHint>2HD-77-26-1</DiskTypeHint>

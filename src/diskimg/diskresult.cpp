@@ -86,7 +86,9 @@ const char *gDiskResultMsgs[] = {
 	//	ERRV_TOO_MANY_TRACKS  v:2
 	wxTRANSLATE("[Disk%d] Too many tracks. Ignore tracks after %dth."),
 	//	ERRV_UNSUPPORTED_TYPE,
-	wxTRANSLATE("[Disk%d] Data type %s is unsupported."),
+	wxTRANSLATE("[Disk%d] Data type '%ls' is unsupported."),
+	//	ERRV_UNSUPPORTED_TRACK_TYPE,
+	wxTRANSLATE("[Disk%d] Unsupported track encoding type. (Type number: 0x%x)"),
 	//	ERRV_END  v:1
 	wxTRANSLATE("Unknown error. code:%d"),
 	NULL

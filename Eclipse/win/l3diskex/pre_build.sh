@@ -4,5 +4,5 @@
 
 pwd
 
-windres.exe ../../../../src/$1.rc -D$2 "-I$3" "-I$4" -O coff -o $1.res
+windres.exe ../../../../src/res/$1.rc -D$2 "-I$3" "-I$4" -O coff -o $1.res
 

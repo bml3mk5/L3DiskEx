@@ -46,6 +46,7 @@
 #include "basictype_amiga.h"
 #include "basictype_m68fdos.h"
 #include "basictype_trsdos.h"
+#include "basictype_hfs.h"
 #include "../logging.h"
 #include "../utils.h"
 
@@ -242,6 +243,9 @@ void DiskBasic::CreateType()
 	case FORMAT_TYPE_FP:
 		type = new DiskBasicTypeFP(this, fat, dir);
 		break;
+	case FORMAT_TYPE_MACHFS:
+		type = new DiskBasicTypeHFS(this, fat, dir);
+		break;
 	case FORMAT_TYPE_DOS80:
 		type = new DiskBasicTypeDOS80(this, fat, dir);
 		break;
@@ -343,7 +347,7 @@ int DiskBasic::ParseBasic(DiskImageDisk *newdisk, int newside, const DiskBasicPa
 	p_disk = newdisk;
 	m_formatted = false;
 
-	myLog.SetInfo("Parsing Disk #%d ...", newdisk->GetNumber());
+	myLog.SetInfo(wxT("Parsing Disk #%d ..."), newdisk->GetNumber());
 
 	// 新しいディスクにあるBASICヒント
 	wxString hint = newdisk->GetFile()->GetBasicTypeHint();
@@ -374,9 +378,9 @@ int DiskBasic::ParseBasic(DiskImageDisk *newdisk, int newside, const DiskBasicPa
 			match = gDiskBasicTemplates.FindType(hint, types.Item(n).GetName());
 			if (match) {
 				// フォーマットされているか？
-				myLog.SetInfo("Parsing format: %s", match->GetBasicTypeName().t_str());
+				myLog.SetInfo(wxString::Format(wxT("Parsing format #%d: "), (int)n) + match->GetBasicTypeName());
 				valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
-				myLog.SetInfo("  Result => %.2f", valid_ratio);
+				myLog.SetInfo(wxT("  Result => %.2f"), valid_ratio);
 				if (valid_ratio >= 0.0) {
 					// 候補にする
 					valid_params.Add(match);
@@ -392,15 +396,15 @@ int DiskBasic::ParseBasic(DiskImageDisk *newdisk, int newside, const DiskBasicPa
 			if (idx < 0) idx = 0;
 			match = valid_params.Item(idx);
 			// 再度チェックする
-			myLog.SetInfo("Decided format: %s", match->GetBasicTypeName().t_str());
+			myLog.SetInfo(wxT("Decided format: ") + match->GetBasicTypeName());
 			valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
-			myLog.SetInfo("  Result => %.2f", valid_ratio);
+			myLog.SetInfo(wxT("  Result => %.2f"), valid_ratio);
 		}
 	} else {
 		// すでにフォーマット済み
-		myLog.SetInfo("Known format: %s", match->GetBasicTypeName().t_str());
+		myLog.SetInfo(wxT("Known format: ") + match->GetBasicTypeName());
 		valid_ratio = ParseFormattedDisk(newdisk, match, is_formatting);
-		myLog.SetInfo("  Result => %.2f", valid_ratio);
+		myLog.SetInfo(wxT("  Result => %.2f"), valid_ratio);
 	}
 	if (valid_ratio >= 0.6) {
 		errinfo.Clear();

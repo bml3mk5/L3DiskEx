@@ -11,6 +11,7 @@
 #include "diskparser.h"
 #include "fileparam.h"
 #include "diskresult.h"
+#include "../config.h"
 
 
 //
@@ -136,7 +137,7 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 
 //	d88_sector_header_t *sector_header = new d88_sector_header_t;
 //	size_t header_size = istream.Read((void *)sector_header, sizeof(d88_sector_header_t)).LastRead();
-			
+#if 0	// check lator (CheckParamInSector)
 	// track number is same ?
 	if (sector_header.GetIDC() != track_number) {
 		p_result->SetWarn(DiskResult::ERRV_ID_TRACK, disk_number, track_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR());
@@ -156,6 +157,9 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 	} else if (sector_header.GetSize() == 0) {
 		p_result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetIDN(), sector_header.GetSize());
 	}
+#else
+	int sector_number = sector_header.GetIDR();
+#endif
 
 	// 追加
 	size_t data_size = sector_header.GetSize();
@@ -220,6 +224,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 		track->CalcInterleave();
 	}
 
+#if 0	// check lator (CheckParamInTrack)
 	if (p_result->GetValid() >= 0) {
 		// セクタの重複や存在をチェック
 		if (sectors) {
@@ -245,6 +250,7 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 			}
 		}
 	}
+#endif
 
 	if (p_result->GetValid() >= 0 && track_number >= 0) {
 		// トラックの重複チェック
@@ -257,10 +263,12 @@ wxUint32 DiskD88Parser::ParseTrack(wxInputStream &istream, size_t start_pos, int
 					DiskImageTrack *t = tracks->Item(i);
 					if (t->GetTrackNumber() == track_number && t->GetSideNumber() == side_number) {
 						// すでに同じトラック番号とサイド番号がある
+#if 0	// ignore this warning
 						if (sector_size >= 256) {
 							// セクターサイズが256バイト以上なら警告を出す。
 							p_result->SetWarn(DiskResult::ERRV_DUPLICATE_TRACK, disk_number, track_number, side_number, side_number + 1);
 						}
+#endif
 						// サイド番号を変更する
 						side_number++;
 						track->SetSideNumber(side_number);
@@ -430,19 +438,8 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 			// ディスクを追加
 			disk->CalcMajorNumber();
 			p_file->Add(disk, m_mod_flags);
-			// セクタ数をチェック
-			DiskImageTracks *tracks = disk->GetTracks();
-			if (tracks) {
-				for(size_t pos = 0; pos < tracks->Count(); pos++) {
-					DiskImageTrack *track = tracks->Item(pos);
-					DiskImageSectors *sectors = track->GetSectors();
-					if (sectors) {
-						if ((int)sectors->Count() < disk->GetSectorsPerTrack()) {
-							p_result->SetWarn(DiskResult::ERRV_SHORT_SECTORS, disk_number, disk->GetSectorsPerTrack(), track->GetTrackNumber(), track->GetSideNumber(), (int)sectors->Count());
-						}
-					}
-				}
-			}
+			// ディスクイメージのパラメータチェック
+			CheckParamInDisk(disk_number, disk);
 		} else {
 			delete disk;
 		}
@@ -453,6 +450,127 @@ wxUint32 DiskD88Parser::ParseDisk(wxInputStream &istream, size_t start_pos, int 
 	}
 
 	return size;
+}
+
+/// ディスクイメージができた後のパラメータチェック
+/// @param [in] disk_number ディスク番号
+/// @param [in] disk        ディスクイメージ
+/// @param [in] track       トラックイメージ
+/// @param [in] sector      セクタイメージ
+void DiskD88Parser::CheckParamInSector(int disk_number, DiskImageDisk *disk, DiskImageTrack *track, DiskImageSector *sector)
+{
+	// track number is same ?
+	int track_number = track->GetTrackNumber();
+	if (sector->GetIDC() != track_number) {
+		p_result->SetWarn(DiskResult::ERRV_ID_TRACK, disk_number, track_number, sector->GetIDC(), sector->GetIDH(), sector->GetIDR());
+	}
+	// side number is valid ?
+	if (gConfig.DoesCheckSideNumber()) {
+		int side_number = track->GetSideNumber();
+		if (sector->GetIDH() != side_number) {
+			p_result->SetWarn(DiskResult::ERRV_ID_SIDE, disk_number, side_number, track_number, sector->GetIDC(), sector->GetIDH(), sector->GetIDR());
+		}
+	}
+	// sector number is valid ?
+	if ((int)sector->GetIDR() < disk->GetSectorNumberBaseOnDisk()) {
+		p_result->SetWarn(DiskResult::ERRV_ID_SECTOR, disk_number, track_number, sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), track->GetSectorsPerTrack());
+	}
+	// invalid sector size
+	int sector_size = sector->GetSize(); 
+	if (sector_size == 0 || sector_size > 2048) {
+		p_result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetIDN(), sector_size);
+	}
+}
+
+/// ディスクイメージができた後のパラメータチェック
+/// @param [in] disk_number ディスク番号
+/// @param [in] disk        ディスクイメージ
+/// @param [in] track       トラックイメージ
+void DiskD88Parser::CheckParamInTrack(int disk_number, DiskImageDisk *disk, DiskImageTrack *track)
+{
+	DiskImageSectors *sectors = track->GetSectors();
+	if (!sectors) {
+		return;
+	}
+	// テンプレートパラメータにトラック数があればその範囲内のトラックだけチェックする
+	const DiskParam *temp_param = disk->GetTemplateParam();
+	if (temp_param && track->GetTrackNumber() >= temp_param->GetTracksPerSide()) {
+		return;
+	}
+
+	// セクタ数をチェック
+	{
+		int sector_per_track = disk->GetSectorsPerTrack();
+		for(int i=0; i<2; i++) {
+			const DiskParticulars *ptracks;
+			if (i == 0) {
+				ptracks = &disk->GetSingles();
+			} else {
+				ptracks = &disk->GetParticularTracks();
+			}
+			if (ptracks->Count() > 0) {
+				// 特殊なトラックに一致する場合はそのトラックのセクタ数を比較対象にする
+				int num = ptracks->FindTrackSide(track->GetTrackNumber(), track->GetSideNumber());
+				if (num >= 0) {
+					sector_per_track = ptracks->Item(num).GetSectorsPerTrack();
+					break;
+				}
+			}
+		}
+		if ((int)sectors->Count() < sector_per_track) {
+			p_result->SetWarn(DiskResult::ERRV_SHORT_SECTORS, disk_number, disk->GetSectorsPerTrack(), track->GetTrackNumber(), track->GetSideNumber(), (int)sectors->Count());
+		}
+	}
+	// セクタの重複や存在をチェック
+	{
+		wxArrayInt arr;
+		for(size_t pos = 0; pos < sectors->Count(); pos++) {
+			DiskImageSector *s = sectors->Item(pos);
+			arr.Add(s->GetSectorNumber());
+		}
+		arr.Sort(&compare_int);
+		int prev = -1;
+		for(size_t sec_pos = 0; sec_pos < arr.Count(); sec_pos++) {
+			int curr = arr.Item(sec_pos);
+			if (prev >= 0) {
+				if (curr == prev) {
+					// duplicate
+					p_result->SetWarn(DiskResult::ERRV_DUPLICATE_SECTOR, disk_number, curr, track->GetTrackNumber(), track->GetSideNumber());
+				} else if (prev + 1 != curr) {
+					// non sequential
+					p_result->SetWarn(DiskResult::ERRV_NO_SECTOR, disk_number, prev + 1, track->GetTrackNumber(), track->GetSideNumber());
+				}
+			}
+			prev = curr;
+		}
+	}
+	// 各セクタのチェック
+	for(size_t pos = 0; pos < sectors->Count(); pos++) {
+		DiskImageSector *sector = sectors->Item(pos);
+		if (!sector) {
+			continue;
+		}
+		CheckParamInSector(disk_number, disk, track, sector);
+	}
+}
+
+/// ディスクイメージができた後のパラメータチェック
+/// @param [in] disk_number ディスク番号
+/// @param [in] disk        ディスクイメージ
+void DiskD88Parser::CheckParamInDisk(int disk_number, DiskImageDisk *disk)
+{
+	DiskImageTracks *tracks = disk->GetTracks();
+	if (!tracks) {
+		return;
+	}
+	// 各トラックのチェック
+	for(size_t pos = 0; pos < tracks->Count(); pos++) {
+		DiskImageTrack *track = tracks->Item(pos);
+		if (!track) {
+			continue;
+		}
+		CheckParamInTrack(disk_number, disk, track);
+	}
 }
 
 /// D88ファイルを解析

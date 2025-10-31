@@ -836,5 +836,20 @@ wxUint32 CRC32(wxUint8 *data, int size)
 	return r ^ 0xffffffff;
 }
 
+/// CRC16-CCITTを1バイト分計算する
+wxUint16 CRC16(wxUint8 data, wxUint16 crc)
+{
+	for (int count = 7; count >= 0; count--) {
+		wxUint16 bit = (((crc >> 15) ^ (data >> 7)) & 1);
+		crc <<= 1;
+		crc |= bit;
+		data <<= 1;
+		if (bit) {
+			crc ^= 0x1020;
+		}
+	}
+	return crc;
+}
+
 }; /* namespace Utils */
 

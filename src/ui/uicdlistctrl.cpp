@@ -36,17 +36,18 @@ void MyCDListValue::Set(long n_row, const wxString &n_value)
 //
 // リストのカラム情報
 //
-MyCDListColumn::MyCDListColumn(int n_idx, const struct st_list_columns *n_info, int n_width)
+MyCDListColumn::MyCDListColumn(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width)
 {
-	Set(n_idx, n_info, n_width);
+	Set(n_idx, n_info, n_default_width, n_width);
 }
 
-void MyCDListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_width)
+void MyCDListColumn::Set(int n_idx, const struct st_list_columns *n_info, int n_default_width, int n_width)
 {
 	idx = n_idx;
 	col = n_idx;
 	info = n_info;
 	width = n_width;
+	default_width = n_default_width;
 	sort_dir = 0;
 	label = wxGetTranslation(n_info->label);
 }
@@ -99,7 +100,7 @@ MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowI
 	for(int idx=0; columns[idx].name != NULL; idx++) {
 		const struct st_list_columns *c = &columns[idx];
 		int w =	ini ? ini->GetListColumnWidth(idx) : -1;
-		m_columns.Add(new MyCDListColumn(idx, c, w >= 0 ? w : c->width));
+		m_columns.Add(new MyCDListColumn(idx, c, c->width, w >= 0 ? w : c->width));
 	}
 
 	// カラム位置の設定
@@ -303,6 +304,12 @@ void MyCDListCtrl::InsertListColumn(int col, int idx, MyCDListColumn *c)
 int MyCDListCtrl::GetListColumnWidth(int col) const
 {
 	return GetColumn(col)->GetWidth();
+}
+
+/// カラムの幅をセット
+void MyCDListCtrl::SetListColumnWidth(int col, int w)
+{
+	GetColumn(col)->SetWidth(w);
 }
 
 /// カラムを削除
@@ -672,6 +679,16 @@ bool MyCDListCtrl::ShowListColumnRearrangeBox()
 	InsertListColumns();
 
 	return true;
+}
+
+/// 全てのカラムの幅をデフォルトに戻す
+void MyCDListCtrl::ResetAllListColumnWidth()
+{
+	int column_count = (int)m_columns.Count();
+	for(int idx = 0; idx < column_count; idx++) {
+		MyCDListColumn *c = m_columns.Item(idx);
+		SetListColumnWidth(c->GetColumn(), c->GetDefaultWidth());
+	}
 }
 
 /// カラム番号ソート用

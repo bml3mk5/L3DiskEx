@@ -39,8 +39,11 @@ private:
 
 	wxTextCtrl *txtStatus;
 
+	wxTextCtrl *txtRCRC;
+	wxTextCtrl *txtCCRC;
+
 public:
-	RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int hide_flags = 0);
+	RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int rcrc, int ccrc, int hide_flags = 0);
 
 	enum {
 		IDC_TEXT_ID_C = 1,
@@ -51,6 +54,8 @@ public:
 		IDC_CHK_DENSITY,
 		IDC_TEXT_SECNUMS,
 		IDC_TEXT_STATUS,
+		IDC_TEXT_RCRC,
+		IDC_TEXT_CCRC,
 	};
 
 	/// @name functions

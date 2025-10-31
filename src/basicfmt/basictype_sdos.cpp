@@ -199,8 +199,8 @@ bool DiskBasicTypeSDOS::PrepareToSaveFile(wxInputStream &istream, int &file_size
 /// @return >0:正常 -1:空きなし(開始グループ設定前) -2:空きなし(開始グループ設定後)
 int DiskBasicTypeSDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, int data_size, AllocateGroupFlags flags, DiskBasicGroups &group_items)
 {
-	int file_size = 0;
-	int groups = 0;
+//	int file_size = 0;
+//	int groups = 0;
 
 	int rc = 0;
 	int sec_size = basic->GetSectorSize();
@@ -210,8 +210,8 @@ int DiskBasicTypeSDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 	while(remain > 0 && limit >= 0 && group_num != INVALID_GROUP_NUMBER) {
 		basic->GetNumsFromGroup(group_num, 0, sec_size, remain, group_items);
 
-		file_size += (sec_size * basic->GetSectorsPerGroup());
-		groups++;
+//		file_size += (sec_size * basic->GetSectorsPerGroup());
+//		groups++;
 		remain -= (sec_size * basic->GetSectorsPerGroup());
 
 		group_num = GetNextEmptyGroupNumber(group_num);

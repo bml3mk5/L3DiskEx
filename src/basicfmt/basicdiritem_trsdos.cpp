@@ -849,7 +849,7 @@ void DiskBasicDirItemTRSD23::SetAsNewFile()
 
 /// Overflowファイルとして設定
 /// @param[in] position_in_hit 元エントリの位置
-/// @param[in] position_in_hit 元エントリのハッシュコード
+/// @param[in] hash_code 元エントリのハッシュコード
 void DiskBasicDirItemTRSD23::SetAsOverflowFile(wxUint8 position_in_hit, wxUint8 hash_code)
 {
 	ClearData();
@@ -973,7 +973,6 @@ int DiskBasicDirItemTRSD23::GetFileSize() const
 /// @param[in] pos : GAP位置
 /// @param[in] val : 開始granule番号
 /// @param[in] cnt : 連続したgranule数
-/// @return 開始granule番号
 void DiskBasicDirItemTRSD23::SetGranulesOnGap(int pos, wxUint32 val, wxUint32 cnt)
 {
 	int blk = basic->GetGroupsPerTrack() * basic->GetSidesPerDiskOnBasic();
@@ -1271,7 +1270,6 @@ int DiskBasicDirItemTRSD13::GetFileSize() const
 /// @param[in] pos : GAP位置
 /// @param[in] val : 開始granule番号
 /// @param[in] cnt : 連続したgranule数
-/// @return 開始granule番号
 void DiskBasicDirItemTRSD13::SetGranulesOnGap(int pos, wxUint32 val, wxUint32 cnt)
 {
 	int blk = basic->GetGroupsPerTrack() * basic->GetSidesPerDiskOnBasic();

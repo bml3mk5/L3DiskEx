@@ -86,6 +86,9 @@
     <ClCompile Include="..\src\basicfmt\basicdiritem_frost.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_hfs.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\basicfmt\basicdiritem_hu68k.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
@@ -207,6 +210,9 @@
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
     <ClCompile Include="..\src\basicfmt\basictype_frost.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_hfs.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
     <ClCompile Include="..\src\basicfmt\basictype_hu68k.cpp">
@@ -398,6 +404,12 @@
     <ClCompile Include="..\src\ui\intnamevalid.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ui\loggingbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\mydialog.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ui\mymenu.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
@@ -503,6 +515,9 @@
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basicdiritem_frost.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_hfs.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basicdiritem_hu68k.h">
@@ -626,6 +641,9 @@
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basictype_frost.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_hfs.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basictype_hu68k.h">
@@ -815,6 +833,12 @@
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\intnamevalid.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\loggingbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\mydialog.h">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\mymenu.h">

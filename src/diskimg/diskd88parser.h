@@ -14,6 +14,7 @@
 
 
 class wxInputStream;
+class DiskImageSector;
 class DiskImageTrack;
 class DiskImageDisk;
 class DiskImageFile;
@@ -57,6 +58,9 @@ private:
 	wxUint32 ParseSector(wxInputStream &istream, int disk_number, int track_number, int side_number, int sector_nums, int sector_size, DiskImageTrack *track);
 	wxUint32 ParseTrack(wxInputStream &istream, size_t start_pos, int offset_pos, wxUint32 offset, int disk_number, int track_size, DiskImageDisk *disk);
 	wxUint32 ParseDisk(wxInputStream &istream, size_t start_pos, int disk_number);
+	void	 CheckParamInSector(int disk_number, DiskImageDisk *disk, DiskImageTrack *track, DiskImageSector *sector);
+	void	 CheckParamInTrack(int disk_number, DiskImageDisk *disk, DiskImageTrack *track);
+	void	 CheckParamInDisk(int disk_number, DiskImageDisk *disk);
 
 	int Check(wxInputStream &istream, const DiskTypeHints *disk_hints, const DiskParam *disk_param, DiskParamPtrs &disk_params, DiskParam &manual_param);
 

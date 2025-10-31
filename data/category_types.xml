@@ -4,9 +4,17 @@
 		<Description>HITACHI LEVEL-3/S1 DISK BASIC</Description>
 		<Description lang="ja">日立 LEVEL-3/S1 DISK BASIC</Description>
 	</DiskBasicCategory>
+	<DiskBasicCategory name="HITACHI-L3S1">
+		<Description>HITACHI LEVEL-3/MB-S1 Series</Description>
+		<Description lang="ja">日立 レベル3/MB-S1シリーズ</Description>
+	</DiskBasicCategory>
 	<DiskBasicCategory name="FM">
 		<Description>FUJITSU F-BASIC</Description>
 		<Description lang="ja">富士通 F-BASIC</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="FUJITSU-FM">
+		<Description>FUJITSU FM-7/77/11シリーズ</Description>
+		<Description lang="ja">富士通 FM-7/77/11シリーズ</Description>
 	</DiskBasicCategory>
 	<DiskBasicCategory name="FMR">
 		<Description>FUJITSU FMR/FM TOWNS MS-DOS</Description>
@@ -18,6 +26,10 @@
 	<DiskBasicCategory name="N88">
 		<Description>NEC PC-8801 N88-BASIC</Description>
 	</DiskBasicCategory>
+	<DiskBasicCategory name="NEC-PC-88">
+		<Description>NEC PC-8801 Series</Description>
+		<Description lang="ja">NEC PC-8801シリーズ</Description>
+	</DiskBasicCategory>
 	<DiskBasicCategory name="N66">
 		<Description>NEC PC-6601 N66-BASIC</Description>
 	</DiskBasicCategory>
@@ -28,9 +40,17 @@
 		<Description>SHARP X1 Hu-BASIC</Description>
 		<Description lang="ja">シャープ X1 Hu-BASIC</Description>
 	</DiskBasicCategory>
+	<DiskBasicCategory name="SHARP-X1">
+		<Description>SHARP X1 Series</Description>
+		<Description lang="ja">シャープ X1シリーズ</Description>
+	</DiskBasicCategory>
 	<DiskBasicCategory name="HU68K">
 		<Description>SHARP X68000 Human68k</Description>
 		<Description lang="ja">シャープ X68000 Human68k</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="SHARP-X68K">
+		<Description>SHARP X68000 Series</Description>
+		<Description lang="ja">シャープ X68000シリーズ</Description>
 	</DiskBasicCategory>
 	<DiskBasicCategory name="MZHU">
 		<Description>SHARP MZ Hu-BASIC</Description>
@@ -126,5 +146,9 @@
 	<DiskBasicCategory name="TRSD13">
 		<Description>Tandy TRSDOS 1.3</Description>
 		<Description lang="ja">タンディ TRSDOS 1.3</Description>
+	</DiskBasicCategory>
+	<DiskBasicCategory name="TANDY-TRS-80">
+		<Description>Tandy TRS-80 Series</Description>
+		<Description lang="ja">タンディ TRS-80シリーズ</Description>
 	</DiskBasicCategory>
 </DiskBasicCategories>

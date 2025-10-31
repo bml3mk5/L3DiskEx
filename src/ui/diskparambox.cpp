@@ -21,6 +21,7 @@
 #include "../basicfmt/basicparam.h"
 #include "../basicfmt/basiccategory.h"
 #include "../diskimg/diskimage.h"
+#include "../diskimg/diskparam.h"
 
 
 const char *gNumberingSector[] = {
@@ -442,14 +443,20 @@ bool DiskParamBox::ValidateAllParam()
 	return (valid >= 0);
 }
 
+/// カテゴリを変更した
 void DiskParamBox::OnCategoryChanged(wxCommandEvent& event)
 {
+	m_category_name.Empty();
 	int pos = event.GetSelection();
 	if (pos <= 0) {
 		// All items
-		m_type_names.Clear();
+		m_basic_type_names.Clear();
 	} else {
-		gDiskBasicTemplates.FindTypeNames(pos - 1, m_type_names);
+		// カテゴリと一致するBASIC種類名リストを得る
+		if (gDiskBasicTemplates.FindTypeNames(pos - 1, m_basic_type_names) <= 0) {
+			// 一致するものがないのでカテゴリ名を保持
+			m_category_name = gDiskBasicTemplates.GetCategoryName(pos - 1);
+		}
 	}
 	SetTemplateValues(pos <= 0);
 }
@@ -491,24 +498,30 @@ void DiskParamBox::SetTemplateValuesFromGlobals(bool all)
 /// @param[in] flags -1:すべて  1:推奨データ  0:一般データ
 void DiskParamBox::SetTemplateValuesFromGlobalsSub(int flags)
 {
-	for(size_t i=0; i < gDiskTemplates.Count(); i++) {
-		const DiskParam *item = gDiskTemplates.ItemPtr(i);
-		if (m_type_names.Count() > 0) {
-			const DiskParamName *match = NULL;
-			for(size_t n=0; n<m_type_names.Count(); n++) {
-				match = item->FindBasicType(m_type_names.Item(n), flags);
-				if (match) {
-					break;
-				}
+	bool list_all = (m_basic_type_names.Count() <= 0 && m_category_name.IsEmpty());
+	if (list_all) {
+		// 全てを候補にする
+		for(size_t i=0; i < gDiskTemplates.Count(); i++) {
+			const DiskParam *item = gDiskTemplates.ItemPtr(i);
+			wxString str = item->GetDiskDescription();
+			comTemplate->Append(str, (void *)i);
+		}
+	} else {
+		// 一致するものを候補にする
+		for(size_t i=0; i < gDiskTemplates.Count(); i++) {
+			const DiskParam *item = gDiskTemplates.ItemPtr(i);
+			// BASIC種類が一致するか
+			bool match = (item->MatchBasicType(m_basic_type_names, flags) != wxNOT_FOUND);
+			// カテゴリ名が設定されている場合
+			if (!match && flags == 0 && !m_category_name.IsEmpty()) {
+				match = (item->MatchCategory(m_category_name) != wxNOT_FOUND);
 			}
 			if (!match) {
 				continue;
 			}
+			wxString str = item->GetDiskDescription();
+			comTemplate->Append(str, (void *)i);
 		}
-
-		wxString str = item->GetDiskDescription();
-
-		comTemplate->Append(str, (void *)i);
 	}
 }
 
@@ -844,6 +857,7 @@ void DiskParamBox::GetParamForManual(DiskParam &param)
 		sd,
 		dummy.GetParticularTracks(),
 		dummy.GetParticularSectors(),
+		wxArrayString(),
 		wxT(""),
 		wxT("")
 	);
@@ -869,6 +883,17 @@ wxString DiskParamBox::GetCategory() const
 		if (num > 0) {
 			str = gDiskBasicTemplates.GetCategoryName(num-1);
 		}
+	}
+	return str;
+}
+
+/// 選択したBASICカテゴリタイプを返す
+wxString DiskParamBox::GetBasicCategory() const
+{
+	wxString str = GetCategory();
+	if (str == m_category_name) {
+		// BASIC種類にないカテゴリはカテゴリ名を空にする
+		str.Empty();
 	}
 	return str;
 }

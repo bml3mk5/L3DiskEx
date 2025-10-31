@@ -45,6 +45,8 @@ const struct st_list_columns gUiDiskRawSectorColumnDefs[] = {
 	{ "Sectors",	wxTRANSLATE("NumOfSectors"),	false,	72,	wxALIGN_RIGHT,	false },
 	{ "Size",		wxTRANSLATE("Size"),			false,	72,	wxALIGN_RIGHT,	false },
 	{ "Status",		wxTRANSLATE("Status"),			false,	40,	wxALIGN_CENTER,	false },
+	{ "RCRC",		wxTRANSLATE("CRC in disk"),		false,	72,	wxALIGN_LEFT,	false },
+	{ "CCRC",		wxTRANSLATE("Calculated CRC"),	false,	72,	wxALIGN_LEFT,	false },
 	{ NULL,			NULL,							false,	 0,	wxALIGN_LEFT,	false }
 };
 
@@ -729,8 +731,8 @@ void UiDiskRawTrack::SelectData()
 	DiskImageTrack *trk = NULL;
 	if (offset > 0) {
 		trk = p_disk->GetTrackByOffset(offset);
-	} else {
-		trk = p_disk->GetTrack(num);
+//	} else {
+//		trk = p_disk->GetTrack(num);
 	}
 	if (trk) {
 		parent->SetSectorListData(trk);
@@ -1025,20 +1027,16 @@ bool UiDiskRawTrack::ShowExportTrackDialog()
 	if (!p_disk) return false;
 
 	DiskImageTrack *track = GetSelectedTrack();
-//	DiskImageSector *sector = NULL;
-//	if (!GetFirstSectorOnTrack(&track, &sector)) {
-//		return false;
-//	}
-	int st_sec, ed_sec;
-	if (!GetFirstAndLastSectorNumOnTrack(track, st_sec, ed_sec)) {
+	DiskImageSector *sector = NULL;
+	if (!GetFirstSectorOnTrack(&track, &sector)) {
 		return false;
 	}
 
 	wxString caption = _("Export data from track");
 
 	RawExpBox dlg(this, wxID_ANY, caption, p_disk, m_side_number
-		, track->GetTrackNumber(), track->GetSideNumber(), st_sec
-		, -1, -1, ed_sec
+		, track->GetTrackNumber(), track->GetSideNumber(), sector->GetSectorNumber()
+		, -1, -1, -1
 		, parent->InvertData(), parent->ReverseSide()
 	);
 	int sts = dlg.ShowModal();
@@ -1511,14 +1509,14 @@ DiskImageTrack *UiDiskRawTrack::GetFirstTrack()
 	return track;
 }
 
-/// トラックの最初のセクタを得る
+/// トラックのセクタ１を得る
 /// @param [in,out] track  トラック NULLのときは最初のトラックのセクタ１
 /// @param [out]    sector セクタ１
 bool UiDiskRawTrack::GetFirstSectorOnTrack(DiskImageTrack **track, DiskImageSector **sector)
 {
 	if (!track || !sector) return false;
 	if (!(*track)) *track = GetFirstTrack();
-	if (*track) *sector = (*track)->GetSectorByIndex(0);
+	if (*track) *sector = (*track)->GetSector(1);
 	if (!(*sector)) {
 		*track = NULL;
 		return false;
@@ -1654,6 +1652,11 @@ void UiDiskRawSectorListCtrl::SetListData(DiskImageSector *sector, int row, MyRa
 	values[SECTORCOL_SECTORS].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorsPerTrack()));
 	values[SECTORCOL_SIZE].Set(row, wxString::Format(wxT("%d"), (int)sector->GetSectorBufferSize()));
 	values[SECTORCOL_STATUS].Set(row, wxString::Format(wxT("%x"), (int)sector->GetSectorStatus()));
+	int rval = sector->GetRecordedCRC();
+	values[SECTORCOL_RCRC].Set(row, rval >= 0 ? wxString::Format(wxT("%04x"), rval) : wxT("----"));
+	int cval = sector->CalculateCRC();
+	wxString cfmt = (rval >= 0 && cval >= 0 && cval != rval) ? wxT("%04x*") : wxT("%04x");
+	values[SECTORCOL_CCRC].Set(row, cval >= 0 ? wxString::Format(cfmt, cval) : wxT("----"));
 }
 
 /// リストにデータを挿入
@@ -2353,6 +2356,7 @@ bool UiDiskRawSector::ShowSectorAttr()
 		, sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetIDN()
 		, sector->GetSectorsPerTrack()
 		, sector->IsDeleted(), sector->IsSingleDensity(), sector->GetSectorStatus()
+		, sector->GetRecordedCRC(), sector->CalculateCRC()
 	);
 
 	int rc = dlg.ShowModal();
@@ -2519,6 +2523,7 @@ void UiDiskRawSector::ShowAppendSectorDialog()
 		, sector->GetIDC(), sector->GetIDH(), new_sec_num, sector->GetIDN()
 		, 1
 		, sector->IsDeleted(), sector->IsSingleDensity(), sector->GetSectorStatus()
+		, -1, -1
 		, SECTORBOX_HIDE_SECTOR_NUMS
 	);
 	int rc = dlg.ShowModal();

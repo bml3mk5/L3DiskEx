@@ -479,7 +479,7 @@ bool DiskBasicParam::LoadNumSectorsMap(const wxXmlNode *node, const wxString &va
 	// sec_param  セクタ数/トラック(全トラック同じの場合)
 	int sec_param = GetSectorsPerTrackOnBasic();
 	// sec_params セクタ数/トラック(トラック毎に異なる場合)
-	NumSectorsParams sec_params = SectorsPerTrackOnBasicList();
+	NumSectorsParams *sec_params = &SectorsPerTrackOnBasicList();
 
 	wxString str;
 	int start_track = -1;
@@ -496,7 +496,7 @@ bool DiskBasicParam::LoadNumSectorsMap(const wxXmlNode *node, const wxString &va
 	if (start_track < 0 && num_of_tracks < 0) {
 		sec_param = sec_per_trk;
 	} else {
-		sec_params.Add(NumSectorsParam(start_track, num_of_tracks, sec_per_trk));
+		sec_params->Add(NumSectorsParam(start_track, num_of_tracks, sec_per_trk));
 	}
 
 	SetSectorsPerTrackOnBasic(sec_param);

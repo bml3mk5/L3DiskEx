@@ -34,7 +34,7 @@ BEGIN_EVENT_TABLE(ConfigBox, wxDialog)
 END_EVENT_TABLE()
 
 ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
-	: wxDialog(parent, id, _("Configure"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
+	: MyDialog(parent, id, _("Configure"))
 {
 	this->ini = ini;
 
@@ -45,7 +45,7 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	wxBoxSizer *szrPage;
 	wxBoxSizer *szrH;
 	wxStaticBoxSizer *bszr;
-	wxButton *btn;
+//	wxButton *btn;
 
 	wxNotebook *book = new wxNotebook(this, wxID_ANY);
 	wxPanel *page;
@@ -55,42 +55,19 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	//
 	page = new wxPanel(book);
 	book->AddPage(page, _("General"));
-
 	szrPage = new wxBoxSizer(wxVERTICAL);
 
 	// 余分なデータをとり除くか
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkTrimData = new wxCheckBox(page, IDC_CHECK_TRIM_DATA, _("Trim unused data when save the disk image."));
-	chkTrimData->SetValue(ini->IsTrimUnusedData());
-	szrH->Add(chkTrimData, flags);
-	szrPage->Add(szrH, flags);
+	chkTrimData = CreateCheckBoxH(page, IDC_CHECK_TRIM_DATA, _("Trim unused data when save the disk image."), ini->IsTrimUnusedData(), szrPage, flags);
 
 	// 削除されたファイルをリストに表示するか
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkShowDelFile = new wxCheckBox(page, IDC_CHECK_SHOW_DELFILE, _("Show deleted and hidden files on the file list."));
-	chkShowDelFile->SetValue(ini->IsShownDeletedFile());
-	szrH->Add(chkShowDelFile, flags);
-	szrPage->Add(szrH, flags);
+	chkShowDelFile = CreateCheckBoxH(page, IDC_CHECK_SHOW_DELFILE, _("Show deleted and hidden files on the file list."), ini->IsShownDeletedFile(), szrPage, flags);
 
 	// プロパティダイアログに内部ディレクトリ情報を表示する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkInterDirItem = new wxCheckBox(page, IDC_CHECK_INTER_DIR_ITEM, _("Show the internal directory information on the property dialog."));
-	chkInterDirItem->SetValue(ini->DoesShowInterDirItem());
-	szrH->Add(chkInterDirItem, flags);
-	szrPage->Add(szrH, flags);
+	chkInterDirItem = CreateCheckBoxH(page, IDC_CHECK_INTER_DIR_ITEM, _("Show the internal directory information on the property dialog."), ini->DoesShowInterDirItem(), szrPage, flags);
 
 	// 一度に処理できるディレクトリの深さ
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	szrH->Add(new wxStaticText(page, wxID_ANY, _("The depth of subdirectories that can be processed per time:")), flags);
-	spnDirDepth = new wxSpinCtrl(page, IDC_SPIN_DIR_DEPTH);
-	spnDirDepth->SetRange(1, 100);
-	spnDirDepth->SetValue(ini->GetDirDepth());
-	szrH->Add(spnDirDepth, flags);
-	szrPage->Add(szrH, flags);
+	spnDirDepth = CreateSpinCtrlH(page, IDC_SPIN_DIR_DEPTH, _("The depth of subdirectories that can be processed per time:"), ini->GetDirDepth(), szrPage, flags);
 
 	// 言語
 
@@ -123,24 +100,13 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	//
 	page = new wxPanel(book);
 	book->AddPage(page, _("Export"));
-
 	szrPage = new wxBoxSizer(wxVERTICAL);
 
 	// 属性に適した拡張子を付加する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkAddExtExport = new wxCheckBox(page, IDC_CHECK_ADD_EXT_EXPORT, _("Add extension suitable for file attribute to filename."));
-	chkAddExtExport->SetValue(ini->IsAddExtensionExport());
-	szrH->Add(chkAddExtExport, flags);
-	szrPage->Add(szrH, flags);
+	chkAddExtExport = CreateCheckBoxH(page, IDC_CHECK_ADD_EXT_EXPORT, _("Add extension suitable for file attribute to filename."), ini->IsAddExtensionExport(), szrPage, flags);
 
 	// エクスポート時に現在日時を設定する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkDateExport = new wxCheckBox(page, IDC_CHECK_DATE_EXPORT, _("Set current date and time to exported file."));
-	chkDateExport->SetValue(ini->IsSetCurrentDateExport());
-	szrH->Add(chkDateExport, flags);
-	szrPage->Add(szrH, flags);
+	chkDateExport = CreateCheckBoxH(page, IDC_CHECK_DATE_EXPORT, _("Set current date and time to exported file."), ini->IsSetCurrentDateExport(), szrPage, flags);
 
 	page->SetSizerAndFit(szrPage);
 
@@ -149,40 +115,19 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	//
 	page = new wxPanel(book);
 	book->AddPage(page, _("Import"));
-
 	szrPage = new wxBoxSizer(wxVERTICAL);
 
 	// 確認ダイアログを抑制する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkSuppImport = new wxCheckBox(page, IDC_CHECK_SUPP_IMPORT, _("Suppress confirmation dialog."));
-	chkSuppImport->SetValue(ini->IsSkipImportDialog());
-	szrH->Add(chkSuppImport, flags);
-	szrPage->Add(szrH, flags);
+	chkSuppImport = CreateCheckBoxH(page, IDC_CHECK_SUPP_IMPORT, _("Suppress confirmation dialog."), ini->IsSkipImportDialog(), szrPage, flags);
 
 	// 属性を決定できる時、ファイル名から拡張子をとり除く
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkDecAttrImport = new wxCheckBox(page, IDC_CHECK_DEC_ATTR_IMPORT, _("Trim extension in filename when decided file attribute by extension."));
-	chkDecAttrImport->SetValue(ini->IsDecideAttrImport());
-	szrH->Add(chkDecAttrImport, flags);
-	szrPage->Add(szrH, flags);
+	chkDecAttrImport = CreateCheckBoxH(page, IDC_CHECK_DEC_ATTR_IMPORT, _("Trim extension in filename when decided file attribute by extension."), ini->IsDecideAttrImport(), szrPage, flags);
 
 	// インポート時に現在日時を設定する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkDateImport = new wxCheckBox(page, IDC_CHECK_DATE_IMPORT, _("Set current date and time to importing file."));
-	chkDateImport->SetValue(ini->IsSetCurrentDateImport());
-	szrH->Add(chkDateImport, flags);
-	szrPage->Add(szrH, flags);
+	chkDateImport = CreateCheckBoxH(page, IDC_CHECK_DATE_IMPORT, _("Set current date and time to importing file."), ini->IsSetCurrentDateImport(), szrPage, flags);
 
 	// インポートやプロパティ変更時に日時を無視する
-
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	chkIgnoreDate = new wxCheckBox(page, IDC_CHECK_IGNORE_DATE, _("Ignore date and time when import or change property. (Supported system only)"));
-	chkIgnoreDate->SetValue(ini->DoesIgnoreDateTime());
-	szrH->Add(chkIgnoreDate, flags);
-	szrPage->Add(szrH, flags);
+	chkIgnoreDate = CreateCheckBoxH(page, IDC_CHECK_IGNORE_DATE, _("Ignore date and time when import or change property. (Supported system only)"), ini->DoesIgnoreDateTime(), szrPage, flags);
 
 	page->SetSizerAndFit(szrPage);
 
@@ -191,7 +136,6 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	//
 	page = new wxPanel(book);
 	book->AddPage(page, _("Path"));
-
 	szrPage = new wxBoxSizer(wxVERTICAL);
 
 	// テンポラリフォルダのパス
@@ -202,37 +146,29 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 	szrH->Add(chkTempFolder, flags);
 	bszr->Add(szrH, flagsh);
 
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	txtTempFolder = new wxTextCtrl(page, IDC_TEXT_TEMP_FOLDER, wxT(""), wxDefaultPosition, wxSize(320, -1));
-	szrH->Add(txtTempFolder, flags);
-	btnTempFolder = new wxButton(page, IDC_BUTTON_TEMP_FOLDER, _("Folder..."));
-	szrH->Add(btnTempFolder, flags);
-	bszr->Add(szrH, flags);
+	txtTempFolder = CreateTextCtrlWithButton(page, IDC_TEXT_TEMP_FOLDER, wxT(""), IDC_BUTTON_TEMP_FOLDER, _("Folder..."), &btnTempFolder, bszr, flags);
+
 	szrPage->Add(bszr, flags);
 
 	InitializeTempFolder();
 
 	// バイナリエディタのパス
-
-	bszr = new wxStaticBoxSizer(new wxStaticBox(page, wxID_ANY, _("Path of the binary editor")), wxVERTICAL);
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	txtBinaryEditor = new wxTextCtrl(page, IDC_TEXT_BINARY_EDITOR, ini->GetBinaryEditor(), wxDefaultPosition, wxSize(320, -1));
-	szrH->Add(txtBinaryEditor, flags);
-	btn = new wxButton(page, IDC_BUTTON_BINARY_EDITOR, _("File..."));
-	szrH->Add(btn, flags);
-	bszr->Add(szrH, flags);
-	szrPage->Add(bszr, flags);
+	txtBinaryEditor = CreateTextCtrlWithButtonBox(page, _("Path of the binary editor"), IDC_TEXT_BINARY_EDITOR, ini->GetBinaryEditor(), IDC_BUTTON_BINARY_EDITOR, _("File..."), szrPage, flags);
 
 	// テキストエディタのパス
+	txtTextEditor = CreateTextCtrlWithButtonBox(page, _("Path of the text editor"), IDC_TEXT_TEXT_EDITOR, ini->GetTextEditor(), IDC_BUTTON_TEXT_EDITOR, _("File..."), szrPage, flags);
 
-	bszr = new wxStaticBoxSizer(new wxStaticBox(page, wxID_ANY, _("Path of the text editor")), wxVERTICAL);
-	szrH = new wxBoxSizer(wxHORIZONTAL);
-	txtTextEditor = new wxTextCtrl(page, IDC_TEXT_TEXT_EDITOR, ini->GetTextEditor(), wxDefaultPosition, wxSize(320, -1));
-	szrH->Add(txtTextEditor, flags);
-	btn = new wxButton(page, IDC_BUTTON_TEXT_EDITOR, _("File..."));
-	szrH->Add(btn, flags);
-	bszr->Add(szrH, flags);
-	szrPage->Add(bszr, flags);
+	page->SetSizerAndFit(szrPage);
+
+	//
+	// page 5 : 検査
+	//
+	page = new wxPanel(book);
+	book->AddPage(page, _("Validation"));
+	szrPage = new wxBoxSizer(wxVERTICAL);
+
+	// サイド番号のチェック
+	chkChkSideNum = CreateCheckBoxH(page, IDC_CHECK_CHK_SIDE_NUM, _("Check side number on each track when open a disk image."), ini->DoesCheckSideNumber(), szrPage, flags);
 
 	page->SetSizerAndFit(szrPage);
 
@@ -338,6 +274,8 @@ void ConfigBox::CommitData()
 	ini->SetBinaryEditor(txtBinaryEditor->GetValue());
 	ini->SetTextEditor(txtTextEditor->GetValue());
 	ini->ShowInterDirItem(chkInterDirItem->GetValue());
+	ini->CheckSideNumber(chkChkSideNum->GetValue());
+
 	int sel = comLanguage->GetSelection();
 	wxString lang;
 	switch(sel) {

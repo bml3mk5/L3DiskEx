@@ -92,6 +92,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basictype_hu68k.o \
 	$(SRCBASICFMTDIR)/basictype_falcom.o \
 	$(SRCBASICFMTDIR)/basictype_apledos.o \
+	$(SRCBASICFMTDIR)/basictype_hfs.o \
 	$(SRCBASICFMTDIR)/basictype_prodos.o \
 	$(SRCBASICFMTDIR)/basictype_c1541.o \
 	$(SRCBASICFMTDIR)/basictype_amiga.o \
@@ -125,6 +126,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basicdiritem_losa.o \
 	$(SRCBASICFMTDIR)/basicdiritem_falcom.o \
 	$(SRCBASICFMTDIR)/basicdiritem_apledos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_hfs.o \
 	$(SRCBASICFMTDIR)/basicdiritem_prodos.o \
 	$(SRCBASICFMTDIR)/basicdiritem_c1541.o \
 	$(SRCBASICFMTDIR)/basicdiritem_amiga.o \
@@ -168,6 +170,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/fontminibox.o \
 	$(SRCUIDIR)/intnamebox.o \
 	$(SRCUIDIR)/intnamevalid.o \
+	$(SRCUIDIR)/loggingbox.o \
 	$(SRCUIDIR)/rawparambox.o \
 	$(SRCUIDIR)/rawexpbox.o \
 	$(SRCUIDIR)/rawsectorbox.o \
@@ -186,6 +189,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/uifatarea.o \
 	$(SRCUIDIR)/uirpanel.o \
 	$(SRCUIDIR)/mymenu.o \
+	$(SRCUIDIR)/mydialog.o \
 	$(SRCDIR)/main.o
 
 EXE =$(BUILDDIR)/$(EXEFILE)

@@ -138,6 +138,8 @@ private:
 	DiskD88SectorHeader	 m_header_origin;	///< pre-save header
 	wxUint8				*data_origin;		///< pre-save data
 
+	int					 m_rec_crc;		///< recorded CRC
+
 	DiskD88Sector();
 	DiskD88Sector(const DiskD88Sector &src) : DiskImageSector(src) {}
 	DiskD88Sector &operator=(const DiskD88Sector &src) { return *this; }
@@ -217,6 +219,13 @@ public:
 	bool	IsSingleDensity();
 	/// 単密度かを設定
 	void	SetSingleDensity(bool val);
+
+	/// CRCを返す
+	int		GetRecordedCRC() const;
+	/// CRCを計算する
+	int		CalculateCRC();
+	/// CRCを設定
+	void 	SetRecordedCRC(wxUint16 crc);
 
 	/// 変更されているか
 	bool	IsModified() const;

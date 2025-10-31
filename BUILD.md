@@ -1,9 +1,12 @@
 
 # L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2024 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2025 All Rights Reserved.
+
+<a href="#ja">日本語</a> <a href="#en">English</a>
 
 ------------------------------------------------------------------------------
+<a name="en"></a>
 
 ## File Tree
 
@@ -22,6 +25,14 @@
      l3diskex.vcxproj ...... Project file for VC++ 2015
      post_build.bat ........ Batch file for post build
      wxwidgets.props ....... Property file for VC++ 2015
+    VC++2017/
+     l3diskex.vcxproj ...... Project file for VC++ 2017
+     post_build.bat ........ Batch file for post build
+     wxwidgets.props ....... Property file for VC++ 2017
+    VC++2019/
+     l3diskex.vcxproj ...... Project file for VC++ 2019
+     post_build.bat ........ Batch file for post build
+     wxwidgets.props ....... Property file for VC++ 2019
     Xcode/ ................. Project files to build on Xcode
      l3diskex/
       l3diskex.xcodeproj ... Project file for MacOS Xcode
@@ -49,8 +60,8 @@
 
 ## Libraries to build this
 
- * wxWidgets Version 3 or lator
-
+ * wxWidgets Version 3.2 or lator
+  + [Official Web Page](https://wxwidgets.org/)
 
 ## How to build
 
@@ -58,17 +69,18 @@
 
 #### 1. Install libraries to build this application
 
- * wxWidgets-3.x.x
+ * wxWidgets-3.2.x
   + case 1) Install from source code
-   1. Download the wxWidgets-3.x.x.zip and extract it to any folder.
+   1. Download the wxWidgets-3.2.x.zip and extract it to any folder.
    2. Open wx_vc??.sln in build\\msw on VC++.
     - When build solution with Debug/Release, static libraries create in `lib\vc_lib\`.
     - When build solution with DLL_Debug/DLL_Release, dynamic libraries create in `lib\vc_dll\`.
 
   + case 2) Install DLL binaries
-   - Download wxMSW-3.x.x_vc100_Dev.7z and extract it to any folder.
-   - Rename `lib\vc100_dll` to `lib\vc_dll`.
-   - Download wxWidgets-3.x.x-headers.7z and extract it to any folder.
+   - Download wxMSW-3.2.x_vc1NN_Dev.7z and extract it to any folder.
+    * vc1NN means the version of Visual Studio.
+   - Rename `lib\vc1NN_dll` to `lib\vc_dll`.
+   - Download wxWidgets-3.2.x-headers.7z and extract it to any folder.
 
 #### 2. Compile
 
@@ -96,7 +108,7 @@
 
   + case 2) Build from source code
 
-   - Extract wxWidgets-3.x.x.tar.bz2 and change to extracted directory.
+   - Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
          mkdir build_release_static_unicode
          cd build_release_static_unicode
@@ -147,16 +159,17 @@
 
  1. Install wxWidgets
 
-  Ex. Ubuntu Linux 18.04 LTS amd64:
+  Ex. Ubuntu Linux 24.04 LTS amd64:
 
   * Install these packages:
-   + libgtk-3.22.30-1ubuntu1
-   + libgtk-3-common-3.22.30-1ubuntu1
-   + libgtk-3-dev-3.22.30-1ubuntu1
-   + libwxbase3.0-0v5-3.0.4+dfsg-3
-   + libwxbase3.0-dev-3.0.4+dfsg-3
-   + libwxgtk3.0-gtk3-0v5-3.0.4+dfsg-3
-   + libwxgtk3.0-gtk3-dev-3.0.4+dfsg-3
+   + libgtk-3-0t64
+   + libgtk-3-common
+   + libgtk-3-dev
+   + libwxbase3.2-1t64
+   + libwxgtk3.2-1t64
+   + libwxgtk3.2-dev
+   + libwxgtk-webview3.2-1t64
+   + libwxgtk-webview3.2-dev
 
  2. Compile
 
@@ -173,7 +186,7 @@
 
  2. Build wxWidgets
 
-  Extract wxWidgets-3.x.x.tar.bz2 and change to extracted directory.
+  Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
       mkdir build_release_static_unicode
       cd build_release_static_unicode
@@ -202,11 +215,11 @@
 
  1. Install Xcode and Command Line Tools for Xcode.
 
- 2. Compile wxWidgets-3.x.x
+ 2. Compile wxWidgets-3.2.x
 
   + Operate on the terminal.
 
-  + Extract wxWidgets-3.x.x.tar.bz2 and change to extracted directory.
+  + Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
         mkdir build_release_static_unicode
         cd build_release_static_unicode
@@ -253,13 +266,8 @@
 * No warranty: We are not responsible for any damage caused by this software.
 
 ------------------------------------------------------------------------------
-
-  Sasaji (sasaji@s-sasaji.ddo.jp)
-  http://s-sasaji.ddo.jp/bml3mk5/
-  (X(Twitter): https://twitter.com/bml3mk5)
-
 ------------------------------------------------------------------------------
-------------------------------------------------------------------------------
+<a name="ja"></a>
 
 ## ファイル構成
 
@@ -278,6 +286,14 @@
      l3diskex.vcxproj ...... VC++ 2015用プロジェクトファイル
      post_build.bat ........ ビルド後処理用バッチファイル
      wxwidgets.props ....... VC++ 2015用プロパティファイル
+    VC++2017/
+     l3diskex.vcxproj ...... VC++ 2017用プロジェクトファイル
+     post_build.bat ........ ビルド後処理用バッチファイル
+     wxwidgets.props ....... VC++ 2017用プロパティファイル
+    VC++2019/
+     l3diskex.vcxproj ...... VC++ 2019用プロジェクトファイル
+     post_build.bat ........ ビルド後処理用バッチファイル
+     wxwidgets.props ....... VC++ 2019用プロパティファイル
     Xcode/ ................. Xcode用プロジェクトファイル
      l3diskex/
       l3diskex.xcodeproj ... MacOS Xcode用プロジェクト
@@ -305,7 +321,8 @@
 
 ## ビルドに必要なライブラリ
 
- * wxWidgets Version 3 以上
+ * wxWidgets Version 3.2 以上
+  + [公式Webページ](https://wxwidgets.org/)
 
 
 ## コンパイル方法
@@ -314,9 +331,9 @@
 
 #### 1. コンパイルに必要なライブラリをインストールします。
 
- * wxWidgets-3.x.x
+ * wxWidgets-3.2.x
   + case 1) ソースコードからインストール
-   1. wxWidgets-3.x.x.zipをダウンロードして適当なフォルダに展開。
+   1. wxWidgets-3.2.x.zipをダウンロードして適当なフォルダに展開。
    2. build\\mswにあるwx_vc??.slnをVC++で開く。
     - Debug/Releaseでソリューションをビルドすると、`lib\vc_lib\`に
       staticライブラリが生成される。
@@ -324,9 +341,10 @@
       DLLライブラリが生成される。
 
   + case 2) DLLバイナリからインストール
-   - wxMSW-3.x.x_vc100_Dev.7zをダウンロードして適当なフォルダに展開。
-   - `lib\vc100_dll`を`lib\vc_dll`にリネーム
-   - wxWidgets-3.x.x-headers.7zをダウンロードして適当なフォルダに展開。
+   - wxMSW-3.2.x_vc1NN_Dev.7zをダウンロードして適当なフォルダに展開。
+    * vc1NNはVisual Studioのバージョンを意味します。
+   - `lib\vc1NN_dll`を`lib\vc_dll`にリネーム
+   - wxWidgets-3.2.x-headers.7zをダウンロードして適当なフォルダに展開。
 
 #### 2. コンパイル
 
@@ -358,7 +376,7 @@
 
   + case 2) ソースからインストール
 
-   - wxWidgets-3.x.x.tar.bz2を展開し、展開先にcdする。
+   - wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
          mkdir build_release_static_unicode
          cd build_release_static_unicode
@@ -414,16 +432,17 @@
 
  1. wxWidgetsをパッケージからインストール
 
-  Ubuntu Linux 18.04 LTS amd64 の例:
+  Ubuntu Linux 24.04 LTS amd64 の例:
 
   * 以下のパッケージをインストールする。
-   + libgtk-3.22.30-1ubuntu1
-   + libgtk-3-common-3.22.30-1ubuntu1
-   + libgtk-3-dev-3.22.30-1ubuntu1
-   + libwxbase3.0-0v5-3.0.4+dfsg-3
-   + libwxbase3.0-dev-3.0.4+dfsg-3
-   + libwxgtk3.0-gtk3-0v5-3.0.4+dfsg-3
-   + libwxgtk3.0-gtk3-dev-3.0.4+dfsg-3
+   + libgtk-3-0t64
+   + libgtk-3-common
+   + libgtk-3-dev
+   + libwxbase3.2-1t64
+   + libwxgtk3.2-1t64
+   + libwxgtk3.2-dev
+   + libwxgtk-webview3.2-1t64
+   + libwxgtk-webview3.2-dev
 
  2. コンパイル
 
@@ -441,7 +460,7 @@
 
  2. wxWidgetsをビルド
 
-  wxWidgets-3.x.x.tar.bz2を展開し、展開先にcdする。
+  wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
       mkdir build_release_static_unicode
       cd build_release_static_unicode
@@ -473,11 +492,11 @@
  1. Xcode をApp Storeからインストールします。
     Command Line Tools for Xcodeもインストールされるはず。
 
- 2. wxWidgets-3.x.xをコンパイル
+ 2. wxWidgets-3.2.xをコンパイル
 
   + ターミナル上で行います。
 
-  + wxWidgets-3.x.x.tar.bz2を展開し、展開先にcdする。
+  + wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
         mkdir build_release_static_unicode
         cd build_release_static_unicode
@@ -533,8 +552,8 @@
 
 ------------------------------------------------------------------------------
 
-連絡先：Sasaji (sasaji@s-sasaji.ddo.jp)
- *             http://s-sasaji.ddo.jp/bml3mk5/
+ MailTo: Sasaji (sasaji@s-sasaji.ddo.jp)
+ * My WebPage: http://s-sasaji.ddo.jp/bml3mk5/
  * GitHub:     https://github.com/bml3mk5/L3DiskEx
  * X(Twitter): https://x.com/bml3mk5
 

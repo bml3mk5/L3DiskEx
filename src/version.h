@@ -1,6 +1,6 @@
 ﻿/// @file version.h
 ///
-/// @author Copyright (c) 2015-2024 Sasaji. All rights reserved.
+/// @author Copyright (c) 2015-2025 Sasaji. All rights reserved.
 ///
 
 #ifndef _VERSION_H_
@@ -10,12 +10,12 @@
 #define APPLICATION_NAME		"l3diskex"
 #define APPLICATION_XPMICON_NAME l3diskex_xpm
 
-#define APPLICATION_VERSION	"0.7.1"
+#define APPLICATION_VERSION	"0.8.0"
 #define APP_VER_MAJOR	0
-#define APP_VER_MINOR	7
-#define APP_VER_REV	1
+#define APP_VER_MINOR	8
+#define APP_VER_REV	0
 #define APP_VER_BUILD	0
-#define APP_COPYRIGHT	"Copyright (C) 2015-2024 Sasaji"
+#define APP_COPYRIGHT	"Copyright (C) 2015-2025 Sasaji"
 
 #if defined(__MINGW32__)
 #if defined(x86_64) || defined(__x86_64)
