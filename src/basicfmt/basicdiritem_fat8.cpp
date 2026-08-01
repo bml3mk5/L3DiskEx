@@ -61,6 +61,16 @@ DiskBasicDirItemFAT8::DiskBasicDirItemFAT8(DiskBasic *basic, int n_num, const Di
 	Used(CheckUsed(n_unuse));
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemFAT8::Reset()
+{
+	DiskBasicDirItem::Reset();
+
+	m_start_address = -1;
+	m_end_address = -1;
+	m_exec_address = -1;
+}
+
 /// 属性を設定する
 void DiskBasicDirItemFAT8::SetFileAttr(const DiskBasicFileType &file_type)
 {
@@ -263,17 +273,6 @@ int DiskBasicDirItemFAT8::ConvFileTypeFromFileName(const wxString &filename) con
 	return ftype;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/radiobox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
 // 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemFAT8::GetFileType1Pos() const
 {
@@ -292,6 +291,19 @@ int DiskBasicDirItemFAT8::GetFileType2Pos() const
 	t2 = (t2 & 1 ? (t3 & 1 ? TYPE_NAME_2_RANDOM : TYPE_NAME_2_ASCII) : TYPE_NAME_2_BINARY);
 	return t2;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/radiobox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -439,6 +451,8 @@ bool DiskBasicDirItemFAT8::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 	return true;
 }
 
+#endif /* !USE_CONSOLE */
+
 //////////////////////////////////////////////////////////////////////
 //
 //
@@ -462,6 +476,16 @@ DiskBasicDirItemFAT8F::DiskBasicDirItemFAT8F(DiskBasic *basic, int n_num, const 
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemFAT8F::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemFAT8::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定

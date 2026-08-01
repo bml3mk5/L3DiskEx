@@ -322,6 +322,8 @@ public:
 	virtual bool	IsRootDirectory(wxUint32 group_num);
 	/// @brief サブディレクトリを作成できるか
 	virtual bool	CanMakeDirectory() const { return false; }
+	/// @brief サブディレクトリを移動できるか
+	virtual bool	CanChangeDirectory() const { return CanMakeDirectory(); }
 	/// @brief ルートディレクトリのサイズを拡張できるか
 	virtual bool	CanExpandRootDirectory() const { return false; }
 	/// @brief サブディレクトリのサイズを拡張できるか
@@ -338,6 +340,8 @@ public:
 	virtual void	AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item) {}
 	/// @brief ディレクトリ拡張後の個別処理
 	virtual bool	AdditionalProcessOnExpandedDirectory(DiskBasicDirItem *item, DiskBasicGroups &group_items, const DiskBasicDirItem *parent_item) { return true; }
+	/// @brief サブディレクトリを検索する前にディレクトリ名を編集する
+	virtual bool	RenameOnFindingDirectory(wxString &dir_name) { return true; }
 	//@}
 
 	/// @name format
@@ -377,7 +381,7 @@ public:
 	/// @brief ファイルをセーブする前の準備を行う
 	virtual bool	PrepareToSaveFile(wxInputStream &istream, int &file_size, DiskBasicDirItem *pitem, DiskBasicDirItem *nitem, DiskBasicError &errinfo) { return true; }
 	/// @brief データの書き込み処理
-	virtual int		WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num);
+	virtual int		WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num);
 	/// @brief データの書き込み終了後の処理
 	virtual void	AdditionalProcessOnSavedFile(DiskBasicDirItem *item) {}
 

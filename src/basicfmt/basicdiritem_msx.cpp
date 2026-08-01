@@ -47,6 +47,8 @@ wxString DiskBasicDirItemMSX::GetFileCreateDateTimeTitle() const
 	return _("Created Date");
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -107,3 +109,5 @@ bool DiskBasicDirItemMSX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 
 	return true;
 }
+
+#endif /* !USE_CONSOLE */

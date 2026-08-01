@@ -9,6 +9,9 @@
 #define UIRAWDISK_H
 
 #include "uicommon.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/string.h>
 #include <wx/splitter.h>
 #include "../diskimg/diskimage.h"
@@ -83,11 +86,24 @@ private:
 	bool invert_data;	///< インポート・エクスポート時にデータを反転するか
 	bool reverse_side;	///< インポート・エクスポート時にサイド番号を降順で行うか
 
+	bool m_conf_load;
+
+	/// 仕切り位置を設定ファイルから読み設定する
+	void LoadSashPosition();
+	/// 仕切り位置を設定ファイルに保存する
+	void SaveSashPosition();
+
 public:
 	UiDiskRawPanel(UiDiskFrame *parentframe, wxWindow *parentwindow);
+	~UiDiskRawPanel();
 
 	UiDiskRawTrack *GetLPanel() { return lpanel; }
 	UiDiskRawSector *GetRPanel() { return rpanel; }
+
+	/// 最初の非表示
+	void HideFirst();
+	/// 表示/非表示
+	bool Show(bool show = true) wxOVERRIDE;
 
 	/// トラックリストにデータを設定する
 	void SetTrackListData(DiskImageDisk *disk, int side_num);
@@ -605,6 +621,8 @@ public:
 
 	wxDECLARE_EVENT_TABLE();
 };
+
+#endif /* !USE_CONSOLE */
 
 #endif /* UIRAWDISK_H */
 

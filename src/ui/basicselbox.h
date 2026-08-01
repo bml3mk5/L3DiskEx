@@ -9,43 +9,66 @@
 #define BASICSELBOX_H
 
 #include "../common.h"
-#include <wx/dialog.h>
-#include <wx/dynarray.h>
 #include "../basicfmt/basicparam.h"
 
-#define VOLUME_ROWS 3
+class DiskBasic;
+class DiskBasicParam;
+class DiskBasicParamPtrs;
+class DiskBasicFormat;
+class DiskImageDisk;
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+#include <wx/dynarray.h>
 
 class wxListBox;
 class wxTextCtrl;
 class wxStaticText;
-class DiskBasic;
-class DiskBasicParam;
-class DiskBasicParamPtrs;
-class DiskImageDisk;
 
 /// VOLUMEコントロール
 class VolumeCtrl
 {
+private:
+	enum {
+		VOLUME_NAME = 0,
+		VOLUME_NUM,
+		VOLUME_DATE,
+		VOLUME_SKEW,
+		VOLUME_ROWS
+	};
+
 protected:
 	wxStaticText *lblVolume[VOLUME_ROWS];
 	wxTextCtrl *txtVolume[VOLUME_ROWS];
 
+	int m_volume_skew;
+
+	void EnableVolumeC(int idx, bool enable);
+	void SetVolumeS(int idx, const wxString &val);
+	void SetVolumeI(int idx, int val, bool is_hexa);
+	wxString GetVolumeS(int idx) const;
+	int GetVolumeI(int idx) const;
+
 public:
 	VolumeCtrl();
 	virtual ~VolumeCtrl() {}
-	wxSizer *CreateVolumeCtrl(wxWindow* parent, wxWindowID id);
+	wxSizer *CreateVolumeCtrl(wxWindow* parent, wxWindowID id, const DiskBasicFormat *fmt);
 
 	void EnableVolumeName(bool enable, size_t max_length, const ValidNameRule &rule);
 	void EnableVolumeNumber(bool enable);
 	void EnableVolumeDate(bool enable);
+	void EnableVolumeSkew(bool enable, int min_value, int max_value);
 
 	void SetVolumeName(const wxString &val);
 	void SetVolumeNumber(int val, bool is_hexa);
 	void SetVolumeDate(const wxString &val);
+	void SetVolumeSkew(int val, bool is_hexa);
 
 	wxString GetVolumeName() const;
 	int GetVolumeNumber() const;
 	wxString GetVolumeDate() const;
+	int GetVolumeSkew() const;
 };
 
 
@@ -89,5 +112,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* BASICSELBOX_H */
+#endif /* USE_CONSOLE */
 
+#endif /* BASICSELBOX_H */

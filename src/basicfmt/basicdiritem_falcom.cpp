@@ -9,7 +9,6 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../charcodes.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -36,6 +35,16 @@ DiskBasicDirItemFalcom::DiskBasicDirItemFalcom(DiskBasic *basic, int n_num, cons
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemFalcom::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定

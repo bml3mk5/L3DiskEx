@@ -9,6 +9,9 @@
 #define _FONTMINIBOX_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dialog.h>
 #include <wx/arrstr.h>
 
@@ -66,5 +69,6 @@ public:
 	DECLARE_EVENT_TABLE()
 };
 
-#endif /* _FONTMINIBOX_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _FONTMINIBOX_H_ */

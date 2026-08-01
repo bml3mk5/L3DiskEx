@@ -16,6 +16,38 @@
 
 #define MAX_RECENT_FILES 20
 
+class wxFileConfig;
+
+/// カラム設定テンプレート
+class ColumnParams
+{
+protected:
+	wxArrayInt		mWidth;	///< リストの各カラムの幅
+	wxArrayInt		mPos;	///< リストの各カラムの位置
+	int				mStart;
+	int				mEnd;
+	const struct st_list_columns *pList;
+
+public:
+	ColumnParams(const struct st_list_columns *list, int pos_start, int pos_end);
+	virtual ~ColumnParams() {}
+
+	virtual int		Count() const { return (int)mWidth.Count(); }
+	virtual void	SetWidth(int id, int val) { mWidth[id] = val; }
+	virtual int		GetWidth(int id) const { return mWidth[id]; }
+	virtual void	SetPos(int id, int val) { mPos[id] = val; }
+	virtual int		GetPos(int id) const { return mPos[id]; }
+	virtual void	Load(wxFileConfig *ini, const wxString &prefix);
+	virtual void	Save(wxFileConfig *ini, const wxString &prefix);
+};
+
+/// ファイルリストのカラム設定
+class FileColumnParams : public ColumnParams
+{
+public:
+	FileColumnParams();
+};
+
 /// 設定ファイルパラメータ
 class Params
 {
@@ -45,8 +77,9 @@ protected:
 	wxString	mBinaryEditor;		///< バイナリエディタのパス
 	wxString	mTextEditor;		///< テキストエディタのパス
 	wxString	mLanguage;			///< 言語
-	int			mListColumnWidth[LISTCOL_END];	///< ファイルリストの各カラムの幅
-	int			mListColumnPos[LISTCOL_END];	///< ファイルリストの各カラムの位置
+	FileColumnParams mFileColumn;	///< ファイルリストの各カラムの設定
+	int			mLPanelWidth;		///< 左パネル（ツリー）の幅
+	int			mTrkPanelWidth;		///< トラックパネルの幅
 
 public:
 	Params();
@@ -106,10 +139,11 @@ public:
 	const wxString &GetTextEditor() const { return mTextEditor; }
 	void			SetLanguage(const wxString &val) { mLanguage = val; }
 	const wxString &GetLanguage() const { return mLanguage; }
-	void			SetListColumnWidth(int id, int val) { mListColumnWidth[id] = val; }
-	int				GetListColumnWidth(int id) const { return mListColumnWidth[id]; }
-	void			SetListColumnPos(int id, int val) { mListColumnPos[id] = val; }
-	int				GetListColumnPos(int id) const { return mListColumnPos[id]; }
+	FileColumnParams *GetFileColumnParams() { return &mFileColumn; }
+	void			SetLPanelWidth(int val) { mLPanelWidth = val; }
+	int				GetLPanelWidth() const { return mLPanelWidth; }
+	void			SetTrackPanelWidth(int val) { mTrkPanelWidth = val; }
+	int				GetTrackPanelWidth() const { return mTrkPanelWidth; }
 	//@}
 };
 
@@ -126,6 +160,9 @@ public:
 	void Load(const wxString &file);
 	void Load();
 	void Save();
+
+	static int FromPercentage(int percent, int base);
+	static int ToPercentage(int num, int base);
 };
 
 extern Config gConfig;

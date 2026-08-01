@@ -47,8 +47,10 @@ protected:
 	int			    GetFileType1Pos() const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    GetFileType2Pos() const;
+#ifndef USE_CONSOLE
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	virtual void	SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+#endif /* !USE_CONSOLE */
 
 	/// @brief ファイル内部のアドレスを取り出す
 	virtual void	TakeAddressesInFile();
@@ -60,6 +62,9 @@ public:
 	DiskBasicDirItemFAT8(DiskBasic *basic);
 	DiskBasicDirItemFAT8(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemFAT8(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 
 	/// @brief 属性を設定
 	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -92,6 +97,7 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvFileTypeFromFileName(const wxString &filename) const;
 
+#ifndef USE_CONSOLE
 	// ダイアログ用
 
 #define ATTR_DIALOG_IDC_RADIO_TYPE1 51
@@ -103,6 +109,7 @@ public:
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// @brief 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
+#endif /* !USE_CONSOLE */
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -137,6 +144,8 @@ public:
 	DiskBasicDirItemFAT8F(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemFAT8F(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 

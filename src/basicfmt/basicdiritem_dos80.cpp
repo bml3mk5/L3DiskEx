@@ -11,7 +11,6 @@
 #include "../config.h"
 #include "../charcodes.h"
 #include <wx/stream.h>
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -69,6 +68,20 @@ DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, int n_num, const 
 
 DiskBasicDirItemDOS80::~DiskBasicDirItemDOS80()
 {
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemDOS80::Reset()
+{
+	m_data2.Delete();
+	m_data.Delete();
+
+	DiskBasicDirItemFAT8::Reset();
+
+	m_cached_type = 0;
+	m_data.Alloc();
+	m_data2.Alloc();
+	m_data2.Fill(0);
 }
 
 /// アイテムへのポインタを設定
@@ -518,6 +531,8 @@ bool DiskBasicDirItemDOS80::PreImportDataFile(wxString &filename)
 	return true;
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -666,3 +681,5 @@ void DiskBasicDirItemDOS80::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("GRPS"), m_data2.Data()->grps, sizeof(m_data2.Data()->grps));
 	vals.Add(wxT("RESERVED"), m_data2.Data()->reserved, sizeof(m_data2.Data()->reserved));
 }
+
+#endif /* !USE_CONSOLE */

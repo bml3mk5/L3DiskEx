@@ -142,6 +142,8 @@ size_t DiskBasicDirItemLOSA::GetDataSize() const
 	return sizeof(directory_losa_t);
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -211,3 +213,5 @@ void DiskBasicDirItemLOSA::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("START_GROUP"), m_data.Data()->losa.start_group);
 	vals.Add(wxT("FILE_SIZE"), m_data.Data()->losa.file_size);
 }
+
+#endif /* !USE_CONSOLE */

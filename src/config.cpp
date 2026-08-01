@@ -12,6 +12,73 @@
 
 Config gConfig;
 
+
+ColumnParams::ColumnParams(const struct st_list_columns *list, int pos_start, int pos_end)
+{
+	mStart = pos_start;
+	mEnd = pos_end;
+	pList = list;
+	int size = mEnd - mStart;
+	mWidth.Alloc(size);
+	mPos.Alloc(size);
+	for (int idx = 0; idx<size; idx++) {
+		mWidth.Add(-1);
+		mPos.Add(idx + mStart);
+	}
+}
+
+void ColumnParams::Load(wxFileConfig *ini, const wxString &prefix)
+{
+	// リストのカラム幅
+	int size = mEnd - mStart;
+	for (int idx = 0; idx < size; idx++) {
+		int id = idx + mStart;
+		wxString key = prefix;
+		key += pList[id].name;
+		key += wxT("Width");
+		int val = GetWidth(idx);
+		ini->Read(key, &val);
+		SetWidth(idx, val);
+	}
+	// リストのカラム位置
+	for (int idx = 0; idx < size; idx++) {
+		int id = idx + mStart;
+		wxString key = prefix;
+		key += pList[id].name;
+		key += wxT("Pos");
+		int val = GetPos(idx);
+		ini->Read(key, &val);
+		SetPos(idx, val);
+	}
+}
+
+void ColumnParams::Save(wxFileConfig *ini, const wxString &prefix)
+{
+	// リストのカラム幅
+	int size = mEnd - mStart;
+	for (int idx = 0; idx < size; idx++) {
+		int id = idx + mStart;
+		wxString key = prefix;
+		key += pList[id].name;
+		key += wxT("Width");
+		ini->Write(key, GetWidth(idx));
+	}
+	// リストのカラム位置
+	for (int idx = 0; idx < size; idx++) {
+		int id = idx + mStart;
+		wxString key = prefix;
+		key += pList[id].name;
+		key += wxT("Pos");
+		ini->Write(key, GetPos(idx));
+	}
+}
+
+FileColumnParams::FileColumnParams()
+	: ColumnParams(gUiDiskFileListColumnDefs, LISTCOL_NAME, LISTCOL_END)
+{
+}
+
+
 Params::Params()
 {
 	// default value
@@ -43,10 +110,8 @@ Params::Params()
 	mBinaryEditor.Empty();
 	mTextEditor.Empty();
 	mLanguage.Empty();
-	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
-		mListColumnWidth[id]=-1;
-		mListColumnPos[id]=id;
-	}
+	mLPanelWidth = mWindowWidth * 20 / 100;	// 20%
+	mTrkPanelWidth = mWindowWidth * 23 / 100;	// 23%
 }
 
 void Params::SetFilePath(const wxString &val)
@@ -84,7 +149,7 @@ void Params::AddRecentFile(const wxString &val)
 	}
 	// 追加
 	mRecentFiles.Insert(fpath.GetFullPath(), 0);
-	// 10を超える分は消す
+	// MAX_RECENT_FILESを超える分は消す
 	if (mRecentFiles.Count() > MAX_RECENT_FILES) {
 		mRecentFiles.RemoveAt(MAX_RECENT_FILES);
 	}
@@ -201,20 +266,12 @@ void Config::Load()
 	ini->Read(wxT("TextEditor"), &mTextEditor);
 	// 言語
 	ini->Read(wxT("Language"), &mLanguage);
-	// リストのカラム幅
-	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
-		wxString key = wxT("ListColumn");
-		key += gUiDiskFileListColumnDefs[id].name;
-		key += wxT("Width");
-		ini->Read(key, &mListColumnWidth[id]);
-	}
-	// リストのカラム位置
-	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
-		wxString key = wxT("ListColumn");
-		key += gUiDiskFileListColumnDefs[id].name;
-		key += wxT("Pos");
-		ini->Read(key, &mListColumnPos[id]);
-	}
+	// ファイルリストのカラム
+	mFileColumn.Load(ini, wxT("ListColumn"));
+	// 左パネル（ツリー）の幅
+	ini->Read(wxT("LeftPanelWidth"), &mLPanelWidth);
+	// トラックパネルの幅
+	ini->Read(wxT("TrackPanelWidth"), &mTrkPanelWidth);
 
 	delete ini;
 }
@@ -286,21 +343,30 @@ void Config::Save()
 	ini->Write(wxT("TextEditor"), mTextEditor);
 	// 言語
 	ini->Write(wxT("Language"), mLanguage);
-	// リストのカラム幅
-	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
-		wxString key = wxT("ListColumn");
-		key += gUiDiskFileListColumnDefs[id].name;
-		key += wxT("Width");
-		ini->Write(key, mListColumnWidth[id]);
-	}
-	// リストのカラム位置
-	for(int id=LISTCOL_NAME; id<LISTCOL_END; id++) {
-		wxString key = wxT("ListColumn");
-		key += gUiDiskFileListColumnDefs[id].name;
-		key += wxT("Pos");
-		ini->Write(key, mListColumnPos[id]);
-	}
+	// ファイルリストのカラム
+	mFileColumn.Save(ini, wxT("ListColumn"));
+	// 左パネル（ツリー）の幅
+	ini->Write(wxT("LeftPanelWidth"), mLPanelWidth);
+	// トラックパネルの幅
+	ini->Write(wxT("TrackPanelWidth"), mTrkPanelWidth);
 
 	// write
 	delete ini;
+}
+
+int Config::FromPercentage(int percent, int base)
+{
+	if (percent < 5) percent = 5;
+	else if (percent > 95) percent = 95;
+	int num = percent * base / 100;
+	return num;
+}
+
+int Config::ToPercentage(int num, int base)
+{
+	if (base <= 0) base = 1;
+	int percent = num * 100 / base;
+	if (percent < 5) percent = 5;
+	else if (percent > 95) percent = 95;
+	return percent;
 }

@@ -6,6 +6,30 @@
 ///
 
 #include "uifilelist.h"
+#include <wx/translation.h>
+
+/// ファイル一覧の各カラム属性
+const struct st_list_columns gUiDiskFileListColumnDefs[] = {
+	{ "Name",		wxTRANSLATE("File Name"),		true,	160,	wxALIGN_LEFT,	true },
+	{ "Attr",		wxTRANSLATE("Attributes"),		false,	150,	wxALIGN_LEFT,	true },
+	{ "Size",		wxTRANSLATE("Size"),			false,	 60,	wxALIGN_RIGHT,	true },
+	{ "Groups",		wxTRANSLATE("Groups"),			false,	 40,	wxALIGN_RIGHT,	true },
+	{ "Start",		wxTRANSLATE("Start Group"),		false,	 40,	wxALIGN_RIGHT,	true },
+	{ "Track",		wxTRANSLATE("Track"),			false,	 40,	wxALIGN_RIGHT,	false },
+	{ "Side",		wxTRANSLATE("Side"),			false,	 40,	wxALIGN_RIGHT,	false },
+	{ "Sector",		wxTRANSLATE("Sector"),			false,	 40,	wxALIGN_RIGHT,	false },
+	{ "Division",	wxTRANSLATE("Division"),		false,	 40,	wxALIGN_RIGHT,	false },
+	{ "Date",		wxTRANSLATE("Date Time"),		false,	150,	wxALIGN_LEFT,	true },
+	{ "StartAddr",	wxTRANSLATE("Load Address"),	false,	 60,	wxALIGN_RIGHT,	false },
+	{ "EndAddr",	wxTRANSLATE("End Address"),		false,	 60,	wxALIGN_RIGHT,	false },
+	{ "ExecAddr",	wxTRANSLATE("Execute Address"),	false,	 60,	wxALIGN_RIGHT,	false },
+	{ "Num",		wxTRANSLATE("Num"),				false,	 40,	wxALIGN_RIGHT,	true },
+	{ NULL,			NULL,							false,	  0,	wxALIGN_LEFT,	false }
+};
+
+
+#ifndef USE_CONSOLE
+
 #include <wx/button.h>
 #include <wx/choice.h>
 #include <wx/stattext.h>
@@ -18,18 +42,19 @@
 #include "mymenu.h"
 #include "../main.h"
 #include "uimainframe.h"
+#include "uimainpanel.h"
 #include "../config.h"
 #include "../diskimg/diskimage.h"
 #include "../basicfmt/basicfmt.h"
 #include "../basicfmt/basicdir.h"
 #include "../basicfmt/basicdiritem.h"
+#include "filedirbox.h"
 #include "intnamebox.h"
 #include "intnamevalid.h"
 #include "basicselbox.h"
 #include "basicparambox.h"
 #include "../diskimg/diskresult.h"
 #include "../utils.h"
-
 
 #ifndef USE_LIST_CTRL_ON_FILE_LIST
 #else
@@ -59,25 +84,6 @@ enum en_icons_for_flist {
 	ICON_FOR_LIST_LABEL,
 	ICON_FOR_LIST_FILE_DELETE,
 	ICON_FOR_LIST_FILE_HIDDEN,
-};
-
-/// ファイル一覧の各カラム属性
-const struct st_list_columns gUiDiskFileListColumnDefs[] = {
-	{ "Name",		wxTRANSLATE("File Name"),		true,	160,	wxALIGN_LEFT,	true },
-	{ "Attr",		wxTRANSLATE("Attributes"),		false,	150,	wxALIGN_LEFT,	true },
-	{ "Size",		wxTRANSLATE("Size"),			false,	 60,	wxALIGN_RIGHT,	true },
-	{ "Groups",		wxTRANSLATE("Groups"),			false,	 40,	wxALIGN_RIGHT,	true },
-	{ "Start",		wxTRANSLATE("Start Group"),		false,	 40,	wxALIGN_RIGHT,	true },
-	{ "Track",		wxTRANSLATE("Track"),			false,	 40,	wxALIGN_RIGHT,	false },
-	{ "Side",		wxTRANSLATE("Side"),			false,	 40,	wxALIGN_RIGHT,	false },
-	{ "Sector",		wxTRANSLATE("Sector"),			false,	 40,	wxALIGN_RIGHT,	false },
-	{ "Division",	wxTRANSLATE("Division"),		false,	 40,	wxALIGN_RIGHT,	false },
-	{ "Date",		wxTRANSLATE("Date Time"),		false,	150,	wxALIGN_LEFT,	true },
-	{ "StartAddr",	wxTRANSLATE("Load Address"),	false,	 60,	wxALIGN_RIGHT,	false },
-	{ "EndAddr",	wxTRANSLATE("End Address"),		false,	 60,	wxALIGN_RIGHT,	false },
-	{ "ExecAddr",	wxTRANSLATE("Execute Address"),	false,	 60,	wxALIGN_RIGHT,	false },
-	{ "Num",		wxTRANSLATE("Num"),				false,	 40,	wxALIGN_RIGHT,	true },
-	{ NULL,			NULL,							false,	  0,	wxALIGN_LEFT,	false }
 };
 
 #ifdef DeleteFile
@@ -156,7 +162,7 @@ UiDiskFileListCtrl::UiDiskFileListCtrl(UiDiskFrame *parentframe, wxWindow *paren
 	: MyCDListCtrl(
 		parentframe, parent, id,
 		gUiDiskFileListColumnDefs,
-		&gConfig,
+		gConfig.GetFileColumnParams(),
 		wxDV_MULTIPLE,
 		new UiDiskFileListStoreModel(parentframe, parent),
 		pos, size
@@ -166,7 +172,7 @@ UiDiskFileListCtrl::UiDiskFileListCtrl(UiDiskFrame *parentframe, wxWindow *paren
 		parentframe, parent, id,
 		gUiDiskFileListColumnDefs,
 		-1, -1,
-		&gConfig,
+		gConfig.GetFileColumnParams(),
 		wxLC_EDIT_LABELS,
 		pos, size
 	)
@@ -200,7 +206,7 @@ void UiDiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItem *i
 	wxString attr =		item->GetFileAttrStr();		// ファイル属性
 	int		 size =		item->GetFileSize();		// ファイルサイズ
 	int		 groups =	item->GetGroupSize();		// 使用グループ数
-	int		 start = 	item->GetStartGroup(0);		// 開始グループ
+	wxUint32 start = 	item->GetStartGroup(0);		// 開始グループ
 	wxString date =		item->GetFileDateTimeStr();	// 日時
 	int		 staddr =	item->GetStartAddress();	// 開始アドレス
 	int		 edaddr = 	item->GetEndAddress();		// 終了アドレス
@@ -211,7 +217,7 @@ void UiDiskFileListCtrl::SetListData(DiskBasic *basic, const DiskBasicDirItem *i
 	values[LISTCOL_ATTR].Set(row, attr);
 	values[LISTCOL_SIZE].Set(row, size >= 0 ? wxNumberFormatter::ToString((long)size) : wxT("---"));
 	values[LISTCOL_GROUPS].Set(row, groups >= 0 ? wxNumberFormatter::ToString((long)groups) : wxT("---"));
-	values[LISTCOL_START].Set(row, wxString::Format(wxT("%02x"), start));
+	values[LISTCOL_START].Set(row, start != (wxUint32)-1 ? wxString::Format(wxT("%02x"), start) : wxT("--"));
 	values[LISTCOL_TRACK].Set(row, track_num >= 0 ? wxString::Format(wxT("%d"), track_num) : wxT("-"));
 	values[LISTCOL_SIDE].Set(row, side_num >= 0 ? wxString::Format(wxT("%d"), side_num) : wxT("-"));
 	values[LISTCOL_SECTOR].Set(row, sector_start >= 0 ? wxString::Format(wxT("%d"), sector_start) : wxT("-"));
@@ -412,12 +418,12 @@ void UiDiskFileListCtrl::SortDataItems(DiskBasic *basic, int col)
 
 int UiDiskFileListCtrl::CompareName(DiskBasicDirItems *items, int i1, int i2, int dir)
 {
-	return items->Item(i1)->GetFileNameStr().CompareTo(items->Item(i2)->GetFileNameStr()) * dir;
+	return items->Item(i1)->GetFileNameStr().Cmp(items->Item(i2)->GetFileNameStr()) * dir;
 }
 int UiDiskFileListCtrl::CompareAttr(DiskBasicDirItems *items, int i1, int i2, int dir)
 {
-	int cmp = (items->Item(i1)->GetFileAttrStr().CompareTo(items->Item(i2)->GetFileAttrStr()) * dir);
-	if (cmp == 0) cmp = (items->Item(i1)->GetFileNameStr().CompareTo(items->Item(i2)->GetFileNameStr()) * dir);
+	int cmp = (items->Item(i1)->GetFileAttrStr().Cmp(items->Item(i2)->GetFileAttrStr()) * dir);
+	if (cmp == 0) cmp = (items->Item(i1)->GetFileNameStr().Cmp(items->Item(i2)->GetFileNameStr()) * dir);
 	return cmp;
 }
 int UiDiskFileListCtrl::CompareSize(DiskBasicDirItems *items, int i1, int i2, int dir)
@@ -530,19 +536,25 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *szrHed = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer *szrBtn = new wxBoxSizer(wxHORIZONTAL);
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 2);
+	int p1 = FromDIP(1);
+	int p2 = FromDIP(2);
+	int p8 = FromDIP(8);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, p2);
+	wxSizerFlags flags_a1 = wxSizerFlags().Expand().Border(wxALL, p1);
+	wxSizerFlags flags_bt2 = wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, p2);
+	wxSizerFlags flags_bt4_lr8 = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxBOTTOM | wxTOP, p2).Border(wxLEFT | wxRIGHT, p8);
 
 	wxSize size(TEXT_ATTR_SIZE, -1);
-	textAttr = new wxTextCtrl(this, IDC_TEXT_ATTR, wxT(""), wxDefaultPosition, size, wxTE_READONLY | wxTE_LEFT);
-	szriTxt = szrHed->Add(textAttr, wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, 2));
+	textAttr = new wxTextCtrl(this, IDC_TEXT_ATTR, wxT(""), wxDefaultPosition, FromDIP(size), wxTE_READONLY | wxTE_LEFT);
+	szriTxt = szrHed->Add(textAttr, flags_bt2);
 
 	size.x = 60;
-	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, size);
+	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, FromDIP(size));
 	btnChange->Enable(false);
 	szrBtn->Add(btnChange, flags);
 
 	lblCharCode = new wxStaticText(this, wxID_ANY, _("Charactor Code"));
-	szrBtn->Add(lblCharCode,  wxSizerFlags().Center().Border(wxBOTTOM | wxTOP, 2).Border(wxLEFT | wxRIGHT, 8));
+	szrBtn->Add(lblCharCode, flags_bt4_lr8);
 	comCharCode = new wxChoice(this, IDC_COMBO_CHAR_CODE, wxDefaultPosition, wxDefaultSize);
 	const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("main"));
 	if (choice) {
@@ -562,7 +574,7 @@ UiDiskFileList::UiDiskFileList(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	listCtrl = new UiDiskFileListCtrl(parentframe, this, IDC_VIEW_LIST);
 	textAttr->SetFont(font);
 	listCtrl->SetFont(font);
-	szriLst = vbox->Add(listCtrl, wxSizerFlags().Expand().Border(wxALL, 1));
+	szriLst = vbox->Add(listCtrl, flags_a1);
 
 	SetSizerAndFit(vbox);
 	Layout();
@@ -1582,8 +1594,9 @@ void UiDiskFileList::ShowImportDataFileDialog()
 	}
 
 	// パスを覚えておく
-	frame->SetIniExportFilePath(dlg.GetPath());
+	frame->SetIniExportFilePath(dlg.GetDirectory(), true);
 
+	// パス一覧
 	wxArrayString paths;
 	dlg.GetPaths(paths);
 	frame->ImportDataFiles(paths, m_current_basic, m_current_basic->GetCurrentDirectory(), false, _("importing..."), _("imported."));
@@ -2159,3 +2172,5 @@ void UiDiskFileList::SetListFont(const wxFont &font)
 	listCtrl->SetFont(font);
 	Refresh();
 }
+
+#endif /* !USE_CONSOLE */

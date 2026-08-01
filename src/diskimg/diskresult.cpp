@@ -59,6 +59,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] Unmatch id H and side %d in track %d. id[C:%d H:%d R:%d]"),
 	//	ERRV_ID_SECTOR  v:6
 	wxTRANSLATE("[Disk%d] Invalid id R in track %d. id[C:%d H:%d R:%d] num of sector:%d"),
+	//	ERRV_ID_NUMBER  v:5
+	wxTRANSLATE("[Disk%d] Invalid id N in track %d. id[C:%d H:%d R:%d N:%d]"),
 	// ERRV_TRACKS_HEADER v:2
 	wxTRANSLATE("[Disk%d] Number of track is too large in header. tracks:%d"),
 	// ERRV_SIDES_HEADER v:2
@@ -75,6 +77,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] Invalid sector size in header. sector size:%d"),
 	//	ERRV_SECTOR_SIZE_SECTOR  v:6
 	wxTRANSLATE("[Disk%d] Invalid sector size in sector. id[C:%d H:%d R:%d N:%d] sector size:%d"),
+	//	ERRV_MISMATCH_SECTOR_SIZE v:6
+	wxTRANSLATE("[Disk%d] Mismatch sector size in sector. id[C:%d H:%d R:%d N:%d] sector size:%d"),
 	//	ERRV_DUPLICATE_TRACK  v:4
 	wxTRANSLATE("[Disk%d] Duplicate track %d and side %d. Side number change to %d."),
 	//	ERRV_DUPLICATE_SECTOR  v:3
@@ -83,6 +87,8 @@ const char *gDiskResultMsgs[] = {
 	wxTRANSLATE("[Disk%d] No found sector %d. [track:%d side:%d]"),
 	//	ERRV_IGNORE_DATA  v:4
 	wxTRANSLATE("[Disk%d] Deleted data found. This sector is ignored. id[C:%d H:%d R:%d]"),
+	// ERRV_STATUS_IS_NOT_ZERO  v:5
+	wxTRANSLATE("[Disk%d] There may be a problem in the sector. id[C:%d H:%d R:%d] status:%02x"),
 	//	ERRV_TOO_MANY_TRACKS  v:2
 	wxTRANSLATE("[Disk%d] Too many tracks. Ignore tracks after %dth."),
 	//	ERRV_UNSUPPORTED_TYPE,
@@ -110,5 +116,5 @@ void DiskResult::SetMessageV(int error_number, va_list ap)
 	} else {
 		msg = wxString::Format(wxGetTranslation(gDiskResultMsgs[ERRV_END]), error_number);
 	}
-	if (!msg.IsEmpty()) msgs.Add(msg);
+	AddMessage(msg);
 }

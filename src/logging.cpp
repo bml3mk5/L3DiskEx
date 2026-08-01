@@ -7,12 +7,15 @@
 
 #include "logging.h"
 #include <wx/wx.h>
-#include <wx/file.h>
 #include <wx/filename.h>
 #include <wx/dir.h>
 #include <wx/datetime.h>
 #include <wx/regex.h>
-
+#ifdef USE_WXFILE_ON_LOGGING
+#include <wx/file.h>
+#else
+#include <wx/ffile.h>
+#endif
 
 MyLogging myLog;
 
@@ -57,7 +60,11 @@ bool MyLogging::Open(const wxString &file_path, const wxString &file_base_name, 
 	filename += wxString::Format(wxT("%d"), seq_num);
 	filename += file_ext;
 	fullpath += filename;
-	p_file = new wxFile(fullpath, wxFile::write);
+#ifdef USE_WXFILE_ON_LOGGING
+//	p_file = new wxFile(fullpath, wxFile::write);
+#else
+	p_file = new wxFFile(fullpath, wxT("w"));
+#endif
 
 	bool rc = p_file->IsOpened();
 	if (rc) {
@@ -65,7 +72,11 @@ bool MyLogging::Open(const wxString &file_path, const wxString &file_base_name, 
 
 		// 一度閉じて再度RWで開く
 		p_file->Close();
+#ifdef USE_WXFILE_ON_LOGGING
 		p_file->Open(fullpath, wxFile::read_write);
+#else
+		p_file->Open(fullpath, wxT("r+"));
+#endif
 
 		SetInfo(wxT("Opened ") + filename);
 	} else {
@@ -129,6 +140,25 @@ void MyLogging::SetMessage(int level, const wxString &msg)
 	mmsg += wxT("\n");
 
 	p_file->Write(mmsg);
+	p_file->Flush();
+}
+void MyLogging::SetMessage(int level, const wxArrayString &msgs)
+{
+	if (!p_file || level > m_log_level) return;
+
+	wxDateTime ndt = wxDateTime::Now();
+	wxString mmsg;
+
+	for(size_t i=0; i<msgs.Count(); i++) {
+		mmsg = ndt.FormatISODate();
+		mmsg += wxT(" ");
+		mmsg += ndt.FormatISOTime();
+		mmsg += wxT(" ");
+		mmsg += msgs.Item(i);
+		mmsg += wxT("\n");
+
+		p_file->Write(mmsg);
+	}
 	p_file->Flush();
 }
 void MyLogging::SetMessage(int level, const char *format, ...)

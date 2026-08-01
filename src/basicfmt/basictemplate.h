@@ -38,7 +38,7 @@ public:
 	~DiskBasicTemplates() {}
 
 	/// @brief XMLファイル読み込み
-	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs);
 
 	/// @brief カテゴリとタイプに一致するパラメータを検索
 	const DiskBasicParam *FindType(const wxString &n_category, const wxString &n_basic_type) const;

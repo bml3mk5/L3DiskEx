@@ -9,9 +9,11 @@
 #define UIDISKATTR_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/string.h>
 #include <wx/panel.h>
-
 
 class wxTextCtrl;
 class wxButton;
@@ -70,5 +72,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* UIDISKATTR_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* UIDISKATTR_H */

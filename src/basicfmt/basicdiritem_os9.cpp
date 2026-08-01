@@ -247,6 +247,19 @@ DiskBasicDirItemOS9::DiskBasicDirItemOS9(DiskBasic *basic, int n_num, const Disk
 	VisibleOnTree(!(IsDirectory() && (name == wxT(".") || name == wxT(".."))));
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemOS9::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+	fd.Alloc();
+	m_owner_id = 0;
+	m_group_id = 0;
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num        通し番号
 /// @param [in]  n_gitem      トラック番号などのデータ
@@ -843,6 +856,27 @@ int DiskBasicDirItemOS9::ConvOriginalTypeFromFileName(const wxString &filename) 
 	return t1;
 }
 
+// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemOS9::GetFileType1Pos()
+{
+	return GetFileType1();
+}
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemOS9::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	bool valid = true;
+	wxString name =	filename;
+	// ".",".."は設定できない
+	if (name == wxT(".") || name == wxT("..")) {
+		errormsg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERRV_CANNOT_SET_NAME]), name);
+		valid = false;
+	}
+	return valid;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -869,12 +903,6 @@ int DiskBasicDirItemOS9::ConvOriginalTypeFromFileName(const wxString &filename) 
 #define IDC_TEXT_CREATEDATE	59
 #define IDC_TEXT_OWNER      60
 #define IDC_TEXT_GROUP      61
-
-// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemOS9::GetFileType1Pos()
-{
-	return GetFileType1();
-}
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -915,7 +943,7 @@ void DiskBasicDirItemOS9::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 	wxCheckBox *chkUsrRead;
 
 //	wxTextCtrl *txtCDate;
-	wxSizerFlags nborder = wxSizerFlags().Expand().Border(wxALL, 1);
+	wxSizerFlags nborder = wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(1));
 
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1);
 
@@ -1039,19 +1067,6 @@ void DiskBasicDirItemOS9::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 //	SetCDate(attr.GetCreateDateTime());
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemOS9::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	bool valid = true;
-	wxString name =	filename;
-	// ".",".."は設定できない
-	if (name == wxT(".") || name == wxT("..")) {
-		errormsg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERRV_CANNOT_SET_NAME]), name);
-		valid = false;
-	}
-	return valid;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemOS9::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -1074,3 +1089,5 @@ void DiskBasicDirItemOS9::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("FD_SIZ"), fd->FD_SIZ, true);
 	vals.Add(wxT("FD_DCR"), &fd->FD_DCR, sizeof(fd->FD_DCR));
 }
+
+#endif /* !USE_CONSOLE */

@@ -6,10 +6,13 @@
 ///
 
 #include "fileselbox.h"
-#include <wx/listbox.h>
-#include <wx/sizer.h>
+#include <wx/translation.h>
 #include "../diskimg/fileparam.h"
 
+#ifndef USE_CONSOLE
+
+#include <wx/listbox.h>
+#include <wx/sizer.h>
 
 // Attach Event
 BEGIN_EVENT_TABLE(FileSelBox, wxDialog)
@@ -20,7 +23,7 @@ END_EVENT_TABLE()
 FileSelBox::FileSelBox(wxWindow* parent, wxWindowID id)
 	: wxDialog(parent, id, _("Select File Type"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -75,3 +78,4 @@ wxString FileSelBox::GetFormatType() const
 	}
 	return type;
 }
+#endif /* USE_CONSOLE */

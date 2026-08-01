@@ -16,7 +16,7 @@
 
 //////////////////////////////////////////////////////////////////////
 
-#define FILENAME_BUFSIZE	(32)
+#define FILENAME_BUFSIZE	(64)
 #define FILEEXT_BUFSIZE		(4)
 
 //////////////////////////////////////////////////////////////////////
@@ -693,6 +693,50 @@ typedef struct st_directory_trsd13 {
 	trdos_gap_t gap[13];
 } directory_trsd13_t;
 
+/// @brief S1-OSポインタ情報
+typedef struct st_s1os_ptr {
+	wxUint16 track;		// BE
+	wxUint16 side;		// BE
+	wxUint16 sector;	// BE
+} s1os_ptr_t;
+
+/// @brief S1-OSサイズ情報
+typedef struct st_s1os_size {
+	wxUint32 secs;	///< 占有しているセクタ数
+	wxUint16 bytes;	///< 最終セクタの占有バイト数
+} s1os_size_t;
+
+/// @brief S1-OSエントリ情報
+typedef struct st_s1os_entry {
+	s1os_ptr_t s;
+	wxUint16 top;		// BE
+} s1os_entry_t;
+
+/// @brief S1-OSチェイン情報(各セクタ)
+typedef struct st_s1os_chain {
+	s1os_entry_t	entry;
+	s1os_ptr_t		prev;
+	s1os_ptr_t		next;
+} s1os_chain_t;
+
+/// @brief S1-OS属性情報
+typedef struct st_s1os_attr {
+	wxUint8 s;	// status
+	wxUint8 k;	// kind
+	wxUint8 p;	// ?
+} s1os_attr_t;
+
+/// @brief ディレクトリエントリ S1-OS (84bytes)
+typedef struct st_directory_s1os {
+	wxUint16 record_length;	// BE
+	s1os_size_t size;
+	s1os_ptr_t start;	///< 開始セクタ
+	wxUint32  date_time;	// BE
+	s1os_attr_t attr;
+	wxUint8  name_len;
+	wxUint8  name[64];
+} directory_s1os_t;
+
 /// @brief ディレクトリエントリ サイズに注意！
 typedef union un_directory {
 	wxUint8				name[16];
@@ -726,6 +770,7 @@ typedef union un_directory {
 	directory_m68fdos_t	m68fdos;
 	directory_trsd23_t	trsd23;
 	directory_trsd13_t	trsd13;
+	directory_s1os_t	s1os;
 } directory_t;
 #pragma pack()
 
@@ -767,6 +812,7 @@ enum DiskBasicFormatType {
 	FORMAT_TYPE_MZ_FDOS	= 73,
 	FORMAT_TYPE_M68FDOS	= 81,
 	FORMAT_TYPE_FALCOM	= 91,
+	FORMAT_TYPE_S1OS	= 92,
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -941,6 +987,8 @@ public:
 	void	Empty();
 	/// @brief リストの数を返す
 	size_t	Count() const;
+	/// @brief リストからアイテムを削除
+	void	RemoveAt(size_t idx);
 	/// @brief リストの最後を返す
 	DiskBasicGroupItem &Last() const;
 	/// @brief リストアイテムを返す

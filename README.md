@@ -1,6 +1,6 @@
 # ![](l3diskex_icon.png) L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2025 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2026 All Rights Reserved.
 
 <a href="#ja">日本語</a> <a href="#en">English</a>
 
@@ -17,7 +17,7 @@
 
 対応している DISK BASIC / OS：
 
-日立 LEVEL-3 DISK BASIC / 日立 S1 DISK BASIC /
+日立 LEVEL-3 DISK BASIC / 日立 S1 DISK BASIC / CEC,日立 S1-OS /
 富士通 F-BASIC /
 NEC N88-BASIC / NEC N66-BASIC /
 MSX-BASIC / MSX-DOS /
@@ -71,7 +71,7 @@ MDOS
 
 Supported DISK BASIC / OS：
 
-HITACHI LEVEL-3 DISK BASIC / HITACHI S1 DISK BASIC /
+HITACHI LEVEL-3 DISK BASIC / HITACHI S1 DISK BASIC / HITACHI S1-OS /
 FUJITSU F-BASIC /
 NEC N88-BASIC / NEC N66-BASIC /
 MSX-BASIC / MSX-DOS /

@@ -153,9 +153,9 @@ protected:
 	/// @brief SpecialAttributes/AttributesByExtensionエレメントをロード
 	static bool LoadMyAttribute(const wxXmlNode *node, const wxString &locale_name, int type, MyAttributes &attrs);
 	/// @brief SpecialAttributes/AttributesByExtensionエレメントをロード
-	static bool LoadMyAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, MyAttributes &attrs);
+	static bool LoadMyAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs, MyAttributes &attrs);
 	/// @brief FileNameCharacters/VolumeNameCharactersエレメントをロード
-	static bool LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_chars, wxString &errmsgs);
+	static bool LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_chars, wxArrayString &errmsgs);
 	/// @brief FileNameCompareCaseエレメントをロード
 	static bool LoadFileNameCompareCase(const wxXmlNode *node, bool &val);
 

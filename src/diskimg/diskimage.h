@@ -358,6 +358,8 @@ public:
 	virtual size_t	Add(DiskImageTrack *newtrk);
 	/// ディスクの内容を置き換える
 	virtual int		Replace(int side_number, DiskImageDisk *src_disk, int src_side_number);
+	/// ディスクの末尾トラックからセクタのないトラックを削除する
+	virtual size_t	Shrink();
 	/// ディスクにトラックを追加
 	virtual int		AddNewTrack(int side_number);
 	/// トラックを削除する
@@ -380,6 +382,8 @@ public:
 
 	/// ヘッダを返す
 	virtual DiskImageDiskHeader *GetHeader() { return NULL; }
+	/// ディスクイメージを返す
+	virtual DiskImage       *GetImage() const;
 	/// ディスクファイルを返す
 	virtual DiskImageFile   *GetFile() const { return parent; }
 	/// トラックリストを返す
@@ -656,5 +660,9 @@ public:
 	/// エラー警告メッセージを表示
 	virtual int   ShowErrWarnMessage();
 };
+
+// ----------------------------------------------------------------------
+
+WX_DEFINE_ARRAY(DiskImage*, DiskImages);
 
 #endif /* DISKIMAGE_H */

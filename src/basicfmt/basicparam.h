@@ -30,7 +30,7 @@ protected:
 	wxUint32 group_final_code;			///< 最終グループのコード(0xc0 - )
 	wxUint32 group_system_code;			///< システムで使用するコード(0xfe)
 	wxUint32 group_unused_code;			///< 未使用のコード(0xff)
-	wxUint8 dir_terminate_code;			///< ディレクトリ名の終端コード
+	wxUint16 dir_terminate_code;		///< ディレクトリ名の終端コード
 	wxUint8 dir_space_code;				///< ディレクトリ名の空白コード
 	wxUint8 dir_trimming_code;			///< ディレクトリ名の空白コード（とり除くコード）
 	int dir_start_pos;					///< サブディレクトリの開始位置（バイト）
@@ -72,7 +72,7 @@ public:
 	/// @brief 未使用のコード
 	wxUint32			GetGroupUnusedCode() const	{ return group_unused_code; }
 	/// @brief ディレクトリ名の終端コード
-	wxUint8				GetDirTerminateCode() const	{ return dir_terminate_code; }
+	wxUint16			GetDirTerminateCode() const	{ return dir_terminate_code; }
 	/// @brief ディレクトリ名の空白コード
 	wxUint8				GetDirSpaceCode() const		{ return dir_space_code; }
 	/// @brief ディレクトリ名の空白コード（とり除くコード）
@@ -137,7 +137,7 @@ public:
 	/// @brief 未使用のコード
 	void				SetGroupUnusedCode(wxUint32 val)	{ group_unused_code = val; }
 	/// @brief ディレクトリ名の終端コード
-	void				SetDirTerminateCode(wxUint8 val)	{ dir_terminate_code = val; }
+	void				SetDirTerminateCode(wxUint16 val)	{ dir_terminate_code = val; }
 	/// @brief ディレクトリ名の空白コード
 	void				SetDirSpaceCode(wxUint8 val)		{ dir_space_code = val; }
 	/// @brief ディレクトリ名の空白コード（とり除くコード）
@@ -196,7 +196,7 @@ public:
 	virtual ~DiskBasicParamBases() {}
 
 	/// @brief 共通パラメータ関連のロード
-	bool Load(const wxXmlNode *node, const wxString &name, const wxString &value, const wxString &locale_name, DiskBasicParamBase &param, wxString &errmsgs);
+	bool Load(const wxXmlNode *node, const wxString &name, const wxString &value, const wxString &locale_name, DiskBasicParamBase &param, wxArrayString &errmsgs);
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -209,6 +209,7 @@ private:
 	bool has_volume_name;				///< ボリューム名
 	bool has_volume_number;				///< ボリューム番号
 	bool has_volume_date;				///< ボリューム日付
+	bool has_volume_skew;				///< ボリュームスキュ
 
 	/// @brief 初期化
 	void ClearBasicFormatPrivate();
@@ -228,6 +229,8 @@ public:
 	bool			HasVolumeNumber() const		{ return has_volume_number; }
 	/// @brief ボリューム日付
 	bool			HasVolumeDate() const		{ return has_volume_date; }
+	/// @brief ボリュームスキュ
+	bool			HasVolumeSkew() const		{ return has_volume_skew; }
 //	/// @brief ファイル名が必須か
 //	bool				IsFileNameRequired() const	{ return filename_require; }
 
@@ -239,6 +242,8 @@ public:
 	void			HasVolumeNumber(bool val)			{ has_volume_number = val; }
 	/// @brief ボリューム日付
 	void			HasVolumeDate(bool val)				{ has_volume_date = val; }
+	/// @brief ボリュームスキュ
+	void			HasVolumeSkew(bool val)				{ has_volume_skew = val; }
 //	/// @brief ファイル名が必須か
 //	void			RequireFileName(bool val)		{ filename_require = val; }
 };
@@ -257,7 +262,7 @@ class DiskBasicFormats : public ArrayOfDiskBasicFormat, public TemplatesBase
 {
 public:
 	/// @brief DiskBasicFormatエレメントのロード
-	bool Load(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool Load(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs);
 	/// @brief フォーマット種類を検索
 	const DiskBasicFormat *Find(DiskBasicFormatType format_type) const;
 };
@@ -475,13 +480,13 @@ public:
 	bool			FindBasicCategoryName(const wxString &str) const;
 
 	/// @brief ReservedGroupsエレメントをロード
-	bool LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs);
 	/// @brief SectorSkewMapエレメントをロード
 	bool LoadSectorSkewMap(const wxXmlNode *node);
 	/// @brief SectorsPerTrackエレメントをロード
 	bool LoadNumSectorsMap(const wxXmlNode *node, const wxString &val);
 	/// @brief Categoriesエレメントのロード
-	bool LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs);
 
 	/// @brief 説明文でソート
 	static int		SortByDescription(const DiskBasicParam **item1, const DiskBasicParam **item2);
@@ -508,7 +513,7 @@ class DiskBasicParams : public ArrayOfDiskBasicParam, public TemplatesBase
 {
 public:
 	/// @brief DiskBasicTypeエレメントのロード
-	bool Load(const wxXmlNode *node, const wxString &locale_name, const DiskBasicFormats &formats, wxString &errmsgs);
+	bool Load(const wxXmlNode *node, const wxString &locale_name, const DiskBasicFormats &formats, wxArrayString &errmsgs);
 	/// @brief カテゴリとタイプに一致するパラメータを検索
 	const DiskBasicParam *Find(const wxString &n_category, const wxString &n_basic_type) const;
 	/// @brief カテゴリが一致し、タイプリストに含まれるパラメータを検索

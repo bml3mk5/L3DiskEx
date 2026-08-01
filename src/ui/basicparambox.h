@@ -9,20 +9,23 @@
 #define BASICPARAMBOX_H
 
 #include "../common.h"
-#include <wx/dialog.h>
-#include <wx/dynarray.h>
 #include "basicselbox.h"
 #include "../basicfmt/basicparam.h"
 
+class DiskBasic;
+class DiskBasicParam;
+class DiskImageDisk;
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+#include <wx/dynarray.h>
 
 class wxListBox;
 class wxTextCtrl;
 class wxChoice;
 class wxStaticText;
 class wxListView;
-class DiskBasic;
-class DiskBasicParam;
-class DiskImageDisk;
 
 /// BASIC情報ボックス
 class BasicParamBox : public wxDialog, public VolumeCtrl
@@ -68,5 +71,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* BASICPARAMBOX_H */
+#endif /* USE_CONSOLE */
 
+#endif /* BASICPARAMBOX_H */

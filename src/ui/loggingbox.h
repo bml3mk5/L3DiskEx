@@ -9,6 +9,9 @@
 #define LOGGINGBOX_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dialog.h>
 
 class wxSizerItem;
@@ -48,5 +51,6 @@ public:
 	DECLARE_EVENT_TABLE()
 };
 
-#endif /* LOGGINGBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* LOGGINGBOX_H */

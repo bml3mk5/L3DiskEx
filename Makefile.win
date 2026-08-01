@@ -101,6 +101,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basictype_amiga.o \
 	$(SRCBASICFMTDIR)/basictype_m68fdos.o \
 	$(SRCBASICFMTDIR)/basictype_trsdos.o \
+	$(SRCBASICFMTDIR)/basictype_s1os.o \
 	$(SRCBASICFMTDIR)/basicfat.o \
 	$(SRCBASICFMTDIR)/basicdiritem_fat8.o \
 	$(SRCBASICFMTDIR)/basicdiritem_fm.o \
@@ -135,6 +136,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCBASICFMTDIR)/basicdiritem_amiga.o \
 	$(SRCBASICFMTDIR)/basicdiritem_m68fdos.o \
 	$(SRCBASICFMTDIR)/basicdiritem_trsdos.o \
+	$(SRCBASICFMTDIR)/basicdiritem_s1os.o \
 	$(SRCBASICFMTDIR)/basicdiritem.o \
 	$(SRCBASICFMTDIR)/basicdir.o \
 	$(SRCBASICFMTDIR)/basicfmt.o \
@@ -178,6 +180,7 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/rawexpbox.o \
 	$(SRCUIDIR)/rawsectorbox.o \
 	$(SRCUIDIR)/rawtrackbox.o \
+	$(SRCUIDIR)/filedirbox.o \
 	$(SRCUIDIR)/uibindump.o \
 	$(SRCUIDIR)/uiclistctrl.o \
 	$(SRCUIDIR)/uicdlistctrl.o \
@@ -187,12 +190,14 @@ OBJS=	$(SRCDIR)/utils.o \
 	$(SRCUIDIR)/uidisklist.o \
 	$(SRCUIDIR)/uifilelist.o \
 	$(SRCUIDIR)/uimainframe.o \
+	$(SRCUIDIR)/uimainpanel.o \
 	$(SRCUIDIR)/uimainprocess.o \
 	$(SRCUIDIR)/uirawdisk.o \
 	$(SRCUIDIR)/uifatarea.o \
 	$(SRCUIDIR)/uirpanel.o \
 	$(SRCUIDIR)/mymenu.o \
 	$(SRCUIDIR)/mydialog.o \
+	$(SRCUIDIR)/aboutbox.o \
 	$(SRCDIR)/main.o
 
 RESOBJS=$(SRCRESDIR)/l3diskex.res

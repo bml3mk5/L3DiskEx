@@ -20,13 +20,13 @@
 
 /// MS-DOS (MSX-DOS)
 const name_value_t gTypeNameMS[] = {
-	{ wxTRANSLATE("Read Only"), FILE_TYPE_READONLY_MASK },
-	{ wxTRANSLATE("Hidden"), FILE_TYPE_HIDDEN_MASK },
-	{ wxTRANSLATE("Sys"), FILE_TYPE_SYSTEM_MASK },
-	{ wxTRANSLATE("<VOL>"), FILE_TYPE_VOLUME_MASK },
-	{ wxTRANSLATE("<DIR>"), FILE_TYPE_DIRECTORY_MASK },
-	{ wxTRANSLATE("Arc"), FILE_TYPE_ARCHIVE_MASK },
-	{ wxTRANSLATE("(LFN)"), FILE_TYPE_READONLY_MASK | FILE_TYPE_HIDDEN_MASK | FILE_TYPE_SYSTEM_MASK | FILE_TYPE_VOLUME_MASK },
+	{ "RO", FILE_TYPE_READONLY_MASK },
+	{ "Hid", FILE_TYPE_HIDDEN_MASK },
+	{ "Sys", FILE_TYPE_SYSTEM_MASK },
+	{ "<VOL>", FILE_TYPE_VOLUME_MASK },
+	{ "<DIR>", FILE_TYPE_DIRECTORY_MASK },
+	{ "Arc", FILE_TYPE_ARCHIVE_MASK },
+	{ "(LFN)", FILE_TYPE_READONLY_MASK | FILE_TYPE_HIDDEN_MASK | FILE_TYPE_SYSTEM_MASK | FILE_TYPE_VOLUME_MASK },
 	{ NULL, -1 }
 };
 /// MS-DOS (MSX-DOS)
@@ -70,6 +70,16 @@ DiskBasicDirItemMSDOS::DiskBasicDirItemMSDOS(DiskBasic *basic, int n_num, const 
 	// カレント or 親ディレクトリはツリーに表示しない
 	wxString name = GetFileNamePlainStr();
 	VisibleOnTree(!(IsDirectory() && (name == wxT(".") || name == wxT(".."))));
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemMSDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -575,6 +585,21 @@ int DiskBasicDirItemMSDOS::RecalcFileSizeOnSave(wxInputStream *istream, int file
 	return file_size;
 }
 
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemMSDOS::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	bool valid = true;
+	wxString name =	filename;
+	// "."で始まる名前は設定できない
+	if (name.Left(1) == wxT(".")) {
+		errormsg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERRV_CANNOT_SET_NAME]), name);
+		valid = false;
+	}
+	return valid;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -682,19 +707,6 @@ void DiskBasicDirItemMSDOS::SetAttrSubInAttrDialog(const IntNameBox *parent, Dis
 	attr.SetFileAttr(FORMAT_TYPE_UNKNOWN, val);
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemMSDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	bool valid = true;
-	wxString name =	filename;
-	// "."で始まる名前は設定できない
-	if (name.Left(1) == wxT(".")) {
-		errormsg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERRV_CANNOT_SET_NAME]), name);
-		valid = false;
-	}
-	return valid;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemMSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -714,6 +726,8 @@ void DiskBasicDirItemMSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("START_GROUP"), m_data.Data()->msdos.start_group);
 	vals.Add(wxT("FILE_SIZE"), m_data.Data()->msdos.file_size);
 }
+
+#endif /* !USE_CONSOLE */
 
 ///
 ///
@@ -1037,6 +1051,8 @@ void DiskBasicDirItemVFAT::ConvCharsToString(const wxUint8 *src, size_t len, wxS
 	}
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -1070,10 +1086,12 @@ bool DiskBasicDirItemVFAT::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 	return true;
 }
 
+#if 0
 /// その他の属性値を設定する
 void DiskBasicDirItemVFAT::SetOptionalAttr(DiskBasicDirItemAttr &attr)
 {
 }
+#endif
 
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
@@ -1094,3 +1112,5 @@ void DiskBasicDirItemVFAT::SetInternalDataInAttrDialog(KeyValArray &vals)
 		DiskBasicDirItemMSDOS::SetInternalDataInAttrDialog(vals);
 	}
 }
+
+#endif /* !USE_CONSOLE */

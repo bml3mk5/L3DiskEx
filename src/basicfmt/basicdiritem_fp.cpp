@@ -10,7 +10,6 @@
 #include "basictype.h"
 #include "../charcodes.h"
 #include "../config.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -49,6 +48,16 @@ DiskBasicDirItemFP::DiskBasicDirItemFP(DiskBasic *basic, int n_num, const DiskBa
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemFP::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemFAT8::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -405,6 +414,30 @@ bool DiskBasicDirItemFP::PreImportDataFile(wxString &filename)
 	return true;
 }
 
+/// 属性値を加工する
+bool DiskBasicDirItemFP::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
+{
+	int ftype = attr.GetFileType();
+	if (ftype & FILE_TYPE_BINARY_MASK) {
+		// バイナリ
+		if (ftype & FILE_TYPE_BASIC_MASK) {
+			// BASICならアドレスは固定
+			attr.SetStartAddress(0);
+			attr.SetEndAddress(GetFileSize());
+			attr.SetExecuteAddress(0);
+		}
+	} else {
+		// アスキー、ランダムアクセス
+		// アドレスは固定
+		attr.SetStartAddress(0);
+		attr.SetEndAddress(0);
+		attr.SetExecuteAddress(0);
+	}
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -578,28 +611,6 @@ bool DiskBasicDirItemFP::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasic
 	return true;
 }
 
-/// 属性値を加工する
-bool DiskBasicDirItemFP::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
-{
-	int ftype = attr.GetFileType();
-	if (ftype & FILE_TYPE_BINARY_MASK) {
-		// バイナリ
-		if (ftype & FILE_TYPE_BASIC_MASK) {
-			// BASICならアドレスは固定
-			attr.SetStartAddress(0);
-			attr.SetEndAddress(GetFileSize());
-			attr.SetExecuteAddress(0);
-		}
-	} else {
-		// アスキー、ランダムアクセス
-		// アドレスは固定
-		attr.SetStartAddress(0);
-		attr.SetEndAddress(0);
-		attr.SetExecuteAddress(0);
-	}
-	return true;
-}
-
 /// ダイアログ用に終了アドレスを返す
 int DiskBasicDirItemFP::GetEndAddressInAttrDialog(IntNameBox *parent)
 {
@@ -642,3 +653,5 @@ void DiskBasicDirItemFP::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("ATTR"), m_data.Data()->attr);
 	vals.Add(wxT("RESERVED"), m_data.Data()->reserved, sizeof(m_data.Data()->reserved));
 }
+
+#endif /* !USE_CONSOLE */

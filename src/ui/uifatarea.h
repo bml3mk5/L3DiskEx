@@ -9,6 +9,9 @@
 #define _UI_FATAREA_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/frame.h>
 #include <wx/scrolwin.h>
 #include <wx/dynarray.h>
@@ -97,5 +100,6 @@ public:
 	wxDECLARE_NO_COPY_CLASS(UiDiskFatAreaPanel);
 };
 
+#endif /* !USE_CONSOLE */
 
 #endif /* _UI_FATAREA_H_ */

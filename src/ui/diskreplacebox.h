@@ -9,9 +9,11 @@
 #define DISKREPLACEBOX_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dialog.h>
 #include <wx/dynarray.h>
-
 
 class wxChoice;
 class DiskImageFile;
@@ -63,5 +65,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* DISKREPLACEBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* DISKREPLACEBOX_H */

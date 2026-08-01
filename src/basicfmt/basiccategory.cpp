@@ -40,7 +40,7 @@ WX_DEFINE_OBJARRAY(ArrayOfDiskBasicCategory);
 /// @param[in] locale_name ローケル名
 /// @param[out] errmsgs    エラー時メッセージ
 /// @return true / false
-bool DiskBasicCategories::Load(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+bool DiskBasicCategories::Load(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	bool valid = false;
 	while(node && !valid) {
@@ -83,9 +83,10 @@ bool DiskBasicCategories::Load(const wxXmlNode *node, const wxString &locale_nam
 			if (Find(type_name) == NULL) {
 				Add(c);
 			} else {
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate type name in DiskBasicCategory : ");
-				errmsgs += type_name;
+				wxString errmsg;
+				errmsg += _("Duplicate type name in DiskBasicCategory : ");
+				errmsg += type_name;
+				errmsgs.Add(errmsg);
 				valid = false;
 				break;
 			}

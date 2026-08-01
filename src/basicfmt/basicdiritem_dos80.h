@@ -67,6 +67,8 @@ public:
 	DiskBasicDirItemDOS80(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 	~DiskBasicDirItemDOS80();
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -136,6 +138,7 @@ public:
 	/// @brief データをインポートする前に必要な処理
 	virtual bool	PreImportDataFile(wxString &filename);
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -153,6 +156,7 @@ public:
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_DOS80_H */

@@ -6,6 +6,9 @@
 ///
 
 #include "uidiskattr.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/choice.h>
 #include <wx/button.h>
@@ -39,23 +42,25 @@ UiDiskDiskAttr::UiDiskDiskAttr(UiDiskFrame *parentframe, wxWindow *parentwindow)
 
 	p_disk	 = NULL;
 
-	wxSizerFlags flagsW = wxSizerFlags().Expand().Border(wxALL, 2);
+	int p2 = FromDIP(2);
+	wxSizerFlags flagsW = wxSizerFlags().Expand().Border(wxALL, p2);
+	wxSizerFlags flags_bt2 = wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, p2);
 	wxBoxSizer *vbox = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *szrHed = new wxBoxSizer(wxHORIZONTAL);
 	wxBoxSizer *szrBtn = new wxBoxSizer(wxHORIZONTAL);
 	wxSize size(TEXT_ATTR_SIZE, -1);
 
 	txtAttr = new wxTextCtrl(this, IDC_TXT_ATTR, wxT(""), wxDefaultPosition, size, wxTE_READONLY | wxTE_LEFT);
-	szriTxt = szrHed->Add(txtAttr, wxSizerFlags().Expand().Border(wxBOTTOM | wxTOP, 2));
+	szriTxt = szrHed->Add(txtAttr, flags_bt2);
 
 	size.x = 60;
-	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, size);
+	btnChange = new wxButton(this, IDC_BTN_CHANGE, _("Change"), wxDefaultPosition, FromDIP(size));
 	szrBtn->Add(btnChange, flagsW);
 
 	size.x = 100;
 	wxArrayString densities;
 	frame->GetDiskImage().GetDensityNames(densities);
-	comDensity = new wxChoice(this, IDC_COM_DENSITY, wxDefaultPosition, size, densities);
+	comDensity = new wxChoice(this, IDC_COM_DENSITY, wxDefaultPosition, FromDIP(size), densities);
 	comDensity->SetSelection(0);
 	szrBtn->Add(comDensity, flagsW);
 
@@ -264,3 +269,5 @@ void UiDiskDiskAttr::SetListFont(const wxFont &font)
 {
 	txtAttr->SetFont(font);
 }
+
+#endif /* !USE_CONSOLE */

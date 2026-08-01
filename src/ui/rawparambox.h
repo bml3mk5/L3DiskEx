@@ -8,15 +8,17 @@
 #ifndef RAWPARAMBOX_H
 #define RAWPARAMBOX_H
 
+#include "../common.h"
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+
 #define RAWPARAMBOX_TRANS \
 _("Required information entry is empty.") \
 _("'%s' is invalid") \
 _("Validation conflict") \
 _("'%s' should only contain digits.")
-
-#include "../common.h"
-#include <wx/dialog.h>
-
 
 class wxTextCtrl;
 class wxChoice;
@@ -88,5 +90,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* RAWPARAMBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* RAWPARAMBOX_H */

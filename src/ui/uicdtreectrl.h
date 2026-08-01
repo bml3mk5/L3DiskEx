@@ -9,6 +9,9 @@
 #define _UICDTREECTRL_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dataview.h>
 #include <wx/clntdata.h>
 #include "uicommon.h"
@@ -59,5 +62,6 @@ public:
 	MyCDTreeItem GetNodeAtPoint(int x, int y) const;
 };
 
-#endif /* _UICDTREECTRL_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _UICDTREECTRL_H_ */

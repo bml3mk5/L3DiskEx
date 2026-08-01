@@ -110,6 +110,8 @@ public:
 	DiskBasicDirItemXDOSBase(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 //	/// @brief アイテムへのポインタを設定
 //	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -211,6 +213,8 @@ public:
 	DiskBasicDirItemXDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
 
@@ -286,6 +290,7 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -297,6 +302,7 @@ public:
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_XDOS_H */

@@ -6,6 +6,9 @@
 ///
 
 #include "diskreplacebox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/choice.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
@@ -47,7 +50,7 @@ END_EVENT_TABLE()
 DiskReplaceBox::DiskReplaceBox(wxWindow* parent, wxWindowID id, int side_number, DiskImageFile &src_file, DiskImageDisk &tag_disk)
 	: wxDialog(parent, id, _("Replace data in a disk"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -151,3 +154,5 @@ int DiskReplaceBox::GetSelectedSideNumber() const
 	int idx = comDisk->GetSelection();
 	return numDisk.Item(idx).sidenum;
 }
+
+#endif /* !USE_CONSOLE */

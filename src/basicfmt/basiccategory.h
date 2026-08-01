@@ -57,7 +57,7 @@ class DiskBasicCategories : public ArrayOfDiskBasicCategory
 {
 public:
 	/// @brief DiskBasicCategoryエレメントのロード
-	bool Load(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs);
+	bool Load(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs);
 	/// @brief カテゴリを検索
 	const DiskBasicCategory *Find(const wxString &n_category) const;
 	/// @brief カテゴリ名を返す

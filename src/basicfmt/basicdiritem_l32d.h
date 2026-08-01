@@ -41,16 +41,20 @@ private:
 	/// @brief 最終セクタの占有サイズを返す
 	int				GetDataSizeOnLastSector() const;
 
+#ifndef USE_CONSOLE
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void			SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
 	/// @brief ファイル名に拡張子を付ける
 	virtual wxString AddExtension(int file_type_1, const wxString &name) const;
+#endif /* !USE_CONSOLE */
 
 public:
 	DiskBasicDirItemL32D(DiskBasic *basic);
 	DiskBasicDirItemL32D(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -80,10 +84,12 @@ public:
 	/// @brief ディレクトリをクリア ファイル新規作成時
 	virtual void	ClearData();
 
+#ifndef USE_CONSOLE
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
 	virtual void	CreateControlsForAttrDialog(IntNameBox *parent, int show_flags, const wxString &file_path, wxBoxSizer *sizer, wxSizerFlags &flags);
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_L32D_H */

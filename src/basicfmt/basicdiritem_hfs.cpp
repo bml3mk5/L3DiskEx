@@ -181,6 +181,18 @@ DiskBasicDirItemHFS::DiskBasicDirItemHFS(DiskBasic *basic, int n_num, const Disk
 //	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemHFS::Reset()
+{
+	m_data.Delete();
+	m_key.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_key.Alloc();
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -1219,6 +1231,8 @@ bool DiskBasicDirItemHFS::ConvTmToHFSDateTime(const TM &src, wxUint32 &dst)
 	return true;
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -1303,12 +1317,6 @@ bool DiskBasicDirItemHFS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBasi
 	return false;
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemHFS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	return true;
-}
-
 /// ファイルサイズが適正か
 /// @param [in]  parent     ダイアログ
 /// @param [in]  size       ファイルサイズ
@@ -1380,3 +1388,5 @@ void DiskBasicDirItemHFS::SetInternalDataInAttrDialog(KeyValArray &vals)
 		break;
 	}
 }
+
+#endif /* !USE_CONSOLE */

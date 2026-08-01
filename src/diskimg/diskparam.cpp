@@ -35,6 +35,15 @@ SectorParam::SectorParam()
 /// @param [in] n_sector_size セクタサイズ
 SectorParam::SectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size)
 {
+	SetSectorParam(n_track_num, n_side_num, n_sector_num, n_sector_size);
+}
+/// 一括設定
+/// @param [in] n_track_num   トラック番号
+/// @param [in] n_side_num    サイド番号
+/// @param [in] n_sector_num  セクタ番号
+/// @param [in] n_sector_size セクタサイズ
+void SectorParam::SetSectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size)
+{
 	track_num = n_track_num;
 	side_num = n_side_num;
 	sector_num = n_sector_num;
@@ -1065,7 +1074,7 @@ DiskTemplates::DiskTemplates() : TemplatesBase()
 /// @param[in] locale_name ローケル名
 /// @param[out] errmsgs    エラーメッセージ
 /// @return true / false
-bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
+bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	wxXmlDocument doc;
 
@@ -1163,9 +1172,10 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 			if (Find(type_name) == NULL) {
 				params.Add(p);
 			} else {
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate type name in DiskType : ");
-				errmsgs += type_name;
+				wxString errmsg;
+				errmsg += _("Duplicate type name in DiskType : ");
+				errmsg += type_name;
+				errmsgs.Add(errmsg);
 				return false;
 			}
 		}
@@ -1179,7 +1189,7 @@ bool DiskTemplates::Load(const wxString &data_path, const wxString &locale_name,
 /// @param[out] basic_types ロードしたデータ
 /// @param[out] errmsgs     エラーメッセージ
 /// @return true
-bool DiskTemplates::LoadDiskBasicTypes(const wxXmlNode *node, DiskParamNames &basic_types, wxString &errmsgs)
+bool DiskTemplates::LoadDiskBasicTypes(const wxXmlNode *node, DiskParamNames &basic_types, wxArrayString &errmsgs)
 {
 	wxXmlNode *citemnode = node->GetChildren();
 	while(citemnode) {
@@ -1208,7 +1218,7 @@ bool DiskTemplates::LoadDiskBasicTypes(const wxXmlNode *node, DiskParamNames &ba
 /// @param[out] s       ロードしたデータ
 /// @param[out] errmsgs エラーメッセージ
 /// @return true
-bool DiskTemplates::LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, wxString &errmsgs)
+bool DiskTemplates::LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, wxArrayString &errmsgs)
 {
 	wxString str;
 	str = node->GetAttribute("track");
@@ -1242,7 +1252,7 @@ bool DiskTemplates::LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, 
 /// @param[out] d       ロードしたデータ
 /// @param[out] errmsgs エラーメッセージ
 /// @return true
-bool DiskTemplates::LoadParticularTrack(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs)
+bool DiskTemplates::LoadParticularTrack(const wxXmlNode *node, DiskParticular &d, wxArrayString &errmsgs)
 {
 	wxString str;
 	str = node->GetAttribute("track");
@@ -1251,8 +1261,7 @@ bool DiskTemplates::LoadParticularTrack(const wxXmlNode *node, DiskParticular &d
 	}
 	str = node->GetAttribute("tracks");
 	if (str.Upper() == wxT("ALL")) {
-		errmsgs += wxT("\n");
-		errmsgs += _("Cannot set \"ALL\" on tracks attribute in ParticularTrack element.");
+		errmsgs.Add(_("Cannot set \"ALL\" on tracks attribute in ParticularTrack element."));
 		return false;
 	}
 	if (!str.IsEmpty() && str.Upper() != wxT("ALL")) {
@@ -1294,7 +1303,7 @@ bool DiskTemplates::LoadParticularTrack(const wxXmlNode *node, DiskParticular &d
 /// @param[out] d       ロードしたデータ
 /// @param[out] errmsgs エラーメッセージ
 /// @return true
-bool DiskTemplates::LoadParticularSector(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs)
+bool DiskTemplates::LoadParticularSector(const wxXmlNode *node, DiskParticular &d, wxArrayString &errmsgs)
 {
 	wxString str;
 	str = node->GetAttribute("track");
@@ -1345,7 +1354,7 @@ bool DiskTemplates::LoadParticularSector(const wxXmlNode *node, DiskParticular &
 /// @param[out] categories  ロードしたデータ
 /// @param[out] errmsgs     エラーメッセージ
 /// @return true
-bool DiskTemplates::LoadCategories(const wxXmlNode *node, wxArrayString &categories, wxString &errmsgs)
+bool DiskTemplates::LoadCategories(const wxXmlNode *node, wxArrayString &categories, wxArrayString &errmsgs)
 {
 	wxXmlNode *citemnode = node->GetChildren();
 	while(citemnode) {

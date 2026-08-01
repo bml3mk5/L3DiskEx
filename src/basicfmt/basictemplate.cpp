@@ -24,7 +24,7 @@ DiskBasicTemplates::DiskBasicTemplates()
 /// @param[in]  locale_name ローケル名
 /// @param[out] errmsgs     エラーメッセージ
 /// @return true/false
-bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
+bool DiskBasicTemplates::Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	wxXmlDocument doc;
 

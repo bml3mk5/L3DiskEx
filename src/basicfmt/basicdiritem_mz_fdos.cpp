@@ -184,6 +184,19 @@ DiskBasicDirItemMZFDOS::DiskBasicDirItemMZFDOS(DiskBasic *basic, int n_num, cons
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemMZFDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemMZBase::Reset();
+
+	m_data.Alloc();
+	chain.SetSectorsPerTrack(basic->GetSectorsPerTrackOnBasic());
+	chain.SetMapSize(basic->GetFatEndGroup());
+	chain.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -668,21 +681,6 @@ int DiskBasicDirItemMZFDOS::ConvOptionalNameFromFileName(const wxString &filenam
 	return (ConvOriginalTypeFromFileName(filename) & 0xff);
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/choice.h>
-#include <wx/checkbox.h>
-#include <wx/radiobox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1 51
-#define IDC_TEXT_ATTR1	52
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemMZFDOS::ConvFileType1Pos(int native_type) const
 {
@@ -698,6 +696,46 @@ int DiskBasicDirItemMZFDOS::ConvFileType1Pos(int native_type) const
 	}
 	return val;
 }
+
+/// 属性値を加工する
+bool DiskBasicDirItemMZFDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
+{
+	int t1 = (attr.GetFileOriginAttr() & 0xff);
+	if (t1 != FILETYPE_MZ_FDOS_OBJ && t1 != FILETYPE_MZ_FDOS_SYS) {
+		// バイナリ以外はアドレス固定
+		attr.SetStartAddress(0);
+		attr.SetExecuteAddress(0xffff);
+	}
+	return true;
+}
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemMZFDOS::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	// 空白はNG
+	if (filename.empty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+		return false;
+	}
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/choice.h>
+#include <wx/checkbox.h>
+#include <wx/radiobox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1 51
+#define IDC_TEXT_ATTR1	52
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -841,18 +879,6 @@ bool DiskBasicDirItemMZFDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskB
 	return true;
 }
 
-/// 属性値を加工する
-bool DiskBasicDirItemMZFDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
-{
-	int t1 = (attr.GetFileOriginAttr() & 0xff);
-	if (t1 != FILETYPE_MZ_FDOS_OBJ && t1 != FILETYPE_MZ_FDOS_SYS) {
-		// バイナリ以外はアドレス固定
-		attr.SetStartAddress(0);
-		attr.SetExecuteAddress(0xffff);
-	}
-	return true;
-}
-
 /// ファイルサイズが適正か
 /// @param [in]  parent     ダイアログ
 /// @param [in]  size       ファイルサイズ
@@ -860,17 +886,6 @@ bool DiskBasicDirItemMZFDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicEr
 /// @return true 適正
 bool DiskBasicDirItemMZFDOS::IsFileValidSize(const IntNameBox *parent, int size, int *limit)
 {
-	return true;
-}
-
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemMZFDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	// 空白はNG
-	if (filename.empty()) {
-		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
-		return false;
-	}
 	return true;
 }
 
@@ -915,3 +930,5 @@ void DiskBasicDirItemMZFDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("DATA_TRACK"), m_data.Data()->data_track, basic->IsDataInverted());
 	vals.Add(wxT("DATA_SECTOR"), m_data.Data()->data_sector, basic->IsDataInverted());
 }
+
+#endif /* !USE_CONSOLE */

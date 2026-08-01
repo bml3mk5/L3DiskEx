@@ -9,7 +9,6 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../charcodes.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -58,6 +57,16 @@ DiskBasicDirItemN88::DiskBasicDirItemN88(DiskBasic *basic, int n_num, const Disk
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemN88::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemFAT8::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -366,22 +375,6 @@ int DiskBasicDirItemN88::ConvOriginalTypeFromFileName(const wxString &filename) 
 	return t1;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/checkbox.h>
-#include <wx/radiobox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_RADIO_TYPE1 51
-#define IDC_CHECK_READONLY 52
-#define IDC_CHECK_READWRITE 53
-#define IDC_CHECK_ENCRYPT 54
-#define IDC_RADIO_TYPE2 55
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemN88::ConvFileType1Pos(int t1) const
 {
@@ -399,6 +392,24 @@ int DiskBasicDirItemN88::ConvFileType1Pos(int t1) const
 	}
 	return val;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/checkbox.h>
+#include <wx/radiobox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_RADIO_TYPE1 51
+#define IDC_CHECK_READONLY 52
+#define IDC_CHECK_READWRITE 53
+#define IDC_CHECK_ENCRYPT 54
+#define IDC_RADIO_TYPE2 55
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -545,3 +556,5 @@ void DiskBasicDirItemN88::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("START_GROUP"), m_data.Data()->start_group);
 	vals.Add(wxT("RESERVED"), m_data.Data()->reserved, sizeof(m_data.Data()->reserved));
 }
+
+#endif /* !USE_CONSOLE */

@@ -134,6 +134,9 @@
     <ClCompile Include="..\src\basicfmt\basicdiritem_prodos.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basicdiritem_s1os.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\basicfmt\basicdiritem_sdos.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
@@ -260,6 +263,9 @@
     <ClCompile Include="..\src\basicfmt\basictype_prodos.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\basicfmt\basictype_s1os.cpp">
+      <Filter>Source Files\basicfmt</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\basicfmt\basictype_sdos.cpp">
       <Filter>Source Files\basicfmt</Filter>
     </ClCompile>
@@ -377,6 +383,9 @@
     <ClCompile Include="..\src\result.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\ui\aboutbox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\ui\basicparambox.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
@@ -390,6 +399,9 @@
       <Filter>Source Files\ui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ui\diskreplacebox.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\filedirbox.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ui\fileselbox.cpp">
@@ -453,6 +465,9 @@
       <Filter>Source Files\ui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ui\uimainframe.cpp">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ui\uimainpanel.cpp">
       <Filter>Source Files\ui</Filter>
     </ClCompile>
     <ClCompile Include="..\src\ui\uimainprocess.cpp">
@@ -563,6 +578,9 @@
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basicdiritem_prodos.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basicdiritem_s1os.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
     <ClInclude Include="..\src\basicfmt\basicdiritem_sdos.h">
@@ -691,6 +709,9 @@
     <ClInclude Include="..\src\basicfmt\basictype_prodos.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\basicfmt\basictype_s1os.h">
+      <Filter>Header Files\basicfmt</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\basicfmt\basictype_sdos.h">
       <Filter>Header Files\basicfmt</Filter>
     </ClInclude>
@@ -808,6 +829,9 @@
     <ClInclude Include="..\src\result.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\ui\aboutbox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
     <ClInclude Include="..\src\ui\basicparambox.h">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
@@ -821,6 +845,9 @@
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\diskreplacebox.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\filedirbox.h">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\fileselbox.h">
@@ -887,6 +914,9 @@
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\uimainframe.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ui\uimainpanel.h">
       <Filter>Header Files\ui</Filter>
     </ClInclude>
     <ClInclude Include="..\src\ui\uimainprocess.h">

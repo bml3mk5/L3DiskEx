@@ -6,6 +6,9 @@
 ///
 
 #include "rawexpbox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 #include <wx/checkbox.h>
@@ -29,7 +32,7 @@ RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, D
 	p_disk = disk;
 	m_sel_side_num = sel_side_num;
 
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 	long style = 0;
 	wxSize size(32,-1);
 	wxTextValidator validate(wxFILTER_EMPTY | wxFILTER_DIGITS);
@@ -166,3 +169,5 @@ bool RawExpBox::ReverseSide() const
 {
 	return chkRevSide->GetValue();
 }
+
+#endif /* !USE_CONSOLE */

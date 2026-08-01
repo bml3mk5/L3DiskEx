@@ -778,6 +778,24 @@
 			<InvalidCharSet>\"\\,*?/:</InvalidCharSet>
 		</FileNameCharacters>
 	</DiskBasicFormat>
+	<DiskBasicFormat type="92" name="S1OS">
+		<HasVolumeName>true</HasVolumeName>
+		<HasVolumeSkew>true</HasVolumeSkew>
+		<FillCodeOnFormat>0xff</FillCodeOnFormat>
+		<Endian>big</Endian>
+		<FileNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet> ()\\/*?</InvalidCharSet>
+		</FileNameCharacters>
+		<VolumeNameCharacters>
+			<InvalidCodeRange first="0x00" last="0x1f" />
+			<InvalidCode>0x7f</InvalidCode>
+			<InvalidCharSet>()\\/*?</InvalidCharSet>
+		</VolumeNameCharacters>
+		<RequireFileName>true</RequireFileName>
+		<VolumeNameMaxLength>64</VolumeNameMaxLength>
+	</DiskBasicFormat>
 </DiskBasicFormats>
 
 <DiskBasicTypes version="1.0">
@@ -2843,6 +2861,14 @@
 		<DirStartSector>6</DirStartSector>
 		<DirEndSector>7</DirEndSector>
 		<Description>Falcom DOS (2HD)</Description>
+	</DiskBasicType>
+	<DiskBasicType name="S1OS-2HD" type="92" category="S1OS">
+		<SectorsPerGroup>1</SectorsPerGroup>
+		<SidesPerDisk>2</SidesPerDisk>
+		<Description>S1-OS for MB-S1 (2HD)</Description>
+		<Categories>
+			<Category>MB-S1</Category>
+		</Categories>
 	</DiskBasicType>
 </DiskBasicTypes>
 </DiskBasics>

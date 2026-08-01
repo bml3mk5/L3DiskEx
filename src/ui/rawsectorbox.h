@@ -8,15 +8,17 @@
 #ifndef RAWSECTORBOX_H
 #define RAWSECTORBOX_H
 
+#include "../common.h"
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+
 #define SECTORBOX_TRANS \
 _("Required information entry is empty.") \
 _("'%s' is invalid") \
 _("Validation conflict") \
 _("'%s' should only contain digits.")
-
-#include "../common.h"
-#include <wx/dialog.h>
-
 
 #define SECTORBOX_HIDE_SECTOR_NUMS	0x0040
 
@@ -80,5 +82,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* RAWSECTORBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* RAWSECTORBOX_H */

@@ -182,7 +182,7 @@ public:
 	/// @name save / write
 	//@{
 	/// @brief データの書き込み処理
-	virtual int		WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num);
+	virtual int		WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num);
 	/// @brief データの書き込み終了後の処理
 	virtual void	AdditionalProcessOnSavedFile(DiskBasicDirItem *item);
 	//@}

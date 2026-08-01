@@ -11,6 +11,9 @@
 /* #define USE_MENU_OPEN	*/
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include "uimainprocess.h"
 #include <wx/string.h>
 #include <wx/filename.h>
@@ -433,6 +436,9 @@ public:
 
 	/// エクスポート用の一時フォルダを作成
 	bool CreateTemporaryFolder(wxString &tmp_dir_name, wxString &tmp_data_path, wxString &tmp_attr_path) const;
+
+	/// DISK BASICをアタッチ＆解析
+	bool ParseDiskBasic(DiskImageDisk *newdisk, int newsidenum, const DiskBasicParam *newparam, bool set_current_root, DiskBasic* &newbasic);
 	//@}
 
 	/// @name 左パネル 全般
@@ -710,6 +716,8 @@ public:
 
 	wxDECLARE_EVENT_TABLE();
 };
+
+#endif /* !USE_CONSOLE */
 
 #endif /* UIMAINFRAME_H */
 

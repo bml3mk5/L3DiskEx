@@ -309,6 +309,11 @@ size_t DiskBasicGroups::Count() const
 {
 	return items.Count();
 }
+/// リストからアイテムを削除
+void DiskBasicGroups::RemoveAt(size_t idx)
+{
+	items.RemoveAt(idx);
+}
 /// 最終アイテム
 DiskBasicGroupItem &DiskBasicGroups::Last() const
 {

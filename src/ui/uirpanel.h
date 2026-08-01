@@ -9,6 +9,9 @@
 #define _UIRPANEL_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/string.h>
 #include <wx/panel.h>
 #include <wx/splitter.h>
@@ -80,5 +83,6 @@ public:
 	wxDECLARE_NO_COPY_CLASS(UiDiskRBPanel);
 };
 
-#endif /* _UIRBPANEL_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _UIRBPANEL_H_ */

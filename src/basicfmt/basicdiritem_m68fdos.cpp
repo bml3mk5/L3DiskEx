@@ -33,14 +33,14 @@ const name_value_t gTypeNameM68FDOS[] = {
 
 /// M68 FDOS属性名(リスト用)
 const name_value_t gTypeNameShortM68FDOS[] = {
-	{ wxTRANSLATE("A"), FILETYPE_M68_FDOS_A },
-	{ wxTRANSLATE("P"), FILETYPE_M68_FDOS_P },
-	{ wxTRANSLATE("W"), FILETYPE_M68_FDOS_W },
-	{ wxTRANSLATE("R"), FILETYPE_M68_FDOS_R },
-	{ wxTRANSLATE("X"), FILETYPE_M68_FDOS_X },
-	{ wxTRANSLATE("S"), FILETYPE_M68_FDOS_S },
-	{ wxTRANSLATE("C"), FILETYPE_M68_FDOS_C },
-	{ wxTRANSLATE("D"), FILETYPE_M68_FDOS_D },
+	{ "A", FILETYPE_M68_FDOS_A },
+	{ "P", FILETYPE_M68_FDOS_P },
+	{ "W", FILETYPE_M68_FDOS_W },
+	{ "R", FILETYPE_M68_FDOS_R },
+	{ "X", FILETYPE_M68_FDOS_X },
+	{ "S", FILETYPE_M68_FDOS_S },
+	{ "C", FILETYPE_M68_FDOS_C },
+	{ "D", FILETYPE_M68_FDOS_D },
 	{ NULL, -1 }
 };
 
@@ -80,6 +80,16 @@ DiskBasicDirItemM68FDOS::DiskBasicDirItemM68FDOS(DiskBasic *basic, int n_num, co
 	Used(CheckUsed(n_unuse));
 
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemM68FDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemMZBase::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -624,6 +634,19 @@ int DiskBasicDirItemM68FDOS::ConvOriginalTypeFromFileName(const wxString &filena
 	return t1;
 }
 
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemM68FDOS::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	// 空白はNG
+	if (filename.empty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+		return false;
+	}
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -738,11 +761,15 @@ bool DiskBasicDirItemM68FDOS::SetAttrInAttrDialog(const IntNameBox *parent, Disk
 	return true;
 }
 
+#endif /* !USE_CONSOLE */
+
 /// 属性値を加工する
 bool DiskBasicDirItemM68FDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
 	return true;
 }
+
+#ifndef USE_CONSOLE
 
 /// ファイルサイズが適正か
 /// @param [in]  parent     ダイアログ
@@ -751,17 +778,6 @@ bool DiskBasicDirItemM68FDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicE
 /// @return true 適正
 bool DiskBasicDirItemM68FDOS::IsFileValidSize(const IntNameBox *parent, int size, int *limit)
 {
-	return true;
-}
-
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemM68FDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	// 空白はNG
-	if (filename.empty()) {
-		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
-		return false;
-	}
 	return true;
 }
 
@@ -786,3 +802,5 @@ void DiskBasicDirItemM68FDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("EXEC_ADDR"), m_data.Data()->exec_addr, basic->IsBigEndian());
 	vals.Add(wxT("UNKNOWN2"), m_data.Data()->unknown2, sizeof(m_data.Data()->unknown2));
 }
+
+#endif /* !USE_CONSOLE */

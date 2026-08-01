@@ -1095,12 +1095,12 @@ bool DiskBasicTypeAmiga::IsEnoughFileSize(int size) const
 /// @param [in]  size			書き込み先バッファサイズ
 /// @param [in]  remain			残りのデータサイズ
 /// @param [in]  sector_num		セクタ番号
-/// @param [in]  group_num		現在のグループ番号
-/// @param [in]  next_group		次のグループ番号
+/// @param [in]  group_item		現在のグループアイテム
+/// @param [in]  next_group		次のグループアイテム
 /// @param [in]  sector_end		最終セクタ番号
 /// @param [in]  seq_num		通し番号(0...)
 /// @return 書き込んだバイト数
-int DiskBasicTypeAmiga::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num)
+int DiskBasicTypeAmiga::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num)
 {
 	int len = 0;
 	amiga_file_data_pre_t *pre = NULL;
@@ -1138,7 +1138,7 @@ int DiskBasicTypeAmiga::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 		pre->o.seq_num = wxUINT32_SWAP_ON_LE(val);
 		val = (remain > size ? size : remain);
 		pre->o.data_size = wxUINT32_SWAP_ON_LE(val);
-		pre->o.next_data = wxUINT32_SWAP_ON_LE(next_group);
+		pre->o.next_data = wxUINT32_SWAP_ON_LE(next_group ? next_group->group : 0);
 	}
 
 	return len;

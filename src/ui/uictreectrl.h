@@ -9,6 +9,9 @@
 #define UICTREECTRL_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/treectrl.h>
 #include <wx/treebase.h>
 #include "uicommon.h"
@@ -56,5 +59,6 @@ public:
 	MyCTreeItem GetNodeAtPoint(int x, int y) const;
 };
 
-#endif /* UICTREECTRL_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* UICTREECTRL_H */

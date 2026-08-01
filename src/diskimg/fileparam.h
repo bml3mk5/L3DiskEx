@@ -197,7 +197,7 @@ public:
 	~FileTypes() {}
 
 	/// @brief XMLファイルをロード
-	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs);
 
 	/// @brief 拡張子をさがす
 	const FileParam *FindExt(const wxString &n_ext) const;

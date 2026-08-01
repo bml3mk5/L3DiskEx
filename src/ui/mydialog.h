@@ -9,6 +9,9 @@
 #define MYDIALOG_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dialog.h>
 #include <wx/dynarray.h>
 
@@ -38,5 +41,6 @@ public:
 	wxTextCtrl *CreateTextCtrlWithButton(wxWindow *parent, wxWindowID textid, const wxString &text, wxWindowID btnid, const wxString &btnlabel, wxButton **button, wxBoxSizer *sizer, const wxSizerFlags &flags);
 };
 
-#endif /* MYDIALOG_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* MYDIALOG_H */

@@ -785,6 +785,21 @@ int DiskImageDisk::Replace(int side_number, DiskImageDisk *src_disk, int src_sid
 	return rc;
 }
 
+/// ディスクの末尾トラックからセクタのないトラックを削除する
+/// @return 削除後のサイズ
+size_t DiskImageDisk::Shrink()
+{
+	for(int t = (int)tracks->Count() - 1; t >= 0; t--) {
+		DiskImageTrack *track = tracks->Item(t);
+		if (track->GetSize() > 0) {
+			break;
+		}
+		tracks->Remove(track);
+		delete track;
+	}
+	return CalcOffsets();
+}
+
 /// ディスクにトラックを追加
 /// @param [in] side_number サイド番号 両面なら-1
 int DiskImageDisk::AddNewTrack(int side_number)
@@ -1015,6 +1030,17 @@ void DiskImageDisk::ClearModify()
 			track->ClearModify();
 		}
 	}
+}
+
+/// ディスクイメージを返す
+/// @return ディスクイメージ
+DiskImage *DiskImageDisk::GetImage() const
+{
+	DiskImage *image = NULL;
+	if (parent) {
+		image = &parent->GetImage();
+	}
+	return image;
 }
 
 /// 指定トラックを返す

@@ -6,12 +6,6 @@
 ///
 
 #include "basicparambox.h"
-#include <wx/choice.h>
-#include <wx/textctrl.h>
-#include <wx/stattext.h>
-#include <wx/listctrl.h>
-#include <wx/button.h>
-#include <wx/sizer.h>
 #include <wx/numformatter.h>
 #include "intnamevalid.h"
 #include "../basicfmt/basictemplate.h"
@@ -20,6 +14,14 @@
 #include "../diskimg/diskimage.h"
 #include "../utils.h"
 
+#ifndef USE_CONSOLE
+
+#include <wx/choice.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
+#include <wx/listctrl.h>
+#include <wx/button.h>
+#include <wx/sizer.h>
 
 // Attach Event
 BEGIN_EVENT_TABLE(BasicParamBox, wxDialog)
@@ -38,7 +40,8 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	DiskBasicType *type = basic->GetType();
 
 	wxSizerFlags flagsr = wxSizerFlags().Align(wxALIGN_RIGHT);
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
+	wxSizerFlags flags_a8 = wxSizerFlags().Expand().Border(wxALL, FromDIP(8));
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 	wxGridSizer *grid;
@@ -236,22 +239,24 @@ BasicParamBox::BasicParamBox(wxWindow* parent, wxWindowID id, const wxString &ca
 	grid->Add(lbl, flagsr);
 
 
-	szrAll->Add(grid, wxSizerFlags().Expand().Border(wxALL, 8));
+	szrAll->Add(grid, flags_a8);
 
 
 	DiskBasicIdentifiedData idata;
 	type->GetIdentifiedData(idata);
 
-	wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL);
+	const DiskBasicFormat *fmt = basic->GetFormatType();
+	wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL, fmt);
 	szrAll->Add(gszr, flags);
 
-	const DiskBasicFormat *fmt = basic->GetFormatType();
 	SetVolumeName(idata.GetVolumeName());
 	EnableVolumeName((show_flags & BASIC_SELECTABLE) == 0 && fmt->HasVolumeName(), idata.GetVolumeNameMaxLength(), basic->GetValidVolumeName());
 	SetVolumeNumber(idata.GetVolumeNumber(), idata.IsVolumeNumberHexa());
 	EnableVolumeNumber((show_flags & BASIC_SELECTABLE) == 0 && fmt->HasVolumeNumber());
 	SetVolumeDate(idata.GetVolumeDate());
 	EnableVolumeDate((show_flags & BASIC_SELECTABLE) == 0 && fmt->HasVolumeDate());
+	SetVolumeSkew(idata.GetVolumeSkew(), false);
+	EnableVolumeSkew(false, 1, 1);
 
 	if (show_flags & BASIC_SELECTABLE) {
 		wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
@@ -313,7 +318,8 @@ void BasicParamBox::CommitData()
 	DiskBasicIdentifiedData data(
 		GetVolumeName(),
 		GetVolumeNumber(),
-		GetVolumeDate()
+		GetVolumeDate(),
+		GetVolumeSkew()
 	);
 	type->SetIdentifiedData(data);
 }
@@ -342,3 +348,5 @@ bool BasicParamBox::WillOpenForcely() const
 {
 	return m_open_forcely;
 }
+
+#endif /* USE_CONSOLE */

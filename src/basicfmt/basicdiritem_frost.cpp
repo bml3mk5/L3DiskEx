@@ -10,7 +10,6 @@
 #include "basictype.h"
 #include "../charcodes.h"
 #include "../config.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -51,6 +50,16 @@ DiskBasicDirItemFROST::DiskBasicDirItemFROST(DiskBasic *basic, int n_num, const 
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemFROST::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -397,6 +406,36 @@ int DiskBasicDirItemFROST::ConvOriginalTypeFromFileName(const wxString &filename
 	return t1;
 }
 
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemFROST::ConvFileType1Pos(int t1) const
+{
+	if (t1 < 0 || t1 > TYPE_NAME_FROST_UNKNOWN) {
+		t1 = TYPE_NAME_FROST_UNKNOWN;
+	}
+	return t1;
+}
+
+/// 属性からリストの位置を返す(プロパティダイアログ用)
+int DiskBasicDirItemFROST::GetFileType2Pos() const
+{
+	return GetFileAttr().GetType();
+}
+
+/// 属性値を加工する
+bool DiskBasicDirItemFROST::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
+{
+	int t1 = attr.GetFileOriginAttr();
+
+	// BASの場合、開始アドレスを1にする
+	if (t1 == FILETYPE_FROST_BAS) {
+		attr.SetStartAddress(1);
+	}
+
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -412,21 +451,6 @@ int DiskBasicDirItemFROST::ConvOriginalTypeFromFileName(const wxString &filename
 #define IDC_CHECK_READWRITE 53
 #define IDC_CHECK_ENCRYPT 54
 #define IDC_RADIO_TYPE2 55
-
-/// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFROST::ConvFileType1Pos(int t1) const
-{
-	if (t1 < 0 || t1 > TYPE_NAME_FROST_UNKNOWN) {
-		t1 = TYPE_NAME_FROST_UNKNOWN;
-	}
-	return t1;
-}
-
-/// 属性からリストの位置を返す(プロパティダイアログ用)
-int DiskBasicDirItemFROST::GetFileType2Pos() const
-{
-	return GetFileAttr().GetType();
-}
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -483,19 +507,6 @@ bool DiskBasicDirItemFROST::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 	return true;
 }
 
-/// 属性値を加工する
-bool DiskBasicDirItemFROST::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
-{
-	int t1 = attr.GetFileOriginAttr();
-
-	// BASの場合、開始アドレスを1にする
-	if (t1 == FILETYPE_FROST_BAS) {
-		attr.SetStartAddress(1);
-	}
-
-	return true;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemFROST::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -509,3 +520,5 @@ void DiskBasicDirItemFROST::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("LOAD_ADDR"), m_data.Data()->load_addr, basic->IsBigEndian());
 	vals.Add(wxT("SIZE"), m_data.Data()->size, basic->IsBigEndian());
 }
+
+#endif /* !USE_CONSOLE */

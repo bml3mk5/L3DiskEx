@@ -1,9 +1,9 @@
 ==============================================================================
     L3 Disk Explorer
-                                                              Version 0.8.0
-                                                                2025/11/01
+                                                              Version 0.8.5
+                                                                2026/08/02
 
-                            Copyright(C) Sasaji 2015-2025 All Rights Reserved.
+                            Copyright(C) Sasaji 2015-2026 All Rights Reserved.
 ==============================================================================
 
 ● はじめに
@@ -13,6 +13,7 @@
 
     現在対応しているファイルシステムは、
   ・日立 LEVEL-3 DISK BASIC / S1 DISK BASIC
+  ・CEC,日立 S1-OS
   ・富士通 F-BASIC
   ・NEC N88-BASIC / N66-BASIC
   ・MSX-BASIC / MSX-DOS

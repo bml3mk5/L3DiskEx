@@ -58,7 +58,7 @@ public:
 	/// @brief ディレクトリアイテムのサイズ
 	virtual size_t	GetDataSize() const;
 
-
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -68,6 +68,7 @@ public:
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_LOSA_H */

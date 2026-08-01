@@ -1526,10 +1526,12 @@
 			<Type p="major">X1HU-2HD</Type>
 			<Type p="major">X1HU-2HD-2D</Type>
 			<Type>OS9-2HD</Type>
+			<Type>S1OS-2HD</Type>
 		</DiskBasicTypes>
 		<Categories>
 			<Category>SHARP-X1</Category>
 			<Category>SHARP-X68K</Category>
+			<Category>HITACHI-L3S1</Category>
 		</Categories>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>

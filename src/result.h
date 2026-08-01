@@ -29,6 +29,10 @@ public:
 
 	virtual void Clear();
 
+	virtual void AddMessage(const wxString &msg);
+	virtual void AddPrefix(const wxString &prefix);
+	virtual void AddPostfix(const wxString &postfix);
+
 	virtual void SetError(int error_number, ...);
 	virtual void SetWarn(int error_number, ...);
 	virtual void SetInfo(int error_number, ...);
@@ -38,6 +42,9 @@ public:
 	virtual void SetMessageV(int error_number, va_list ap) = 0;
 	virtual void GetMessages(wxArrayString &arr);
 	virtual const wxArrayString &GetMessages(int maxrow = 20);
+
+	/// 同じメッセージがあるか(前方一致)
+	int FindMessage(const wxString &msg);
 
 	/// 結果レベルをセット
 	virtual void SetValid(int val) { valid = val; }
@@ -49,7 +56,9 @@ public:
 	virtual int GetValid() const { return valid; }
 
 	virtual void Show();
+	virtual void ShowIfExists();
 	
+	static void ShowMessage(int level, const wxString &msg);
 	static void ShowMessage(int level, const wxArrayString &msgs);
 	static int  ShowErrWarnMessage(int code, const wxArrayString &msgs);
 };

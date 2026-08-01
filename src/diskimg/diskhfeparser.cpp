@@ -177,6 +177,9 @@ int RunLengthLimitedParser::SetSectorData(wxUint8 *indata, bool single, bool del
 	}
 	wxUint16 crc = ((wxUint16)DecodeData(&indata[siz * unit]) << 8) | DecodeData(&indata[(siz + 1) * unit]);
 	sector->SetRecordedCRC(crc);
+	if (sector->CalculateCRC() != (int)crc) {
+		sector->SetSectorStatus(0xb0);
+	}
 	sector->SetSingleDensity(single);
 	sector->SetDeletedMark(deleted);
 	sector->ClearModify();
@@ -795,10 +798,14 @@ wxUint32 DiskHfeParser::ParseDisk(wxInputStream &istream)
 			p_result->SetWarn(DiskResult::ERRV_OVERFLOW_OFFSET, 0, d88_offset_pos, d88_offset, d88_offset);
 		}
 	}
+
 	// 最大トラック番号設定
 	disk->SetMaxTrackNumber(tracks);
 
 	disk->SetSize(d88_offset);
+
+	// セクタのないトラックを削除する
+	disk->Shrink();
 
 	if (p_result->GetValid() >= 0) {
 		// ディスクを追加

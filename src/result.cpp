@@ -37,6 +37,18 @@ void ResultInfo::Clear()
 	msgs.Empty();
 	bufs.Empty();
 }
+void ResultInfo::AddMessage(const wxString &msg)
+{
+	if (!msg.IsEmpty()) msgs.Add(msg + wxT("\n"));
+}
+void ResultInfo::AddPrefix(const wxString &prefix)
+{
+	if (!prefix.IsEmpty()) msgs.Insert(prefix, 0);
+}
+void ResultInfo::AddPostfix(const wxString &postfix)
+{
+	if (!postfix.IsEmpty()) msgs.Add(postfix);
+}
 void ResultInfo::SetError(int error_number, ...)
 {
 	va_list ap;
@@ -87,9 +99,7 @@ const wxArrayString &ResultInfo::GetMessages(int maxrow)
 	bufs.Empty();
 	int level = valid < 0 ? myLog.MyLog_Error : myLog.MyLog_Info;
 	if (valid < 2) {
-		for(size_t i = 0; i < msgs.Count(); i++) {
-			myLog.SetMessage(level, msgs.Item(i));
-		}
+		myLog.SetMessage(level, msgs);
 	}
 	if (maxrow >= 0) {
 		size_t cnt = msgs.Count();
@@ -104,6 +114,18 @@ const wxArrayString &ResultInfo::GetMessages(int maxrow)
 		return msgs;
 	}
 }
+/// 同じメッセージがあるか(前方一致)
+int ResultInfo::FindMessage(const wxString &msg)
+{
+	int match = wxNOT_FOUND;
+	for(int i=0; i<(int)msgs.Count(); i++) {
+		if (msgs[i].StartsWith(msg)) {
+			match = i;
+			break;
+		}
+	}
+	return match;
+}
 
 /// 結果ダイアログを表示
 void ResultInfo::Show()
@@ -111,16 +133,18 @@ void ResultInfo::Show()
 	ShowMessage(GetValid(), GetMessages());
 }
 
+/// 結果があればダイアログを表示
+void ResultInfo::ShowIfExists()
+{
+	if (msgs.Count() == 0) return;
+	ShowMessage(GetValid(), GetMessages());
+}
+
 /// 結果ダイアログを表示
 /// @param[in] level 0:正常 -1:エラー時 1:警告時
-/// @param[in] msgs メッセージ配列
-void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
+/// @param[in] msg メッセージ
+void ResultInfo::ShowMessage(int level, const wxString &msg)
 {
-	wxString msg;
-	for(size_t i=0; i<msgs.Count(); i++) {
-		msg += msgs[i];
-		msg += wxT("\n");
-	}
 	if (msg.IsEmpty()) return;
 
 	wxString caption;
@@ -140,6 +164,18 @@ void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
 	wxMessageBox(msg, caption, style);
 }
 
+/// 結果ダイアログを表示
+/// @param[in] level 0:正常 -1:エラー時 1:警告時
+/// @param[in] msgs メッセージ配列
+void ResultInfo::ShowMessage(int level, const wxArrayString &msgs)
+{
+	wxString msg;
+	for(size_t i=0; i<msgs.Count(); i++) {
+		msg += msgs[i];
+	}
+	ShowMessage(level, msg);
+}
+
 /// メッセージダイアログを表示
 /// @param[in] code -1:エラー時 1:警告時
 /// @param[in] msgs メッセージ配列
@@ -150,7 +186,6 @@ int ResultInfo::ShowErrWarnMessage(int code, const wxArrayString &msgs)
 	wxString msg;
 	for(size_t i=0; i<msgs.Count(); i++) {
 		msg += msgs[i];
-		msg += wxT("\n");
 	}
 	if (msg.IsEmpty()) return 0;
 

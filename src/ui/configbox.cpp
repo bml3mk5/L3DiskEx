@@ -6,6 +6,9 @@
 ///
 
 #include "configbox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/notebook.h>
 #include <wx/checkbox.h>
 #include <wx/statbox.h>
@@ -16,7 +19,7 @@
 #include <wx/spinctrl.h>
 #include <wx/sizer.h>
 #include "../config.h"
-#include "../main.h"
+#include "filedirbox.h"
 #include "../basicfmt/basicfmt.h"
 #include "../basicfmt/basictype.h"
 #include "../diskimg/diskimage.h"
@@ -38,8 +41,9 @@ ConfigBox::ConfigBox(wxWindow* parent, wxWindowID id, Config *ini)
 {
 	this->ini = ini;
 
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
-	wxSizerFlags flagsh = wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 4);
+	int p4 = FromDIP(4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, p4);
+	wxSizerFlags flagsh = wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, p4);
 
 	wxBoxSizer *szrAll;
 	wxBoxSizer *szrPage;
@@ -290,3 +294,5 @@ void ConfigBox::CommitData()
 	}
 	ini->SetLanguage(lang);
 }
+
+#endif /* !USE_CONSOLE */

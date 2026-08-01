@@ -12,7 +12,6 @@
 #include <time.h>
 //#include "version.h"
 
-
 #ifndef _MAX_PATH
 #define _MAX_PATH	260
 #endif

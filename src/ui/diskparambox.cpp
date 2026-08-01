@@ -6,6 +6,14 @@
 ///
 
 #include "diskparambox.h"
+#include "../basicfmt/basictemplate.h"
+#include "../basicfmt/basicparam.h"
+#include "../basicfmt/basiccategory.h"
+#include "../diskimg/diskimage.h"
+#include "../diskimg/diskparam.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/numformatter.h>
 #include <wx/stattext.h>
 #include <wx/checkbox.h>
@@ -17,11 +25,6 @@
 #include <wx/valtext.h>
 #include <wx/msgdlg.h>
 #include "uimainframe.h"
-#include "../basicfmt/basictemplate.h"
-#include "../basicfmt/basicparam.h"
-#include "../basicfmt/basiccategory.h"
-#include "../diskimg/diskimage.h"
-#include "../diskimg/diskparam.h"
 
 
 const char *gNumberingSector[] = {
@@ -59,9 +62,10 @@ END_EVENT_TABLE()
 DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, OpeFlags ope_flags, int select_number, DiskImageDisk *disk, const DiskParamPtrs *params, const DiskParam *manual_param, int show_flags)
 	: wxDialog(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
-	wxSizerFlags flagsH = wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, 4);
-//	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxLEFT | wxTOP | wxBOTTOM, 4).Border(wxRIGHT, 8);
+	int p4 = FromDIP(4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, p4);
+	wxSizerFlags flagsH = wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT, p4);
+//	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxLEFT | wxTOP | wxBOTTOM, p4).Border(wxRIGHT, p8);
 	wxSize size;
 	long style = 0;
 
@@ -1017,3 +1021,22 @@ int DiskParamBox::GetSingleSectorSize() const
 	int idx = comSingleSecSize->GetSelection();
 	return gSectorSizes[idx];
 }
+
+// ----------------------------------------------------------------------------
+
+DiskParamDiskCreateBox::DiskParamDiskCreateBox(wxWindow* parent, wxWindowID id, DiskImage& image, int show_flags)
+	: DiskParamBox(parent, id, image, DiskParamBox::CREATE_NEW_DISK, 0, NULL, NULL, NULL, show_flags)
+{
+}
+
+DiskParamDiskAddBox::DiskParamDiskAddBox(wxWindow* parent, wxWindowID id, DiskImage& image, int select_number, int show_flags)
+	: DiskParamBox(parent, id, image, DiskParamBox::ADD_NEW_DISK, select_number, NULL, NULL, NULL, show_flags)
+{
+}
+
+DiskParamDiskSelectBox::DiskParamDiskSelectBox(wxWindow* parent, wxWindowID id, DiskImage& image, const DiskParamPtrs* params, const DiskParam* manual_param, int show_flags)
+	: DiskParamBox(parent, id, image, DiskParamBox::SELECT_DISK_TYPE, 0, NULL, params, manual_param, show_flags)
+{
+}
+
+#endif /* USE_CONSOLE */

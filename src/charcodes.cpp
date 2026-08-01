@@ -569,6 +569,34 @@ int CharCodeChoices::IndexOf(const wxString &name, const wxString &item_name) co
 	return idx;
 }
 
+/// 選択リスト名に一致するマップを探す
+/// @param[in] name      リスト名
+/// @param[in] item_name マップ名
+const CharCodeMap *CharCodeChoices::FindMap(const wxString &name, const wxString &item_name) const
+{
+	const CharCodeMap *map = NULL;
+	const CharCodeChoice *choice = Find(name);
+	if (choice) {
+		map = choice->Find(item_name);
+	}
+	return map;
+}
+
+/// 選択リスト名に一致するマップを探す
+/// @param[in] name      リスト名
+/// @param[in] item_name マップ名
+const CharCodeMap *CharCodeChoices::FindMap(const wxString &name, size_t item_idx) const
+{
+	const CharCodeMap *map = NULL;
+	const CharCodeChoice *choice = Find(name);
+	if (choice) {
+		map = choice->Item(item_idx);
+	} else {
+		map = gCharCodeMaps.GetMap(0);
+	}
+	return map;
+}
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // キャラクターコード変換操作
@@ -585,7 +613,7 @@ CharCodes::~CharCodes()
 /// @param[in]  locale_name : ローケル名
 /// @param[out] errmsgs     : エラーメッセージ
 /// @return true / false
-bool CharCodes::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
+bool CharCodes::Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	wxXmlDocument doc;
 
@@ -615,7 +643,7 @@ bool CharCodes::Load(const wxString &data_path, const wxString &locale_name, wxS
 /// @param[in]  locale_name : ローケル名
 /// @param[out] errmsgs     : エラーメッセージ
 /// @return true / false
-bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs)
+bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	item = item->GetChildren();
 	while(item) {
@@ -675,9 +703,10 @@ bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString 
 			if (gCharCodeMaps.FindMap(sname) == NULL) {
 				gCharCodeMaps.Add(map);
 			} else {
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate name in CharCodes::Maps : ");
-				errmsgs += sname;
+				wxString errmsg;
+				errmsg += _("Duplicate name in CharCodes::Maps : ");
+				errmsg += sname;
+				errmsgs.Add(errmsg);
 				delete map;
 				return false;
 			}
@@ -691,7 +720,7 @@ bool CharCodes::LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString 
 /// @param[in]  locale_name : ローケル名
 /// @param[out] errmsgs     : エラーメッセージ
 /// @return true / false
-bool CharCodes::LoadChoices(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs)
+bool CharCodes::LoadChoices(wxXmlNode *item, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	item = item->GetChildren();
 	while(item) {
@@ -726,9 +755,10 @@ bool CharCodes::LoadChoices(wxXmlNode *item, const wxString &locale_name, wxStri
 			if (gCharCodeChoices.Find(sname) == NULL) {
 				gCharCodeChoices.Add(new CharCodeChoice(sname, item_names));
 			} else {
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate name in CharCodes::Choices : ");
-				errmsgs += sname;
+				wxString errmsg;
+				errmsg += _("Duplicate name in CharCodes::Choices : ");
+				errmsg += sname;
+				errmsgs.Add(errmsg);
 				return false;
 			}
 		}

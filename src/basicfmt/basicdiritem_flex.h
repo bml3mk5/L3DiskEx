@@ -72,6 +72,8 @@ public:
 	DiskBasicDirItemFLEX(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemFLEX(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -152,8 +154,10 @@ public:
 	wxUint8			GetLastTrack() const;
 	/// @brief 最後のセクタ番号を返す
 	wxUint8			GetLastSector() const;
+	/// @brief ダイアログ入力後のファイル名チェック
+	virtual bool	ValidateFileName(const wxString &filename, wxString &errormsg);
 
-
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -162,11 +166,10 @@ public:
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// @brief 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
-	/// @brief ダイアログ入力後のファイル名チェック
-	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_FLEX_H */

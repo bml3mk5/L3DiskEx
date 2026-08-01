@@ -10,7 +10,6 @@
 #include "basictype.h"
 #include "../config.h"
 #include "../charcodes.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -55,6 +54,17 @@ DiskBasicDirItemSDOS::DiskBasicDirItemSDOS(DiskBasic *basic, int n_num, const Di
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemSDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+	AllocateItem(NULL);
 }
 
 /// アイテムへのポインタを設定
@@ -436,18 +446,6 @@ void DiskBasicDirItemSDOS::SetModify()
 	}
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/choice.h>
-#include <wx/checkbox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1 51
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemSDOS::GetFileType1Pos() const
 {
@@ -464,6 +462,20 @@ int DiskBasicDirItemSDOS::GetFileType2Pos() const
 {
 	return GetFileAttr().GetType();
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/choice.h>
+#include <wx/checkbox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1 51
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -537,6 +549,8 @@ bool DiskBasicDirItemSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 	return true;
 }
 
+#endif /* !USE_CONSOLE */
+
 /// 属性値を加工する
 bool DiskBasicDirItemSDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const
 {
@@ -554,6 +568,8 @@ bool DiskBasicDirItemSDOS::ProcessAttr(DiskBasicDirItemAttr &attr, DiskBasicErro
 	return true;
 }
 
+#ifndef USE_CONSOLE
+
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -569,3 +585,5 @@ void DiskBasicDirItemSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("EXEC ADDR"), m_data.Data()->exec_addr, basic->IsBigEndian());
 	vals.Add(wxT("RESERVED"), m_data.Data()->reserved);
 }
+
+#endif /* !USE_CONSOLE */

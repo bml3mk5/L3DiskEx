@@ -74,6 +74,16 @@ DiskBasicDirItemCPM::DiskBasicDirItemCPM(DiskBasic *basic, int n_num, const Disk
 	Used(CheckUsed(n_unuse));
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemCPM::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -579,6 +589,8 @@ int DiskBasicDirItemCPM::ConvFileTypeFromFileName(const wxString &filename) cons
 	return ftype;
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -639,6 +651,8 @@ void DiskBasicDirItemCPM::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 	wxCheckBox *chkSystem;
 	wxCheckBox *chkArchive;
 
+	wxSizerFlags flagsC = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
+
 	SetFileTypeForAttrDialog(show_flags, file_path, file_type_1, file_type_2);
 
 	wxArrayString choices;
@@ -651,7 +665,7 @@ void DiskBasicDirItemCPM::CreateControlsForAttrDialog(IntNameBox *parent, int sh
 
 	wxStaticBoxSizer *staType4 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Attributes")), wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-	hbox->Add(new wxStaticText(parent, wxID_ANY, _("User ID")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL));
+	hbox->Add(new wxStaticText(parent, wxID_ANY, _("User ID")), flagsC);
 	spnUserId = new wxSpinCtrl(parent, IDC_SPIN_USERID, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS | wxALIGN_LEFT, 0, 15, file_type_1);
 	hbox->Add(spnUserId, flags);
 	staType4->Add(hbox);
@@ -714,3 +728,5 @@ void DiskBasicDirItemCPM::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("RECORD_NUM"), m_data.Data()->record_num);
 	vals.Add(wxT("MAP"), m_data.Data()->map.b, sizeof(m_data.Data()->map.b));
 }
+
+#endif /* !USE_CONSOLE */

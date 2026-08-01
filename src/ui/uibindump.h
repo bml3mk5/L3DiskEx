@@ -9,6 +9,9 @@
 #define UIBINDUMP_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/frame.h>
 #include <wx/scrolwin.h>
 #include <wx/splitter.h>
@@ -62,6 +65,7 @@ private:
 		IDM_VIEW_TEXT,
 		IDM_VIEW_BINARY,
 		IDM_VIEW_FONT,
+		IDM_VIEW_UPDATE,
 
 		IDM_VIEW_CHAR_0,
 	};
@@ -75,6 +79,7 @@ public:
 	void OnViewChar(wxCommandEvent& event);
 	void OnViewTextBinary(wxCommandEvent& event);
 	void OnViewFont(wxCommandEvent& event);
+	void OnViewUpdate(wxCommandEvent& event);
 
 	UiDiskBinDumpPanel *GetPanel() const { return panel; }
 	UiDiskBinDump *GetDumpPanel() const;
@@ -138,6 +143,7 @@ public:
 	~UiDiskBinDumpPanel();
 
 	UiDiskBinDump *GetDumpPanel() const { return dump; }
+	void RefreshWindow();
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
@@ -177,6 +183,8 @@ public:
 	void OnCheckChar(wxCommandEvent& event);
 	void OnCheckInvert(wxCommandEvent& event);
 	void OnClickButton(wxCommandEvent& event);
+
+	void RefreshWindow();
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
@@ -236,6 +244,7 @@ public:
 	void RefreshData();
 
 	void SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py);
+	void RefreshWindow();
 
 	void SetTextBinary(int val);
 	void SetDataInvert(bool val);
@@ -247,5 +256,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
+#endif /* !USE_CONSOLE */
 
 #endif /* UIBINDUMP_H */

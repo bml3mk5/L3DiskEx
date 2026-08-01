@@ -11,14 +11,25 @@
 #include "common.h"
 #include <stdarg.h>
 #include <wx/string.h>
+#include <wx/arrstr.h>
 
+#ifdef USE_WXFILE_ON_LOGGING
+// wxFile performs raw file I/O. This is a wrapper around file descriptor.
 class wxFile;
+#else
+// wxFFile implements buffered file I/O. It wraps inside it a FILE * handle used by standard C IO library.
+class wxFFile;
+#endif
 
 /// ロギング メッセージをファイルに保存する
 class MyLogging
 {
 private:
+#ifdef USE_WXFILE_ON_LOGGING
 	wxFile  *p_file;
+#else
+	wxFFile *p_file;
+#endif
 	wxString m_file_path;
 	int      m_log_level;
 
@@ -38,6 +49,7 @@ public:
 	void Close();
 
 	void SetMessage(int level, const wxString &msg);
+	void SetMessage(int level, const wxArrayString &msgs);
 	void SetMessage(int level, const char *format, ...);
 	void SetMessageV(int level, const char *format, va_list ap);
 	void SetMessage(int level, const wchar_t *format, ...);

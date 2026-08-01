@@ -6,6 +6,9 @@
 ///
 
 #include "uictreectrl.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/imaglist.h>
 #include <wx/icon.h>
 #include "../config.h"
@@ -108,3 +111,5 @@ MyCTreeItem MyCTreeCtrl::GetNodeAtPoint(int x, int y) const
 	wxPoint pt(x, y);
 	return HitTest(pt);
 }
+
+#endif /* !USE_CONSOLE */

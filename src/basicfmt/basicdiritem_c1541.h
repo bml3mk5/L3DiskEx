@@ -82,6 +82,8 @@ public:
 	DiskBasicDirItemC1541(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemC1541(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -157,6 +159,7 @@ public:
 	/// @brief アイテムの属するセクタを変更済みにする
 	virtual void	SetModify();
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -167,13 +170,10 @@ public:
 	virtual void	ChangeTypeInAttrDialog(IntNameBox *parent);
 	/// @brief 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
-//	/// @brief ダイアログ入力後のファイル名チェック
-//	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
-//	/// @brief その他の属性値を設定する
-//	virtual void	SetOptionalAttr(DiskBasicDirItemAttr &attr);
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_C1541_H */

@@ -6,6 +6,9 @@
 #define MYMENU_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/menu.h>
 #include <wx/string.h>
 
@@ -32,5 +35,7 @@ public:
 
 	bool Append(wxMenu *menu, const wxString &title);
 };
+
+#endif /* !USE_CONSOLE */
 
 #endif /* MYMENU_H */

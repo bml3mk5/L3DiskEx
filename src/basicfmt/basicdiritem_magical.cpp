@@ -10,7 +10,6 @@
 #include "basictype.h"
 #include "../config.h"
 #include "../charcodes.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -128,6 +127,17 @@ DiskBasicDirItemMAGICAL::DiskBasicDirItemMAGICAL(DiskBasic *basic, int n_num, co
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemMAGICAL::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemXDOSBase::Reset();
+
+	m_data.Alloc();
+	AllocateItem(NULL);
 }
 
 /// アイテムへのポインタを設定
@@ -656,23 +666,6 @@ void DiskBasicDirItemMAGICAL::SetModify()
 	}
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/choice.h>
-#include <wx/checkbox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1		51
-#define IDC_COMBO_MEMBANK	52
-#define IDC_CHECK_READONLY	53
-#define IDC_CHECK_HIDDEN	54
-#define IDC_CHECK_SYSTEM	55
-#define IDC_CHECK_SUPER		56
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemMAGICAL::ConvFileType1Pos(int t1) const
 {
@@ -689,6 +682,25 @@ int DiskBasicDirItemMAGICAL::ConvFileType1Pos(int t1) const
 	}
 	return pos;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/choice.h>
+#include <wx/checkbox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1		51
+#define IDC_COMBO_MEMBANK	52
+#define IDC_CHECK_READONLY	53
+#define IDC_CHECK_HIDDEN	54
+#define IDC_CHECK_SYSTEM	55
+#define IDC_CHECK_SUPER		56
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -823,3 +835,5 @@ void DiskBasicDirItemMAGICAL::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("START.SECTOR"), m_data.Data()->start.sector);
 	vals.Add(wxT("START.SIZE"), m_data.Data()->start.size);
 }
+
+#endif /* !USE_CONSOLE */

@@ -763,10 +763,10 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 //	newitem->SetFileAttr(FILE_TYPE_DIRECTORY_MASK);
 
 	// ディレクトリサイズを更新
-	int dir_size = dir->CalcSize();
 //	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
 	DiskBasicDirItem *dir_item = item->GetParent();
 	if (dir_item) {
+		int dir_size = dir->CalcSize(dir_item);
 		dir_item->SetFileSize(dir_size);
 	}
 
@@ -810,6 +810,7 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 	os9_ident->DD_TKS = basic->GetSectorsPerTrackOnBasic();
 	// allocation map length
 	ival = (total_lsn + 7) / 8;
+	wxUint32 map_bytes = ival;
 	os9_ident->DD_MAP = wxUINT16_SWAP_ON_LE(ival);
 	// sectors per group
 	ival = basic->GetGroupWidth();
@@ -864,6 +865,7 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 		if (!sector) return false;
 		sector->Fill(0xff);
 	}
+	alloc_map.AllocMap(basic, map_lsn > 0 ? map_lsn : 1, map_bytes);
 	for(int lsn = root_end_lsn + 1; lsn < total_lsn; lsn++) {
 		SetGroupNumber(lsn, 0);
 	}
@@ -910,17 +912,16 @@ bool DiskBasicTypeOS9::AdditionalProcessOnFormatted(const DiskBasicIdentifiedDat
 }
 
 /// データの書き込み終了後の処理
+/// @param [in]	item        ディレクトリアイテム
 void DiskBasicTypeOS9::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
 	// ディレクトリサイズを更新
-	int dir_size = dir->CalcSize();
 //	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
 	DiskBasicDirItem *dir_item = item->GetParent();
-	if (!dir_item) {
-		// Why?
-		return;
+	if (dir_item) {
+		int dir_size = dir->CalcSize(dir_item);
+		dir_item->SetFileSize(dir_size);
 	}
-	dir_item->SetFileSize(dir_size);
 }
 
 /// FAT領域を削除する
@@ -937,15 +938,12 @@ bool DiskBasicTypeOS9::AdditionalProcessOnDeletedFile(DiskBasicDirItem *item)
 	SetGroupNumber(item->GetStartGroup(0), 0);
 
 	// ディレクトリサイズを更新
-	int dir_size = dir->CalcSize();
 //	DiskBasicDirItem *dir_item = dir->FindName(wxT("."), NULL, NULL);
 	DiskBasicDirItem *dir_item = item->GetParent();
-	if (!dir_item) {
-		// Why?
-		return true;
+	if (dir_item) {
+		int dir_size = dir->CalcSize(dir_item);
+		dir_item->SetFileSize(dir_size);
 	}
-	dir_item->SetFileSize(dir_size);
-
 	return true;
 }
 

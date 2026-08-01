@@ -6,6 +6,9 @@
 ///
 
 #include "uirawdisk.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/menu.h>
 #include <wx/regex.h>
 #include <wx/filename.h>
@@ -16,6 +19,8 @@
 #include "mymenu.h"
 #include "../main.h"
 #include "uimainframe.h"
+#include "uimainpanel.h"
+#include "filedirbox.h"
 #include "rawtrackbox.h"
 #include "rawsectorbox.h"
 #include "rawparambox.h"
@@ -69,6 +74,7 @@ UiDiskRawPanel::UiDiskRawPanel(UiDiskFrame *parentframe, wxWindow *parentwindow)
 
 	invert_data = false;
 	reverse_side = false;
+	m_conf_load = false;
 
 	// fit size on parent window
 	wxSize sz = parentwindow->GetClientSize();
@@ -80,9 +86,47 @@ UiDiskRawPanel::UiDiskRawPanel(UiDiskFrame *parentframe, wxWindow *parentwindow)
 	// control panel
 	lpanel = new UiDiskRawTrack(frame, this);
 	rpanel = new UiDiskRawSector(frame, this);
-	SplitVertically(lpanel, rpanel, 236);
+
+	SplitVertically(lpanel, rpanel, FromDIP(230));
 
 	SetMinimumPaneSize(10);
+}
+
+UiDiskRawPanel::~UiDiskRawPanel()
+{
+	SaveSashPosition();
+}
+
+/// 最初の非表示
+void UiDiskRawPanel::HideFirst()
+{
+	// 仕切り位置の保存をせずに隠す
+	wxSplitterWindow::Show(false);
+}
+
+/// 表示/非表示
+bool UiDiskRawPanel::Show(bool show)
+{
+	bool sts = wxSplitterWindow::Show(show);
+	if (show && !m_conf_load) {
+		LoadSashPosition();
+		m_conf_load = true;
+	}
+	return sts;
+}
+
+/// 仕切り位置を設定ファイルから読み設定する
+void UiDiskRawPanel::LoadSashPosition()
+{
+	int w = gConfig.GetTrackPanelWidth();
+	SetSashPosition(FromDIP(w));
+}
+
+/// 仕切り位置を設定ファイルに保存する
+void UiDiskRawPanel::SaveSashPosition()
+{
+	int w = GetSashPosition();
+	gConfig.SetTrackPanelWidth(ToDIP(w));
 }
 
 /// トラックリストにデータを設定する
@@ -2639,3 +2683,5 @@ void UiDiskRawSector::DeleteSectorsOnTrack()
 		parent->RefreshAllData();
 	}
 }
+
+#endif /* !USE_CONSOLE */

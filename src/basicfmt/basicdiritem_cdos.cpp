@@ -61,6 +61,16 @@ DiskBasicDirItemCDOS::DiskBasicDirItemCDOS(DiskBasic *basic, int n_num, const Di
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemCDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemMZBase::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -391,21 +401,6 @@ int DiskBasicDirItemCDOS::ConvOriginalTypeFromFileName(const wxString &filename)
 	return t1;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/choice.h>
-#include <wx/checkbox.h>
-#include <wx/radiobox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1 51
-#define IDC_CHECK_READONLY 52
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 /// @return 位置不明の属性はマイナスにする
 int DiskBasicDirItemCDOS::ConvFileType1Pos(int native_type) const
@@ -441,6 +436,23 @@ int DiskBasicDirItemCDOS::ConvFileType2Pos(int native_type) const
 	}
 	return val;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/choice.h>
+#include <wx/checkbox.h>
+#include <wx/radiobox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1 51
+#define IDC_CHECK_READONLY 52
 
 /// ダイアログ用に属性を設定する
 /// ダイアログ表示前にファイルの属性を設定
@@ -584,3 +596,5 @@ void DiskBasicDirItemCDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("TRACK"), m_data.Data()->track, basic->IsDataInverted());
 	vals.Add(wxT("SECTOR"), m_data.Data()->sector, basic->IsDataInverted());
 }
+
+#endif /* !USE_CONSOLE */

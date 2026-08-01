@@ -177,7 +177,7 @@ FileTypes::FileTypes() : TemplatesBase()
 /// @param[in] locale_name : ローケル(jaなど)
 /// @param[out] errmsgs     エラーメッセージ
 /// @return false:エラー
-bool FileTypes::Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs)
+bool FileTypes::Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	wxXmlDocument doc;
 

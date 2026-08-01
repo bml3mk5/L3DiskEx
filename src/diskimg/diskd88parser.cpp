@@ -163,6 +163,22 @@ wxUint32 DiskD88Parser::ParseSector(wxInputStream &istream, int disk_number, int
 
 	// 追加
 	size_t data_size = sector_header.GetSize();
+	if (data_size == 0 || data_size > (size_t)(sector_size * sector_nums)) {
+		// データ領域が0 or 大きすぎる
+		p_result->SetWarn(DiskResult::ERRV_SECTOR_SIZE_SECTOR, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetIDN(), sector_header.GetSize());
+		// ID_Nからサイズを計算
+		int id_n = sector_header.GetIDN();
+		if (sector_size != (128 << id_n)) {
+			p_result->SetWarn(DiskResult::ERRV_MISMATCH_SECTOR_SIZE, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetIDN(), sector_header.GetSize());
+		}
+		sector_header.SetSize((wxUint16)sector_size);
+		data_size = sector_size;
+	}
+	// ステータス
+	if (sector_header.GetStatus() != 0) {
+		p_result->SetWarn(DiskResult::ERRV_STATUS_IS_NOT_ZERO, disk_number, sector_header.GetIDC(), sector_header.GetIDH(), sector_header.GetIDR(), sector_header.GetStatus());
+	}
+
 	if (p_result->GetValid() >= 0) {
 		wxUint8 *sector_data = NULL;
 		if (data_size > 0) {

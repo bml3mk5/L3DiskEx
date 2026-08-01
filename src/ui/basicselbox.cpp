@@ -7,17 +7,20 @@
 
 #include "basicselbox.h"
 #include <wx/string.h>
-#include <wx/listbox.h>
-#include <wx/textctrl.h>
-#include <wx/stattext.h>
-#include <wx/sizer.h>
-#include "intnamevalid.h"
 #include "../basicfmt/basicfmt.h"
 #include "../basicfmt/basictemplate.h"
 #include "../basicfmt/basicparam.h"
 #include "../diskimg/diskimage.h"
 #include "../utils.h"
 
+#ifndef USE_CONSOLE
+
+#include <wx/listbox.h>
+#include <wx/textctrl.h>
+#include <wx/stattext.h>
+#include <wx/valnum.h>
+#include <wx/sizer.h>
+#include "intnamevalid.h"
 
 VolumeCtrl::VolumeCtrl()
 {
@@ -25,9 +28,10 @@ VolumeCtrl::VolumeCtrl()
 		lblVolume[i] = NULL;
 		txtVolume[i] = NULL;
 	}
+	m_volume_skew = 1;
 }
 
-wxSizer *VolumeCtrl::CreateVolumeCtrl(wxWindow* parent, wxWindowID id)
+wxSizer *VolumeCtrl::CreateVolumeCtrl(wxWindow* parent, wxWindowID id, const DiskBasicFormat *fmt)
 {
 	static const struct {
 		const char *title;
@@ -35,14 +39,35 @@ wxSizer *VolumeCtrl::CreateVolumeCtrl(wxWindow* parent, wxWindowID id)
 		{ wxTRANSLATE("Volume Name") },
 		{ wxTRANSLATE("Volume Number") },
 		{ wxTRANSLATE("Volume Date") },
+		{ wxTRANSLATE("Sector Skew") },
 	};
 
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
-	wxSizerFlags vflags = wxSizerFlags().Expand().Border(wxALL, 1);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(4));
+	wxSizerFlags vflags = wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(1));
 
 	int vmax_width = 192;
 	wxFlexGridSizer *gszr = new wxFlexGridSizer(2, 2, 2);
 	for(int i=0; i<VOLUME_ROWS; i++) {
+		bool enable = true;
+		if (fmt) {
+			switch(i) {
+			case VOLUME_NAME:
+				enable = fmt->HasVolumeName();
+				break;
+			case VOLUME_NUM:
+				enable = fmt->HasVolumeNumber();
+				break;
+			case VOLUME_DATE:
+				enable = fmt->HasVolumeDate();
+				break;
+			case VOLUME_SKEW:
+				enable = fmt->HasVolumeSkew();
+				break;
+			default:
+				break;
+			}
+		}
+		if (!enable) continue;
 		lblVolume[i] = new wxStaticText(parent, wxID_ANY, wxGetTranslation(c_volume_items[i].title));
 		gszr->Add(lblVolume[i], flags);
 		txtVolume[i] = new wxTextCtrl(parent, id + i);
@@ -53,82 +78,127 @@ wxSizer *VolumeCtrl::CreateVolumeCtrl(wxWindow* parent, wxWindowID id)
 	return gszr;
 }
 
+void VolumeCtrl::EnableVolumeC(int idx, bool enable)
+{
+	if (lblVolume[idx]) lblVolume[idx]->Enable(enable);
+	if (txtVolume[idx]) txtVolume[idx]->Enable(enable);
+}
+
 void VolumeCtrl::EnableVolumeName(bool enable, size_t max_length, const ValidNameRule &rule)
 {
-	if (lblVolume[0]) lblVolume[0]->Enable(enable);
-	if (txtVolume[0]) {
-		txtVolume[0]->Enable(enable);
+	EnableVolumeC(VOLUME_NAME, enable);
+
+	if (txtVolume[VOLUME_NAME]) {
 		if (enable) {
 			if (max_length == 0) max_length = 64;
-			txtVolume[0]->SetMaxLength(max_length);
-			txtVolume[0]->SetValidator(IntNameValidator(max_length, _("volume name"), rule));
+			txtVolume[VOLUME_NAME]->SetMaxLength(max_length);
+			txtVolume[VOLUME_NAME]->SetValidator(IntNameValidator(max_length, _("volume name"), rule));
 		} else {
-			txtVolume[0]->SetValidator(wxValidator());
+			txtVolume[VOLUME_NAME]->SetValidator(wxValidator());
 		}
 	}
 }
 
 void VolumeCtrl::EnableVolumeNumber(bool enable)
 {
-	if (lblVolume[1]) lblVolume[1]->Enable(enable);
-	if (txtVolume[1]) txtVolume[1]->Enable(enable);
+	EnableVolumeC(VOLUME_NUM, enable);
 }
 
 void VolumeCtrl::EnableVolumeDate(bool enable)
 {
-	if (lblVolume[2]) lblVolume[2]->Enable(enable);
-	if (txtVolume[2]) txtVolume[2]->Enable(enable);
+	EnableVolumeC(VOLUME_DATE, enable);
+}
+
+void VolumeCtrl::EnableVolumeSkew(bool enable, int min_value, int max_value)
+{
+	EnableVolumeC(VOLUME_SKEW, enable);
+	if (txtVolume[VOLUME_SKEW]) {
+		if (enable) {
+			txtVolume[VOLUME_SKEW]->SetMaxLength(3);
+			txtVolume[VOLUME_SKEW]->SetValidator(wxIntegerValidator<int>(&m_volume_skew, min_value, max_value));
+		} else{
+			txtVolume[VOLUME_SKEW]->SetValidator(wxValidator());
+		}
+	}
+}
+
+void VolumeCtrl::SetVolumeS(int idx, const wxString &val)
+{
+	if (txtVolume[idx]) {
+		txtVolume[idx]->SetValue(val);
+		txtVolume[idx]->SetInsertionPoint(0);
+	}
+}
+
+void VolumeCtrl::SetVolumeI(int idx, int val, bool is_hexa)
+{
+	if (txtVolume[idx]) {
+		if (is_hexa) {
+			txtVolume[idx]->SetValue(wxString::Format(wxT("0x%x"), val));
+		} else {
+			txtVolume[idx]->SetValue(wxString::Format(wxT("%d"), val));
+		}
+		txtVolume[idx]->SetInsertionPoint(0);
+	}
 }
 
 /// ボリューム名をセット
 void VolumeCtrl::SetVolumeName(const wxString &val)
 {
-	if (txtVolume[0]) {
-		txtVolume[0]->SetValue(val);
-		txtVolume[0]->SetInsertionPoint(0);
-	}
+	SetVolumeS(VOLUME_NAME, val);
 }
 
 /// ボリューム番号をセット
 void VolumeCtrl::SetVolumeNumber(int val, bool is_hexa)
 {
-	if (txtVolume[1]) {
-		if (is_hexa) {
-			txtVolume[1]->SetValue(wxString::Format(wxT("0x%x"), val));
-		} else {
-			txtVolume[1]->SetValue(wxString::Format(wxT("%d"), val));
-		}
-		txtVolume[1]->SetInsertionPoint(0);
-	}
+	SetVolumeI(VOLUME_NUM, val, is_hexa);
 }
 
 /// ボリューム日付をセット
 void VolumeCtrl::SetVolumeDate(const wxString &val)
 {
-	if (txtVolume[2]) {
-		txtVolume[2]->SetValue(val);
-		txtVolume[2]->SetInsertionPoint(0);
-	}
+	SetVolumeS(VOLUME_DATE, val);
+}
+
+/// ボリュームスキュをセット
+void VolumeCtrl::SetVolumeSkew(int val, bool is_hexa)
+{
+	SetVolumeI(VOLUME_SKEW, val, is_hexa);
+}
+
+wxString VolumeCtrl::GetVolumeS(int idx) const
+{
+	return txtVolume[idx] ? txtVolume[idx]->GetValue() : wxT("");
+}
+
+int VolumeCtrl::GetVolumeI(int idx) const
+{
+	return Utils::ToInt(txtVolume[idx] ? txtVolume[idx]->GetValue() : wxT("0"));
 }
 
 /// ボリューム名を返す
 wxString VolumeCtrl::GetVolumeName() const
 {
-	return txtVolume[0] ? txtVolume[0]->GetValue() : wxT("");
+	return GetVolumeS(VOLUME_NAME);
 }
 
 /// ボリューム番号を返す
 int VolumeCtrl::GetVolumeNumber() const
 {
-	return Utils::ToInt(txtVolume[1] ? txtVolume[1]->GetValue() : wxT("0"));
+	return GetVolumeI(VOLUME_NUM);
 }
 
 /// ボリューム日付を返す
 wxString VolumeCtrl::GetVolumeDate() const
 {
-	return txtVolume[2] ? txtVolume[2]->GetValue() : wxT("");
+	return GetVolumeS(VOLUME_DATE);
 }
 
+/// ボリュームスキュを返す
+int VolumeCtrl::GetVolumeSkew() const
+{
+	return GetVolumeI(VOLUME_SKEW);
+}
 
 // Attach Event
 BEGIN_EVENT_TABLE(BasicSelBox, wxDialog)
@@ -140,7 +210,7 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskImageDisk *disk, D
 	: wxDialog(parent, id, _("Select BASIC Type"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 	, VolumeCtrl()
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -171,7 +241,12 @@ BasicSelBox::BasicSelBox(wxWindow* parent, wxWindowID id, DiskImageDisk *disk, D
 	}
 
 	if (show_flags & SHOW_ATTR_CONTROLS) {
-		wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL);
+		wxSizer *gszr = CreateVolumeCtrl(this, IDC_VOLUME_CTRL, NULL);
+		DiskBasicIdentifiedData idata;
+		SetVolumeName(idata.GetVolumeName());
+		SetVolumeNumber(idata.GetVolumeNumber(), false);
+		SetVolumeDate(idata.GetVolumeDate());
+		SetVolumeSkew(idata.GetVolumeSkew(), false);
 		szrAll->Add(gszr, flags);
 	}
 	ChangeBasic(cur_num);
@@ -218,6 +293,8 @@ void BasicSelBox::ChangeBasic(int sel)
 	EnableVolumeName(fmt->HasVolumeName(), fmt->GetValidVolumeName().GetMaxLength(), fmt->GetValidVolumeName());
 	EnableVolumeNumber(fmt->HasVolumeNumber());
 	EnableVolumeDate(fmt->HasVolumeDate());
+	int sectors = p_disk ? p_disk->GetSectorsPerTrack() : 1;
+	EnableVolumeSkew(fmt->HasVolumeSkew(), 1, sectors);
 }
 
 const DiskBasicParam *BasicSelBox::GetBasicParam() const
@@ -231,3 +308,4 @@ const DiskBasicParam *BasicSelBox::GetBasicParam() const
 
 	return match;
 }
+#endif /* USE_CONSOLE */

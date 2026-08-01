@@ -6,6 +6,9 @@
 ///
 
 #include "rawparambox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/choice.h>
 #include <wx/radiobox.h>
@@ -23,7 +26,7 @@ END_EVENT_TABLE()
 RawParamBox::RawParamBox(wxWindow* parent, wxWindowID id, const wxString &title, int type, int value, int maxvalue)
 	: wxDialog(parent, id, title, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 	long style = 0;
 	wxTextValidator validate(wxFILTER_EMPTY | wxFILTER_DIGITS);
 
@@ -123,7 +126,7 @@ END_EVENT_TABLE()
 DensityParamBox::DensityParamBox(wxWindow* parent, wxWindowID id, bool sdensity)
 	: wxDialog(parent, id, _("Density Parameter"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 //	long style = 0;
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
@@ -149,3 +152,5 @@ bool DensityParamBox::IsSingleDensity()
 {
 	return (radDensity->GetSelection() == 1);
 }
+
+#endif /* !USE_CONSOLE */

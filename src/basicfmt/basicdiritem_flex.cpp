@@ -60,6 +60,16 @@ DiskBasicDirItemFLEX::DiskBasicDirItemFLEX(DiskBasic *basic, int n_num, const Di
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemFLEX::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -485,6 +495,19 @@ wxUint8 DiskBasicDirItemFLEX::GetLastSector() const
 	return m_data.Data()->last_sector;
 }
 
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemFLEX::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	wxFileName fn(filename);
+	if (fn.GetExt().IsEmpty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
+		return false;
+	}
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -572,17 +595,6 @@ bool DiskBasicDirItemFLEX::SetAttrInAttrDialog(const IntNameBox *parent, DiskBas
 	return true;
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemFLEX::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	wxFileName fn(filename);
-	if (fn.GetExt().IsEmpty()) {
-		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
-		return false;
-	}
-	return true;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemFLEX::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -603,3 +615,5 @@ void DiskBasicDirItemFLEX::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("DAY"), m_data.Data()->day);
 	vals.Add(wxT("YEAR"), m_data.Data()->year);
 }
+
+#endif /* !USE_CONSOLE */

@@ -66,6 +66,16 @@ DiskBasicDirItemMZ::DiskBasicDirItemMZ(DiskBasic *basic, int n_num, const DiskBa
 	VisibleOnTree(!(IsDirectory() && (name == wxT(".") || name == wxT(".."))));
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemMZ::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemMZBase::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -603,22 +613,6 @@ int DiskBasicDirItemMZ::ConvOriginalTypeFromFileName(const wxString &filename) c
 	return t1;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/choice.h>
-#include <wx/checkbox.h>
-#include <wx/radiobox.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1 51
-#define IDC_CHECK_READONLY 52
-#define IDC_CHECK_SEAMLESS 53
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 /// @return 位置不明の属性はマイナスにする
 int DiskBasicDirItemMZ::ConvFileType1Pos(int native_type) const
@@ -653,6 +647,35 @@ int DiskBasicDirItemMZ::ConvFileType1Pos(int native_type) const
 	}
 	return pos;
 }
+
+/// ダイアログ入力後のファイル名チェック
+bool DiskBasicDirItemMZ::ValidateFileName(const wxString &filename, wxString &errormsg)
+{
+	// 空白はOK
+	if (filename.empty()) {
+		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
+		return false;
+	}
+	return true;
+}
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/choice.h>
+#include <wx/checkbox.h>
+#include <wx/radiobox.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1 51
+#define IDC_CHECK_READONLY 52
+#define IDC_CHECK_SEAMLESS 53
 
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemMZ::ConvFileType2Pos(int native_type) const
@@ -842,17 +865,6 @@ bool DiskBasicDirItemMZ::IsFileValidSize(const IntNameBox *parent, int size, int
 	return (size <= limit_size);
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemMZ::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	// 空白はOK
-	if (filename.empty()) {
-		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILENAME_EMPTY]);
-		return false;
-	}
-	return true;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemMZ::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -870,3 +882,5 @@ void DiskBasicDirItemMZ::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("DATE_TIME"), m_data.Data()->date_time, sizeof(m_data.Data()->date_time), basic->IsDataInverted());
 	vals.Add(wxT("START_SECTOR"), m_data.Data()->start_sector, basic->IsBigEndian(), basic->IsDataInverted());
 }
+
+#endif /* !USE_CONSOLE */

@@ -258,6 +258,19 @@ DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, int n_num, cons
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemProDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+	AllocateItem(NULL);
+
+	m_dir_group_num = 0;
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -321,8 +334,10 @@ void DiskBasicDirItemProDOS::SetNativeName(wxUint8 *filename, size_t size, size_
 		memcpy(n, filename, ns);
 	}
 
-	nl = rtrim(n, length, basic->GetDirTerminateCode());
-
+	wxUint16 term = basic->GetDirTerminateCode();
+	if (term != (wxUint16)-1) {
+		nl = rtrim(n, length, term);
+	}
 	// ファイル名長さ
 	m_data.Data()->stype_and_nlen = (wxUint8)((nl & 0xf) | (m_data.Data()->stype_and_nlen & 0xf0));
 }
@@ -1250,6 +1265,8 @@ void DiskBasicDirItemProDOS::SetModify()
 	}
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -1522,32 +1539,6 @@ bool DiskBasicDirItemProDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskB
 	return true;
 }
 
-#if 0
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemProDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-//	wxFileName fn(filename);
-//	if (fn.GetExt().IsEmpty()) {
-//		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
-//		return false;
-//	}
-	return true;
-}
-
-/// その他の属性値を設定する
-void DiskBasicDirItemProDOS::SetOptionalAttr(DiskBasicDirItemAttr &attr)
-{
-//	int type4 = attr.GetUserData(0);
-//	int version = attr.GetUserData(1);
-//	if (type4 >= 0) {
-//		SetAuxType(type4);
-//	}
-//	if (version >= 0) {
-//		SetVersion(version);
-//	}
-}
-#endif
-
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemProDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 {
@@ -1588,3 +1579,5 @@ void DiskBasicDirItemProDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 		break;
 	}
 }
+
+#endif /* !USE_CONSOLE */

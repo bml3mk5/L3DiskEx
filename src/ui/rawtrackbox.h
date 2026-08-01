@@ -9,8 +9,10 @@
 #define RAWTRACKBOX_H
 
 #include "../common.h"
-#include <wx/dialog.h>
 
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
 
 class wxTextCtrl;
 class DiskImageDisk;
@@ -36,5 +38,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* RAWTRACKBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* RAWTRACKBOX_H */

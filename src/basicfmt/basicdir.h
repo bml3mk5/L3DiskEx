@@ -33,13 +33,13 @@ private:
 	DiskBasic		*basic;
 	DiskBasicFat	*fat;
 
-	const DiskBasicFormat *format_type;	///< フォーマットタイプ
+	const DiskBasicFormat *p_format_type;	///< フォーマットタイプ
 
-	DiskBasicDirItem	*root;			///< ルートディレクトリの仮想的なアイテム
+	DiskBasicDirItem	*p_root_item;		///< ルートディレクトリの仮想的なアイテム
 
-	DiskBasicDirItem	*current_item;	///< 現ディレクトリのアイテム
+	DiskBasicDirItem	*p_curr_item;		///< 現ディレクトリのアイテム
 
-//	DiskBasicGroups		root_groups;	///< ルートディレクトリのあるセクタリスト
+//	DiskBasicGroups		m_root_groups;		///< ルートディレクトリのあるセクタリスト
 
 	DiskBasicDir();
 public:
@@ -52,6 +52,8 @@ public:
 	DiskBasicDirItem *NewItem(DiskImageSector *n_sector, int n_pos, wxUint8 *n_data);
 	/// @brief ディレクトリアイテムを新規に作成してアサインする
 	DiskBasicDirItem *NewItem(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_pos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
+	/// @brief ディレクトリアイテムを初期状態に戻す
+	void					ResetItem(DiskBasicDirItem *dir_item);
 
 	/// @brief ルートディレクトリのアイテムを返す
 	DiskBasicDirItem		*GetRootItem() const;
@@ -68,6 +70,8 @@ public:
 	/// ディレクトリの全ディレクトリアイテムをクリア
 	void					EmptyChildren(DiskBasicDirItem *dir_item);
 
+	/// @brief カレントディレクトリをセットする
+	void					SetCurrentItem(DiskBasicDirItem *dir_item);
 	/// @brief ルートをカレントにする
 	void					SetCurrentAsRoot();
 
@@ -105,6 +109,10 @@ public:
 	DiskBasicDirItem *FindFileByAttrOnRoot(int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
 	/// @brief 指定したディレクトリ内の属性に一致するファイルを検索
 	DiskBasicDirItem *FindFileByAttr(const DiskBasicDirItem *dir_item, int file_type, int mask, DiskBasicDirItem *prev_item = NULL);
+	/// @brief 指定したディレクトリ内からファイル名が前方一致するものを取得
+	int			GetFilesByPrefix(const DiskBasicDirItem *dir_item, const wxString &prefix, bool icase, DiskBasicDirItems &dir_items) const;
+	/// @brief 指定したディレクトリ内からファイル名が一致するものを取得(ワイルドカード指定可)
+	int			GetFilesWithWildcard(const DiskBasicDirItem *dir_item, const wxString &filename, bool icase, DiskBasicDirItems &dir_items) const;
 	/// @brief ルートディレクトリのチェック
 	double		CheckRoot(DiskBasicType *type, int start_sector, int end_sector, bool is_formatting);
 	/// @brief ルートディレクトリをアサイン
@@ -131,8 +139,10 @@ public:
 	/// @brief ルートディレクトリ領域を指定コードで埋める
 	void        Fill(int start_sector, int end_sector, wxUint8 code);
 
+	/// @brief 指定したカレントディレクトリ下のサブディレクトリへ移動する
+	bool		Change(DiskBasicDirItem* &curr_item, DiskBasicDirItem* &dst_item);
 	/// @brief ディレクトリを移動する
-	bool		Change(DiskBasicDirItem * &dst_item);
+	bool		Change(DiskBasicDirItem* &dst_item);
 
 	/// @brief ディレクトリの拡張ができるか
 	bool		CanExpand(const DiskBasicDirItem *dir_item);
@@ -140,12 +150,14 @@ public:
 	bool		Expand(DiskBasicDirItem *dir_item);
 
 	/// @brief フォーマット種類を設定
-	void		SetFormatType(const DiskBasicFormat *val) { format_type = val; }
+	void		SetFormatType(const DiskBasicFormat *val) { p_format_type = val; }
 	/// @brief フォーマット種類を得る
-	const DiskBasicFormat *GetFormatType() const { return format_type; }
+	const DiskBasicFormat *GetFormatType() const { return p_format_type; }
 
+//	/// @brief カレントディレクトリの占有サイズを計算する
+//	int			CalcSize();
 	/// @brief ディレクトリの占有サイズを計算する
-	int			CalcSize();
+	int			CalcSize(DiskBasicDirItem *dir_item);
 };
 
 #endif /* BASICDIR_H */

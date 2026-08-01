@@ -8,15 +8,17 @@
 #ifndef RAWEXPBOX_H
 #define RAWEXPBOX_H
 
+#include "../common.h"
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+
 #define RAWEXPBOX_TRANS \
 _("Required information entry is empty.") \
 _("'%s' is invalid") \
 _("Validation conflict") \
 _("'%s' should only contain digits.")
-
-#include "../common.h"
-#include <wx/dialog.h>
-
 
 class wxTextCtrl;
 class wxCheckBox;
@@ -73,5 +75,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* RAWEXPBOX_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* RAWEXPBOX_H */

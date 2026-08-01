@@ -60,6 +60,17 @@ DiskBasicDirItemTFDOS::DiskBasicDirItemTFDOS(DiskBasic *basic, int n_num, const 
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemTFDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemMZBase::Reset();
+
+	m_data.Alloc();
+	m_external_attr = 2;	// TXTの時、BASE互換かを自動判定
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -326,22 +337,6 @@ int DiskBasicDirItemTFDOS::ConvOriginalTypeFromFileName(const wxString &filename
 	return t1;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/statbox.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1    51
-#define IDC_CHECK_BASECOMP 52
-#define IDC_CHECK_READONLY 53
-#define IDC_CHECK_HIDDEN   54
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemTFDOS::ConvFileType1Pos(int t1) const
 {
@@ -367,6 +362,24 @@ int DiskBasicDirItemTFDOS::ConvFileType2Pos(int t1) const
 	}
 	return val;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/choice.h>
+#include <wx/statbox.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1    51
+#define IDC_CHECK_BASECOMP 52
+#define IDC_CHECK_READONLY 53
+#define IDC_CHECK_HIDDEN   54
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -497,12 +510,6 @@ bool DiskBasicDirItemTFDOS::IsFileValidSize(const IntNameBox *parent, int size, 
 	return (size <= limit_size);
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemTFDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	return true;
-}
-
 /// プロパティで表示する内部データを設定
 /// @param[in,out] vals 名前＆値のリスト
 void DiskBasicDirItemTFDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
@@ -517,3 +524,5 @@ void DiskBasicDirItemTFDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("EXEC_ADDR"), m_data.Data()->exec_addr, basic->IsBigEndian(), basic->IsDataInverted());
 	vals.Add(wxT("TRACK"), m_data.Data()->track, basic->IsDataInverted());
 }
+
+#endif /* !USE_CONSOLE */

@@ -71,12 +71,14 @@ private:
 	int				ConvFileType1Pos(int native_type) const;
 	/// @brief 属性からリストの位置を返す(プロパティダイアログ用)
 	int			    ConvFileType2Pos(int native_type) const;
+#ifndef USE_CONSOLE
 	/// @brief リストの位置から属性を返す(プロパティダイアログ用)
 	int				CalcFileTypeFromPos(int pos) const;
 	/// @brief 属性1を得る
 	int				GetFileType1InAttrDialog(const IntNameBox *parent) const;
 	/// @brief インポート時ダイアログ表示前にファイルの属性を設定
 	void			SetFileTypeForAttrDialog(int show_flags, const wxString &name, int &file_type_1, int &file_type_2);
+#endif /* !USE_CONSOLE */
 
 	/// @brief データ内にファイルサイズをセット
 	void			SetFileSizeBase(int val);
@@ -88,6 +90,8 @@ public:
 	DiskBasicDirItemCDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemCDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -149,6 +153,7 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -160,6 +165,7 @@ public:
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_CDOS_H */

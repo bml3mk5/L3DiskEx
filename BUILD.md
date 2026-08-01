@@ -1,7 +1,7 @@
 
-# L3 Disk Explorer
+# Build the L3 Disk Explorer
 
-#### Copyright(C) Sasaji 2015-2025 All Rights Reserved.
+#### Copyright(C) Sasaji 2015-2026 All Rights Reserved.
 
 <a href="#ja">日本語</a> <a href="#en">English</a>
 
@@ -61,7 +61,7 @@
 ## Libraries to build this
 
  * wxWidgets Version 3.2 or lator
-  + [Official Web Page](https://wxwidgets.org/)
+   + [Official Web Page](https://wxwidgets.org/)
 
 ## How to build
 
@@ -70,23 +70,23 @@
 #### 1. Install libraries to build this application
 
  * wxWidgets-3.2.x
-  + case 1) Install from source code
-   1. Download the wxWidgets-3.2.x.zip and extract it to any folder.
-   2. Open wx_vc??.sln in build\\msw on VC++.
-    - When build solution with Debug/Release, static libraries create in `lib\vc_lib\`.
-    - When build solution with DLL_Debug/DLL_Release, dynamic libraries create in `lib\vc_dll\`.
+   + case 1) Install from source code
+     1. Download the wxWidgets-3.2.x.zip and extract it to any folder.
+     2. Open wx_vc??.sln in build\\msw on VC++.
+       - When build solution with Debug/Release, static libraries create in `lib\vc_lib\`.
+       - When build solution with DLL_Debug/DLL_Release, dynamic libraries create in `lib\vc_dll\`.
 
-  + case 2) Install DLL binaries
-   - Download wxMSW-3.2.x_vc1NN_Dev.7z and extract it to any folder.
-    * vc1NN means the version of Visual Studio.
-   - Rename `lib\vc1NN_dll` to `lib\vc_dll`.
-   - Download wxWidgets-3.2.x-headers.7z and extract it to any folder.
+   + case 2) Install DLL binaries
+     - Download wxMSW-3.2.x_vc1NN_Dev.7z and extract it to any folder.
+       * vc1NN means the version of Visual Studio.
+     - Rename `lib\vc1NN_dll` to `lib\vc_dll`.
+     - Download wxWidgets-3.2.x-headers.7z and extract it to any folder.
 
 #### 2. Compile
 
   1. Open *.vcxproj
   2. Select [View]→[Property Manager] in the menu and open the property page to double-click l3diskex in Debug/Release.
-   * Set the path of libraries folder on wxWidgets to DevelopDir and wxWidgetsDir in User Macro.
+    * Set the path of libraries folder on wxWidgets to DevelopDir and wxWidgetsDir in User Macro.
   3. Also set the library name to wxWidgetsLibsRelease and wxWidgetsLibsDebug.
   4. Use Debug/Release to link static libraries or use DLLDebug/DLLRelease to link DLL libraries.
 
@@ -108,12 +108,12 @@
 
   + case 2) Build from source code
 
-   - Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
+    - Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
-         mkdir build_release_static_unicode
-         cd build_release_static_unicode
-         ../configure --with-msw --disable-debug --disable-shared --enable-unicode
-         make
+          mkdir build_release_static_unicode
+          cd build_release_static_unicode
+          ../configure --with-msw --disable-debug --disable-shared --enable-unicode
+          make
 
     * The static libraries and wx-config are created in the build_release_static_unicode folder if makes successfully.
 
@@ -123,24 +123,24 @@
 
   + case 1) Build shared libraries
 
-   - Edit Makefile.win
+    - Edit Makefile.win
 
-     Set the path to WXCONFIG_SH
+      Set the path to WXCONFIG_SH
 
-         make -f Makefile.win clean
-         make -f Makefile.win install
+          make -f Makefile.win clean
+          make -f Makefile.win install
 
     * The application and resource files are copied into ReleaseM directory.
     * Need DLL files for MINGW to run the application.
 
   + case 2) Build static libraries
 
-   - Edit Makefile.win
+    - Edit Makefile.win
 
-     Set the path to WXCONFIG_ST
+      Set the path to WXCONFIG_ST
 
-         make -f Makefile.win st_clean
-         make -f Makefile.win st_install
+          make -f Makefile.win st_clean
+          make -f Makefile.win st_install
 
     * The application and resource files are copied into ReleaseM directory.
 
@@ -161,51 +161,51 @@
 
   Ex. Ubuntu Linux 24.04 LTS amd64:
 
-  * Install these packages:
-   + libgtk-3-0t64
-   + libgtk-3-common
-   + libgtk-3-dev
-   + libwxbase3.2-1t64
-   + libwxgtk3.2-1t64
-   + libwxgtk3.2-dev
-   + libwxgtk-webview3.2-1t64
-   + libwxgtk-webview3.2-dev
+   * Install these packages:
+     + libgtk-3-0t64
+     + libgtk-3-common
+     + libgtk-3-dev
+     + libwxbase3.2-1t64
+     + libwxgtk3.2-1t64
+     + libwxgtk3.2-dev
+     + libwxgtk-webview3.2-1t64
+     + libwxgtk-webview3.2-dev
 
  2. Compile
 
         make -f Makefile.linux clean
         make -f Makefile.linux install
 
-  * The application and resource files are copied into Release directory.
+   * The application and resource files are copied into Release directory.
 
 #### case 2) Build from source
 
  1. Install GTK+ development packages
 
-   + libgtk-3-dev
+    + libgtk-3-dev
 
  2. Build wxWidgets
 
-  Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
+   * Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
-      mkdir build_release_static_unicode
-      cd build_release_static_unicode
-      ../configure --with-gtk --disable-debug --disable-shared --enable-unicode
-      make
+         mkdir build_release_static_unicode
+         cd build_release_static_unicode
+         ../configure --with-gtk --disable-debug --disable-shared --enable-unicode
+         make
 
-  * The static libraries and wx-config are created in the build_release_static_unicode folder if makes successfully.
+   * The static libraries and wx-config are created in the build_release_static_unicode folder if makes successfully.
 
-  * Need not run 'make install'.
+   * Need not run 'make install'.
 
  3. Compile
 
-  + Edit Makefile.linux
-  + Set the path to WXCONFIG_ST.
+   + Edit Makefile.linux
+   + Set the path to WXCONFIG_ST.
 
-        make -f Makefile.linux st_clean
-        make -f Makefile.linux st_install
+         make -f Makefile.linux st_clean
+         make -f Makefile.linux st_install
 
-  * The application and resource files are copied into Release directory.
+   * The application and resource files are copied into Release directory.
 
 
 ----------------------------------------
@@ -217,25 +217,25 @@
 
  2. Compile wxWidgets-3.2.x
 
-  + Operate on the terminal.
+   + Operate on the terminal.
 
-  + Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
+   + Extract wxWidgets-3.2.x.tar.bz2 and change to extracted directory.
 
-        mkdir build_release_static_unicode
-        cd build_release_static_unicode
-        ../configure --with-osx_cocoa --disable-debug --disable-shared --enable-unicode
-        make
+         mkdir build_release_static_unicode
+         cd build_release_static_unicode
+         ../configure --with-osx_cocoa --disable-debug --disable-shared --enable-unicode
+         make
 
    * The static libraries and wx-config are created in the build_release_static_unicode folder if makes successfully.
 
    * Need not run 'make install'.
 
-  + Build debug libraries if use it in the Xcode.
+   + Build debug libraries if use it in the Xcode.
 
-        mkdir build_debug_static_unicode
-        cd build_debug_static_unicode
-        ../configure --with-osx_cocoa --enable-debug --disable-shared --enable-unicode
-        make
+         mkdir build_debug_static_unicode
+         cd build_debug_static_unicode
+         ../configure --with-osx_cocoa --enable-debug --disable-shared --enable-unicode
+         make
 
    * The static libraries and wx-config are created in the build_debug_static_unicode folder if makes successfully.
 
@@ -243,20 +243,20 @@
 
 #### 2. Compile
 
- + case 1) Do make on the terminal.
+  + case 1) Do make on the terminal.
 
-  * Edit Makefile.macosx
+    * Edit Makefile.macosx
 
-    Set the path to WXCONFIG_ST.
+      Set the path to WXCONFIG_ST.
 
-        make -f Makefile.macosx st_clean
-        make -f Makefile.macosx st_install
+          make -f Makefile.macosx st_clean
+          make -f Makefile.macosx st_install
 
-   * The application files are created into Release directory.
+    * The application files are created into Release directory.
 
- + case 2) Build under the Xcode
+  + case 2) Build under the Xcode
 
-  * Modify WX_WIDGET_BASE, WX_WIDGET_DIR in Build Settings.
+    * Modify WX_WIDGET_BASE, WX_WIDGET_DIR in Build Settings.
 
 
 ## Disclaimer
@@ -322,7 +322,7 @@
 ## ビルドに必要なライブラリ
 
  * wxWidgets Version 3.2 以上
-  + [公式Webページ](https://wxwidgets.org/)
+   + [公式Webページ](https://wxwidgets.org/)
 
 
 ## コンパイル方法
@@ -331,28 +331,28 @@
 
 #### 1. コンパイルに必要なライブラリをインストールします。
 
- * wxWidgets-3.2.x
-  + case 1) ソースコードからインストール
-   1. wxWidgets-3.2.x.zipをダウンロードして適当なフォルダに展開。
-   2. build\\mswにあるwx_vc??.slnをVC++で開く。
-    - Debug/Releaseでソリューションをビルドすると、`lib\vc_lib\`に
-      staticライブラリが生成される。
-    - DLL_Debug/DLL_Releaseでソリューションをビルドすると、`lib\vc_dll\`に
-      DLLライブラリが生成される。
+  * wxWidgets-3.2.x
+    + case 1) ソースコードからインストール
+      1. wxWidgets-3.2.x.zipをダウンロードして適当なフォルダに展開。
+      2. build\\mswにあるwx_vc??.slnをVC++で開く。
+        - Debug/Releaseでソリューションをビルドすると、`lib\vc_lib\`に
+          staticライブラリが生成される。
+        - DLL_Debug/DLL_Releaseでソリューションをビルドすると、`lib\vc_dll\`に
+          DLLライブラリが生成される。
 
-  + case 2) DLLバイナリからインストール
-   - wxMSW-3.2.x_vc1NN_Dev.7zをダウンロードして適当なフォルダに展開。
-    * vc1NNはVisual Studioのバージョンを意味します。
-   - `lib\vc1NN_dll`を`lib\vc_dll`にリネーム
-   - wxWidgets-3.2.x-headers.7zをダウンロードして適当なフォルダに展開。
+    + case 2) DLLバイナリからインストール
+      - wxMSW-3.2.x_vc1NN_Dev.7zをダウンロードして適当なフォルダに展開。
+        * vc1NNはVisual Studioのバージョンを意味します。
+      - `lib\vc1NN_dll`を`lib\vc_dll`にリネーム
+      - wxWidgets-3.2.x-headers.7zをダウンロードして適当なフォルダに展開。
 
 #### 2. コンパイル
 
   1. *.vcxprojを開きます。
   2. [表示]→[プロパティマネージャー]を開き、Debug/Release配下にある
      l3diskexをダブルクリックしてプロパティページを開きます。
-   * ユーザーマクロにある値DevelopDir,wxWidgetsDirをwxWidgetsライブラリが
-     あるパスに設定してください。
+    * ユーザーマクロにある値DevelopDir,wxWidgetsDirをwxWidgetsライブラリが
+      あるパスに設定してください。
   3. 同様にwxWidgetsLibsRelease,wxWidgetsLibsDebugのライブラリ名を変更
      してください。
   4. staticライブラリを使用するならDebug/Releaseを、
@@ -376,12 +376,12 @@
 
   + case 2) ソースからインストール
 
-   - wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
+    - wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
-         mkdir build_release_static_unicode
-         cd build_release_static_unicode
-         ../configure --with-msw --disable-debug --disable-shared --enable-unicode
-         make
+          mkdir build_release_static_unicode
+          cd build_release_static_unicode
+          ../configure --with-msw --disable-debug --disable-shared --enable-unicode
+          make
 
     * makeが正常に終われば build_release_static_unicode に
       staticライブラリとwx-configができるはず。
@@ -392,12 +392,12 @@
 
   + case 1) sharedライブラリを使用する場合
 
-   - Makefile.winを編集
+    - Makefile.winを編集
 
-     WXCONFIG_SHのパスを設定する。
+      WXCONFIG_SHのパスを設定する。
 
-         make -f Makefile.win clean
-         make -f Makefile.win install
+          make -f Makefile.win clean
+          make -f Makefile.win install
 
     * カレントにReleaseMディレクトリを作成し、そこに必要なファイルが
       コピーされます。
@@ -405,12 +405,12 @@
 
   + case 2) staticライブラリを使用する場合
 
-   - Makefile.winを編集
+    - Makefile.winを編集
 
-     WXCONFIG_STのパスを設定する。
+      WXCONFIG_STのパスを設定する。
 
-         make -f Makefile.win st_clean
-         make -f Makefile.win st_install
+          make -f Makefile.win st_clean
+          make -f Makefile.win st_install
 
     * カレントにReleaseMディレクトリを作成し、そこに必要なファイルが
       コピーされます。
@@ -432,17 +432,17 @@
 
  1. wxWidgetsをパッケージからインストール
 
-  Ubuntu Linux 24.04 LTS amd64 の例:
+   Ubuntu Linux 24.04 LTS amd64 の例:
 
-  * 以下のパッケージをインストールする。
-   + libgtk-3-0t64
-   + libgtk-3-common
-   + libgtk-3-dev
-   + libwxbase3.2-1t64
-   + libwxgtk3.2-1t64
-   + libwxgtk3.2-dev
-   + libwxgtk-webview3.2-1t64
-   + libwxgtk-webview3.2-dev
+   * 以下のパッケージをインストールする。
+     + libgtk-3-0t64
+     + libgtk-3-common
+     + libgtk-3-dev
+     + libwxbase3.2-1t64
+     + libwxgtk3.2-1t64
+     + libwxgtk3.2-dev
+     + libwxgtk-webview3.2-1t64
+     + libwxgtk-webview3.2-dev
 
  2. コンパイル
 
@@ -456,29 +456,29 @@
 
  1. GTK+開発モジュールをパッケージからインストール
 
-   + libgtk-3-devなど
+    + libgtk-3-devなど
 
  2. wxWidgetsをビルド
 
-  wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
+   * wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
-      mkdir build_release_static_unicode
-      cd build_release_static_unicode
-      ../configure --with-gtk --disable-debug --disable-shared --enable-unicode
-      make
+         mkdir build_release_static_unicode
+         cd build_release_static_unicode
+         ../configure --with-gtk --disable-debug --disable-shared --enable-unicode
+         make
 
-  * makeが正常に終われば build_release_static_unicode に
+   * makeが正常に終われば build_release_static_unicode に
     staticライブラリとwx-configができるはず。
 
-  * make installは行いません。
+   * make installは行いません。
 
  3. コンパイル
 
-  + Makefile.linuxを編集
-  + WXCONFIG_STのパスを 2. でビルドしたパスに設定。
+   + Makefile.linuxを編集
+   + WXCONFIG_STのパスを 2. でビルドしたパスに設定。
 
-        make -f Makefile.linux st_clean
-        make -f Makefile.linux st_install
+         make -f Makefile.linux st_clean
+         make -f Makefile.linux st_install
 
    * カレントにReleaseディレクトリを作成し、そこに必要なファイルが
      コピーされます。
@@ -494,26 +494,26 @@
 
  2. wxWidgets-3.2.xをコンパイル
 
-  + ターミナル上で行います。
+   + ターミナル上で行います。
 
-  + wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
+   + wxWidgets-3.2.x.tar.bz2を展開し、展開先にcdする。
 
-        mkdir build_release_static_unicode
-        cd build_release_static_unicode
-        ../configure --with-osx_cocoa --disable-debug --disable-shared --enable-unicode
-        make
+         mkdir build_release_static_unicode
+         cd build_release_static_unicode
+         ../configure --with-osx_cocoa --disable-debug --disable-shared --enable-unicode
+         make
 
    * makeが正常に終われば build_release_static_unicode に
      staticライブラリとwx-configができるはず。
 
    * make installは行いません。
 
-  + Xcodeを使用する場合はデバッグ用ライブラリもビルドしてください。
+   + Xcodeを使用する場合はデバッグ用ライブラリもビルドしてください。
 
-        mkdir build_debug_static_unicode
-        cd build_debug_static_unicode
-        ../configure --with-osx_cocoa --enable-debug --disable-shared --enable-unicode
-        make
+         mkdir build_debug_static_unicode
+         cd build_debug_static_unicode
+         ../configure --with-osx_cocoa --enable-debug --disable-shared --enable-unicode
+         make
 
    * makeが正常に終われば build_debug_static_unicode に
      staticライブラリとwx-configができるはず。
@@ -522,22 +522,22 @@
 
 #### 2. コンパイル
 
- + case 1) ターミナル上でmake
+  + case 1) ターミナル上でmake
 
-  * Makefile.macosxを編集
+    * Makefile.macosxを編集
 
-    WXCONFIG_STのパスを1.でビルドしたパスに設定。
+      WXCONFIG_STのパスを1.でビルドしたパスに設定。
 
-        make -f Makefile.macosx st_clean
-        make -f Makefile.macosx st_install
+          make -f Makefile.macosx st_clean
+          make -f Makefile.macosx st_install
 
-   * カレントにReleaseディレクトリを作成し、そこに必要なファイルが
-     コピーされます。
+    * カレントにReleaseディレクトリを作成し、そこに必要なファイルが
+      コピーされます。
 
- + case 2) Xcodeを使用
+  + case 2) Xcodeを使用
 
-  * Build Settingsの下の方にあるユーザ定義の WX_WIDGET_BASE, WX_WIDGET_DIR を
-    適宜変更する。
+    * Build Settingsの下の方にあるユーザ定義の WX_WIDGET_BASE, WX_WIDGET_DIR を
+      適宜変更する。
 
 
 ## 免責事項

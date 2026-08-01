@@ -124,14 +124,28 @@ DiskBasicDirItem::DiskBasicDirItem(DiskBasic *basic, int n_num, const DiskBasicG
 /// デストラクタ
 DiskBasicDirItem::~DiskBasicDirItem()
 {
-	if (m_children) {
-		for(size_t i=0; i<m_children->Count(); i++) {
-			DiskBasicDirItem *child = m_children->Item(i);
-			delete child;
-		}
-		m_children->Clear();
-		delete m_children;
-	}
+	EmptyChildren();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItem::Reset()
+{
+	EmptyChildren();
+
+	m_groups.Empty();
+
+	m_parent = NULL;
+	m_children = NULL;
+	m_valid_dir = false;
+
+	m_num = 0;
+	m_position = 0;
+//	m_file_size = 0;
+	m_sector = NULL;
+
+	m_external_attr = 0;
+
+	m_flags = (VISIBLE_LIST | VISIBLE_TREE);
 }
 
 /// アイテムへのポインタを設定
@@ -426,10 +440,10 @@ void DiskBasicDirItem::SetNativeFileName(wxUint8 *name, size_t nsize, size_t nle
 {
 	bool invert = basic->IsDataInverted();
 	char space = basic->GetDirSpaceCode();	// 空白コード
-	char term  = basic->GetDirTerminateCode();	// 終端コード
+	wxUint16 term = basic->GetDirTerminateCode();	// 終端コード
 
 	if (name) {
-		if (nsize > nlen) {
+		if (nsize > nlen && term != (wxUint16)-1) {
 			name[nlen] = (wxUint8)term;
 			nlen++;
 		}
@@ -444,7 +458,7 @@ void DiskBasicDirItem::SetNativeFileName(wxUint8 *name, size_t nsize, size_t nle
 	}
 
 	if (ext) {
-		if (esize > elen) {
+		if (esize > elen && term != (wxUint16)-1) {
 			ext[elen] = (wxUint8)term;
 			elen++;
 		}
@@ -616,7 +630,7 @@ void DiskBasicDirItem::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *e
 	bool invert = basic->IsDataInverted();
 	char trimm = basic->GetDirTrimmingCode();	// とり除くコード
 	char space = basic->GetDirSpaceCode();	// 空白コード
-	char term  = basic->GetDirTerminateCode();	// 終端コード
+	wxUint16 term = basic->GetDirTerminateCode();	// 終端コード
 
 	if (name && nlen > 0) {
 		memset(name, 0, nlen);
@@ -628,7 +642,9 @@ void DiskBasicDirItem::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *e
 		}
 		nl = rtrim(name, nl, trimm);
 		nl = rtrim(name, nl, space);
-		nl = rtrim(name, nl, term);
+		if (term != (wxUint16)-1) {
+			nl = rtrim(name, nl, (wxUint8)term);
+		}
 
 		if (IsUsed()) nlen = str_shrink(name, nl);
 		else nlen = nl;
@@ -644,7 +660,9 @@ void DiskBasicDirItem::GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *e
 		}
 		el = rtrim(ext, el, trimm);
 		el = rtrim(ext, el, space);
-		el = rtrim(ext, el, term);
+		if (term != (wxUint16)-1) {
+			el = rtrim(ext, el, (wxUint8)term);
+		}
 
 		if (IsUsed()) elen = str_shrink(ext,  el);
 		else elen = el;
@@ -742,6 +760,49 @@ bool DiskBasicDirItem::IsSameFileName(const DiskBasicDirItem *src, bool icase) c
 	return (memcmp(sname, dname, snlen > dnlen ? snlen : dnlen) == 0)
 		&& ((delen == 0 && selen == 0) || memcmp(sext, dext, selen > delen ? selen : delen) == 0)
 		&& (src->GetOptionalName() == GetOptionalName());
+}
+
+/// ファイル名が前方一致するか
+/// ファイル名＋"."＋拡張子で一致するかどうか
+/// @param [in] prefix  ファイル名＋"."＋拡張子
+/// @param [in] icase   大文字小文字を区別しないか(case insensitive)
+bool DiskBasicDirItem::MatchPrefix(const wxString &prefix, bool icase) const
+{
+	if (!IsUsedAndVisible()) return false;
+
+	// ファイル名＋"."＋拡張子
+	wxString src = GetFileNameStr();
+	wxString dst = prefix;
+
+	// 小文字大文字を区別しない場合
+	if (icase) {
+		src = src.Upper();
+		dst = dst.Upper();
+	}
+	// 比較
+	return src.StartsWith(dst);
+}
+
+/// ワイルドカードを含むファイル名が一致するか
+/// ファイル名＋"."＋拡張子で一致するかどうか ワイルドカード"*","?"が使える
+/// @param [in] filename ファイル名＋"."＋拡張子
+/// @param [in] icase   大文字小文字を区別しないか(case insensitive)
+bool DiskBasicDirItem::MatchWithWildcard(const wxString &filename, bool icase) const
+{
+	if (!IsUsedAndVisible()) return false;
+
+	// ファイル名＋"."＋拡張子
+	wxString src = GetFileNameStr();
+	wxString dst = filename;
+
+	// 小文字大文字を区別しない場合
+	if (icase) {
+		src = src.Upper();
+		dst = dst.Upper();
+	}
+
+	// 比較
+	return src.Matches(dst);
 }
 
 /// 小文字を大文字にする

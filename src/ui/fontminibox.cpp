@@ -6,6 +6,9 @@
 ///
 
 #include "fontminibox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/combobox.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
@@ -24,7 +27,8 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_
 {
 	mDefaultFont = default_font;
 
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
+	wxSizerFlags flagsR = wxSizerFlags().Align(wxALIGN_RIGHT);
 	wxSize size;
 
 	wxTextValidator tVali(wxFILTER_NUMERIC);
@@ -43,7 +47,7 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_
 	btnDefault = new wxButton(this, IDC_BUTTON_DEFAULT, _("Default"));
 	gszr->Add(btnDefault);
 	wxSizer *szrButtons = CreateButtonSizer(wxOK | wxCANCEL);
-	gszr->Add(szrButtons, wxSizerFlags().Align(wxALIGN_RIGHT));
+	gszr->Add(szrButtons, flagsR);
 	szrAll->Add(gszr, flags);
 
 	init_dialog();
@@ -117,3 +121,5 @@ void FontMiniBox::OnButtonDefault(wxCommandEvent& event)
 	SetFontName(mDefaultFont.GetFaceName());
 	SetFontSize(mDefaultFont.GetPointSize());
 }
+
+#endif /* !USE_CONSOLE */

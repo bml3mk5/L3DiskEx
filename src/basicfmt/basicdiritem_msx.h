@@ -34,6 +34,7 @@ public:
 	/// @brief 日付のタイトル名（ダイアログ用）
 	virtual wxString GetFileCreateDateTimeTitle() const;
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -41,6 +42,7 @@ public:
 	/// @brief 機種依存の属性を設定する
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_MSX_H */

@@ -9,6 +9,30 @@
 #define UIFILELIST_H
 
 #include "uicommon.h"
+
+enum en_disk_file_list_columns {
+	LISTCOL_NAME = 0,
+	LISTCOL_ATTR,
+	LISTCOL_SIZE,
+	LISTCOL_GROUPS,
+	LISTCOL_START,
+	LISTCOL_TRACK,
+	LISTCOL_SIDE,
+	LISTCOL_SECTOR,
+	LISTCOL_DIVISION,
+	LISTCOL_DATE,
+	LISTCOL_STADDR,
+	LISTCOL_EDADDR,
+	LISTCOL_EXADDR,
+	LISTCOL_NUM,
+	LISTCOL_END
+};
+
+extern const struct st_list_columns gUiDiskFileListColumnDefs[];
+
+
+#ifndef USE_CONSOLE
+
 #include <wx/string.h>
 #include <wx/panel.h>
 #include <wx/radiobut.h>
@@ -45,25 +69,6 @@ class UiDiskFileList;
 class DiskImageDisk;
 class DiskImageSector;
 
-enum en_disk_file_list_columns {
-	LISTCOL_NAME = 0,
-	LISTCOL_ATTR,
-	LISTCOL_SIZE,
-	LISTCOL_GROUPS,
-	LISTCOL_START,
-	LISTCOL_TRACK,
-	LISTCOL_SIDE,
-	LISTCOL_SECTOR,
-	LISTCOL_DIVISION,
-	LISTCOL_DATE,
-	LISTCOL_STADDR,
-	LISTCOL_EDADDR,
-	LISTCOL_EXADDR,
-	LISTCOL_NUM,
-	LISTCOL_END
-};
-
-extern const struct st_list_columns gUiDiskFileListColumnDefs[];
 
 //////////////////////////////////////////////////////////////////////
 
@@ -415,5 +420,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* UIFILELIST_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* UIFILELIST_H */

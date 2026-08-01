@@ -37,6 +37,16 @@ DiskBasicDirItemL32D::DiskBasicDirItemL32D(DiskBasic *basic, int n_num, const Di
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemL32D::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemFAT8::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -204,6 +214,8 @@ int DiskBasicDirItemL32D::RecalcFileSize(DiskBasicGroups &group_items, int occup
 	return occupied_size;
 }
 
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/radiobox.h>
 #include "../ui/intnamebox.h"
@@ -286,3 +298,5 @@ void DiskBasicDirItemL32D::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("END_BYTES"), m_data.Data()->end_bytes, true);
 	vals.Add(wxT("RESERVED"), m_data.Data()->reserved, sizeof(m_data.Data()->reserved));
 }
+
+#endif /* !USE_CONSOLE */

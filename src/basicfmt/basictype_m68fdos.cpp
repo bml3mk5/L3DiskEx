@@ -454,12 +454,12 @@ bool DiskBasicTypeM68FDOS::AdditionalProcessOnFormatted(const DiskBasicIdentifie
 /// @param [in]  size			書き込み先バッファサイズ
 /// @param [in]  remain			残りのデータサイズ
 /// @param [in]  sector_num		セクタ番号
-/// @param [in]  group_num		現在のグループ番号
-/// @param [in]  next_group		次のグループ番号
+/// @param [in]  group_item		現在のグループアイテム
+/// @param [in]  next_group		次のグループアイテム
 /// @param [in]  sector_end		最終セクタ番号
 /// @param [in]  seq_num		通し番号(0...)
 /// @return 書き込んだバイト数
-int DiskBasicTypeM68FDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num)
+int DiskBasicTypeM68FDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num)
 {
 	bool need_chain = item->NeedChainInData();
 
@@ -487,7 +487,10 @@ int DiskBasicTypeM68FDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istre
 
 	// 次のセクタ番号を書く
 	if (need_chain) {
-		wxUint16 next_sector = (wxUint16)next_group * basic->GetSectorsPerGroup();
+		wxUint16 next_sector = 0;
+		if (next_group) {
+			next_sector = (wxUint16)(next_group->group * basic->GetSectorsPerGroup());
+		}
 		if (next_sector >= 0) {
 			// bigendien
 			buffer[size] = ((next_sector >> 8) & 0xff); 
@@ -499,10 +502,9 @@ int DiskBasicTypeM68FDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istre
 }
 
 /// データの書き込み終了後の処理
+/// @param [in]	item        ディレクトリアイテム
 void DiskBasicTypeM68FDOS::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
-//	DiskBasicDirItemM68FDOS *ditem = (DiskBasicDirItemM68FDOS *)item;
-//	ditem->SetUnknownData();
 }
 
 /// IPLや管理エリアの属性を得る

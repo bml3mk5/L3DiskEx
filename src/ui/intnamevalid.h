@@ -9,6 +9,9 @@
 #define _INTNAMEVALID_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/validate.h>
 #include <wx/valtext.h>
 
@@ -96,5 +99,6 @@ public:
 	bool Validate(wxWindow *parent);
 };
 
-#endif /* _INTNAMEVALID_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _INTNAMEVALID_H_ */

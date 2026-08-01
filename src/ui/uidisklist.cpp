@@ -6,12 +6,16 @@
 ///
 
 #include "uidisklist.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/imaglist.h>
 #include <wx/clipbrd.h>
 #include <wx/dataobj.h>
 #include "mymenu.h"
 #include "../main.h"
 #include "uimainframe.h"
+#include "uimainpanel.h"
 #include "uidiskattr.h"
 #include "uifilelist.h"
 #include "diskparambox.h"
@@ -605,43 +609,20 @@ void UiDiskList::SetDataOnItemNode(const UiDiskListItem &node, SetDataOnItemNode
 /// @return 片面のみ使用するBASICの場合false -> さらに下位ノードで解析
 bool UiDiskList::ParseDiskBasic(const UiDiskListItem &node, UiDiskPositionData *cd, DiskImageDisk *newdisk, int newsidenum, const DiskBasicParam *newparam)
 {
-	DiskBasic *newbasic = newdisk->GetDiskBasic(newsidenum);
+	DiskBasic *newbasic = NULL;
 
-	newbasic->SetCharCode(frame->GetCharCode());
-
-	// BASICモードのときはディスクを解析
-	if (frame->GetSelectedMode() == 0) {
-		// トラックが存在するか
-		bool valid = false;
-		bool found = newdisk->ExistTrack(newsidenum);
-		if (found) {
-			// ディスクをDISK BASICとして解析
-			valid = (newbasic->ParseBasic(newdisk, newsidenum, newparam, false) == 0);
-		} else {
-			// トラックがない
-			newbasic->GetErrinfo().SetWarn(DiskBasicError::ERR_NO_FOUND_TRACK);
-		}
-
-		// ルートディレクトリをセット
-		if (valid) {
-			valid = newbasic->AssignRootDirectory();
-		}
-
-		// エラーメッセージ
-		if (!valid) {
-			newbasic->ShowErrorMessage();
-		}
-	}
+	/// DISK BASICをアタッチ＆解析
+	frame->ParseDiskBasic(newdisk, newsidenum, newparam, true, newbasic);
 
 	// 片面のみ使用するOSで表裏面それぞれの使用が可能な場合
 	// ディスクがリバーシブルな場合
 	if (cd->GetTypeNumber() == CD_TYPENUM_NODE) {
 		if (newdisk->IsReversible() || newbasic->CanMountEachSides()) {
-			DiskBasics *basics = newdisk->GetDiskBasics();
-			if (basics->Count() <= 1) {
-				basics->Add(new DiskBasic);
-			}
-			// サイド番号を設定
+//			DiskBasics *basics = newdisk->GetDiskBasics();
+//			if (basics->Count() <= 1) {
+//				basics->Add(new DiskBasic);
+//			}
+//			// サイド番号を設定
 //			for(size_t i=0; i<2; i++) {
 //				DiskBasic* basic = basics->Item(i);
 //				basic->SetSelectedSide((int)i);
@@ -1222,7 +1203,8 @@ bool UiDiskList::FormatDisk()
 		DiskBasicIdentifiedData data(
 			dlg.GetVolumeName(),
 			dlg.GetVolumeNumber(),
-			dlg.GetVolumeDate()
+			dlg.GetVolumeDate(),
+			dlg.GetVolumeSkew()
 		);
 
 		m_selected_disk->Initialize(current_basic->GetSelectedSide());
@@ -1677,3 +1659,5 @@ bool UiDiskList::IsSelectedDiskSide()
 {
 	return (m_disk_selecting && m_selected_disk != NULL && m_selected_disk->IsReversible());	// AB面あり;
 }
+
+#endif /* !USE_CONSOLE */

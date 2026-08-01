@@ -131,7 +131,7 @@ void DiskBasicError::SetMessageV(int error_number, va_list ap)
 		msg = wxString::Format(wxGetTranslation(gDiskBasicErrorMsgs[ERRV_END]), error_number);
 	}
 
-	if (msgs.Index(msg) == wxNOT_FOUND) {
-		msgs.Add(msg);
+	if (FindMessage(msg) == wxNOT_FOUND) {
+		AddMessage(msg);
 	}
 }

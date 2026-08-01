@@ -9,8 +9,10 @@
 #define FILESELBOX_H
 
 #include "../common.h"
-#include <wx/dialog.h>
 
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
 
 class wxListBox;
 
@@ -42,5 +44,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* FILESELBOX_H */
+#endif /* USE_CONSOLE */
 
+#endif /* FILESELBOX_H */

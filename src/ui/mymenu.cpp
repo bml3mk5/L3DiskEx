@@ -2,7 +2,11 @@
 ///
 /// @brief メニューコントロール
 ///
+
 #include "mymenu.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/regex.h>
 
 // メニューコントロール
@@ -69,3 +73,4 @@ bool MyMenuBar::Append(wxMenu *menu, const wxString &title)
 	return wxMenuBar::Append(menu, MyMenu::ConvItemString(title));
 }
 
+#endif /* !USE_CONSOLE */

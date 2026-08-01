@@ -86,7 +86,7 @@ const wxUint32 gTypeConvAmiga2[] = {
 	FILETYPE_MASK_AMIGA_O_NEXEC,
 	FILETYPE_MASK_AMIGA_O_NWRITE,
 	FILETYPE_MASK_AMIGA_O_NREAD,
-	FILETYPE_MASK_AMIGA_SETUID,
+	(const wxUint32)FILETYPE_MASK_AMIGA_SETUID,
 	(const wxUint32)-1
 };
 
@@ -198,6 +198,21 @@ void DiskBasicDirItemAmiga::AllocData(DiskImageSector *n_sector, wxUint8 *n_data
 		m_data.Data()->pre = NULL;
 		m_data.Data()->post = NULL;
 	}
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemAmiga::Reset()
+{
+	DeleteTemp();
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_temp_pre = NULL;
+	m_temp_post = NULL;
+
+	AllocData(NULL, NULL);
+	AllocTemp();
 }
 
 /// アイテムへのポインタを設定
@@ -1538,6 +1553,8 @@ void DiskBasicDirItemAmiga::CalcCheckSum(const void *data, int size, wxUint32 &s
 	sum_data = wxUINT32_SWAP_ON_LE(newsum);
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -1739,19 +1756,6 @@ bool DiskBasicDirItemAmiga::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 	return valid;
 }
 
-#if 0
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemAmiga::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	return true;
-}
-
-/// その他の属性値を設定する
-void DiskBasicDirItemAmiga::SetOptionalAttr(DiskBasicDirItemAttr &attr)
-{
-}
-#endif
-
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemAmiga::SetInternalDataInAttrDialog(KeyValArray &vals)
 {
@@ -1800,3 +1804,5 @@ void DiskBasicDirItemAmiga::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("EXTENSION"), post->extension, true);
 	vals.Add(wxT("SEC_TYPE"), post->sec_type, true);
 }
+
+#endif /* !USE_CONSOLE */

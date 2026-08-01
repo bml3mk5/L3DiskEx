@@ -6,6 +6,9 @@
 ///
 
 #include "uibindump.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/statline.h>
 #include <wx/radiobut.h>
 #include <wx/checkbox.h>
@@ -49,10 +52,12 @@ wxBEGIN_EVENT_TABLE(UiDiskBinDumpFrame, wxFrame)
 	EVT_MENU_RANGE(IDM_VIEW_CHAR_0, IDM_VIEW_CHAR_0 + 30, UiDiskBinDumpFrame::OnViewChar)
 	EVT_MENU_RANGE(IDM_VIEW_TEXT, IDM_VIEW_BINARY, UiDiskBinDumpFrame::OnViewTextBinary)
 	EVT_MENU(IDM_VIEW_FONT, UiDiskBinDumpFrame::OnViewFont)
+	EVT_MENU(IDM_VIEW_UPDATE, UiDiskBinDumpFrame::OnViewUpdate)
 wxEND_EVENT_TABLE()
 
 UiDiskBinDumpFrame::UiDiskBinDumpFrame(UiDiskFrame *parent, const wxString& title, const wxSize& size)
        : wxFrame(parent, -1, title, wxDefaultPosition, size, wxDEFAULT_FRAME_STYLE | wxFRAME_FLOAT_ON_PARENT)
+	   , panel(NULL)
 {
 	// icon
 #ifdef __WXMSW__
@@ -83,6 +88,8 @@ UiDiskBinDumpFrame::UiDiskBinDumpFrame(UiDiskFrame *parent, const wxString& titl
 	menuView->AppendCheckItem(IDM_VIEW_INVERT, _("&Invert Datas"));
 	menuView->AppendSeparator();
 	menuView->Append(IDM_VIEW_FONT, _("&Font..."));
+	menuView->AppendSeparator();
+	menuView->Append(IDM_VIEW_UPDATE, _("&Update"));
 
 	// menu bar
 	MyMenuBar *menuBar = new MyMenuBar;
@@ -139,6 +146,11 @@ void UiDiskBinDumpFrame::OnViewTextBinary(wxCommandEvent& event)
 void UiDiskBinDumpFrame::OnViewFont(wxCommandEvent& event)
 {
 	ShowDataFontDialog();
+}
+
+void UiDiskBinDumpFrame::OnViewUpdate(wxCommandEvent& event)
+{
+	panel->RefreshWindow();
 }
 
 UiDiskBinDump *UiDiskBinDumpFrame::GetDumpPanel() const
@@ -282,6 +294,12 @@ UiDiskBinDumpPanel::~UiDiskBinDumpPanel()
 {
 }
 
+void UiDiskBinDumpPanel::RefreshWindow()
+{
+	attr->RefreshWindow();
+	dump->RefreshWindow();
+}
+
 void UiDiskBinDumpPanel::SetTextBinary(int val)
 {
 	attr->SetTextBinary(val);
@@ -328,7 +346,8 @@ UiDiskBinDumpAttr::UiDiskBinDumpAttr(UiDiskBinDumpFrame *parentframe, wxWindow *
 	parent = parentwindow;
     frame = parentframe;
 
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 2);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(2));
+	wxSizerFlags flags_a4 = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxALL, FromDIP(4));
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *szrH = new wxBoxSizer(wxHORIZONTAL);
 
@@ -341,7 +360,7 @@ UiDiskBinDumpAttr::UiDiskBinDumpAttr(UiDiskBinDumpFrame *parentframe, wxWindow *
 
 	szrH->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_VERTICAL), flags);
 
-	szrH->Add(new wxStaticText(this, wxID_ANY, _("Charactor Code")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxALL, 4));
+	szrH->Add(new wxStaticText(this, wxID_ANY, _("Charactor Code")), flags_a4);
 	comCharCode = new wxChoice(this, IDC_COMBO_CHAR_CODE, wxDefaultPosition, wxDefaultSize);
 	const CharCodeChoice *choice = gCharCodeChoices.Find(wxT("dump"));
 	if (choice) {
@@ -390,6 +409,10 @@ void UiDiskBinDumpAttr::OnCheckInvert(wxCommandEvent& event)
 void UiDiskBinDumpAttr::OnClickButton(wxCommandEvent& event)
 {
 	frame->ShowDataFontDialog();
+}
+
+void UiDiskBinDumpAttr::RefreshWindow()
+{
 }
 
 void UiDiskBinDumpAttr::SetTextBinary(int val)
@@ -797,6 +820,12 @@ int UiDiskBinDump::GetDataFontSize() const
 	return font.GetPointSize();
 }
 
+void UiDiskBinDump::RefreshWindow()
+{
+	wxFont font = txtHex->GetFont();
+	SetDataFont(font);
+}
+
 // スクロールバーを設定
 void UiDiskBinDump::SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_py)
 {
@@ -816,3 +845,5 @@ void UiDiskBinDump::SetScrollBarPos(int new_ux, int new_uy, int new_px, int new_
 			, new_px / SCROLLBAR_UNIT, new_py / SCROLLBAR_UNIT, true);
 	}
 }
+
+#endif /* !USE_CONSOLE */

@@ -117,7 +117,7 @@ DiskBasicParamBases::DiskBasicParamBases()
 }
 
 /// 共通パラメータ関連のロード
-bool DiskBasicParamBases::Load(const wxXmlNode *node, const wxString &name, const wxString &value, const wxString &locale_name, DiskBasicParamBase &param, wxString &errmsgs)
+bool DiskBasicParamBases::Load(const wxXmlNode *node, const wxString &name, const wxString &value, const wxString &locale_name, DiskBasicParamBase &param, wxArrayString &errmsgs)
 {
 	bool valid = true;
 	if (name == "SectorsPerGroup") {
@@ -212,6 +212,7 @@ void DiskBasicFormat::ClearBasicFormatPrivate()
 	has_volume_name		 = false;
 	has_volume_number	 = false;
 	has_volume_date		 = false;
+	has_volume_skew		 = false;
 }
 
 /// 初期化
@@ -233,7 +234,7 @@ WX_DEFINE_OBJARRAY(ArrayOfDiskBasicFormat);
 /// @param[in] locale_name ローケル名
 /// @param[out] errmsgs    エラー時メッセージ
 /// @return true / false
-bool DiskBasicFormats::Load(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+bool DiskBasicFormats::Load(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	bool valid = false;
 	while (node && !valid) {
@@ -265,6 +266,8 @@ bool DiskBasicFormats::Load(const wxXmlNode *node, const wxString &locale_name, 
 					f.HasVolumeNumber(Utils::ToBool(str));
 				} else if (name == "HasVolumeDate") {
 					f.HasVolumeDate(Utils::ToBool(str));
+				} else if (name == "HasVolumeSkew") {
+					f.HasVolumeSkew(Utils::ToBool(str));
 				} else {
 					bool rc = param_bases.Load(itemnode, name, str, locale_name, f, errmsgs);
 					valid = (valid && rc);
@@ -275,9 +278,10 @@ bool DiskBasicFormats::Load(const wxXmlNode *node, const wxString &locale_name, 
 			if (Find((DiskBasicFormatType)type_number) == NULL) {
 				Add(f);
 			} else {
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate type number in DiskBasicFormat : ");
-				errmsgs += wxString::Format(wxT("%d"), type_number);
+				wxString errmsg;
+				errmsg += _("Duplicate type number in DiskBasicFormat : ");
+				errmsg += wxString::Format(wxT("%d"), type_number);
+				errmsgs.Add(errmsg);
 				valid = false;
 				break;
 			}
@@ -423,7 +427,7 @@ bool DiskBasicParam::FindBasicCategoryName(const wxString &str) const
 /// @param[in]  locale_name ローケル名
 /// @param[out] errmsgs     エラーメッセージ
 /// @return true
-bool DiskBasicParam::LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+bool DiskBasicParam::LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	// reserved_groups 予約済みグループ
 	wxArrayInt reserved_groups;
@@ -508,7 +512,7 @@ bool DiskBasicParam::LoadNumSectorsMap(const wxXmlNode *node, const wxString &va
 /// @param[in] locale_name ローケル名
 /// @param[out] errmsgs    エラー時メッセージ
 /// @return true / false
-bool DiskBasicParam::LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs)
+bool DiskBasicParam::LoadCategories(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs)
 {
 	bool valid = true;
 	wxXmlNode *item = node->GetChildren();
@@ -547,7 +551,7 @@ WX_DEFINE_OBJARRAY(ArrayOfDiskBasicParam);
 /// @param[in] formats     フォーマットパラメータ
 /// @param[out] errmsgs    エラー時メッセージ
 /// @return true / false
-bool DiskBasicParams::Load(const wxXmlNode *node, const wxString &locale_name, const DiskBasicFormats &formats, wxString &errmsgs)
+bool DiskBasicParams::Load(const wxXmlNode *node, const wxString &locale_name, const DiskBasicFormats &formats, wxArrayString &errmsgs)
 {
 	bool valid = false;
 	while (node && !valid) {
@@ -578,9 +582,10 @@ bool DiskBasicParams::Load(const wxXmlNode *node, const wxString &locale_name, c
 				p.SetBasicParamBase(*format_type);
 			} else {
 				// フォーマットタイプがない
-				errmsgs += wxT("\n");
-				errmsgs += _("Unknown format type in DiskBasicType : ");
-				errmsgs += type_name;
+				wxString errmsg;
+				errmsg += _("Unknown format type in DiskBasicType : ");
+				errmsg += type_name;
+				errmsgs.Add(errmsg);
 				return false;
 			}
 
@@ -692,9 +697,10 @@ bool DiskBasicParams::Load(const wxXmlNode *node, const wxString &locale_name, c
 				Add(p);
 			} else {
 				// タイプ名が重複している
-				errmsgs += wxT("\n");
-				errmsgs += _("Duplicate type name in DiskBasicType : ");
-				errmsgs += type_name;
+				wxString errmsg;
+				errmsg += _("Duplicate type name in DiskBasicType : ");
+				errmsg += type_name;
+				errmsgs.Add(errmsg);
 				valid = false;
 				break;
 			}

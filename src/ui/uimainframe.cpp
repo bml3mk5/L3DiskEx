@@ -6,7 +6,11 @@
 ///
 
 #include "uimainframe.h"
+
+#ifndef USE_CONSOLE
+
 #include "../main.h"
+#include "uimainpanel.h"
 #include <wx/toolbar.h>
 //#include <wx/cmdline.h>
 //#include <wx/filename.h>
@@ -30,6 +34,8 @@
 #include "fontminibox.h"
 #include "configbox.h"
 #include "loggingbox.h"
+#include "filedirbox.h"
+#include "aboutbox.h"
 #include "../diskimg/diskd88.h"
 #include "../diskimg/diskwriter.h"
 #include "../diskimg/diskresult.h"
@@ -292,14 +298,16 @@ _p("macOS menu item","About..."), \
 _("&Window"),_("Minimize"),_("Zoom"),_("Bring All to Front")
 
 UiDiskFrame::UiDiskFrame(const wxString& title, const wxSize& size)
-#if defined(__WXOSX__)
+#if 1 // defined(__WXOSX__)
 	: UiDiskProcess(NULL, -1, title, wxDefaultPosition, wxDefaultSize)
 #else
 	: UiDiskProcess(NULL, -1, title, wxDefaultPosition, size)
 #endif
 {
 #if defined(__WXOSX__)
-	SetClientSize(size);
+	SetClientSize(FromDIP(size));
+#else
+	SetSize(FromDIP(size));
 #endif
 
 	p_image = new DiskD88;
@@ -336,6 +344,7 @@ UiDiskFrame::~UiDiskFrame()
 #else
 	wxSize sz = GetSize();
 #endif
+	sz = ToDIP(sz);
 	gConfig.SetWindowWidth(sz.GetWidth());
 	gConfig.SetWindowHeight(sz.GetHeight());
 
@@ -1363,7 +1372,7 @@ void UiDiskFrame::ShowCreateFileDialog()
 {
 	if (!CloseDataFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, *p_image, DiskParamBox::CREATE_NEW_DISK, 0, NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
+	DiskParamDiskCreateBox dlg(this, wxID_ANY, *p_image);
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1400,7 +1409,7 @@ void UiDiskFrame::ShowAddNewDiskDialog()
 {
 	if (!p_image->GetFile()) return;
 
-	DiskParamBox dlg(this, wxID_ANY, *p_image, DiskParamBox::ADD_NEW_DISK, p_image->GetDiskTypeNumber(0), NULL, NULL, NULL, DiskParamBox::SHOW_ALL);
+	DiskParamDiskAddBox dlg(this, wxID_ANY, *p_image, p_image->GetDiskTypeNumber(0));
 
 	int rc = dlg.ShowModal();
 	if (rc == wxID_OK) {
@@ -1641,7 +1650,7 @@ bool UiDiskFrame::ShowFileSelectDialog(const wxString &path, wxString &file_form
 bool UiDiskFrame::ShowParamSelectDialog(const wxString &path, const DiskParamPtrs &disk_params, const DiskParam *manual_param, DiskParam &param_hint)
 {
 	// パラメータを選択
-	DiskParamBox dlg(this, wxID_ANY, *p_image, DiskParamBox::SELECT_DISK_TYPE, 0, NULL, &disk_params, manual_param, DiskParamBox::SHOW_TEMPLATE);
+	DiskParamDiskSelectBox dlg(this, wxID_ANY, *p_image, &disk_params, manual_param);
 	int sts = dlg.ShowModal();
 	if (sts != wxID_OK) {
 		return false;
@@ -2177,6 +2186,55 @@ bool UiDiskFrame::CreateTemporaryFolder(wxString &tmp_dir_name, wxString &tmp_da
 	return true;
 }
 
+/// DISK BASICをアタッチ＆解析
+/// @param [in] newdisk    ディスクイメージ
+/// @param [in] newsidenum サイド番号 片面選択時0/1 両面なら-1
+/// @param [in] newparam   BASICパラメータ 通常NULL BASICを変更した際に設定する
+/// @param [in] set_current_root 既にアサインしている場合にルートディレクトリをカレントにするか
+/// @param [out] newbasic  BASIC
+/// @return true if success
+bool UiDiskFrame::ParseDiskBasic(DiskImageDisk *newdisk, int newsidenum, const DiskBasicParam *newparam, bool set_current_root, DiskBasic* &newbasic)
+{
+	newbasic = newdisk->GetDiskBasic(newsidenum);
+
+	newbasic->SetCharCode(GetCharCode());
+
+	// BASICモードのときはディスクを解析
+	bool valid = true;
+	if (GetSelectedMode() == 0) {
+		// トラックが存在するか
+		bool found = newdisk->ExistTrack(newsidenum);
+		if (found) {
+			// ディスクをDISK BASICとして解析
+			valid = (newbasic->ParseBasic(newdisk, newsidenum, newparam, false) == 0);
+		} else {
+			// トラックがない
+			newbasic->GetErrinfo().SetWarn(DiskBasicError::ERR_NO_FOUND_TRACK);
+		}
+
+		// ルートディレクトリをセット
+		if (valid) {
+			valid = newbasic->AssignRootDirectory(set_current_root);
+		}
+
+		// エラーメッセージ
+		if (!valid) {
+			newbasic->ShowErrorMessage();
+		}
+	}
+
+	// 片面のみ使用するOSで表裏面それぞれの使用が可能な場合
+	// ディスクがリバーシブルな場合
+	// BASIC領域を増やしておく
+	if (newdisk->IsReversible() || newbasic->CanMountEachSides()) {
+		DiskBasics *basics = newdisk->GetDiskBasics();
+		if (basics->Count() <= 1) {
+			basics->Add(new DiskBasic);
+		}
+	}
+
+	return valid;
+}
 
 ////////////////////////////////////////
 //
@@ -2900,3 +2958,4 @@ bool UiDiskFrame::OpenFileWithEditor(enEditorTypes editor_type, const wxFileName
 	return true;
 }
 
+#endif /* !USE_CONSOLE */

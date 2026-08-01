@@ -225,6 +225,21 @@ DiskBasicDirItemAppleDOS::DiskBasicDirItemAppleDOS(DiskBasic *basic, int n_num, 
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemAppleDOS::Reset()
+{
+	chain.Clear();
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_start_address = -1;
+	m_data_length = -1;
+
+	m_data.Alloc();
+	chain.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -748,6 +763,8 @@ int DiskBasicDirItemAppleDOS::GetEndAddress() const
 	return (m_start_address >= 0 && m_data_length > 0) ? m_start_address + m_data_length - 1 : -1;
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -874,17 +891,6 @@ bool DiskBasicDirItemAppleDOS::SetAttrInAttrDialog(const IntNameBox *parent, Dis
 	return true;
 }
 
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemAppleDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-//	wxFileName fn(filename);
-//	if (fn.GetExt().IsEmpty()) {
-//		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
-//		return false;
-//	}
-	return true;
-}
-
 /// ファイルサイズが適正か
 /// @param [in]  parent     ダイアログ
 /// @param [in]  size       ファイルサイズ
@@ -908,3 +914,5 @@ void DiskBasicDirItemAppleDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("NAME"), m_data.Data()->name, sizeof(m_data.Data()->name));
 	vals.Add(wxT("SECTOR_COUNT"), m_data.Data()->sector_count);
 }
+
+#endif /* !USE_CONSOLE */

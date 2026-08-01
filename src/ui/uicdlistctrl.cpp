@@ -6,6 +6,9 @@
 ///
 
 #include "uicdlistctrl.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/menu.h>
 #include "../config.h"
 #include "uicommon.h"
@@ -82,7 +85,7 @@ bool MyCDListColumn::IsSortable() const
 /// @param [in] size        サイズ
 MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID id,
 	const struct st_list_columns *columns,
-	Config *ini,
+	ColumnParams *ini,
 	long style,
 	wxDataViewModel *model,
 	const wxPoint &pos, const wxSize &size)
@@ -99,8 +102,9 @@ MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowI
 	// カラムデータの設定
 	for(int idx=0; columns[idx].name != NULL; idx++) {
 		const struct st_list_columns *c = &columns[idx];
-		int w =	ini ? ini->GetListColumnWidth(idx) : -1;
-		m_columns.Add(new MyCDListColumn(idx, c, c->width, w >= 0 ? w : c->width));
+		int w =	ini ? ini->GetWidth(idx) : -1;
+		if (w < 0) w = c->width;
+		m_columns.Add(new MyCDListColumn(idx, c, c->width, w));
 	}
 
 	// カラム位置の設定
@@ -108,7 +112,7 @@ MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowI
 
 	m_idOnFirstColumn = 0;
 	for(int idx = 0; idx < column_count; idx++) {
-		int col = ini ? ini->GetListColumnPos(idx) : idx;
+		int col = ini ? ini->GetPos(idx) : idx;
 
 		if (col < 0) col = -1;
 		if (column_count <= col) col = (column_count-1);
@@ -176,8 +180,9 @@ MyCDListCtrl::~MyCDListCtrl()
 
 	if (m_ini) {
 		for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
-			m_ini->SetListColumnWidth(idx, m_columns[idx]->GetWidth());
-			m_ini->SetListColumnPos(idx, m_columns[idx]->GetColumn());
+			int w = m_columns[idx]->GetWidth();
+			m_ini->SetWidth(idx, w);
+			m_ini->SetPos(idx, m_columns[idx]->GetColumn());
 		}
 	}
 
@@ -303,13 +308,13 @@ void MyCDListCtrl::InsertListColumn(int col, int idx, MyCDListColumn *c)
 /// カラムの幅
 int MyCDListCtrl::GetListColumnWidth(int col) const
 {
-	return GetColumn(col)->GetWidth();
+	return ToDIP(GetColumn(col)->GetWidth());
 }
 
 /// カラムの幅をセット
 void MyCDListCtrl::SetListColumnWidth(int col, int w)
 {
-	GetColumn(col)->SetWidth(w);
+	GetColumn(col)->SetWidth(FromDIP(w));
 }
 
 /// カラムを削除
@@ -748,3 +753,5 @@ MyCDListRearrangeBox::MyCDListRearrangeBox(MyCDListCtrl *parent, const wxArrayIn
 	: wxRearrangeDialog(parent, _("Configure the columns shown:"), _("Arrange Column Order"), order, items) 
 {
 }
+
+#endif /* !USE_CONSOLE */

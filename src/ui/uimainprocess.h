@@ -9,6 +9,9 @@
 #define UIMAINPROCESS_H
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/frame.h>
 #include <wx/string.h>
 #include <wx/dynarray.h>
@@ -118,5 +121,6 @@ public:
 	//@}
 };
 
-#endif /* UIMAINPROCESS_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* UIMAINPROCESS_H */

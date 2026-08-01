@@ -6,6 +6,9 @@
 ///
 
 #include "uifatarea.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/frame.h>
 #include <wx/dcclient.h>
 #include "uimainframe.h"
@@ -332,3 +335,5 @@ void UiDiskFatAreaPanel::ClearGroup()
 	ClearGroupBase();
 	Refresh(false);
 }
+
+#endif /* !USE_CONSOLE */

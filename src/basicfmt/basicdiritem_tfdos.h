@@ -90,6 +90,8 @@ public:
 	DiskBasicDirItemTFDOS(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data);
 	DiskBasicDirItemTFDOS(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse);
 
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);;
 
@@ -139,6 +141,7 @@ public:
 	/// @brief ファイル名から属性を決定する
 	virtual int		ConvOriginalTypeFromFileName(const wxString &filename) const;
 
+#ifndef USE_CONSOLE
 	/// @name プロパティダイアログ用
 	//@{
 	/// @brief ダイアログ内の属性部分のレイアウトを作成
@@ -149,11 +152,10 @@ public:
 	virtual bool	SetAttrInAttrDialog(const IntNameBox *parent, DiskBasicDirItemAttr &attr, DiskBasicError &errinfo) const;
 	/// @brief ファイルサイズが適正か
 	virtual bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit);
-	/// @brief ダイアログ入力後のファイル名チェック
-	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg);
 	/// @brief プロパティで表示する内部データを設定
 	virtual void	SetInternalDataInAttrDialog(KeyValArray &vals);
 	//@}
+#endif /* !USE_CONSOLE */
 };
 
 #endif /* BASICDIRITEM_TFDOS_H */

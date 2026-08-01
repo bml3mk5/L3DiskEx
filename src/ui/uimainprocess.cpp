@@ -6,6 +6,9 @@
 ///
 
 #include "uimainprocess.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dir.h>
 #include <wx/dnd.h>
 #include "uidisklist.h"
@@ -825,3 +828,5 @@ bool UiDiskProcess::SetDirItemFromIntNameParam(DiskBasicDirItem *item, const wxS
 	}
 	return sts;
 }
+
+#endif /* !USE_CONSOLE */

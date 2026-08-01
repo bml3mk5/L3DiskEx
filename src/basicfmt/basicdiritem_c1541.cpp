@@ -63,6 +63,16 @@ DiskBasicDirItemC1541::DiskBasicDirItemC1541(DiskBasic *basic, int n_num, const 
 	CalcFileSize();
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemC1541::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -573,6 +583,8 @@ void DiskBasicDirItemC1541::SetModify()
 {
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -706,24 +718,6 @@ bool DiskBasicDirItemC1541::SetAttrInAttrDialog(const IntNameBox *parent, DiskBa
 	return valid;
 }
 
-#if 0
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemC1541::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-//	wxFileName fn(filename);
-//	if (fn.GetExt().IsEmpty()) {
-//		errormsg = wxGetTranslation(gDiskBasicErrorMsgs[DiskBasicError::ERR_FILEEXT_EMPTY]);
-//		return false;
-//	}
-	return true;
-}
-
-/// その他の属性値を設定する
-void DiskBasicDirItemC1541::SetOptionalAttr(DiskBasicDirItemAttr &attr)
-{
-}
-#endif
-
 /// プロパティで表示する内部データを設定
 void DiskBasicDirItemC1541::SetInternalDataInAttrDialog(KeyValArray &vals)
 {
@@ -741,3 +735,5 @@ void DiskBasicDirItemC1541::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("REPLACE.SECTOR"), m_data.Data()->replace.sector);
 	vals.Add(wxT("NUM_OF_BLOCKS"), m_data.Data()->num_of_blocks);
 }
+
+#endif /* !USE_CONSOLE */

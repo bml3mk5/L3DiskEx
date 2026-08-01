@@ -9,7 +9,6 @@
 #include "basicfmt.h"
 #include "basictype.h"
 #include "../charcodes.h"
-#include <wx/msgdlg.h>
 
 
 //
@@ -34,6 +33,16 @@ DiskBasicDirItemMDOS::DiskBasicDirItemMDOS(DiskBasic *basic, int n_num, const Di
 
 	// ファイルサイズとグループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemMDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定

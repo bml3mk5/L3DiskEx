@@ -9,9 +9,26 @@
 #define _INTNAMEBOX_H_
 
 #include "../common.h"
+
+/// 内部ファイル名ボックスの表示フラグ
+typedef enum en_intnamebox_show_flags {
+	INTNAME_SHOW_TEXT			 = 0x0001,	///< 内部ファイル名を表示する
+	INTNAME_SHOW_ATTR			 = 0x0002,	///< 属性を表示する
+	INTNAME_SHOW_PROPERTY		 = 0x0004,	///< プロパティ表示（グループ一覧表示）
+	INTNAME_SHOW_SKIP_DIALOG	 = 0x0008,	///< スキップするかチェックボックス表示
+	INTNAME_NEW_FILE			 = 0x0010,	///< 新規ファイル時
+	INTNAME_IMPORT_INTERNAL		 = 0x0020,	///< アプリ内インポート
+	INTNAME_SPECIFY_FILE_NAME	 = 0x0100,	///< ファイル名を別途指定
+	INTNAME_SPECIFY_CDATE_TIME	 = 0x0200,	///< 作成日時を別途指定
+	INTNAME_SPECIFY_MDATE_TIME	 = 0x0400,	///< 更新日時を別途指定
+	INTNAME_SPECIFY_ADATE_TIME	 = 0x0800,	///< アクセス日時を別途指定
+} IntNameBoxShowFlags;
+
+
+#ifndef USE_CONSOLE
+
 #include <wx/dialog.h>
 #include <wx/windowid.h>
-
 
 #define INTNAMEBOX_CLASSNAME "INTNAMEBOX"
 
@@ -31,20 +48,6 @@ class DiskBasicDirItemAttr;
 class DiskBasicFileName;
 class DiskBasicGroups;
 class KeyValArray;
-
-/// 内部ファイル名ボックスの表示フラグ
-typedef enum en_intnamebox_show_flags {
-	INTNAME_SHOW_TEXT			 = 0x0001,	///< 内部ファイル名を表示する
-	INTNAME_SHOW_ATTR			 = 0x0002,	///< 属性を表示する
-	INTNAME_SHOW_PROPERTY		 = 0x0004,	///< プロパティ表示（グループ一覧表示）
-	INTNAME_SHOW_SKIP_DIALOG	 = 0x0008,	///< スキップするかチェックボックス表示
-	INTNAME_NEW_FILE			 = 0x0010,	///< 新規ファイル時
-	INTNAME_IMPORT_INTERNAL		 = 0x0020,	///< アプリ内インポート
-	INTNAME_SPECIFY_FILE_NAME	 = 0x0100,	///< ファイル名を別途指定
-	INTNAME_SPECIFY_CDATE_TIME	 = 0x0200,	///< 作成日時を別途指定
-	INTNAME_SPECIFY_MDATE_TIME	 = 0x0400,	///< 更新日時を別途指定
-	INTNAME_SPECIFY_ADATE_TIME	 = 0x0800,	///< アクセス日時を別途指定
-} IntNameBoxShowFlags;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -253,5 +256,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* _INTNAMEBOX_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _INTNAMEBOX_H_ */

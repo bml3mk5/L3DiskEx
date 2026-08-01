@@ -6,6 +6,9 @@
 ///
 
 #include "intnamebox.h"
+
+#ifndef USE_CONSOLE
+
 #include "intnamevalid.h"
 #include "../main.h"
 #include "uimainprocess.h"
@@ -74,10 +77,13 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 	this->unique_number = frame->GetUniqueNumber();
 	this->basic = basic;
 
-	wxSizerFlags border = wxSizerFlags().Expand().Border(wxALL, 4);
-	wxSizerFlags fborder = wxSizerFlags(1).Expand().Border(wxALL, 4);	// flexible
+	int p4 = FromDIP(4);
+	wxSizerFlags border = wxSizerFlags().Expand().Border(wxALL, p4);
+	wxSizerFlags fborder = wxSizerFlags(1).Expand().Border(wxALL, p4);	// flexible
 //	wxSizerFlags aleft = wxSizerFlags().Left();
 	wxSizerFlags atitle = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
+	wxSizerFlags flags_b4 = wxSizerFlags().Expand().Border(wxBOTTOM, p4);
+
 	wxSize tsize(INTNAME_COLUMN_WIDTH, -1);
 	wxSize size;
 	long style = 0;
@@ -260,7 +266,7 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 				chkIgnoreDate->SetValue(gConfig.DoesIgnoreDateTime());
 				ChangedIgnoreDate(chkIgnoreDate->GetValue());
 				hbox->Add(chkIgnoreDate, atitle);
-				szrAll->Add(hbox, wxSizerFlags().Expand().Border(wxBOTTOM, 4));
+				szrAll->Add(hbox, flags_b4);
 			}
 		}
 	}
@@ -949,3 +955,5 @@ bool IntNameBox::IsSkipDialog(bool def_val) const
 {
 	return (chkSkipDlg ? chkSkipDlg->IsChecked() : def_val);
 }
+
+#endif /* !USE_CONSOLE */

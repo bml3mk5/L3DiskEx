@@ -6,6 +6,9 @@
 ///
 
 #include "mydialog.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/sizer.h>
 #include <wx/checkbox.h>
 #include <wx/notebook.h>
@@ -71,3 +74,4 @@ wxTextCtrl *MyDialog::CreateTextCtrlWithButton(wxWindow *parent, wxWindowID text
 	return txt;
 }
 
+#endif /* !USE_CONSOLE */

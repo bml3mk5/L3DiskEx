@@ -6,6 +6,9 @@
 ///
 
 #include "uirpanel.h"
+
+#ifndef USE_CONSOLE
+
 #include "../main.h"
 #include "uidiskattr.h"
 #include "uirawdisk.h"
@@ -127,8 +130,8 @@ UiDiskRBPanel::UiDiskRBPanel(UiDiskFrame *parentframe, UiDiskRPanel *parentwindo
 	case 1:
 		// RAWモード
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-//		SplitVertically(rawpanel, bindump, 500);
-		SplitVertically(rawpanel, proppanel, 600);
+//		SplitVertically(rawpanel, bindump, FromDIP(500));
+		SplitVertically(rawpanel, proppanel, FromDIP(600));
 		Unsplit(proppanel);
 #endif
 		filelist->Hide();
@@ -136,11 +139,11 @@ UiDiskRBPanel::UiDiskRBPanel(UiDiskFrame *parentframe, UiDiskRPanel *parentwindo
 	default:
 		// BASICモード
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
-//		SplitVertically(filelist, bindump, 500);
-		SplitVertically(filelist, proppanel, 600);
+//		SplitVertically(filelist, bindump, FromDIP(500));
+		SplitVertically(filelist, proppanel, FromDIP(600));
 		Unsplit(proppanel);
 #endif
-		rawpanel->Hide();
+		rawpanel->HideFirst();
 		break;
 	}
 
@@ -156,7 +159,7 @@ void UiDiskRBPanel::ChangePanel(int num)
 #ifdef USE_SPLITTER_WINDOW_ON_RBPANEL
 		if (GetWindow1() == filelist) {
 			ReplaceWindow(filelist, rawpanel);
-//			SplitVertically(rawpanel, proppanel, 640);
+//			SplitVertically(rawpanel, proppanel, FromDIP(640));
 			rawpanel->Show();
 			filelist->Hide();
 			filelist->ClearAttr();
@@ -198,3 +201,5 @@ UiDiskRawPanel *UiDiskRBPanel::GetRawPanel(bool inst) const
 	if (rawpanel && (inst || rawpanel->IsShown())) return rawpanel;
 	else return NULL;
 }
+
+#endif /* !USE_CONSOLE */

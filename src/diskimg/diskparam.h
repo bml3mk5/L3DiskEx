@@ -37,6 +37,8 @@ public:
 	SectorParam();
 	SectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size);
 	virtual ~SectorParam() {}
+	/// @brief 一括設定
+	void SetSectorParam(int n_track_num, int n_side_num, int n_sector_num, int n_sector_size);
 	/// @brief 一致するか
 	bool operator==(const SectorParam &dst) const;
 //	/// @brief 特殊なトラックか
@@ -480,17 +482,17 @@ public:
 	~DiskTemplates() {}
 
 	/// @brief XMLファイルから読み込み
-	bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
+	bool Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs);
 	/// @brief DiskBasicTypesエレメントをロード
-	bool LoadDiskBasicTypes(const wxXmlNode *node, DiskParamNames &basic_types, wxString &errmsgs);
+	bool LoadDiskBasicTypes(const wxXmlNode *node, DiskParamNames &basic_types, wxArrayString &errmsgs);
 	/// @brief SingleDensityエレメントをロード
-	bool LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, wxString &errmsgs);
+	bool LoadSingleDensity(const wxXmlNode *node, DiskParticular &s, wxArrayString &errmsgs);
 	/// @brief ParticularTrackエレメントをロード
-	bool LoadParticularTrack(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs);
+	bool LoadParticularTrack(const wxXmlNode *node, DiskParticular &d, wxArrayString &errmsgs);
 	/// @brief ParticularSectorエレメントをロード
-	bool LoadParticularSector(const wxXmlNode *node, DiskParticular &d, wxString &errmsgs);
+	bool LoadParticularSector(const wxXmlNode *node, DiskParticular &d, wxArrayString &errmsgs);
 	/// @brief Categoriesエレメントをロード
-	bool LoadCategories(const wxXmlNode *node, wxArrayString &categories, wxString &errmsgs);
+	bool LoadCategories(const wxXmlNode *node, wxArrayString &categories, wxArrayString &errmsgs);
 
 	/// @brief タイプ名に一致するテンプレートの番号を返す
 	int IndexOf(const wxString &n_type_name) const;

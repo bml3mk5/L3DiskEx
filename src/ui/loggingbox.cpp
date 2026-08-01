@@ -6,6 +6,9 @@
 ///
 
 #include "loggingbox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/sizer.h>
@@ -23,7 +26,7 @@ END_EVENT_TABLE()
 LoggingBox::LoggingBox(wxWindow* parent)
 	: wxDialog(parent, wxID_ANY, _("Log"), wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER | wxMAXIMIZE_BOX | wxMINIMIZE_BOX | wxDIALOG_NO_PARENT)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
@@ -33,8 +36,6 @@ LoggingBox::LoggingBox(wxWindow* parent)
 	szr->AddStretchSpacer();
 	btn = new wxButton(this, wxID_CLOSE, _("Close"));
 	szr->Add(btn);
-//	wxSizer *szrButtons = CreateButtonSizer(wxCLOSE);
-//	szr->Add(szrButtons, wxSizerFlags().Align(wxALIGN_RIGHT));
 	szriHed = szrAll->Add(szr, flags);
 
 	wxSize sz(320,200);
@@ -100,3 +101,4 @@ void LoggingBox::OnButtonUpdate(wxCommandEvent& WXUNUSED(event))
 	txtLogging->ShowPosition(txtLogging->GetLastPosition());
 }
 
+#endif /* !USE_CONSOLE */

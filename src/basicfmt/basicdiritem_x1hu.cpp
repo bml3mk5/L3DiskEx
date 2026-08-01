@@ -10,7 +10,6 @@
 #include "basictype.h"
 #include "../charcodes.h"
 #include <wx/datetime.h>
-#include <wx/msgdlg.h>
 #include "../config.h"
 #include "../utils.h"
 
@@ -64,6 +63,17 @@ DiskBasicDirItemX1HU::DiskBasicDirItemX1HU(DiskBasic *basic, int n_num, const Di
 
 	// グループ数を計算
 	CalcFileSize();
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemX1HU::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItem::Reset();
+
+	m_data.Alloc();
+	m_external_attr = basic->GetVariousIntegerParam(wxT("DefaultAsciiType"));
 }
 
 /// アイテムへのポインタを設定
@@ -544,22 +554,6 @@ int DiskBasicDirItemX1HU::ConvOriginalTypeFromFileName(const wxString &filename)
 	return t1;
 }
 
-//
-// ダイアログ用
-//
-
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/statbox.h>
-#include <wx/radiobut.h>
-#include <wx/sizer.h>
-#include "../ui/intnamebox.h"
-
-#define IDC_COMBO_TYPE1		51
-
-#define IDC_CHECK_ATTR1		56
-
 /// 属性からリストの位置を返す(プロパティダイアログ用)
 int DiskBasicDirItemX1HU::GetFileType1Pos(int native_type) const
 {
@@ -585,6 +579,24 @@ int DiskBasicDirItemX1HU::GetFileType1Pos(int native_type) const
 	}
 	return val;
 }
+
+#ifndef USE_CONSOLE
+
+//
+// ダイアログ用
+//
+
+#include <wx/textctrl.h>
+#include <wx/checkbox.h>
+#include <wx/choice.h>
+#include <wx/statbox.h>
+#include <wx/radiobut.h>
+#include <wx/sizer.h>
+#include "../ui/intnamebox.h"
+
+#define IDC_COMBO_TYPE1		51
+
+#define IDC_CHECK_ATTR1		56
 
 /// ダイアログ内の属性部分のレイアウトを作成
 /// @param [in] parent         プロパティダイアログ
@@ -782,3 +794,5 @@ void DiskBasicDirItemX1HU::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("START_GROUP_H"), m_data.Data()->start_group_h, basic->IsDataInverted());
 	vals.Add(wxT("START_GROUP_L"), m_data.Data()->start_group_l, basic->IsBigEndian(), basic->IsDataInverted());
 }
+
+#endif /* !USE_CONSOLE */

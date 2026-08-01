@@ -57,6 +57,15 @@ DiskBasicDirItemTRSDOS::DiskBasicDirItemTRSDOS(DiskBasic *basic, int n_num, cons
 	next_item = NULL;
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemTRSDOS::Reset()
+{
+	DiskBasicDirItem::Reset();
+
+	m_position_in_hit = -1;
+	next_item = NULL;
+}
+
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
 /// @param [in]  n_gitem    トラック番号などのデータ
@@ -107,7 +116,10 @@ void DiskBasicDirItemTRSDOS::SetNativeName(wxUint8 *filename, size_t size, size_
 		memcpy(n, filename, ns);
 	}
 
-	nl = rtrim(n, length, basic->GetDirTerminateCode());
+	wxUint16 term = basic->GetDirTerminateCode();
+	if (term != (wxUint16)-1) {
+		nl = rtrim(n, length, term);
+	}
 }
 
 /// ファイル名を得る
@@ -534,6 +546,8 @@ void DiskBasicDirItemTRSDOS::SetModify()
 //	}
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -684,37 +698,7 @@ bool DiskBasicDirItemTRSDOS::SetAttrInAttrDialog(const IntNameBox *parent, DiskB
 	return true;
 }
 
-#if 0
-/// ダイアログ入力後のファイル名チェック
-bool DiskBasicDirItemTRSDOS::ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg)
-{
-	return true;
-}
-
-/// その他の属性値を設定する
-void DiskBasicDirItemTRSDOS::SetOptionalAttr(DiskBasicDirItemAttr &attr)
-{
-}
-
-/// プロパティで表示する内部データを設定
-void DiskBasicDirItemTRSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
-{
-	vals.Add(wxT("self"), m_data.IsSelf());
-	vals.Add(wxT("ACCESS_CONTROL"), m_data.Data()->access_control);
-	vals.Add(wxT("OVERFLOW"), m_data.Data()->overflow);
-	vals.Add(wxT("EOF_BYTE_OFFSET"), m_data.Data()->eof_byte_offset);
-	vals.Add(wxT("RECORD_LENGTH"), m_data.Data()->record_length);
-	vals.Add(wxT("FILE_NAME"), m_data.Data()->name, sizeof(m_data.Data()->name));
-	vals.Add(wxT("EXTENSION"), m_data.Data()->ext, sizeof(m_data.Data()->ext));
-	vals.Add(wxT("UPDATE_PASSWORD"), m_data.Data()->update_password);
-	vals.Add(wxT("ACCESS_PASSWORD"), m_data.Data()->access_password);
-	vals.Add(wxT("EOF_SECTOR"), m_data.Data()->eof_sector);
-	for(int i=0; i<5; i++) {
-		vals.Add(wxString::Format("GAP%d TRACK", i+1), m_data.Data()->gap[i].track);
-		vals.Add(wxString::Format("GAP%d GRANULES", i+1), m_data.Data()->gap[i].granules);
-	}
-}
-#endif
+#endif /* !USE_CONSOLE */
 
 //////////////////////////////////////////////////////////////////////
 //

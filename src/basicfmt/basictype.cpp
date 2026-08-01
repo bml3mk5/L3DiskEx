@@ -625,9 +625,16 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 
 			int size = sector->GetSectorSize() / div_nums;
 
-			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
-				, -1);
+			SectorParam next_sec;
+			if (sec_num < gitem->sector_end) {
+				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
+			} else {
+				if (next_gitem) {
+					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+				} else {
+					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
+				}
+			}
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -743,9 +750,16 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 
 			int size = sector->GetSectorSize() / div_nums;
 
-			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
-				, -1);
+			SectorParam next_sec;
+			if (sec_num < gitem->sector_end) {
+				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
+			} else {
+				if (next_gitem) {
+					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+				} else {
+					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
+				}
+			}
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -839,9 +853,16 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 
 			int size = sector->GetSectorSize() / div_nums;
 
-			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
-				, -1);
+			SectorParam next_sec;
+			if (sec_num < gitem->sector_end) {
+				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
+			} else {
+				if (next_gitem) {
+					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+				} else {
+					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
+				}
+			}
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -957,9 +978,16 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 
 			int size = sector->GetSectorSize() / div_nums;
 
-			SectorParam next_sec(trk_num, sid_num
-				, sec_num < gitem->sector_end ? sec_num + 1 : (next_gitem ? next_gitem->sector_start : -1)
-				, -1);
+			SectorParam next_sec;
+			if (sec_num < gitem->sector_end) {
+				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
+			} else {
+				if (next_gitem) {
+					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+				} else {
+					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
+				}
+			}
 
 			// オフセットを足す
 			buffer += (size * div_num);
@@ -1622,12 +1650,12 @@ wxUint32 DiskBasicType::CalcLastGroupNumber(wxUint32 group_num, int &size_remain
 /// @param [in]  size			書き込み先バッファサイズ
 /// @param [in]  remain			残りのデータサイズ
 /// @param [in]  sector_num		セクタ番号
-/// @param [in]  group_num		現在のグループ番号
-/// @param [in]  next_group		次のグループ番号
+/// @param [in]  group_item		現在のグループアイテム
+/// @param [in]  next_group		次のグループアイテム
 /// @param [in]  sector_end		最終セクタ番号
 /// @param [in]  seq_num		通し番号(0...)
 /// @return 書き込んだバイト数
-int DiskBasicType::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num)
+int DiskBasicType::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num)
 {
 	bool need_eof_code = item->NeedCheckEofCode();
 

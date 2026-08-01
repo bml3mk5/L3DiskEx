@@ -12,7 +12,6 @@
 #include "../charcodes.h"
 #include "../config.h"
 #include "../utils.h"
-#include <wx/msgdlg.h>
 
 
 //////////////////////////////////////////////////////////////////////
@@ -254,6 +253,14 @@ DiskBasicDirItemXDOSBase::DiskBasicDirItemXDOSBase(DiskBasic *basic, int n_num, 
 {
 }
 
+/// 初期状態に戻す
+void DiskBasicDirItemXDOSBase::Reset()
+{
+	DiskBasicDirItem::Reset();
+
+	chain.Alloc();
+}
+
 #if 0
 /// アイテムへのポインタを設定
 /// @param [in]  n_num      通し番号
@@ -491,6 +498,16 @@ DiskBasicDirItemXDOS::DiskBasicDirItemXDOS(DiskBasic *basic, int n_num, const Di
 	// 親ディレクトリはツリーに表示しない
 	wxString name = GetFileNamePlainStr();
 	VisibleOnTree(!(IsDirectory() && name == wxT("!")));
+}
+
+/// 初期状態に戻す
+void DiskBasicDirItemXDOS::Reset()
+{
+	m_data.Delete();
+
+	DiskBasicDirItemXDOSBase::Reset();
+
+	m_data.Alloc();
 }
 
 /// アイテムへのポインタを設定
@@ -972,6 +989,8 @@ int DiskBasicDirItemXDOS::ConvOriginalTypeFromFileName(const wxString &filename)
 	return t1;
 }
 
+#ifndef USE_CONSOLE
+
 //
 // ダイアログ用
 //
@@ -1179,3 +1198,5 @@ void DiskBasicDirItemXDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 	vals.Add(wxT("ATTR"), m_data.Data()->attr);
 	vals.Add(wxT("START"), &m_data.Data()->start, sizeof(m_data.Data()->start));
 }
+
+#endif /* !USE_CONSOLE */

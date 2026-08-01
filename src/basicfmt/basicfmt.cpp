@@ -47,6 +47,7 @@
 #include "basictype_m68fdos.h"
 #include "basictype_trsdos.h"
 #include "basictype_hfs.h"
+#include "basictype_s1os.h"
 #include "../logging.h"
 #include "../utils.h"
 
@@ -69,14 +70,16 @@ DiskBasicIdentifiedData::DiskBasicIdentifiedData()
 	m_volume_name_maxlen = 0;
 	m_volume_number = 0;
 	m_volume_number_hexa = false;
+	m_volume_skew = 1;
 }
-DiskBasicIdentifiedData::DiskBasicIdentifiedData(const wxString &volume_name, int volume_number, const wxString &volume_date)
+DiskBasicIdentifiedData::DiskBasicIdentifiedData(const wxString &volume_name, int volume_number, const wxString &volume_date, int volume_skew)
 {
 	m_volume_name = volume_name;
 	m_volume_name_maxlen = 0;
 	m_volume_number = volume_number;
 	m_volume_number_hexa = false;
 	m_volume_date = volume_date;
+	m_volume_skew = volume_skew;
 }
 
 //////////////////////////////////////////////////////////////////////
@@ -305,6 +308,9 @@ void DiskBasic::CreateType()
 		break;
 	case FORMAT_TYPE_TRSD13:
 		type = new DiskBasicTypeTRSD13(this, fat, dir);
+		break;
+	case FORMAT_TYPE_S1OS:
+		type = new DiskBasicTypeS1OS(this, fat, dir);
 		break;
 	default:
 		wxFAIL_MSG(wxT("Unknown type is defined in basic_type.xml."));
@@ -649,8 +655,9 @@ double DiskBasic::CheckRootDirectory(bool is_formatting)
 }
 
 /// 現在選択しているディスクのルートディレクトリをアサイン
+/// @param [in] set_current 既にアサインしている場合にルートディレクトリをカレントにするか
 /// @return true / false ディレクトリにエラーあり
-bool DiskBasic::AssignRootDirectory()
+bool DiskBasic::AssignRootDirectory(bool set_current)
 {
 //	dir->Empty();
 	if (!p_disk) return false;
@@ -662,7 +669,7 @@ bool DiskBasic::AssignRootDirectory()
 		valid = dir->AssignRoot(type, GetDirStartSector(), GetDirEndSector());
 	} else {
 		// 既にアサイン済み、ルートをカレントにする
-		dir->SetCurrentAsRoot();
+		if(set_current) dir->SetCurrentAsRoot();
 	}
 	if (valid) {
 		// 残りサイズ計算
@@ -686,7 +693,7 @@ bool DiskBasic::AssignFatAndDirectory()
 	valid = (AssignFat(false) >= 0.0);
 
 	// directory area
-	valid = valid && AssignRootDirectory();
+	valid = valid && AssignRootDirectory(true);
 
 	return valid;
 }
@@ -1200,13 +1207,17 @@ bool DiskBasic::SaveUnitData(int fileunit_num, wxInputStream &istream, int isize
 
 	// セクタに書き込む
 	int sector_num = 0;
-	wxUint32 group_num, next_group;
+//	wxUint32 group_num, next_group;
 	int track_num, side_num, sector_start, sector_end;
 	int seq_num = 0;
 	for(int gidx = 0; gidx < (int)gitems.Count(); gidx++) {
 		DiskBasicGroupItem *gitem = &gitems.Item(gidx);
-		group_num = gitem->group;
-		next_group = gitem->next;
+		DiskBasicGroupItem *next_gitem = NULL;
+		if (gidx + 1 < (int)gitems.Count()) {
+			next_gitem = &gitems.Item(gidx + 1);
+		}
+//		group_num = gitem->group;
+//		next_group = gitem->next;
 		track_num = gitem->track;
 		side_num = gitem->side;
 		sector_start = gitem->sector_start;
@@ -1225,7 +1236,7 @@ bool DiskBasic::SaveUnitData(int fileunit_num, wxInputStream &istream, int isize
 			buf += (bufsize * gitem->div_num);
 
 			// ディスク内に書き込む
-			int last_size = type->WriteFile(item, istream, buf, bufsize, isize, sector_num, group_num, next_group, sector_end, seq_num);
+			int last_size = type->WriteFile(item, istream, buf, bufsize, isize, sector_num, gitem, next_gitem, sector_end, seq_num);
 			isize -= last_size;
 			file_size += last_size;
 			seq_num++;
@@ -1547,6 +1558,12 @@ int DiskBasic::FormatDisk(const DiskBasicIdentifiedData &data)
 	return errinfo.GetValid();
 }
 
+/// ディレクトリ内の一覧を返す
+DiskBasicDirItems *DiskBasic::GetDirectoryChildren(DiskBasicDirItem *dir_item)
+{
+	return dir->GetChildren(dir_item);
+}
+
 /// ルートディレクトリを返す
 DiskBasicDirItem *DiskBasic::GetRootDirectory()
 {
@@ -1568,6 +1585,11 @@ DiskBasicDirItems *DiskBasic::GetCurrentDirectoryItems(DiskBasicDirItem **dir_it
 {
 	return dir->GetCurrentItems(dir_item);
 }
+/// カレントディレクトリをセット
+void DiskBasic::SetCurrentDirectory(DiskBasicDirItem *dir_item)
+{
+	dir->SetCurrentItem(dir_item);
+}
 
 /// ディレクトリをアサイン
 /// @param [in] dir_item ディレクトリのアイテム
@@ -1585,6 +1607,40 @@ bool DiskBasic::ReassignDirectory(DiskBasicDirItem *dir_item)
 	if (!p_disk) return false;
 
 	return dir->Reassign(dir_item);
+}
+
+/// ディレクトリを検索
+/// @param [in,out] dir_item        現在のディレクトリ
+/// @param [in]     filename        ディレクトリ名
+DiskBasicDirItem *DiskBasic::FindDirectory(DiskBasicDirItem *dir_item, const wxString &filename)
+{
+	if (!p_disk) return NULL;
+
+	DiskBasicFileName dir_name;
+	dir_name.SetName(filename);
+	// 必要ならディレクトリ名を編集する
+	if (!type->RenameOnFindingDirectory(dir_name.GetName())) {
+		return NULL;
+	}
+
+	// ディレクトリがあるか
+	return dir->FindFile(dir_item, dir_name, IsCompareCaseInsense(), NULL, NULL);
+}
+
+/// ディレクトリの移動できるか
+bool DiskBasic::CanChangeDirectory() const
+{
+	return (type->CanChangeDirectory()) && (GetSubDirGroupSize() > 0);
+}
+
+/// 指定したカレントディレクトリ下のサブディレクトリへ移動する
+/// @param [in,out] curr_item カレントディレクトリのアイテム
+/// @param [in,out] dst_item  移動先のディレクトリのアイテム
+bool DiskBasic::ChangeDirectory(DiskBasicDirItem * &curr_item, DiskBasicDirItem * &dst_item)
+{
+	if (!p_disk) return false;
+
+	return dir->Change(curr_item, dst_item);
 }
 
 /// ディレクトリを変更
@@ -1789,6 +1845,30 @@ bool DiskBasic::ExpandDirectory(DiskBasicDirItem *dir_item)
 	}
 
 	return true;
+}
+
+/// ディレクトリ内のファイルを取得(前方一致)
+/// @param [in] dir_item ディレクトリのエントリ
+/// @param [in] prefix ファイル名＋"."＋拡張子
+/// @param [out] dir_items ディレクトリ内のエントリリスト
+int DiskBasic::GetFilesByPrefix(DiskBasicDirItem *dir_item, const wxString &prefix, DiskBasicDirItems &dir_items) const
+{
+	if (!p_disk) return 0;
+
+	// ファイル一覧
+	return dir->GetFilesByPrefix(dir_item, prefix, IsCompareCaseInsense(), dir_items);
+}
+
+/// ディレクトリ内のファイルを取得(ワイルドカード指定可)
+/// @param [in] dir_item ディレクトリのエントリ
+/// @param [in] filename ファイル名＋"."＋拡張子(ワイルドカード指定可)
+/// @param [out] dir_items ディレクトリ内のエントリリスト
+int DiskBasic::GetFilesWithWildcard(DiskBasicDirItem *dir_item, const wxString &filename, DiskBasicDirItems &dir_items) const
+{
+	if (!p_disk) return 0;
+
+	// ファイル一覧
+	return dir->GetFilesWithWildcard(dir_item, filename, IsCompareCaseInsense(), dir_items);
 }
 
 /// ディレクトリアイテムの作成

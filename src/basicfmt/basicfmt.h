@@ -45,10 +45,11 @@ private:
 	int		 m_volume_number;		///< ボリューム番号
 	bool	 m_volume_number_hexa;	///< ボリューム番号が16進か
 	wxString m_volume_date;			///< ボリューム日付
+	int		 m_volume_skew;			///< ボリュームスキュ
 
 public:
 	DiskBasicIdentifiedData();
-	DiskBasicIdentifiedData(const wxString &volume_name, int volume_number, const wxString &volume_date);
+	DiskBasicIdentifiedData(const wxString &volume_name, int volume_number, const wxString &volume_date, int volume_skew);
 	~DiskBasicIdentifiedData() {}
 
 	const wxString &GetVolumeName() const { return m_volume_name; }
@@ -56,12 +57,14 @@ public:
 	int GetVolumeNumber() const { return m_volume_number; }
 	bool IsVolumeNumberHexa() const { return m_volume_number_hexa; }
 	const wxString &GetVolumeDate() const { return m_volume_date; }
+	int GetVolumeSkew() const { return m_volume_skew; }
 
 	void SetVolumeName(const wxString &val) { m_volume_name = val; }
 	void SetVolumeNameMaxLength(size_t val) { m_volume_name_maxlen = val; }
 	void SetVolumeNumber(int val) { m_volume_number = val; }
 	void VolumeNumberIsHexa(bool val) { m_volume_number_hexa = val; }
 	void SetVolumeDate(const wxString &val) { m_volume_date = val; }
+	void SetVolumeSkew(int val) { m_volume_skew = val; }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -95,6 +98,9 @@ public:
 #endif
 #ifdef GetCurrentDirectory
 #undef GetCurrentDirectory
+#endif
+#ifdef SetCurrentDirectory
+#undef SetCurrentDirectory
 #endif
 
 //////////////////////////////////////////////////////////////////////
@@ -149,7 +155,7 @@ public:
 	/// 現在選択しているディスクのルートディレクトリ構造をチェック
 	double			CheckRootDirectory(bool is_formatting);
 	/// 現在選択しているディスクのルートディレクトリをアサイン
-	bool			AssignRootDirectory();
+	bool			AssignRootDirectory(bool set_current);
 	/// 現在選択しているディスクのFATとルートディレクトリをアサイン
 	bool			AssignFatAndDirectory();
 	/// 解析済みをクリア
@@ -248,6 +254,8 @@ public:
 	//@}
 	/// @name ディレクトリ操作
 	//@{
+	/// ディレクトリ内の一覧を返す
+	DiskBasicDirItems *GetDirectoryChildren(DiskBasicDirItem *dir_item);
 	/// ルートディレクトリを返す
 	DiskBasicDirItem *GetRootDirectory();
 	/// ルートディレクトリ内の一覧を返す
@@ -256,11 +264,19 @@ public:
 	DiskBasicDirItem *GetCurrentDirectory();
 	/// カレントディレクトリ内の一覧を返す
 	DiskBasicDirItems *GetCurrentDirectoryItems(DiskBasicDirItem **dir_item = NULL);
+	/// カレントディレクトリをセット
+	void			SetCurrentDirectory(DiskBasicDirItem *dir_item);
 	/// ディレクトリをアサイン
 	bool			AssignDirectory(DiskBasicDirItem *dir_item);
 	/// ディレクトリを読み直す
 	bool			ReassignDirectory(DiskBasicDirItem *dir_item);
-	/// ディレクトリを変更
+	/// ディレクトリを検索
+	DiskBasicDirItem *FindDirectory(DiskBasicDirItem *dir_item, const wxString &filename);
+	/// ディレクトリの移動できるか
+	bool			CanChangeDirectory() const;
+	/// 指定したカレントディレクトリ下のサブディレクトリへ移動する
+	bool			ChangeDirectory(DiskBasicDirItem * &curr_item, DiskBasicDirItem * &dst_item);
+	/// ディレクトリを移動
 	bool			ChangeDirectory(DiskBasicDirItem * &dst_item);
 	/// サブディレクトリの作成できるか
 	bool			CanMakeDirectory() const;
@@ -268,6 +284,10 @@ public:
 	int				MakeDirectory(DiskBasicDirItem *dir_item, const wxString &filename, bool ignore_datetime, DiskBasicDirItem **nitem = NULL);
 	/// ディレクトリのサイズを拡張
 	bool			ExpandDirectory(DiskBasicDirItem *dir_item);
+	/// ディレクトリ内のファイルを取得(前方一致)
+	int				GetFilesByPrefix(DiskBasicDirItem *dir_item, const wxString &prefix, DiskBasicDirItems &dir_items) const;
+	/// ディレクトリ内のファイルを取得(ワイルドカード指定可)
+	int				GetFilesWithWildcard(DiskBasicDirItem *dir_item, const wxString &filename, DiskBasicDirItems &dir_items) const;
 	//@}
 	/// @name ディレクトリアイテム操作
 	//@{

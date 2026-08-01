@@ -267,6 +267,8 @@ public:
 
 	/// @name 初期設定
 	//@{
+	/// @brief 初期状態に戻す
+	virtual void	Reset();
 	/// @brief アイテムへのポインタを設定
 	virtual void	SetDataPtr(int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next = NULL);
 	//@}
@@ -342,11 +344,15 @@ public:
 	/// @brief ファイル名と拡張子を得る
 	virtual void	GetNativeFileName(wxUint8 *name, size_t &nlen, wxUint8 *ext, size_t &elen) const;
 	/// @brief ファイル名(拡張子除く)が一致するか
-	bool			IsSameName(const wxString &name, bool icase) const;
+	virtual bool	IsSameName(const wxString &name, bool icase) const;
 	/// @brief ファイル名が一致するか
 	virtual bool	IsSameFileName(const DiskBasicFileName &filename, bool icase) const;
 	/// @brief 同じファイル名か
 	virtual bool	IsSameFileName(const DiskBasicDirItem *src, bool icase) const;
+	/// @brief ファイル名が前方一致するか
+	virtual bool	MatchPrefix(const wxString &prefix, bool icase) const;
+	/// @brief ワイルドカードを含むファイル名が一致するか
+	virtual bool	MatchWithWildcard(const wxString &filename, bool icase) const;
 	/// @brief 小文字を大文字にする
 	virtual void	ToUpper(wxUint8 *str, size_t size) const;
 	/// @brief ファイル名＋拡張子のサイズ
@@ -686,6 +692,8 @@ public:
 	int				GetNumber() const { return m_num; }
 	/// @brief 通し番号をセット
 	void			SetNumber(int val) { m_num = val; }
+	/// @brief アイテムを含むセクタを返す
+	DiskImageSector *GetSector() { return m_sector; }
 	/// @brief セクタ内の位置（バイト）を返す
 	int				GetPosition() const { return m_position; }
 	//@}
@@ -703,7 +711,7 @@ public:
 	/// @brief ファイルサイズが適正か
 	virtual bool	IsFileValidSize(const IntNameBox *parent, int size, int *limit) { return true; }
 	/// @brief ダイアログ入力後のファイル名チェック
-	virtual bool	ValidateFileName(const wxWindow *parent, const wxString &filename, wxString &errormsg) { return true; }
+	virtual bool	ValidateFileName(const wxString &filename, wxString &errormsg) { return true; }
 	/// @brief ファイル名に付随する拡張属性をセットする
 	/// @see GetOptionalName()
 	virtual int		GetOptionalNameInAttrDialog(const IntNameBox *parent) { return 0; }

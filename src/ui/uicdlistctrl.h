@@ -9,6 +9,9 @@
 #define _UICDLISTCTRL_H_
 
 #include "../common.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/dataview.h>
 #include <wx/clntdata.h>
 #include <wx/rearrangectrl.h>
@@ -22,7 +25,7 @@
 class wxMenu;
 class wxIcon;
 class UiDiskFrame;
-class Config;
+class ColumnParams;
 
 //////////////////////////////////////////////////////////////////////
 
@@ -91,7 +94,7 @@ protected:
 	UiDiskFrame		*frame;
 	MyCDListColumns	 m_columns;
 	int				 m_idOnFirstColumn;
-	Config			*m_ini;
+	ColumnParams	*m_ini;
 	MyCDListIcons	 m_icons;
 	wxArrayInt		 m_selecting;
 
@@ -101,7 +104,7 @@ protected:
 public:
 	MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowID id,
 		const struct st_list_columns *columns,
-		Config *ini,
+		ColumnParams *ini,
 		long style,
 		wxDataViewModel *model=NULL,
 		const wxPoint &pos=wxDefaultPosition, const wxSize &size=wxDefaultSize);
@@ -217,5 +220,6 @@ public:
 
 };
 
-#endif /* _UICDLISTCTRL_H_ */
+#endif /* !USE_CONSOLE */
 
+#endif /* _UICDLISTCTRL_H_ */

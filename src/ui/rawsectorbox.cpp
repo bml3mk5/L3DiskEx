@@ -6,6 +6,9 @@
 ///
 
 #include "rawsectorbox.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/checkbox.h>
 #include <wx/stattext.h>
@@ -24,8 +27,10 @@ END_EVENT_TABLE()
 RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &caption, int id_c, int id_h, int id_r, int id_n, int sec_nums, bool deleted, bool sdensity, int status, int rcrc, int ccrc, int hide_flags)
 	: wxDialog(parent, id, caption, wxDefaultPosition, wxDefaultSize, wxCAPTION | wxCLOSE_BOX)
 {
-	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, 4);
-	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxALL, 4).Border(wxRIGHT, 8);
+	int p4 = FromDIP(4);
+	int p8 = FromDIP(8);
+	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, p4);
+	wxSizerFlags flagsR = wxSizerFlags().Expand().Border(wxALL, p4).Border(wxRIGHT, p8);
 	wxSize size;
 	long style = 0;
 	wxTextValidator validate(wxFILTER_EMPTY | wxFILTER_DIGITS);
@@ -168,3 +173,5 @@ int RawSectorBox::GetStatus()
 	txtStatus->GetValue().ToLong(&val, 16);
 	return (int)val;
 }
+
+#endif /* !USE_CONSOLE */

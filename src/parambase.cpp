@@ -339,7 +339,7 @@ static const struct st_special_attr_names {
 /// @param[out] errmsgs     エラーメッセージ
 /// @param[out] attrs       値
 /// @return true
-bool TemplatesBase::LoadMyAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxString &errmsgs, MyAttributes &attrs)
+bool TemplatesBase::LoadMyAttributesInTypes(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs, MyAttributes &attrs)
 {
 	wxXmlNode *citemnode = node->GetChildren();
 	while(citemnode) {
@@ -359,7 +359,7 @@ bool TemplatesBase::LoadMyAttributesInTypes(const wxXmlNode *node, const wxStrin
 /// @param[out] valid_chars 値 
 /// @param[out] errmsgs     エラー時メッセージ
 /// @return true
-bool TemplatesBase::LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_chars, wxString &errmsgs)
+bool TemplatesBase::LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_chars, wxArrayString &errmsgs)
 {
 	bool valid = true;
 	wxString chars[4];
@@ -395,9 +395,10 @@ bool TemplatesBase::LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_c
 				int c = Utils::ToInt(cnode->GetNodeContent());
 				if (encoding == 0) {
 					if (c < 0 || c >= 0x80) {
-						errmsgs += wxT("\n");
-						errmsgs += _("Out of range in InvalidateCharacters::Code");
-						errmsgs += wxString::Format(_("(line #%d)"), cnode->GetLineNumber());
+						wxString errmsg;
+						errmsg += _("Out of range in InvalidateCharacters::Code");
+						errmsg += wxString::Format(_("(line #%d)"), cnode->GetLineNumber());
+						errmsgs.Add(errmsg);
 						valid = false;
 					} else {
 						chars[num] += wxString((char)c, (size_t)1);
@@ -412,9 +413,10 @@ bool TemplatesBase::LoadValidChars(const wxXmlNode *node, ValidNameRule &valid_c
 				if (encoding == 0) {
 					for(int c=st; c<=ed; c++) {
 						if (c < 0 || c >= 0x80) {
-							errmsgs += wxT("\n");
-							errmsgs += _("Out of range in InvalidateCharacters::CodeRange");
-							errmsgs += wxString::Format(_("(line #%d)"), cnode->GetLineNumber());
+							wxString errmsg;
+							errmsg += _("Out of range in InvalidateCharacters::CodeRange");
+							errmsg += wxString::Format(_("(line #%d)"), cnode->GetLineNumber());
+							errmsgs.Add(errmsg);
 							valid = false;
 							break;
 						} else {

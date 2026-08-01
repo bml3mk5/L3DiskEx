@@ -8,6 +8,18 @@
 #ifndef DISKPARAMBOX_H
 #define DISKPARAMBOX_H
 
+#include "../common.h"
+#include <wx/arrstr.h>
+
+class DiskParam;
+class DiskParamPtrs;
+class DiskImage;
+class DiskImageDisk;
+
+#ifndef USE_CONSOLE
+
+#include <wx/dialog.h>
+
 #define DISKPARAMBOX_TRANS \
 _("Required information entry is empty.") \
 _("'%s' is invalid") \
@@ -15,21 +27,12 @@ _("Validation conflict") \
 _("'%s' should only contain digits.") \
 _("'%s' should only contain ASCII characters.")
 
-#include "../common.h"
-#include <wx/dialog.h>
-#include <wx/arrstr.h>
-
-
 class wxComboBox;
 class wxChoice;
 class wxTextCtrl;
 class wxCheckBox;
 class wxRadioButton;
 
-class DiskParam;
-class DiskParamPtrs;
-class DiskImage;
-class DiskImageDisk;
 
 /// ディスクパラメータボックス
 class DiskParamBox : public wxDialog
@@ -166,5 +169,29 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* DISKPARAMBOX_H */
+// ----------------------------------------------------------------------------
 
+/// 新規作成時のディスク種類を選択
+class DiskParamDiskCreateBox : public DiskParamBox
+{
+public:
+	DiskParamDiskCreateBox(wxWindow* parent, wxWindowID id, DiskImage& image, int show_flags = DiskParamBox::SHOW_ALL);
+};
+
+/// ディスク追加時のディスク種類を選択
+class DiskParamDiskAddBox : public DiskParamBox
+{
+public:
+	DiskParamDiskAddBox(wxWindow* parent, wxWindowID id, DiskImage& image, int select_number, int show_flags = DiskParamBox::SHOW_ALL);
+};
+
+/// ディスク種類を選択
+class DiskParamDiskSelectBox : public DiskParamBox
+{
+public:
+	DiskParamDiskSelectBox(wxWindow* parent, wxWindowID id, DiskImage& image, const DiskParamPtrs* params, const DiskParam* manual_param, int show_flags = DiskParamBox::SHOW_TEMPLATE);
+};
+
+#endif /* USE_CONSOLE */
+
+#endif /* DISKPARAMBOX_H */

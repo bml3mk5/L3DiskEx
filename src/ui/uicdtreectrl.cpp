@@ -6,6 +6,9 @@
 ///
 
 #include "uicdtreectrl.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/imaglist.h>
 #include <wx/icon.h>
 #include "../config.h"
@@ -121,3 +124,5 @@ MyCDTreeItem MyCDTreeCtrl::GetNodeAtPoint(int x, int y) const
 	HitTest(pt, item, column);
 	return item;
 }
+
+#endif /* !USE_CONSOLE */

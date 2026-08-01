@@ -6,6 +6,9 @@
 ///
 
 #include "intnamevalid.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/textctrl.h>
 #include <wx/msgdlg.h>
 #include "../basicfmt/basicfmt.h"
@@ -152,7 +155,7 @@ bool IntNameValidator::Validate(wxWindow *parent, const wxString &val)
 			}
 		}
 		if (errormsg.empty()) {
-			m_item->ValidateFileName(parent, val, errormsg);
+			m_item->ValidateFileName(val, errormsg);
 		}
 	} else {
 		if (errormsg.empty()) {
@@ -391,3 +394,5 @@ bool AddressValidator::Validate(wxWindow *parent)
 	}
 	return true;
 }
+
+#endif /* !USE_CONSOLE */

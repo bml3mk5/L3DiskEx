@@ -9,6 +9,9 @@
 #define UIDISKLIST_H
 
 #include "uicommon.h"
+
+#ifndef USE_CONSOLE
+
 #include <wx/string.h>
 
 
@@ -346,5 +349,6 @@ public:
 	wxDECLARE_EVENT_TABLE();
 };
 
-#endif /* UIDISKLIST_H */
+#endif /* !USE_CONSOLE */
 
+#endif /* UIDISKLIST_H */

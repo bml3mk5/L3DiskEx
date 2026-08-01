@@ -202,6 +202,10 @@ public:
 	const wxString &GetItemName(const wxString &name, size_t item_idx) const;
 	/// @brief 選択リスト名に一致するマップを探す
 	int IndexOf(const wxString &name, const wxString &item_name) const;
+	/// @brief 選択リスト名に一致するマップを探す
+	const CharCodeMap *FindMap(const wxString &name, const wxString &item_name) const;
+	/// @brief 選択リスト名に一致するマップを探す
+	const CharCodeMap *FindMap(const wxString &name, size_t item_idx) const;
 };
 
 class wxXmlNode;
@@ -213,16 +217,16 @@ private:
 	CharCodeMap *cache;
 
 	/// @brief Mapsエレメントをロード
-	static bool LoadMaps(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs);
+	static bool LoadMaps(wxXmlNode *item, const wxString &locale_name, wxArrayString &errmsgs);
 	/// @brief Choicesエレメントをロード
-	static bool LoadChoices(wxXmlNode *item, const wxString &locale_name, wxString &errmsgs);
+	static bool LoadChoices(wxXmlNode *item, const wxString &locale_name, wxArrayString &errmsgs);
 
 public:
 	CharCodes();
 	~CharCodes();
 
 	/// @brief XMLからパラメータをロード
-	static bool Load(const wxString &data_path, const wxString &locale_name, wxString &errmsgs);
+	static bool Load(const wxString &data_path, const wxString &locale_name, wxArrayString &errmsgs);
 
 	/// @brief 文字コードを文字列に変換する
 	void ConvToString(const wxUint8 *src, size_t len, wxString &dst, int term_code = -1);

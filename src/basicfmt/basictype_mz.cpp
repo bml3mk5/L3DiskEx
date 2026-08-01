@@ -601,12 +601,12 @@ bool DiskBasicTypeMZ::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData
 /// @param [in]  size			書き込み先バッファサイズ
 /// @param [in]  remain			残りのデータサイズ
 /// @param [in]  sector_num		セクタ番号
-/// @param [in]  group_num		現在のグループ番号
-/// @param [in]  next_group		次のグループ番号
+/// @param [in]  group_item		現在のグループアイテム
+/// @param [in]  next_group		次のグループアイテム
 /// @param [in]  sector_end		最終セクタ番号
 /// @param [in]  seq_num		通し番号(0...)
 /// @return 書き込んだバイト数
-int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, wxUint32 group_num, wxUint32 next_group, int sector_end, int seq_num)
+int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, wxUint8 *buffer, int size, int remain, int sector_num, DiskBasicGroupItem *group_item, DiskBasicGroupItem *next_group, int sector_end, int seq_num)
 {
 	bool need_chain = item->NeedChainInData();
 
@@ -634,12 +634,12 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 
 	// チェーン用のセクタ番号を書く
 	if (need_chain) {
-		wxUint16 next_sector = group_num * basic->GetSectorsPerGroup();
+		wxUint16 next_sector = group_item->group * basic->GetSectorsPerGroup();
 		// 次のデータがあるセクタ番号を入れる
 		if (sector_num < sector_end) {
 			next_sector++;
 		} else {
-			next_sector = (remain > size ? next_group * basic->GetSectorsPerGroup() : 0);
+			next_sector = (remain > size && next_group ? next_group->group * basic->GetSectorsPerGroup() : 0);
 		}
 		*((wxUint16 *)&buffer[size]) = basic->InvertAndOrderUint16(next_sector);
 	}
@@ -651,6 +651,7 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 }
 
 /// データの書き込み終了後の処理
+/// @param [in]	item        ディレクトリアイテム
 void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 {
 	if (!item || !item->GetFileAttr().IsDirectory()) return;
@@ -670,6 +671,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 }
 
 /// ファイル名変更後の処理
+/// @param [in]	item        ディレクトリアイテム
 void DiskBasicTypeMZ::AdditionalProcessOnRenamedFile(DiskBasicDirItem *item)
 {
 	AdditionalProcessOnSavedFile(item);
