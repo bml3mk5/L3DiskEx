@@ -264,9 +264,9 @@ double DiskBasicTypeHFS::CheckDirectory(bool is_root, const DiskBasicGroups &gro
 	for(size_t idx = 0; idx < end_idx; idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
 //		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int sec_num = gitem->sector_start;
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int sec_num = gitem->GetSectorStart();
 
 		DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (!sector) {
@@ -392,9 +392,9 @@ bool DiskBasicTypeHFS::AssignDirectory(bool is_root, const DiskBasicGroups &grou
 	for(size_t idx = 0; idx < end_idx; idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
 //		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int sec_num = gitem->sector_start;
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int sec_num = gitem->GetSectorStart();
 
 		DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 		if (!sector) {

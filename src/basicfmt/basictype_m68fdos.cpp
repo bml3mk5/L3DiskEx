@@ -163,7 +163,7 @@ void DiskBasicTypeM68FDOS::CalcDiskFreeSize(bool wrote)
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
 				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-				wxUint32 gnum = gitem->group;
+				wxUint32 gnum = gitem->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}
@@ -277,7 +277,7 @@ int DiskBasicTypeM68FDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem 
 	// 確保したグループ数をセット
 	item->SetGroupSize(groups);
 	// 最終グループをセット
-	item->SetExtraGroup(group_items.Last().group);
+	item->SetExtraGroup(group_items.Last().GetGroup());
 
 	return rc;
 }
@@ -489,7 +489,7 @@ int DiskBasicTypeM68FDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istre
 	if (need_chain) {
 		wxUint16 next_sector = 0;
 		if (next_group) {
-			next_sector = (wxUint16)(next_group->group * basic->GetSectorsPerGroup());
+			next_sector = (wxUint16)(next_group->GetGroup() * basic->GetSectorsPerGroup());
 		}
 		if (next_sector >= 0) {
 			// bigendien

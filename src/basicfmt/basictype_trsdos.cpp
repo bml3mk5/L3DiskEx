@@ -1132,7 +1132,7 @@ int DiskBasicTypeTRSD23::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 		int cnt = 0;
 		int max_idx = (int)group_items.Count();
 		for(int idx = 0; idx < max_idx; idx++) {
-			wxUint32 grp = group_items.Item(idx).group;
+			wxUint32 grp = group_items.Item(idx).GetGroup();
 			if (idx == 0) {
 				sta_grp = grp;
 			} else if (cnt > 32 || pre_grp + 1 != grp) {
@@ -1408,7 +1408,7 @@ int DiskBasicTypeTRSD13::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 		int cnt = 0;
 		int max_idx = (int)group_items.Count();
 		for(int idx = 0; idx < max_idx; idx++) {
-			wxUint32 grp = group_items.Item(idx).group;
+			wxUint32 grp = group_items.Item(idx).GetGroup();
 			if (idx == 0) {
 				sta_grp = grp;
 			} else if (cnt > 32 || pre_grp + 1 != grp) {

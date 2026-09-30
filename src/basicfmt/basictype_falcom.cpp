@@ -61,7 +61,7 @@ void DiskBasicTypeFalcom::CalcDiskFreeSize(bool wrote)
 		int count = (int)groups->Count();
 		for(int n = 0; n < count; n++) {
 			const DiskBasicGroupItem *group = groups->ItemPtr(n);
-			wxUint32 gnum = group->group;
+			wxUint32 gnum = group->GetGroup();
 			if (gnum <= basic->GetFatEndGroup()) {
 				if (n + 1 == count) {
 					fat_availability.Item(gnum) = FAT_AVAIL_USED_LAST;

@@ -925,16 +925,16 @@ public:
 /// @sa DiskBasicGroups
 class DiskBasicGroupItem
 {
-public:
-	wxUint32 group;			///< グループ番号
-	wxUint32 next;			///< 次のグループ番号
-	int track;				///< トラック番号
-	int side;				///< サイド番号
-	int sector_start;		///< グループ内の開始セクタ番号
-	int sector_end;			///< グループ内の終了セクタ番号
-	int div_num;			///< １グループがセクタ内に複数ある時の分割位置
-	int div_nums;			///< １グループがセクタ内に複数ある時の分割数
-	DiskBasicGroupUserData *user_data;	///< 機種依存データ
+private:
+	wxUint32 m_group;			///< グループ番号
+	wxUint32 m_next;			///< 次のグループ番号
+	int m_track;				///< トラック番号
+	int m_side;					///< サイド番号
+	int m_sector_start;			///< グループ内の開始セクタ番号
+	int m_sector_end;			///< グループ内の終了セクタ番号
+	int m_div_num;				///< １グループがセクタ内に複数ある時の分割位置
+	int m_div_nums;				///< １グループがセクタ内に複数ある時の分割数
+	DiskBasicGroupUserData *p_user_data;	///< 機種依存データ
 public:
 	DiskBasicGroupItem();
 	DiskBasicGroupItem(const DiskBasicGroupItem &);
@@ -947,6 +947,38 @@ public:
 	void Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div = 0, int n_divs = 1, DiskBasicGroupUserData *n_user = NULL);
 	/// @brief データセット
 	void Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, DiskBasicGroupUserData *n_user = NULL);
+	/// @brief グループ番号を返す
+	wxUint32 GetGroup() const { return m_group; }
+	/// @brief 次のグループ番号を返す
+	wxUint32 GetNextGroup() const { return m_next; }
+	/// @brief トラック番号を返す
+	int GetTrack() const { return m_track; }
+	/// @brief サイド番号を返す
+	int GetSide() const { return m_side; }
+	/// @brief グループ内の開始セクタ番号を返す
+	int GetSectorStart() const { return m_sector_start; }
+	/// @brief グループ内の終了セクタ番号を返す
+	int GetSectorEnd() const { return m_sector_end; }
+	/// @brief 分割位置を返す
+	int GetDivNum() const { return m_div_num; }
+	/// @brief 分割数を返す
+	int GetDivNums() const { return m_div_nums; }
+	/// @brief 機種依存データを返す
+	const DiskBasicGroupUserData &GetUserData() const { return *p_user_data; }
+	/// @brief 次のグループ番号を設定
+	void SetNextGroup(wxUint32 val) { m_next = val; }
+	/// @brief トラック番号を設定
+	void SetTrack(int val) { m_track = val; }
+	/// @brief サイド番号を設定
+	void SetSide(int val) { m_side = val; }
+	/// @brief グループ内の開始セクタ番号を設定
+	void SetSectorStart(int val) { m_sector_start = val; }
+	/// @brief グループ内の終了セクタ番号を設定
+	void SetSectorEnd(int val) { m_sector_end = val; }
+	/// @brief 分割位置を設定
+	void SetDivNum(int val) { m_div_num = val; }
+	/// @brief 分割数を設定
+	void SetDivNums(int val) { m_div_nums = val; }
 	/// @brief 比較
 	static int Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2);
 };
@@ -966,10 +998,10 @@ WX_DECLARE_OBJARRAY(DiskBasicGroupItem, DiskBasicGroupItems);
 class DiskBasicGroups
 {
 private:
-	DiskBasicGroupItems	items;			///< グループ番号のリスト
-	int					nums;			///< グループ数
-	size_t				size;			///< グループ内の占有サイズ
-	size_t				size_per_group;	///< １グループのサイズ
+	DiskBasicGroupItems	m_items;			///< グループ番号のリスト
+	int					m_nums;				///< グループ数
+	size_t				m_size;				///< グループ内の占有サイズ
+	size_t				m_size_per_group;	///< １グループのサイズ
 
 public:
 	DiskBasicGroups();
@@ -996,21 +1028,21 @@ public:
 	/// @brief リストアイテムを返す
 	DiskBasicGroupItem *ItemPtr(size_t idx) const;
 	/// @brief リストを返す
-	const DiskBasicGroupItems &GetItems() const { return items; }
+	const DiskBasicGroupItems &GetItems() const { return m_items; }
 
 	/// @brief グループ数を返す
-	int		GetNums() const { return nums; }
+	int		GetNums() const { return m_nums; }
 	/// @brief 占有サイズを返す
-	size_t	GetSize() const { return size; }
+	size_t	GetSize() const { return m_size; }
 	/// @brief １グループのサイズを返す
-	size_t	GetSizePerGroup() const { return size_per_group; }
+	size_t	GetSizePerGroup() const { return m_size_per_group; }
 
 	/// @brief グループ数を設定
-	void	SetNums(int val) { nums = val; }
+	void	SetNums(int val) { m_nums = val; }
 	/// @brief 占有サイズを設定
-	void	SetSize(size_t val) { size = val; }
+	void	SetSize(size_t val) { m_size = val; }
 	/// @brief １グループのサイズを設定
-	void	SetSizePerGroup(size_t val) { size_per_group = val; }
+	void	SetSizePerGroup(size_t val) { m_size_per_group = val; }
 
 	/// @brief グループ数を足す
 	int		AddNums(int val);

@@ -117,21 +117,26 @@ public:
 class DiskBasicFatBuffer
 {
 private:
-	size_t   size;		///< バッファサイズ
-	wxUint8 *buffer;	///< バッファポインタ（セクタ内の開始ポインタ）
+	wxUint8 *p_buffer;			///< バッファポインタ（セクタ内の開始ポインタ）
+	wxUint32 m_size;			///< バッファサイズ
+	wxUint32 m_accume_start;	///< 累積開始位置
 
 public:
 	DiskBasicFatBuffer();
-	DiskBasicFatBuffer(wxUint8 *newbuf, int newsize);
-	~DiskBasicFatBuffer() {}
+	DiskBasicFatBuffer(wxUint8 *buf, wxUint32 size, wxUint32 accume_start);
+	~DiskBasicFatBuffer();
 	/// @brief バッファポインタを返す
-	wxUint8 *GetBuffer() const { return buffer; }
+	wxUint8 *GetBuffer() const { return p_buffer; }
 	/// @brief バッファサイズを返す
-	size_t   GetSize() const { return size; }
+	wxUint32 GetSize() const { return m_size; }
 	/// @brief バッファを指定コードで埋める
 	void	 Fill(wxUint8 code);
 	/// @brief バッファにコピー
 	void	 Copy(const wxUint8 *buf, size_t len);
+	/// @brief 累計位置が範囲内か
+	int		 InRange(wxUint32 accume_pos) const;
+	/// @brief 累計位置を範囲内の指定位置に変換
+	wxUint32 ConvPos(wxUint32 accume_pos) const;
 	/// @brief 指定位置のデータを返す(8ビット)
 	wxUint32 Get(size_t pos) const;
 	/// @brief 指定位置にデータをセット(8ビット)
@@ -159,7 +164,23 @@ WX_DECLARE_OBJARRAY(DiskBasicFatBuffer, ArrayDiskBasicFatBuffer);
 /// @brief FAT１つ分のバッファ（複数セクタあり） DiskBasicFatBuffer の配列
 class DiskBasicFatBuffers : public ArrayDiskBasicFatBuffer
 {
+protected:
+	int m_size;			///< 1セクタのサイズ
+
+	///  @brief 位置からセクタ位置を返す
+	bool	GetSectorIndex(wxUint32 &pos, size_t &idx) const;
+
 public:
+	DiskBasicFatBuffers();
+	/// @brief コピーコンストラクタ
+	DiskBasicFatBuffers(const DiskBasicFatBuffers &src);
+	/// @brief 代入
+	DiskBasicFatBuffers &operator=(const DiskBasicFatBuffers &src);
+	/// @brief セクタサイズを返す
+	int      GetSize() const { return m_size; }
+	/// @brief セクタサイズをセット
+	void     SetSize(int val) { m_size = val; }
+
 	/// @brief 8ビットデータを返す
 	wxUint32 GetData8(wxUint32 pos) const;
 	/// @brief 8ビットデータをセット
@@ -195,7 +216,7 @@ WX_DECLARE_OBJARRAY(DiskBasicFatBuffers, ArrayArrayDiskBasicFatBuffer);
 class DiskBasicFatArea : public ArrayArrayDiskBasicFatBuffer
 {
 private:
-	size_t	valid_count;	///< 有効なバッファ数
+	size_t	m_valid_count;	///< 有効なバッファ数
 
 public:
 	DiskBasicFatArea();
@@ -208,9 +229,9 @@ public:
 	/// @brief 追加
 	void	Add(const DiskBasicFatBuffers &lItem, size_t nInsert = 1);
 	/// @brief 有効なバッファ数をセット
-	void	SetValidCount(size_t val) { valid_count = val; }
+	void	SetValidCount(size_t val) { m_valid_count = val; }
 	/// @brief 有効なバッファ数を返す
-	size_t	GetValidCount() const { return valid_count; }
+	size_t	GetValidCount() const { return m_valid_count; }
 
 	/// @brief 8ビットデータを返す
 	wxUint32 GetData8(size_t idx, wxUint32 pos) const;
@@ -257,15 +278,15 @@ class DiskBasicType;
 class DiskBasicFat
 {
 private:
-	DiskBasic			*basic;
-	DiskBasicType		*type;
-	int count;			///< FATの数
-	int vcount;			///< 使用しているFATの数
-	int size;			///< FATサイズ(セクタ数)
-	int start;			///< 開始セクタ番号
-	int start_pos;		///< 開始位置
+	DiskBasic			*p_basic;
+	DiskBasicType		*p_type;
+	int m_count;		///< FATの数
+	int m_vcount;		///< 使用しているFATの数
+	int m_size;			///< FATサイズ(セクタ数)
+	int m_start;		///< 開始セクタ番号
+	int m_start_pos;	///< 開始位置
 
-	DiskBasicFatArea bufs;
+	DiskBasicFatArea m_bufs;
 
 	DiskBasicFat();
 
@@ -290,7 +311,7 @@ public:
 	void Fill(wxUint8 code);
 
 	/// @brief FAT領域を返す
-	DiskBasicFatArea	 *GetDiskBasicFatArea() { return &bufs; }
+	DiskBasicFatArea	 *GetDiskBasicFatArea() { return &m_bufs; }
 	/// @brief FATバッファを返す
 	DiskBasicFatBuffers	 *GetDiskBasicFatBuffers(size_t idx);
 	/// @brief FATバッファ（セクタ）を返す

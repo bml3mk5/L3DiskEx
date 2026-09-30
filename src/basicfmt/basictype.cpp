@@ -598,11 +598,11 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 	DiskBasicDirItem *nitem = dir->NewItem(NULL, 0, NULL);
 	for(size_t idx = 0; idx < group_items.Count() && finish >= -1; idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
-		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int div_num = gitem->div_num;	// 分割番号
-		int div_nums = gitem->div_nums;	// 分割数
+		wxUint32 grp_num = gitem->GetGroup();
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int div_num = gitem->GetDivNum();	// 分割番号
+		int div_nums = gitem->GetDivNums();	// 分割数
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
@@ -610,7 +610,7 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 		}
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && finish >= -1; sec_num++) {
 			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
@@ -626,11 +626,11 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec;
-			if (sec_num < gitem->sector_end) {
+			if (sec_num < gitem->GetSectorEnd()) {
 				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
 			} else {
 				if (next_gitem) {
-					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+					next_sec.SetSectorParam(next_gitem->GetTrack(), next_gitem->GetSide(), next_gitem->GetSectorStart(), -1);
 				} else {
 					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
 				}
@@ -648,7 +648,7 @@ double DiskBasicType::CheckDirectory(bool is_root, const DiskBasicGroups &group_
 				prev_grp_num = grp_num;
 			}
 
-			if (idx == 0 && sec_num == gitem->sector_start) {
+			if (idx == 0 && sec_num == gitem->GetSectorStart()) {
 				// ディレクトリエリア先頭をスキップする位置
 				if (is_root) {
 					buffer += basic->GetDirStartPosOnRoot();
@@ -723,11 +723,11 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 	DiskBasicDirItem *nitem = dir->NewItem(NULL, 0, NULL);
 	for(size_t idx = 0; idx < group_items.Count() && finish >= -1; idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
-		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int div_num = gitem->div_num;	// 分割番号
-		int div_nums = gitem->div_nums;	// 分割数
+		wxUint32 grp_num = gitem->GetGroup();
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int div_num = gitem->GetDivNum();	// 分割番号
+		int div_nums = gitem->GetDivNums();	// 分割数
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
@@ -735,7 +735,7 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 		}
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && valid && !last && finish >= -1; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && valid && !last && finish >= -1; sec_num++) {
 			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
@@ -751,11 +751,11 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec;
-			if (sec_num < gitem->sector_end) {
+			if (sec_num < gitem->GetSectorEnd()) {
 				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
 			} else {
 				if (next_gitem) {
-					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+					next_sec.SetSectorParam(next_gitem->GetTrack(), next_gitem->GetSide(), next_gitem->GetSectorStart(), -1);
 				} else {
 					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
 				}
@@ -773,7 +773,7 @@ bool DiskBasicType::IsEmptyDirectory(bool is_root, const DiskBasicGroups &group_
 				prev_grp_num = grp_num;
 			}
 
-			if (idx == 0 && sec_num == gitem->sector_start) {
+			if (idx == 0 && sec_num == gitem->GetSectorStart()) {
 				// ディレクトリエリア先頭をスキップする位置
 				if (is_root) {
 					buffer += basic->GetDirStartPosOnRoot();
@@ -833,18 +833,18 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 	wxUint32 prev_grp_num = (wxUint32)-1;
 	for(size_t idx = 0; idx < group_items.Count() && finish >= -1; idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
-		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int div_num = gitem->div_num;	// 分割番号
-		int div_nums = gitem->div_nums;	// 分割数
+		wxUint32 grp_num = gitem->GetGroup();
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int div_num = gitem->GetDivNum();	// 分割番号
+		int div_nums = gitem->GetDivNums();	// 分割数
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			continue;
 		}
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && finish >= -1; sec_num++) {
 			DiskImageSector *sector = track->GetSector(sec_num);
 			if (!sector) continue;
 
@@ -854,11 +854,11 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec;
-			if (sec_num < gitem->sector_end) {
+			if (sec_num < gitem->GetSectorEnd()) {
 				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
 			} else {
 				if (next_gitem) {
-					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+					next_sec.SetSectorParam(next_gitem->GetTrack(), next_gitem->GetSide(), next_gitem->GetSectorStart(), -1);
 				} else {
 					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
 				}
@@ -876,7 +876,7 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 				prev_grp_num = grp_num;
 			}
 
-			if (idx == 0 && sec_num == gitem->sector_start) {
+			if (idx == 0 && sec_num == gitem->GetSectorStart()) {
 				// ディレクトリエリア先頭をスキップする位置
 				if (is_root) {
 					buffer += basic->GetDirStartPosOnRoot();
@@ -912,6 +912,8 @@ bool DiskBasicType::AssignDirectory(bool is_root, const DiskBasicGroups &group_i
 				nitem->SetParent(dir_item);
 				// 子ディレクトリに追加
 				dir_item->AddChild(nitem);
+				// 必要なら追加処理
+				nitem->AdditionalProcessAfterAssigned();
 
 				pos    += nitem->GetDataSize();
 				buffer += nitem->GetDataSize();
@@ -945,11 +947,11 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 	wxUint32 prev_grp_num = (wxUint32)-1;
 	for(size_t idx = 0; idx < group_items.Count() && finish >= -1 && rc >= 0; idx++) {
 		const DiskBasicGroupItem *gitem = &group_items.Item(idx);
-		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
-		int div_num = gitem->div_num;	// 分割番号
-		int div_nums = gitem->div_nums;	// 分割数
+		wxUint32 grp_num = gitem->GetGroup();
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
+		int div_num = gitem->GetDivNum();	// 分割番号
+		int div_nums = gitem->GetDivNums();	// 分割数
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			// トラックがない！
@@ -960,7 +962,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1 && rc >= 0; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && finish >= -1 && rc >= 0; sec_num++) {
 			DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 			if (!sector) {
 				// セクタがない！
@@ -979,11 +981,11 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 			int size = sector->GetSectorSize() / div_nums;
 
 			SectorParam next_sec;
-			if (sec_num < gitem->sector_end) {
+			if (sec_num < gitem->GetSectorEnd()) {
 				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
 			} else {
 				if (next_gitem) {
-					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+					next_sec.SetSectorParam(next_gitem->GetTrack(), next_gitem->GetSide(), next_gitem->GetSectorStart(), -1);
 				} else {
 					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
 				}
@@ -1001,7 +1003,7 @@ int DiskBasicType::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, in
 				prev_grp_num = grp_num;
 			}
 
-			if (idx == 0 && sec_num == gitem->sector_start) {
+			if (idx == 0 && sec_num == gitem->GetSectorStart()) {
 				// ディレクトリエリア先頭をスキップする位置
 //				if (is_root) {
 //					buffer += basic->GetDirStartPosOnRoot();
@@ -1224,7 +1226,7 @@ int DiskBasicType::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *item, 
 		if (flags == ALLOCATE_GROUPS_APPEND) {
 			// 追加のときはチェインをつなぐ
 			if (group_items.Count() > 0) {
-				rc = ChainGroups(item->GetStartGroup(0), group_items.Item(0).group);
+				rc = ChainGroups(item->GetStartGroup(0), group_items.Item(0).GetGroup());
 			}
 		}
 	} else {
@@ -1697,7 +1699,7 @@ void DiskBasicType::DeleteGroups(const DiskBasicGroups &group_items)
 {
 	for(size_t gidx=0; gidx<group_items.Count(); gidx++) {
 		// FATエントリを削除
-		DeleteGroupNumber(group_items.Item(gidx).group);
+		DeleteGroupNumber(group_items.Item(gidx).GetGroup());
 	}
 }
 

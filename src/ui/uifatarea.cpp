@@ -311,7 +311,7 @@ void UiDiskFatAreaPanel::SetGroup(wxUint32 group_num)
 void UiDiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	for(size_t n = 0; n < group_items.Count(); n++) {
-		SetGroupBase(group_items.Item(n).group, 0x10000);
+		SetGroupBase(group_items.Item(n).GetGroup(), 0x10000);
 	}
 	for(size_t n = 0; n < extra_group_nums.Count(); n++) {
 		SetGroupBase(extra_group_nums.Item(n), 0x20000);
@@ -322,7 +322,7 @@ void UiDiskFatAreaPanel::SetGroup(const DiskBasicGroups &group_items, const wxAr
 void UiDiskFatAreaPanel::UnsetGroup(const DiskBasicGroups &group_items, const wxArrayInt &extra_group_nums)
 {
 	for(size_t n = 0; n < group_items.Count(); n++) {
-		UnsetGroupBase(group_items.Item(n).group);
+		UnsetGroupBase(group_items.Item(n).GetGroup());
 	}
 	for(size_t n = 0; n < extra_group_nums.Count(); n++) {
 		UnsetGroupBase(extra_group_nums.Item(n));

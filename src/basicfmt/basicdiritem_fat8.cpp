@@ -190,7 +190,7 @@ int	DiskBasicDirItemFAT8::RecalcFileSize(DiskBasicGroups &group_items, int occup
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->GetTrack(), litem->GetSide(), litem->GetSectorEnd());
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -212,7 +212,7 @@ void DiskBasicDirItemFAT8::TakeAddressesInFile()
 	}
 
 	DiskBasicGroupItem *item = &m_groups.Item(0);
-	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorStart());
 	if (!sector) return;
 
 	bool is_bigendian = basic->IsBigEndian();
@@ -223,14 +223,14 @@ void DiskBasicDirItemFAT8::TakeAddressesInFile()
 	m_end_address = (int)sector->Get16(1, is_bigendian) + m_start_address - 1;
 
 	item = &m_groups.Last();
-	sector = basic->GetSector(item->track, item->side, item->sector_end);
+	sector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorEnd());
 	if (!sector) return;
 	// 実行アドレス
 	int remain_size = m_groups.GetSize() % sector->GetSectorSize();
 	if (remain_size >= 2) {
 		m_exec_address = (int)sector->Get16(remain_size - 2, is_bigendian);
 	} else {
-		DiskImageSector *psector = basic->GetSector(item->track, item->side, item->sector_end - 1);
+		DiskImageSector *psector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorEnd() - 1);
 		if (psector) {
 			if (remain_size >= 1) {
 				m_exec_address = sector->Get(0) | (int)psector->Get(psector->GetSectorSize() - 1) << 8;

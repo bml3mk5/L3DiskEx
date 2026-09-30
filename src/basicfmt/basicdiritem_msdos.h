@@ -197,6 +197,8 @@ public:
 class DiskBasicDirItemVFAT : public DiskBasicDirItemMSDOS
 {
 protected:
+	bool m_has_lfn;	///< LFNを持っているか
+
 	DiskBasicDirItemVFAT() : DiskBasicDirItemMSDOS() {}
 	DiskBasicDirItemVFAT(const DiskBasicDirItemVFAT &src) : DiskBasicDirItemMSDOS(src) {}
 
@@ -206,6 +208,14 @@ protected:
 	virtual void	SetNativeName(wxUint8 *filename, size_t size, size_t length);
 	/// @brief ファイル名を得る
 	virtual void	GetNativeName(wxUint8 *filename, size_t size, size_t &length) const;
+	/// @brief 拡張子を得る
+	virtual void	GetNativeExt(wxUint8 *fileext, size_t size, size_t &length) const;
+	/// @brief ショートファイル名を得る
+	void			GetNativeNameSFN(wxUint8 *filename, size_t size, size_t &length) const;
+	/// @brief SFNのチェックサムを計算する
+	wxUint8			CalcCheckSumSFN() const;
+	/// @brief ロングファイル名を得る
+	bool			GetNativeNameLFN(wxUint8 *filename, size_t size, size_t &length) const;
 
 public:
 	DiskBasicDirItemVFAT(DiskBasic *basic);
@@ -218,6 +228,8 @@ public:
 	virtual bool	IsDeletable() const;
 	/// @brief ファイル名を編集できるか
 	virtual bool	IsFileNameEditable() const;
+	/// @brief ディレクトリアイテムをアサインした後の追加処理 ロングファイル名のチェック
+	virtual void	AdditionalProcessAfterAssigned();
 
 	/// @brief 属性を設定
 	virtual void	SetFileAttr(const DiskBasicFileType &file_type);
@@ -228,10 +240,10 @@ public:
 	/// @brief 属性の文字列を返す(ファイル一覧画面表示用)
 	virtual wxString GetFileAttrStr() const;
 
-	/// @brief 最初のグループ番号をセット
-	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
-	/// @brief 最初のグループ番号を返す
-	virtual wxUint32 GetStartGroup(int fileunit_num) const;
+//	/// @brief 最初のグループ番号をセット
+//	virtual void	SetStartGroup(int fileunit_num, wxUint32 val, int size = 0);
+//	/// @brief 最初のグループ番号を返す
+//	virtual wxUint32 GetStartGroup(int fileunit_num) const;
 
 	/// @brief アイテムが作成日時を持っているか
 	virtual bool 	HasCreateDateTime() const { return true; }

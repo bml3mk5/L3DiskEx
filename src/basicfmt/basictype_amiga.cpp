@@ -1138,7 +1138,7 @@ int DiskBasicTypeAmiga::WriteFile(DiskBasicDirItem *item, wxInputStream &istream
 		pre->o.seq_num = wxUINT32_SWAP_ON_LE(val);
 		val = (remain > size ? size : remain);
 		pre->o.data_size = wxUINT32_SWAP_ON_LE(val);
-		pre->o.next_data = wxUINT32_SWAP_ON_LE(next_group ? next_group->group : 0);
+		pre->o.next_data = wxUINT32_SWAP_ON_LE(next_group ? next_group->GetGroup() : 0);
 	}
 
 	return len;

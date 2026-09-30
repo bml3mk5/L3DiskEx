@@ -1487,8 +1487,8 @@
 		</DiskBasicTypes>
 		<DensityName>2HD/8inch2D</DensityName>
 		<DensityName lang="ja">2HD/8インチ2D</DensityName>
-		<Description>, Track0 and side0 is single density</Description>
-		<Description lang="ja">トラック0,サイド0は単密度</Description>
+		<Description>, Track0 and side0 is single density [N88-BASIC etc.]</Description>
+		<Description lang="ja">トラック0,サイド0は単密度 [N88-BASICなど]</Description>
 	</DiskType>
 	<DiskType name="2HD-77-26-5-S0">
 		<SidesPerDisk>2</SidesPerDisk>

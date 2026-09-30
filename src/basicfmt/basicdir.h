@@ -39,8 +39,6 @@ private:
 
 	DiskBasicDirItem	*p_curr_item;		///< 現ディレクトリのアイテム
 
-//	DiskBasicGroups		m_root_groups;		///< ルートディレクトリのあるセクタリスト
-
 	DiskBasicDir();
 public:
 	DiskBasicDir(DiskBasic *basic);

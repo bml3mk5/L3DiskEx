@@ -3,8 +3,10 @@
 <Choices version="1.0">
 	<Choice name="main">
 		<Item>Ascii8</Item>
-		<Item>ShiftJIS</Item>
+		<Item>CP932</Item>
 		<Item>ISO-8859-1</Item>
+		<Item>UTF8</Item>
+		<!-- Item>UTF16LE</Item -->
 		<Item>L3Signs</Item>
 		<Item>FMSigns</Item>
 		<Item>X1Signs</Item>
@@ -13,8 +15,10 @@
 	</Choice>
 	<Choice name="dump">
 		<Item>Hankaku</Item>
-		<Item>ShiftJIS</Item>
+		<Item>CP932</Item>
 		<Item>ISO-8859-1</Item>
+		<Item>UTF8</Item>
+		<!-- Item>UTF16LE</Item -->
 		<Item>Ascii8</Item>
 		<Item>Ascii7</Item>
 		<Item>L3Signs</Item>
@@ -214,15 +218,25 @@
 		<Description lang="ja">アスキー 7ビット</Description>
 	</Map>
 
-	<Map name="ShiftJIS" type="2">
-		<Description>Shift JIS</Description>
-		<Description lang="ja">シフトJIS</Description>
+	<Map name="CP932" type="2">
+		<Description>Shift JIS (CP932)</Description>
+		<Description lang="ja">シフトJIS(CP932)</Description>
 		<FontEncoding>27</FontEncoding><!-- wxFONTENCODING_CP932 -->
 	</Map>
 
 	<Map name="ISO-8859-1" type="3">
 		<Description>ISO-8859-1</Description>
 		<FontEncoding>1</FontEncoding><!-- wxFONTENCODING_ISO8859_1 -->
+	</Map>
+
+	<Map name="UTF8" type="2">
+		<Description>UTF-8</Description>
+		<FontEncoding>43</FontEncoding><!-- wxFONTENCODING_UTF8 -->
+	</Map>
+
+	<Map name="UTF16LE" type="2">
+		<Description>UTF-16 LE</Description>
+		<FontEncoding>46</FontEncoding><!-- wxFONTENCODING_UTF16LE -->
 	</Map>
 
 	<Map name="Hankaku">

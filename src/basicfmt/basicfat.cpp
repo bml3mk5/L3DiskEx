@@ -214,20 +214,25 @@ bool DiskBasicBitMLMap::GetPosInMap(wxUint32 group_num, size_t &idx, wxUint32 &p
 
 DiskBasicFatBuffer::DiskBasicFatBuffer()
 {
-	size = 0;
-	buffer = NULL;
+	p_buffer = NULL;
+	m_size = 0;
+	m_accume_start = 0;
 }
-DiskBasicFatBuffer::DiskBasicFatBuffer(wxUint8 *newbuf, int newsize)
+DiskBasicFatBuffer::DiskBasicFatBuffer(wxUint8 *buf, wxUint32 size, wxUint32 accume_start)
 {
-	size = newsize;
-	buffer = newbuf;
+	p_buffer = buf;
+	m_size = size;
+	m_accume_start = accume_start;
+}
+DiskBasicFatBuffer::~DiskBasicFatBuffer()
+{
 }
 /// バッファを指定コードで埋める
 /// @param[in] code コード
 void DiskBasicFatBuffer::Fill(wxUint8 code)
 {
-	if (buffer) {
-		memset(buffer, code, size);
+	if (p_buffer) {
+		memset(p_buffer, code, m_size);
 	}
 }
 /// バッファにコピー
@@ -235,24 +240,40 @@ void DiskBasicFatBuffer::Fill(wxUint8 code)
 /// @param[in] len サイズ
 void DiskBasicFatBuffer::Copy(const wxUint8 *buf, size_t len)
 {
-	if (buffer) {
-		memcpy(buffer, buf, len < size ? len : size);
+	if (p_buffer) {
+		len = len < (size_t)m_size ? len : m_size;
+		memcpy(p_buffer, buf, len);
 	}
 }
+/// 累計位置が範囲内か
+/// @return 0:範囲内にある -1:範囲外(accume_posのほうが小さい) 1:範囲外(accume_posの方が大きい)
+int DiskBasicFatBuffer::InRange(wxUint32 accume_pos) const
+{
+	if (accume_pos < m_accume_start) return -1;
+	else if (m_accume_start + m_size <= accume_pos) return 1;
+	else return 0;
+}
+
+/// 累計位置を範囲内の指定位置に変換
+wxUint32 DiskBasicFatBuffer::ConvPos(wxUint32 accume_pos) const
+{
+	return accume_pos - m_accume_start;
+}
+
 /// 指定位置のデータを返す(8ビット)
 /// @param[in] pos 位置(8ビット1単位)
 /// @return 値
 wxUint32 DiskBasicFatBuffer::Get(size_t pos) const
 {
-	return buffer ? buffer[pos] : INVALID_GROUP_NUMBER;
+	return p_buffer ? p_buffer[pos] : INVALID_GROUP_NUMBER;
 }
 /// 指定位置にデータをセット(8ビット)
 /// @param[in] pos 位置(8ビット1単位)
 /// @param[in] val 値
 void DiskBasicFatBuffer::Set(size_t pos, wxUint32 val)
 {
-	if (buffer) {
-		buffer[pos] = (wxUint8)val;
+	if (p_buffer) {
+		p_buffer[pos] = (wxUint8)val;
 	}
 }
 /// 指定位置のビットをセット/リセット
@@ -290,16 +311,16 @@ bool DiskBasicFatBuffer::BitTest(wxUint32 pos, wxUint8 mask, bool invert)
 /// @return 値
 wxUint32 DiskBasicFatBuffer::Get16LE(size_t pos) const
 {
-	return buffer ? ((wxUint32)buffer[pos] | buffer[pos+1] << 8) : INVALID_GROUP_NUMBER;
+	return p_buffer ? ((wxUint32)p_buffer[pos] | p_buffer[pos+1] << 8) : INVALID_GROUP_NUMBER;
 }
 /// 指定位置にデータをセット(16ビット、リトルエンディアン)
 /// @param[in] pos    位置(8ビット1単位)
 /// @param[in] val    値
 void DiskBasicFatBuffer::Set16LE(size_t pos, wxUint32 val)
 {
-	if (buffer) {
-		buffer[pos]   = (val & 0xff);
-		buffer[pos+1] = ((val >> 8) & 0xff);
+	if (p_buffer) {
+		p_buffer[pos]   = (val & 0xff);
+		p_buffer[pos+1] = ((val >> 8) & 0xff);
 	}
 }
 /// 指定位置のデータを返す(16ビット、ビッグエンディアン)
@@ -307,16 +328,16 @@ void DiskBasicFatBuffer::Set16LE(size_t pos, wxUint32 val)
 /// @return 値 
 wxUint32 DiskBasicFatBuffer::Get16BE(size_t pos) const
 {
-	return buffer ? ((wxUint32)buffer[pos] << 8 | buffer[pos+1]) : INVALID_GROUP_NUMBER;
+	return p_buffer ? ((wxUint32)p_buffer[pos] << 8 | p_buffer[pos+1]) : INVALID_GROUP_NUMBER;
 }
 /// 指定位置にデータをセット(16ビット、ビッグエンディアン)
 /// @param[in] pos    位置(8ビット1単位)
 /// @param[in] val    値
 void DiskBasicFatBuffer::Set16BE(size_t pos, wxUint32 val)
 {
-	if (buffer) {
-		buffer[pos]   = ((val >> 8) & 0xff);
-		buffer[pos+1] = (val & 0xff);
+	if (p_buffer) {
+		p_buffer[pos]   = ((val >> 8) & 0xff);
+		p_buffer[pos+1] = (val & 0xff);
 	}
 }
 
@@ -329,20 +350,65 @@ WX_DEFINE_OBJARRAY(ArrayDiskBasicFatBuffer);
 //
 //////////////////////////////////////////////////////////////////////
 
+DiskBasicFatBuffers::DiskBasicFatBuffers()
+	: ArrayDiskBasicFatBuffer()
+{
+	m_size = 1;
+}
+
+/// コピーコンストラクタ
+DiskBasicFatBuffers::DiskBasicFatBuffers(const DiskBasicFatBuffers &src)
+	: ArrayDiskBasicFatBuffer(src)
+{
+	m_size = src.m_size;
+}
+
+/// 代入
+DiskBasicFatBuffers &DiskBasicFatBuffers::operator=(const DiskBasicFatBuffers &src)
+{
+	ArrayDiskBasicFatBuffer::operator=(src);
+	m_size = src.m_size;
+	return *this;
+}
+
+/// 位置からセクタ位置を返す
+/// @return -1:範囲外
+bool DiskBasicFatBuffers::GetSectorIndex(wxUint32 &pos, size_t &idx) const
+{
+	idx = pos / m_size;
+	int cmp = 0;
+	while(idx < Count()) {
+		cmp = Item(idx).InRange(pos);
+		if (cmp == 0) {
+			pos = Item(idx).ConvPos(pos);
+			break;
+		}
+		idx += cmp;
+	}
+	return (idx < Count());
+}
+
 /// 8ビットデータを返す
 /// @param[in] pos 位置(8ビット1単位)
 /// @return 値
 wxUint32 DiskBasicFatBuffers::GetData8(wxUint32 pos) const
 {
 	wxUint32 val = INVALID_GROUP_NUMBER;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		val = Item(idx).Get(pos);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			val = buf->Get(pos);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 	return val;
 }
 /// 8ビットデータをセット
@@ -350,14 +416,21 @@ wxUint32 DiskBasicFatBuffers::GetData8(wxUint32 pos) const
 /// @param[in] val 値
 void DiskBasicFatBuffers::SetData8(wxUint32 pos, wxUint32 val)
 {
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		Item(idx).Set(pos, val);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			buf->Set(pos, val);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 }
 /// 8ビットデータが一致するか
 /// @param[in] pos 位置(8ビット1単位)
@@ -366,14 +439,21 @@ void DiskBasicFatBuffers::SetData8(wxUint32 pos, wxUint32 val)
 bool DiskBasicFatBuffers::MatchData8(wxUint32 pos, wxUint32 val) const
 {
 	bool match = false;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		match = (Item(idx).Get(pos) == val);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			match = (buf->Get(pos) == val);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 	return match;
 }
 /// 8ビットデータのビットをセット/リセット
@@ -385,12 +465,19 @@ bool DiskBasicFatBuffers::MatchData8(wxUint32 pos, wxUint32 val) const
 bool DiskBasicFatBuffers::BitData8(wxUint32 pos, wxUint8 mask, bool val, bool invert)
 {
 	bool processed = false;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		processed = Item(idx).Bit(pos, mask, val, invert);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		processed = buf->Bit(pos, mask, val, invert);
 		if (processed) break;
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 	return processed;
 }
 /// 12ビットデータ(リトルエンディアン)を返す
@@ -402,13 +489,20 @@ wxUint32 DiskBasicFatBuffers::GetData12LE(wxUint32 pos) const
 	bool odd = ((pos & 1) != 0);
 	pos = pos * 3 / 2;
 	int cnt = 0;
-	for(size_t i = 0; i < Count() && cnt < 2; i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (!GetSectorIndex(pos, idx)) {
+		return val;
+	}
+#endif
+	for (; idx < Count() && cnt < 2; idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		while (pos < (wxUint32)buf->GetSize() && cnt < 2) {
 			wxUint32 tmp = buf->Get(pos);
 			if (cnt == 0) {
 				val = odd ? tmp >> 4 : tmp;
-			} else {
+			}
+			else {
 				val |= odd ? tmp << 4 : (tmp & 0x0f) << 8;
 			}
 			pos++;
@@ -427,13 +521,20 @@ void DiskBasicFatBuffers::SetData12LE(wxUint32 pos, wxUint32 val)
 	bool odd = ((pos & 1) != 0);
 	pos = pos * 3 / 2;
 	int cnt = 0;
-	for(size_t i = 0; i < Count() && cnt < 2; i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (!GetSectorIndex(pos, idx)) {
+		return;
+	}
+#endif
+	for (; idx < Count() && cnt < 2; idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		while (pos < (wxUint32)buf->GetSize() && cnt < 2) {
 			wxUint32 tmp = buf->Get(pos);
 			if (cnt == 0) {
 				tmp = odd ? ((val & 0x0f) << 4) | (tmp & 0x0f) : (val & 0xff);
-			} else {
+			}
+			else {
 				tmp = odd ? (val >> 4) & 0xff : ((val >> 8) & 0x0f) | (tmp & 0xf0);
 			}
 			buf->Set(pos, tmp);
@@ -451,14 +552,21 @@ wxUint32 DiskBasicFatBuffers::GetData16LE(wxUint32 pos) const
 {
 	wxUint32 val = INVALID_GROUP_NUMBER;
 	pos *= 2;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		val = Item(idx).Get16LE(pos);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			val = buf->Get16LE(pos);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 	return val;
 }
 /// 16ビットデータ(リトルエンディアン)をセット
@@ -467,14 +575,21 @@ wxUint32 DiskBasicFatBuffers::GetData16LE(wxUint32 pos) const
 void DiskBasicFatBuffers::SetData16LE(wxUint32 pos, wxUint32 val)
 {
 	pos *= 2;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		Item(idx).Set16LE(pos, val);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			buf->Set16LE(pos, val);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 }
 
 /// 16ビットデータ(ビッグエンディアン)を返す
@@ -484,14 +599,21 @@ wxUint32 DiskBasicFatBuffers::GetData16BE(wxUint32 pos) const
 {
 	wxUint32 val = INVALID_GROUP_NUMBER;
 	pos *= 2;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		val = Item(idx).Get16BE(pos);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			val = buf->Get16BE(pos);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 	return val;
 }
 /// 16ビットデータ(ビッグエンディアン)をセット
@@ -500,14 +622,21 @@ wxUint32 DiskBasicFatBuffers::GetData16BE(wxUint32 pos) const
 void DiskBasicFatBuffers::SetData16BE(wxUint32 pos, wxUint32 val)
 {
 	pos *= 2;
-	for(size_t i = 0; i < Count(); i++) {
-		DiskBasicFatBuffer *buf = &Item(i);
+	size_t idx = 0;
+#if 0
+	if (GetSectorIndex(pos, idx)) {
+		Item(idx).Set16BE(pos, val);
+	}
+#else
+	for(; idx < Count(); idx++) {
+		DiskBasicFatBuffer *buf = &Item(idx);
 		if (pos < (wxUint32)buf->GetSize()) {
 			buf->Set16BE(pos, val);
 			break;
 		}
 		pos -= (wxUint32)buf->GetSize();
 	}
+#endif
 }
 
 WX_DEFINE_OBJARRAY(ArrayArrayDiskBasicFatBuffer);
@@ -521,26 +650,26 @@ WX_DEFINE_OBJARRAY(ArrayArrayDiskBasicFatBuffer);
 DiskBasicFatArea::DiskBasicFatArea()
 	: ArrayArrayDiskBasicFatBuffer()
 {
-	valid_count = Count();
+	m_valid_count = Count();
 }
 /// コピーコンストラクタ
 DiskBasicFatArea::DiskBasicFatArea(const DiskBasicFatArea &src)
 	: ArrayArrayDiskBasicFatBuffer(src)
 {
-	valid_count = src.valid_count;
+	m_valid_count = src.m_valid_count;
 }
 /// 代入
 DiskBasicFatArea &DiskBasicFatArea::operator=(const DiskBasicFatArea &src)
 {
 	ArrayArrayDiskBasicFatBuffer::operator=(src);
-	valid_count = src.valid_count;
+	m_valid_count = src.m_valid_count;
 	return *this;
 }
 /// クリア
 void DiskBasicFatArea::Empty()
 {
 	ArrayArrayDiskBasicFatBuffer::Empty();
-	valid_count = 0;
+	m_valid_count = 0;
 }
 /// 追加
 /// @param[in] lItem   追加するアイテム
@@ -548,7 +677,7 @@ void DiskBasicFatArea::Empty()
 void DiskBasicFatArea::Add(const DiskBasicFatBuffers &lItem, size_t nInsert)
 {
 	ArrayArrayDiskBasicFatBuffer::Add(lItem, nInsert);
-	valid_count = Count();
+	m_valid_count = Count();
 }
 /// 8ビットデータを返す
 /// @param[in] idx    ミラーリング位置
@@ -728,8 +857,8 @@ void DiskBasicFatArea::SetData16BE(size_t idx, wxUint32 pos, wxUint32 val)
 
 DiskBasicFat::DiskBasicFat(DiskBasic *basic)
 {
-	this->basic = basic;
-	type = NULL;
+	p_basic = basic;
+	p_type = NULL;
 	Clear();
 }
 DiskBasicFat::~DiskBasicFat()
@@ -744,47 +873,48 @@ double DiskBasicFat::Assign(bool is_formatting)
 {
 	double valid_ratio = 1.0;
 
-	int sector_num = basic->GetFatStartSector();
-	int side_num = basic->GetReversedSideNumber(basic->GetFatSideNumber());
+	int sector_num = p_basic->GetFatStartSector();
+	int side_num = p_basic->GetReversedSideNumber(p_basic->GetFatSideNumber());
 
-	bufs.Empty();
+	m_bufs.Empty();
 
-	type = basic->GetType();
+	p_type = p_basic->GetType();
 
 	if (sector_num >= 0) {
 		DiskImageTrack *managed_track;
 		if (side_num >= 0) {
 			// トラック、サイド番号から計算
-			managed_track = basic->GetTrack(basic->GetManagedTrackNumber(), side_num);
+			managed_track = p_basic->GetTrack(p_basic->GetManagedTrackNumber(), side_num);
 		} else {
 			// セクタ番号の通し番号で計算
-			managed_track = basic->GetManagedTrack(basic->GetReservedSectors(), &side_num, &sector_num);
+			managed_track = p_basic->GetManagedTrack(p_basic->GetReservedSectors(), &side_num, &sector_num);
 		}
 		if (!managed_track) {
 			return -1.0;
 		}
 		// セクタ位置を得る
-		start = type->GetSectorPosFromNum(basic->GetManagedTrackNumber(), side_num, sector_num, 0, 1);
+		m_start = p_type->GetSectorPosFromNum(p_basic->GetManagedTrackNumber(), side_num, sector_num, 0, 1);
 
-		count =			basic->GetNumberOfFats();
-		size =			basic->GetSectorsPerFat();
-		start_pos =		basic->GetFatStartPos();
-		vcount =		basic->GetValidNumberOfFats();
-		if (vcount < 0) {
-			vcount = count;
+		m_count =		p_basic->GetNumberOfFats();
+		m_size =		p_basic->GetSectorsPerFat();
+		m_start_pos =	p_basic->GetFatStartPos();
+		m_vcount =		p_basic->GetValidNumberOfFats();
+		if (m_vcount < 0) {
+			m_vcount = m_count;
 		}
 
-		type->CalcManagedStartGroup();
+		p_type->CalcManagedStartGroup();
 
 		// set buffer pointer for useful accessing
-		int start_sector = start;
-		int end_sector = start + size - 1;
-		for(int fat_num = 0; fat_num < count && valid_ratio >= 0.0; fat_num++) {
+		int start_sector = m_start;
+		int end_sector = m_start + m_size - 1;
+		for(int fat_num = 0; fat_num < m_count && valid_ratio >= 0.0; fat_num++) {
 			DiskBasicFatBuffers fatbufs;
+			int totalpos = 0;
 			for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
 				int div_num = 0;
 				int div_nums = 1;
-				DiskImageSector *sector = basic->GetSectorFromSectorPos(sec_num, &div_num, &div_nums);
+				DiskImageSector *sector = p_basic->GetSectorFromSectorPos(sec_num, &div_num, &div_nums);
 				if (!sector) {
 					valid_ratio = -1.0;
 					break;
@@ -798,23 +928,27 @@ double DiskBasicFat::Assign(bool is_formatting)
 //				sector_size = ssize;
 				if (sec_num == start_sector) {
 					// 最初のセクタだけ開始位置がずれる
-					buf += start_pos;
-					ssize -= start_pos;
+					buf += m_start_pos;
+					ssize -= m_start_pos;
 				}
-				DiskBasicFatBuffer fatbuf(buf, ssize);
+				DiskBasicFatBuffer fatbuf(buf, ssize, totalpos);
 				fatbufs.Add(fatbuf);
+				totalpos += ssize;
+				if (ssize > fatbufs.GetSize()) {
+					fatbufs.SetSize(ssize);
+				}
 			}
-			bufs.Add(fatbufs);
+			m_bufs.Add(fatbufs);
 
-			start_sector += size;
-			end_sector += size;
+			start_sector += m_size;
+			end_sector += m_size;
 		}
 
-		bufs.SetValidCount(vcount);
+		m_bufs.SetValidCount(m_vcount);
 	}
 
 	if (valid_ratio >= 0.0) {
-		valid_ratio = type->CheckFat(is_formatting);
+		valid_ratio = p_type->CheckFat(is_formatting);
 	}
 
 	return valid_ratio;
@@ -822,13 +956,13 @@ double DiskBasicFat::Assign(bool is_formatting)
 /// FATエリアのアサインを解除
 void DiskBasicFat::Clear()
 {
-	count = 0;
-	vcount = 0;
-	size = 0;
-	start = 0;
-	start_pos = 0;
+	m_count = 0;
+	m_vcount = 0;
+	m_size = 0;
+	m_start = 0;
+	m_start_pos = 0;
 
-	bufs.Clear();
+	m_bufs.Clear();
 }
 /// FATエリアのアサインを解除
 void DiskBasicFat::Empty()
@@ -841,7 +975,7 @@ void DiskBasicFat::Empty()
 wxUint8 DiskBasicFat::Get(int pos) const
 {
 	wxUint8 code = 0;
-	DiskImageSector *sector = basic->GetSectorFromSectorPos(start);
+	DiskImageSector *sector = p_basic->GetSectorFromSectorPos(m_start);
 	if (sector) {
 		wxUint8 *buf = sector->GetSectorBuffer();
 		int size = sector->GetSectorBufferSize();
@@ -857,9 +991,9 @@ wxUint8 DiskBasicFat::Get(int pos) const
 /// @param[in] code コード
 void DiskBasicFat::Set(int pos, wxUint8 code)
 {
-	int start_sector = start;
-	for(int fat_num = 0; fat_num < vcount; fat_num++) {
-		DiskImageSector *sector = basic->GetSectorFromSectorPos(start_sector);
+	int start_sector = m_start;
+	for(int fat_num = 0; fat_num < m_vcount; fat_num++) {
+		DiskImageSector *sector = p_basic->GetSectorFromSectorPos(start_sector);
 		if (sector) {
 			wxUint8 *buf = sector->GetSectorBuffer();
 			int size = sector->GetSectorBufferSize();
@@ -867,7 +1001,7 @@ void DiskBasicFat::Set(int pos, wxUint8 code)
 				buf[pos] = code;
 			}
 		}
-		start_sector += size;
+		start_sector += m_size;
 	}
 }
 
@@ -876,13 +1010,13 @@ void DiskBasicFat::Set(int pos, wxUint8 code)
 /// @param[in] len サイズ
 void DiskBasicFat::Copy(const wxUint8 *buf, size_t len)
 {
-	int start_sector = start;
-	for(int fat_num = 0; fat_num < vcount; fat_num++) {
-		DiskImageSector *sector = basic->GetSectorFromSectorPos(start_sector);
+	int start_sector = m_start;
+	for(int fat_num = 0; fat_num < m_vcount; fat_num++) {
+		DiskImageSector *sector = p_basic->GetSectorFromSectorPos(start_sector);
 		if (sector) {
 			sector->Copy(buf, (int)len);
 		}
-		start_sector += size;
+		start_sector += m_size;
 	}
 }
 
@@ -890,17 +1024,17 @@ void DiskBasicFat::Copy(const wxUint8 *buf, size_t len)
 /// @param[in] code コード
 void DiskBasicFat::Fill(wxUint8 code)
 {
-	int start_sector = start;
-	int end_sector = start + size - 1;
-	for(int fat_num = 0; fat_num < count; fat_num++) {
+	int start_sector = m_start;
+	int end_sector = m_start + m_size - 1;
+	for(int fat_num = 0; fat_num < m_count; fat_num++) {
 		for(int sec_num = start_sector; sec_num <= end_sector; sec_num++) {
-			DiskImageSector *sector = basic->GetSectorFromSectorPos(sec_num);
+			DiskImageSector *sector = p_basic->GetSectorFromSectorPos(sec_num);
 			if (sector) {
 				sector->Fill(code);
 			}
 		}
-		start_sector += size;
-		end_sector += size;
+		start_sector += m_size;
+		end_sector += m_size;
 	}
 }
 
@@ -908,10 +1042,10 @@ void DiskBasicFat::Fill(wxUint8 code)
 /// @param[in] idx ミラーリングしているときのインデックス
 DiskBasicFatBuffers *DiskBasicFat::GetDiskBasicFatBuffers(size_t idx)
 {
-	if (idx >= bufs.Count()) {
+	if (idx >= m_bufs.Count()) {
 		return NULL;
 	}
-	return &bufs.Item(idx);
+	return &m_bufs.Item(idx);
 }
 
 /// FATバッファ（セクタ）を返す

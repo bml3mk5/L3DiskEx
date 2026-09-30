@@ -34,7 +34,7 @@ RawExpBox::RawExpBox(wxWindow* parent, wxWindowID id, const wxString &caption, D
 
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, FromDIP(4));
 	long style = 0;
-	wxSize size(32,-1);
+	wxSize size(FromDIP(32),-1);
 	wxTextValidator validate(wxFILTER_EMPTY | wxFILTER_DIGITS);
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);

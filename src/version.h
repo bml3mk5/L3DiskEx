@@ -10,10 +10,10 @@
 #define APPLICATION_NAME		"l3diskex"
 #define APPLICATION_XPMICON_NAME l3diskex_xpm
 
-#define APPLICATION_VERSION	"0.8.5"
+#define APPLICATION_VERSION	"0.8.6"
 #define APP_VER_MAJOR	0
 #define APP_VER_MINOR	8
-#define APP_VER_REV	5
+#define APP_VER_REV	6
 #define APP_VER_BUILD	0
 #define APP_COPYRIGHT	"Copyright (C) 2015-2026 Sasaji"
 

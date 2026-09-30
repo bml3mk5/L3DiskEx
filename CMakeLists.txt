@@ -61,6 +61,7 @@ add_executable(${PROJECT_NAME}
 	${SRCBASICFMTDIR}/basictype_amiga.cpp
 	${SRCBASICFMTDIR}/basictype_m68fdos.cpp
 	${SRCBASICFMTDIR}/basictype_trsdos.cpp
+	${SRCBASICFMTDIR}/basictype_s1os.cpp
 	${SRCBASICFMTDIR}/basicfat.cpp
 	${SRCBASICFMTDIR}/basicdiritem_fat8.cpp
 	${SRCBASICFMTDIR}/basicdiritem_fm.cpp
@@ -95,6 +96,7 @@ add_executable(${PROJECT_NAME}
 	${SRCBASICFMTDIR}/basicdiritem_amiga.cpp
 	${SRCBASICFMTDIR}/basicdiritem_m68fdos.cpp
 	${SRCBASICFMTDIR}/basicdiritem_trsdos.cpp
+	${SRCBASICFMTDIR}/basicdiritem_s1os.cpp
 	${SRCBASICFMTDIR}/basicdiritem.cpp
 	${SRCBASICFMTDIR}/basicdir.cpp
 	${SRCBASICFMTDIR}/basicfmt.cpp
@@ -124,11 +126,13 @@ add_executable(${PROJECT_NAME}
 	${SRCDISKIMGDIR}/diskwriter.cpp
 	${SRCDISKIMGDIR}/diskresult.cpp
 	${SRCDISKIMGDIR}/fileparam.cpp
+	${SRCUIDIR}/aboutbox.cpp
 	${SRCUIDIR}/basicselbox.cpp
 	${SRCUIDIR}/basicparambox.cpp
 	${SRCUIDIR}/configbox.cpp
 	${SRCUIDIR}/diskparambox.cpp
 	${SRCUIDIR}/diskreplacebox.cpp
+	${SRCUIDIR}/filedirbox.cpp
 	${SRCUIDIR}/fileselbox.cpp
 	${SRCUIDIR}/fontminibox.cpp
 	${SRCUIDIR}/intnamebox.cpp
@@ -147,6 +151,7 @@ add_executable(${PROJECT_NAME}
 	${SRCUIDIR}/uidisklist.cpp
 	${SRCUIDIR}/uifilelist.cpp
 	${SRCUIDIR}/uimainframe.cpp
+	${SRCUIDIR}/uimainpanel.cpp
 	${SRCUIDIR}/uimainprocess.cpp
 	${SRCUIDIR}/uirawdisk.cpp
 	${SRCUIDIR}/uifatarea.cpp

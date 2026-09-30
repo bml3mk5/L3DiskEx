@@ -183,7 +183,7 @@ bool DiskBasicTypeProDOS::AssignRootDirectory(int start_sector, int end_sector, 
 
 	// ボリュームヘッダの内容をコピーする
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
-	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->GetTrack(), gitem->GetSide(), gitem->GetSectorStart());
 	directory_t *vol = (directory_t *)sector->GetSectorBuffer(4);
 	dir_item->CopyData(vol);
 	// ディレクトリ属性にしておく
@@ -322,7 +322,7 @@ void DiskBasicTypeProDOS::CalcDiskFreeSize(bool wrote)
 	if (root) {
 		const DiskBasicGroups *root_groups = &root->GetGroups();
 		for(size_t i=0; i<root_groups->Count(); i++) {
-			fat_availability.Set(root_groups->Item(i).group, FAT_AVAIL_SYSTEM);
+			fat_availability.Set(root_groups->Item(i).GetGroup(), FAT_AVAIL_SYSTEM);
 		}
 	}
 //	free_disk_size = (int)fsize;
@@ -603,8 +603,8 @@ int DiskBasicTypeProDOS::ChainDirectoryGroups(DiskBasicDirItem *item, DiskBasicG
 	prodos_dir_ptr_t *prev = NULL;
 	for(size_t i=0; i<group_items.Count(); i++) {
 		DiskBasicGroupItem *item = &group_items.Item(i);
-		if (item->group != group_num) {
-			group_num = item->group;
+		if (item->GetGroup() != group_num) {
+			group_num = item->GetGroup();
 			DiskImageSector *sector = basic->GetSectorFromGroup(group_num);
 			prodos_dir_ptr_t *curr = (prodos_dir_ptr_t *)sector->GetSectorBuffer();
 
@@ -870,7 +870,7 @@ void DiskBasicTypeProDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *ite
 
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->GetTrack(), gitem->GetSide(), gitem->GetSectorStart());
 
 	wxUint8 *buf = sector->GetSectorBuffer(4);
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);

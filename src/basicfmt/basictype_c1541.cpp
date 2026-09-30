@@ -310,7 +310,7 @@ bool DiskBasicTypeC1541::CalcGroupsOnRootDirectory(int start_sector, int end_sec
 int DiskBasicTypeC1541::InitializeSectorsAsDirectory(DiskBasicGroups &group_items, int &file_size, int &size_remain, DiskBasicError &errinfo)
 {
 	for(size_t i=0; i<group_items.Count(); i++) {
-		DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Item(i).group);
+		DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Item(i).GetGroup());
 		sector->Fill(0, sector->GetSectorSize() - 2, 2);
 	}
 
@@ -350,7 +350,7 @@ void DiskBasicTypeC1541::CalcDiskFreeSize(bool wrote)
 	if (root) {
 		const DiskBasicGroups *root_groups = &root->GetGroups();
 		for(size_t i=0; i<root_groups->Count(); i++) {
-			fat_availability.Set(root_groups->Item(i).group, FAT_AVAIL_SYSTEM);
+			fat_availability.Set(root_groups->Item(i).GetGroup(), FAT_AVAIL_SYSTEM);
 		}
 	}
 
@@ -526,7 +526,7 @@ int DiskBasicTypeC1541::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 	if (flags == ALLOCATE_GROUPS_APPEND) {
 		// ディレクトリ拡張時
 		remain = bytes_per_group;
-		group_num = item->GetGroups().Last().group;
+		group_num = item->GetGroups().Last().GetGroup();
 	}
 	while(remain > 0 && limit >= 0) {
 		// 空きをさがす
@@ -972,7 +972,7 @@ void DiskBasicTypeC1541::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 
 		// データへのポインタを設定
 		for(int i = 0; i < 120 && data_pos < blocks; i++) {
-			GetNumFromSectorPosS(data_groups->Item(data_pos).group, track_num, sector_num);
+			GetNumFromSectorPosS(data_groups->Item(data_pos).GetGroup(), track_num, sector_num);
 			track_num += C1541_START_TRACK_OFFSET;
 			sector_num += C1541_START_SECTOR_OFFSET;
 

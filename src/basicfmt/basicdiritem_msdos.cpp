@@ -12,6 +12,7 @@
 #include "../charcodes.h"
 #include "../utils.h"
 
+//#define USE_VFAT_LFN 1
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -143,7 +144,8 @@ void DiskBasicDirItemMSDOS::SetFileType1(int val)
 /// 使用しているアイテムか
 bool DiskBasicDirItemMSDOS::CheckUsed(bool unuse)
 {
-	return (m_data.Data()->msdos.name[0] != 0 && m_data.Data()->msdos.name[0] != 0xe5);
+	wxUint8 ch = m_data.Data()->msdos.name[0];
+	return (ch != 0 && ch != 0xe5);
 }
 
 /// ファイル名を設定
@@ -212,7 +214,7 @@ void DiskBasicDirItemMSDOS::GetNativeName(wxUint8 *filename, size_t size, size_t
 	} while(num <= 1);
 
 	if (nl > 0) {
-		// 0x05を0xe5に変換(Sjift JISなど2バイト系文字など)
+		// 0x05を0xe5に変換(Shift JISなど2バイト系文字など)
 		if (filename[0] == 0x05) filename[0] = 0xe5;
 	}
 
@@ -735,14 +737,17 @@ void DiskBasicDirItemMSDOS::SetInternalDataInAttrDialog(KeyValArray &vals)
 DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic)
 	: DiskBasicDirItemMSDOS(basic)
 {
+	m_has_lfn = false;
 }
 DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data)
 	: DiskBasicDirItemMSDOS(basic, n_sector, n_secpos, n_data)
 {
+	m_has_lfn = false;
 }
 DiskBasicDirItemVFAT::DiskBasicDirItemVFAT(DiskBasic *basic, int n_num, const DiskBasicGroupItem *n_gitem, DiskImageSector *n_sector, int n_secpos, wxUint8 *n_data, const SectorParam *n_next, bool &n_unuse)
 	: DiskBasicDirItemMSDOS(basic, n_num, n_gitem, n_sector, n_secpos, n_data, n_next, n_unuse)
 {
+	m_has_lfn = false;
 }
 
 /// ファイル名を格納する位置を返す
@@ -824,6 +829,47 @@ void DiskBasicDirItemVFAT::SetNativeName(wxUint8 *filename, size_t size, size_t 
 /// @param [out]    length   長さ
 void DiskBasicDirItemVFAT::GetNativeName(wxUint8 *filename, size_t size, size_t &length) const
 {
+#ifdef USE_VFAT_LFN
+	if (m_has_lfn) {
+		// ロングファイル名を取得
+		if (!GetNativeNameLFN(filename, size, length)) {
+			// ロングファイル名を取得出来ないときは、ショートファイル名
+			GetNativeNameSFN(filename, size, length);
+		}
+	} else {
+		// LFNエントリ
+		GetNativeNameSFN(filename, size, length);
+	}
+#else
+	GetNativeNameSFN(filename, size, length);
+#endif
+}
+
+/// @brief 拡張子を得る
+/// @param [in,out] fileext  拡張子
+/// @param [in]     size     バッファサイズ
+/// @param [out]    length   長さ
+/// @note データビットは反転させたまま
+void DiskBasicDirItemVFAT::GetNativeExt(wxUint8 *fileext, size_t size, size_t &length) const
+{
+#ifdef USE_VFAT_LFN
+	if (m_has_lfn) {
+		// 拡張子は無視
+		length = 0;
+	} else {
+		DiskBasicDirItemMSDOS::GetNativeExt(fileext, size, length);
+	}
+#else
+	DiskBasicDirItemMSDOS::GetNativeExt(fileext, size, length);
+#endif
+}
+
+/// ショートファイル名を得る
+/// @param [in,out] filename ファイル名
+/// @param [in]     size     バッファサイズ
+/// @param [out]    length   長さ
+void DiskBasicDirItemVFAT::GetNativeNameSFN(wxUint8 *filename, size_t size, size_t &length) const
+{
 	wxUint8 *n = NULL;
 	size_t nl = 0;
 	int num = 0;
@@ -844,11 +890,148 @@ void DiskBasicDirItemVFAT::GetNativeName(wxUint8 *filename, size_t size, size_t 
 	} while(num <= 4);
 
 	if (nl > 0) {
-		// 0x05を0xe5に変換(Sjift JISなど2バイト系文字など)
+		// 0x05を0xe5に変換(Shift JISなど2バイト系文字など)
 		if (filename[0] == 0x05) filename[0] = 0xe5;
 	}
 
 	length = nl;
+}
+
+/// SFNのチェックサムを計算する
+wxUint8 DiskBasicDirItemVFAT::CalcCheckSumSFN() const
+{
+	wxUint8 sum = 0;
+	for(int i=0; i<11; i++) {
+		sum = (sum >> 1) + (sum << 7);
+		sum += m_data.Data()->msdos.name[i];	// ext[3]も含む
+	}
+	return sum;
+}
+
+/// ロングファイル名を得る
+/// @param [in,out] filename ファイル名
+/// @param [in]     size     バッファサイズ
+/// @param [out]    length   長さ
+/// @return false LFNなし
+bool DiskBasicDirItemVFAT::GetNativeNameLFN(wxUint8 *filename, size_t size, size_t &length) const
+{
+	bool valid = false;
+	wxUint8 name_str[512];
+	size_t name_len = 0;
+	length = 0;
+
+	if (!m_parent) {
+		// LFNなし
+		return valid;
+	}
+
+	// チェックサムを計算
+	wxUint8 sum = CalcCheckSumSFN();
+
+	// このエントリが含まれるディレクトリ内のエントリリスト
+	DiskBasicDirItems *items = m_parent->GetChildren();
+	// LFNエントリはこのエントリの直前にあるはず
+	for(int n = m_num - 1, cnt = 1; n >= 0 && cnt <= 20; n--, cnt++) {
+		DiskBasicDirItem *item = items->Item(n);
+		if (!item) {
+			break;
+		}
+		// 属性がLFNか
+		int t1 = item->GetData()->mslfn.type;
+		if ((t1 & FILETYPE_MASK_MS_LFN) != FILETYPE_MASK_MS_LFN) {
+			// LFNではない
+			break;
+		}
+		// チェックサムが一致するか
+		if (item->GetData()->mslfn.chksum != sum) {
+			// LFNが不正？
+			break;
+		}
+		// オーダー順が一致するか
+		if ((item->GetData()->mslfn.order & 0x3f) != cnt) {
+			// LFNが不正？
+			break;
+		}
+		// LFNファイル名取得(UTF16LE)
+		memcpy(&name_str[name_len], item->GetData()->mslfn.name, sizeof(item->GetData()->mslfn.name));
+		name_len += sizeof(item->GetData()->mslfn.name);
+		memcpy(&name_str[name_len], item->GetData()->mslfn.name2, sizeof(item->GetData()->mslfn.name2));
+		name_len += sizeof(item->GetData()->mslfn.name2);
+		memcpy(&name_str[name_len], item->GetData()->mslfn.name3, sizeof(item->GetData()->mslfn.name3));
+		name_len += sizeof(item->GetData()->mslfn.name3);
+		name_str[name_len] = 0;
+		name_str[name_len+1] = 0;
+		// 最終オーダーか
+		if (item->GetData()->mslfn.order & 0x40) {
+			valid = true;
+			break;
+		}
+	}
+	if (valid) {
+		// 長さ計算
+		for(size_t i=0; i<(name_len+2); i+=2) {
+			if ((name_str[i] | name_str[i+1]) == 0) {
+				length = i;	// bytes
+				break;
+			}
+		}
+		// コピー
+		if (size > length) size = length;
+		memcpy(filename, name_str, size);
+	}
+	return valid;
+}
+
+/// ディレクトリアイテムをアサインした後の追加処理 ロングファイル名のチェック
+void DiskBasicDirItemVFAT::AdditionalProcessAfterAssigned()
+{
+	m_has_lfn = false;
+
+#ifdef USE_VFAT_LFN
+	if ((m_data.Data()->msdos.type & FILETYPE_MASK_MS_LFN) == FILETYPE_MASK_MS_LFN) {
+		// LFNエントリは無視
+		return;
+	}
+
+	if (!m_parent) {
+		// LFNなし
+		return;
+	}
+
+	// チェックサムを計算
+	wxUint8 sum = CalcCheckSumSFN();
+
+	// このエントリが含まれるディレクトリ内のエントリリスト
+	DiskBasicDirItems *items = m_parent->GetChildren();
+	// LFNエントリはこのエントリの直前にあるはず
+	for(int n = m_num - 1, cnt = 1; n >= 0 && cnt <= 20; n--, cnt++) {
+		DiskBasicDirItem *item = items->Item(n);
+		if (!item) {
+			break;
+		}
+		// 属性がLFNか
+		int t1 = item->GetData()->mslfn.type;
+		if ((t1 & FILETYPE_MASK_MS_LFN) != FILETYPE_MASK_MS_LFN) {
+			// LFNではない
+			break;
+		}
+		// チェックサムが一致するか
+		if (item->GetData()->mslfn.chksum != sum) {
+			// LFNが不正？
+			break;
+		}
+		// オーダー順が一致するか
+		if ((item->GetData()->mslfn.order & 0x3f) != cnt) {
+			// LFNが不正？
+			break;
+		}
+		// 最終オーダーか
+		if (item->GetData()->mslfn.order & 0x40) {
+			m_has_lfn = true;
+			break;
+		}
+	}
+#endif
 }
 
 /// ディレクトリアイテムのチェック
@@ -1007,6 +1190,7 @@ void DiskBasicDirItemVFAT::SetFileAccessDate(const TM &tm)
 	}
 }
 
+#if 0
 /// 最初のグループ番号を設定
 void DiskBasicDirItemVFAT::SetStartGroup(int fileunit_num, wxUint32 val, int size)
 {
@@ -1020,12 +1204,13 @@ wxUint32 DiskBasicDirItemVFAT::GetStartGroup(int fileunit_num) const
 	// MS-DOS
 	return wxUINT16_SWAP_ON_BE(m_data.Data()->msdos.start_group);
 }
+#endif
 
 /// 文字列をバイト列に変換 文字コードは機種依存
 /// @return >=0 バイト数
 int DiskBasicDirItemVFAT::ConvStringToChars(const wxString &src, wxUint8 *dst, size_t len) const
 {
-	if ((GetFileType1() & FILETYPE_MASK_MS_LFN) == FILETYPE_MASK_MS_LFN) {
+	if ((GetFileType1() & FILETYPE_MASK_MS_LFN) == FILETYPE_MASK_MS_LFN || m_has_lfn) {
 		// ロングファイル名は常にUTF-16
 		wxCharBuffer buf = src.mb_str(wxMBConvUTF16());
 		if (buf.length() > 0) {
@@ -1043,7 +1228,7 @@ int DiskBasicDirItemVFAT::ConvStringToChars(const wxString &src, wxUint8 *dst, s
 /// バイト列を文字列に変換 文字コードは機種依存
 void DiskBasicDirItemVFAT::ConvCharsToString(const wxUint8 *src, size_t len, wxString &dst) const
 {
-	if ((GetFileType1() & FILETYPE_MASK_MS_LFN) == FILETYPE_MASK_MS_LFN) {
+	if ((GetFileType1() & FILETYPE_MASK_MS_LFN) == FILETYPE_MASK_MS_LFN || m_has_lfn) {
 		// ロングファイル名は常にUTF-16
 		dst = wxString((const char *)src, wxMBConvUTF16());
 	} else {

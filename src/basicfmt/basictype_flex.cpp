@@ -274,7 +274,7 @@ void DiskBasicTypeFLEX::CalcDiskFreeSize(bool wrote)
 			// 最後のグループ
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
-				wxUint32 gnum = item->GetGroup(gcnt-1)->group;
+				wxUint32 gnum = item->GetGroup(gcnt-1)->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}
@@ -480,11 +480,11 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 			wxUint32 idx_start = 0;
 			for(size_t i = 0; i < group_items.Count(); i++) {
 				DiskBasicGroupItem *gitm = group_items.ItemPtr(i);
-				if (prev_grp == gitm->group) {
+				if (prev_grp == gitm->GetGroup()) {
 					// 同じならスキップ
 					continue;
 				}
-				if (prev_trk == gitm->track && prev_grp + 1 == gitm->group) {
+				if (prev_trk == gitm->GetTrack() && prev_grp + 1 == gitm->GetGroup()) {
 					// グループ番号が連続している
 					idx_count++;
 				} else {
@@ -492,11 +492,11 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 					if (idx_count > 0) {
 						random_groups.Add(idx_start, idx_count, 0, 0, 0, 0, 0, basic->GetGroupsPerSector());
 					}
-					idx_start = gitm->group;
+					idx_start = gitm->GetGroup();
 					idx_count = 1;
 				}
-				prev_trk = gitm->track;
-				prev_grp = gitm->group;
+				prev_trk = gitm->GetTrack();
+				prev_grp = gitm->GetGroup();
 			}
 			if (idx_count > 0) {
 				random_groups.Add(idx_start, idx_count, 0, 0, 0, 0, 0, basic->GetGroupsPerSector());
@@ -515,11 +515,11 @@ int DiskBasicTypeFLEX::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 				for(int pos = 4; pos < LogSecSiz(isector->GetSectorSize()); pos += (int)sizeof(struct st_flex_fsm)) {
 					DiskBasicGroupItem *ritem = random_groups.ItemPtr(idx);
 					int trk_num, sec_num;
-					GetNumFromSectorPosS(ritem->group, trk_num, sec_num);
+					GetNumFromSectorPosS(ritem->GetGroup(), trk_num, sec_num);
 					struct st_flex_fsm *fsm = (struct st_flex_fsm *)&buf[pos];
 					fsm->track = (wxUint8)trk_num;
 					fsm->sector = (wxUint8)sec_num;
-					fsm->count = (wxUint8)(ritem->next);
+					fsm->count = (wxUint8)(ritem->GetNextGroup());
 					idx++;
 					if (idx >= random_groups.Count()) {
 						finished = true;
@@ -662,6 +662,18 @@ void DiskBasicTypeFLEX::GetNumFromSectorPos(int sector_pos, int &track_num, int 
 	// sector_pos は groups_per_track 基準で計算しているので、セクタ数が異なるとサイド番号がずれる
 	NumSectorsParam *sp = basic->SectorsPerTrackOnBasicList().FindByTrackNumber(track_num);
 	if (sp) {
+		// sector_posが範囲内か
+		int sp_sector_pos = (sp->GetSectorsPerTrack() + (track_num * groups_per_track)) * sides_per_disk;
+		if (sector_pos >= sp_sector_pos) {
+			// このsector_posは欠番になる
+			track_num = -1;
+			side_num = -1;
+			sector_num = -1;
+			if (div_num) *div_num = 0;
+			if (div_nums) *div_nums = 1;
+			return;
+		}
+
 		// トラックのセクタ数が異なる場合サイドを再計算
 		sectors_per_track = sp->GetSectorsPerTrack();
 		groups_per_track = groups_per_sector * sectors_per_track;
@@ -822,14 +834,14 @@ void DiskBasicTypeFLEX::FillSector(DiskImageTrack *track, DiskImageSector *secto
 bool DiskBasicTypeFLEX::AdditionalProcessOnFormatted(const DiskBasicIdentifiedData &data)
 {
 	// SIR area
-	DiskImageSector *sector = basic->GetSectorFromSectorPos(2);
-	if (!sector) return false;
-	flex_sir_t *flex = (flex_sir_t *)sector->GetSectorBuffer(SecBufOfs(2 + 1));
+	DiskImageSector *sir_sector = basic->GetSectorFromSectorPos(2);
+	if (!sir_sector) return false;
+	flex_sir_t *flex = (flex_sir_t *)sir_sector->GetSectorBuffer(SecBufOfs(2 + 1));
 	if (!flex) return false;
 
 	flex_sir = flex;
 
-	sector->Fill(0, LogSecSiz(basic->GetSectorSize()), SecBufOfs(2 + 1));
+	sir_sector->Fill(0, LogSecSiz(basic->GetSectorSize()), SecBufOfs(2 + 1));
 
 	// SIRエリアを設定
 
@@ -1018,20 +1030,20 @@ void DiskBasicTypeFLEX::RemakeChainOnFreeArea()
 	for(size_t idx = 0; idx < group_items_count; idx++) {
 		DiskBasicGroupItem *gitem = &group_items.Item(idx);
 		int div_num = 0;
-		sector = basic->GetSectorFromSectorPos(GetSectorPosFromNumS(gitem->track, gitem->sector_start), &div_num);
+		sector = basic->GetSectorFromSectorPos(GetSectorPosFromNumS(gitem->GetTrack(), gitem->GetSectorStart()), &div_num);
 		if (!sector) break;
 		p = (flex_ptr_t *)sector->GetSectorBuffer(SecBufOfs(div_num + 1));
 		if (!p) break;
 
 		if (idx == 0) {
 			// first
-			flex_sir->free_start_track = (wxUint8)gitem->track;
-			flex_sir->free_start_sector = (wxUint8)gitem->sector_start;
+			flex_sir->free_start_track = (wxUint8)gitem->GetTrack();
+			flex_sir->free_start_sector = (wxUint8)gitem->GetSectorStart();
 		}
 		if ((idx + 1) != group_items_count) {
 			DiskBasicGroupItem *next_gitem = &group_items.Item(idx + 1);
-			p->next_track = (wxUint8)next_gitem->track;
-			p->next_sector = (wxUint8)next_gitem->sector_start;
+			p->next_track = (wxUint8)next_gitem->GetTrack();
+			p->next_sector = (wxUint8)next_gitem->GetSectorStart();
 //			p->seq_num = wxUINT16_SWAP_ON_LE(idx + 1);
 			p->seq_num = 0;
 		} else {
@@ -1040,8 +1052,8 @@ void DiskBasicTypeFLEX::RemakeChainOnFreeArea()
 			p->next_sector = 0;
 			p->seq_num = 0;
 
-			flex_sir->free_last_track = (wxUint8)gitem->track;
-			flex_sir->free_last_sector = (wxUint8)gitem->sector_start;
+			flex_sir->free_last_track = (wxUint8)gitem->GetTrack();
+			flex_sir->free_last_sector = (wxUint8)gitem->GetSectorStart();
 		}
 	}
 	flex_sir->free_sector_nums = wxUINT16_SWAP_ON_LE(group_items_count);

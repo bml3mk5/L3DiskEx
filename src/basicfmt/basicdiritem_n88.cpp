@@ -256,7 +256,7 @@ void DiskBasicDirItemN88::TakeAddressesInFile()
 	}
 
 	DiskBasicGroupItem *item = &m_groups.Item(0);
-	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorStart());
 	if (!sector) return;
 
 	bool is_bigendian = basic->IsBigEndian();

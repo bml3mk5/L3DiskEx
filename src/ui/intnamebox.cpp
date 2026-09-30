@@ -84,7 +84,7 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 	wxSizerFlags atitle = wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL);
 	wxSizerFlags flags_b4 = wxSizerFlags().Expand().Border(wxBOTTOM, p4);
 
-	wxSize tsize(INTNAME_COLUMN_WIDTH, -1);
+	wxSize tsize(FromDIP(INTNAME_COLUMN_WIDTH), -1);
 	wxSize size;
 	long style = 0;
 	mNameMaxLen = item->GetFileNameStrSize();
@@ -114,7 +114,7 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 	txtIntName = NULL;
 	if (show_flags & INTNAME_SHOW_TEXT) {
 		szrAll->Add(new wxStaticText(this, wxID_ANY, _("File Name In The Disk Image")), border);
-		size.x = DEFAULT_TEXTWIDTH; size.y = -1;
+		size.x = FromDIP(DEFAULT_TEXTWIDTH); size.y = -1;
 		if (item->IsFileNameEditable()) {
 			IntNameValidator validate(item, _("file name"), basic->GetValidFileName());
 			txtIntName = new wxTextCtrl(this, IDC_TEXT_INTNAME, filename, wxDefaultPosition, size, style, validate);
@@ -302,14 +302,15 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 
 		// グループ番号のリスト
 
-		sz.Set(INTNAME_LISTCOL_WIDTH * 6 + 32, -1);
+		int colw = FromDIP(INTNAME_LISTCOL_WIDTH);
+		sz.Set(FromDIP(INTNAME_LISTCOL_WIDTH * 6 + 32), -1);
 		lstGroups = new wxListCtrl(this, IDC_LIST_GROUPS, wxDefaultPosition, sz, wxLC_REPORT | wxLC_SINGLE_SEL);
-		lstGroups->AppendColumn(_("Group"), wxLIST_FORMAT_LEFT, INTNAME_LISTCOL_WIDTH);
-		lstGroups->AppendColumn(_("Track"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
-		lstGroups->AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
-		lstGroups->AppendColumn(_("Start Sector"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
-		lstGroups->AppendColumn(_("End Sector"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
-		lstGroups->AppendColumn(_("Division"), wxLIST_FORMAT_RIGHT, INTNAME_LISTCOL_WIDTH);
+		lstGroups->AppendColumn(_("Group"), wxLIST_FORMAT_LEFT, colw);
+		lstGroups->AppendColumn(_("Track"), wxLIST_FORMAT_RIGHT, colw);
+		lstGroups->AppendColumn(_("Side"), wxLIST_FORMAT_RIGHT, colw);
+		lstGroups->AppendColumn(_("Start Sector"), wxLIST_FORMAT_RIGHT, colw);
+		lstGroups->AppendColumn(_("End Sector"), wxLIST_FORMAT_RIGHT, colw);
+		lstGroups->AppendColumn(_("Division"), wxLIST_FORMAT_RIGHT, colw);
 		szrAll->Add(lstGroups, fborder);
 
 		lstGroups->SetFont(font);
@@ -319,8 +320,8 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 		if (gConfig.DoesShowInterDirItem()) {
 			// ディレクトリ内部のメタデータリスト
 			lstInternal = new wxListCtrl(this, IDC_LIST_INTERNAL, wxDefaultPosition, sz, wxLC_REPORT | wxLC_SINGLE_SEL);
-			lstInternal->AppendColumn(_("Name"), wxLIST_FORMAT_LEFT, INTNAME_LISTCOL_WIDTH * 2);
-			lstInternal->AppendColumn(_("Value"), wxLIST_FORMAT_LEFT, INTNAME_LISTCOL_WIDTH * 4);
+			lstInternal->AppendColumn(_("Name"), wxLIST_FORMAT_LEFT, colw * 2);
+			lstInternal->AppendColumn(_("Value"), wxLIST_FORMAT_LEFT, colw * 4);
 			szrAll->Add(lstInternal, fborder);
 
 			lstInternal->SetFont(font);
@@ -330,7 +331,7 @@ void IntNameBox::CreateBox(UiDiskProcess *frame, wxWindow* parent, wxWindowID id
 	chkSkipDlg = NULL;
 	if (show_flags & INTNAME_SHOW_SKIP_DIALOG) {
 		// 「以降スキップ」チェックボックス
-		sz.Set(200, 2);
+		sz = FromDIP(wxSize(200, 2));
 		szrAll->Add(new wxStaticLine(this, wxID_ANY, wxDefaultPosition, sz, wxLI_HORIZONTAL), border);
 		chkSkipDlg = new wxCheckBox(this, IDC_CHK_SKIP_DLG, _("Skip the confirmation after this."));
 		chkSkipDlg->SetValue(gConfig.IsSkipImportDialog());
@@ -919,13 +920,13 @@ void IntNameBox::SetGroups(const DiskBasicGroups &vals)
 
 		for(size_t i=0; i < vals.Count(); i++) {
 			DiskBasicGroupItem *item = vals.ItemPtr(i);
-			lstGroups->InsertItem(i, wxString::Format(wxT("%02x"), item->group));
+			lstGroups->InsertItem(i, wxString::Format(wxT("%02x"), item->GetGroup()));
 			int col = 1;
-			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->track));
-			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->side));
-			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->sector_start));
-			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->sector_end));
-			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d/%d"), item->div_num + 1, item->div_nums));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->GetTrack()));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->GetSide()));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->GetSectorStart()));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d"), item->GetSectorEnd()));
+			lstGroups->SetItem(i, col++, wxString::Format(wxT("%d/%d"), item->GetDivNum() + 1, item->GetDivNums()));
 		}
 	}
 }

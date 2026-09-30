@@ -14,7 +14,7 @@
 //
 //
 DiskBasicTypeFAT16::DiskBasicTypeFAT16(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
-	: DiskBasicTypeFATBase(basic, fat, dir)
+	: DiskBasicTypeFAT12(basic, fat, dir)
 {
 }
 
@@ -49,4 +49,26 @@ void DiskBasicTypeFAT16::SetGroupNumber(wxUint32 num, wxUint32 val)
 wxUint32 DiskBasicTypeFAT16::GetGroupNumber(wxUint32 num) const
 {
 	return fat->GetDiskBasicFatArea()->GetData16LE(0, num);
+}
+
+//
+//
+//
+DiskBasicTypeFAT16BE::DiskBasicTypeFAT16BE(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir)
+	: DiskBasicTypeFAT16(basic, fat, dir)
+{
+}
+
+/// FAT位置をセット
+/// @param [in] num グループ番号(0...)
+/// @param [in] val 値
+void DiskBasicTypeFAT16BE::SetGroupNumber(wxUint32 num, wxUint32 val)
+{
+	fat->GetDiskBasicFatArea()->SetData16BE(num, val);
+}
+/// FAT位置を返す
+/// @param [in] num グループ番号(0...)
+wxUint32 DiskBasicTypeFAT16BE::GetGroupNumber(wxUint32 num) const
+{
+	return fat->GetDiskBasicFatArea()->GetData16BE(0, num);
 }

@@ -400,7 +400,7 @@ int DiskBasicDirItemCPM::RecalcFileSize(DiskBasicGroups &group_items, int occupi
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->GetTrack(), litem->GetSide(), litem->GetSectorEnd());
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();

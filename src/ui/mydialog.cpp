@@ -65,7 +65,7 @@ wxTextCtrl *MyDialog::CreateTextCtrlWithButtonBox(wxWindow *parent, const wxStri
 wxTextCtrl *MyDialog::CreateTextCtrlWithButton(wxWindow *parent, wxWindowID textid, const wxString &text, wxWindowID btnid, const wxString &btnlabel, wxButton **button, wxBoxSizer *sizer, const wxSizerFlags &flags)
 {
 	wxBoxSizer *szrH = new wxBoxSizer(wxHORIZONTAL);
-	wxTextCtrl *txt = new wxTextCtrl(parent, textid, text, wxDefaultPosition, wxSize(320, -1));
+	wxTextCtrl *txt = new wxTextCtrl(parent, textid, text, wxDefaultPosition, wxSize(FromDIP(320), -1));
 	szrH->Add(txt, flags);
 	wxButton *btn = new wxButton(parent, btnid, btnlabel);
 	szrH->Add(btn, flags);

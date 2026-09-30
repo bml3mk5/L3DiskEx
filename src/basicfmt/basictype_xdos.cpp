@@ -227,7 +227,7 @@ void DiskBasicTypeXDOS::CalcDiskFreeSize(bool wrote)
 		size_t gcnt = item->GetGroupCount();
 		if (gcnt > 0) {
 			const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-			gnum = gitem->group;
+			gnum = gitem->GetGroup();
 			if (gnum <= basic->GetFatEndGroup()) {
 				fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 			}
@@ -373,9 +373,9 @@ void DiskBasicTypeXDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item,
 	if (group_items.Count() == 0) return;
 
 	const DiskBasicGroupItem *group = group_items.ItemPtr(0);
-	item->SetStartGroup(0, group->group, basic->GetSubDirGroupSize());
+	item->SetStartGroup(0, group->GetGroup(), basic->GetSubDirGroupSize());
 
-	DiskImageSector *sector = basic->GetSector(group->track, group->side, group->sector_start);
+	DiskImageSector *sector = basic->GetSector(group->GetTrack(), group->GetSide(), group->GetSectorStart());
 	if (!sector) return;
 
 	wxUint8 *buf = sector->GetSectorBuffer();

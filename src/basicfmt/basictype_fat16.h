@@ -10,7 +10,7 @@
 
 #include "../common.h"
 #include "basiccommon.h"
-#include "basictype_fat_base.h"
+#include "basictype_fat12.h"
 
 
 /** @class DiskBasicTypeFAT16
@@ -18,11 +18,11 @@
 @brief FAT16の処理
 
 */
-class DiskBasicTypeFAT16 : public DiskBasicTypeFATBase
+class DiskBasicTypeFAT16 : public DiskBasicTypeFAT12
 {
 protected:
-	DiskBasicTypeFAT16() : DiskBasicTypeFATBase() {}
-	DiskBasicTypeFAT16(const DiskBasicType &src) : DiskBasicTypeFATBase(src) {}
+	DiskBasicTypeFAT16() : DiskBasicTypeFAT12() {}
+	DiskBasicTypeFAT16(const DiskBasicType &src) : DiskBasicTypeFAT12(src) {}
 public:
 	DiskBasicTypeFAT16(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
 	virtual ~DiskBasicTypeFAT16() {}
@@ -53,12 +53,6 @@ public:
 
 	/// @name file chain
 	//@{
-//	/// @brief グループ番号から開始セクタ番号を得る
-//	virtual int		GetStartSectorFromGroup(wxUint32 group_num);
-//	/// @brief グループ番号から最終セクタ番号を得る
-//	virtual int		GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
-//	/// @brief データ領域の開始セクタを計算
-//	virtual int		CalcDataStartSectorPos();
 	//@}
 
 	/// @name directory
@@ -71,6 +65,29 @@ public:
 
 	/// @name save / write
 	//@{
+	//@}
+};
+
+/** @class DiskBasicTypeFAT16BE
+
+@brief FAT16の処理 (Big Endien)
+
+*/
+class DiskBasicTypeFAT16BE : public DiskBasicTypeFAT16
+{
+protected:
+	DiskBasicTypeFAT16BE() : DiskBasicTypeFAT16() {}
+	DiskBasicTypeFAT16BE(const DiskBasicType &src) : DiskBasicTypeFAT16(src) {}
+public:
+	DiskBasicTypeFAT16BE(DiskBasic *basic, DiskBasicFat *fat, DiskBasicDir *dir);
+	virtual ~DiskBasicTypeFAT16BE() {}
+
+	/// @name access to FAT area
+	//@{
+	/// @brief FAT位置をセット
+	virtual void		SetGroupNumber(wxUint32 num, wxUint32 val);
+	/// @brief FAT位置を返す
+	virtual wxUint32	GetGroupNumber(wxUint32 num) const;
 	//@}
 };
 

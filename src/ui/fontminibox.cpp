@@ -35,9 +35,9 @@ FontMiniBox::FontMiniBox(wxWindow* parent, wxWindowID id, const wxFont &default_
 
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-	size.x = DEFAULT_TEXTWIDTH * 2; size.y = -1;
+	size.x = FromDIP(DEFAULT_TEXTWIDTH * 2); size.y = -1;
 	comFontName = new wxComboBox(this, IDC_COMBO_FONTNAME, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
-	size.x = 80; size.y = -1;
+	size.x = FromDIP(80); size.y = -1;
 	comFontSize = new wxComboBox(this, IDC_COMBO_FONTSIZE, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN, tVali);
 	hbox->Add(comFontName, flags);
 	hbox->Add(comFontSize, flags);

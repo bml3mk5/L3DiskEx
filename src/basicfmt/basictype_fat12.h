@@ -53,12 +53,6 @@ public:
 
 	/// @name file chain
 	//@{
-//	/// @brief グループ番号から開始セクタ番号を得る
-//	virtual int		GetStartSectorFromGroup(wxUint32 group_num);
-//	/// @brief グループ番号から最終セクタ番号を得る
-//	virtual int		GetEndSectorFromGroup(wxUint32 group_num, wxUint32 next_group, int sector_start, int sector_size, int remain_size);
-//	/// @brief データ領域の開始セクタを計算
-//	virtual int		CalcDataStartSectorPos();
 	//@}
 
 	/// @name directory

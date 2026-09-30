@@ -143,7 +143,7 @@ void DiskBasicTypeSDOS::CalcDiskFreeSize(bool wrote)
 		size_t gcnt = item->GetGroupCount();
 		for(size_t gidx = 0; gidx < gcnt; gidx++) {
 			const DiskBasicGroupItem *gitem = item->GetGroup(gidx);
-			gnum = gitem->group;
+			gnum = gitem->GetGroup();
 			fat_availability.Set(gnum, (gidx == gcnt - 1 ? FAT_AVAIL_USED_LAST : FAT_AVAIL_USED));
 		}
 
@@ -226,7 +226,7 @@ int DiskBasicTypeSDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *it
 	if (rc == 0) {
 		// 最初のグループをセット
 		if (group_items.Count() > 0) {
-			item->SetStartGroup(fileunit_num, group_items.Item(0).group);
+			item->SetStartGroup(fileunit_num, group_items.Item(0).GetGroup());
 		}
 	}
 	return rc;

@@ -130,7 +130,7 @@ bool DiskBasicTypeS1OS::CalcGroupsOnRootDirectory(int start_sector, int end_sect
 	CountGroups(&p_volume->root_size, &p_volume->root_start, group_items);
 
 	if (group_items.Count() > 0) {
-		basic->SetDirEndSector(group_items.Last().group + 1);
+		basic->SetDirEndSector(group_items.Last().GetGroup() + 1);
 	} else {
 		basic->SetDirEndSector(0);
 	}
@@ -191,9 +191,9 @@ int DiskBasicTypeS1OS::InitializeSectorsAsDirectory(DiskBasicGroups &group_items
 		file_size, dir_size);
 	for(size_t idx = 0; idx < group_items.Count() && finish >= -1 && rc >= 0; idx++) {
 		const DiskBasicGroupItem *gitem = &group_items.Item(idx);
-		wxUint32 grp_num = gitem->group;
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
+		wxUint32 grp_num = gitem->GetGroup();
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			// トラックがない！
@@ -204,7 +204,7 @@ int DiskBasicTypeS1OS::InitializeSectorsAsDirectory(DiskBasicGroups &group_items
 
 		const DiskBasicGroupItem *next_gitem = idx + 1 < group_items.Count() ? group_items.ItemPtr(idx + 1) : NULL;
 
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && finish >= -1 && rc >= 0; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && finish >= -1 && rc >= 0; sec_num++) {
 			DiskImageSector *sector = basic->GetSector(trk_num, sid_num, sec_num);
 			if (!sector) {
 				// セクタがない！
@@ -223,11 +223,11 @@ int DiskBasicTypeS1OS::InitializeSectorsAsDirectory(DiskBasicGroups &group_items
 			int size = sector->GetSectorSize();
 
 			SectorParam next_sec;
-			if (sec_num < gitem->sector_end) {
+			if (sec_num < gitem->GetSectorEnd()) {
 				next_sec.SetSectorParam(trk_num, sid_num, sec_num + 1, -1);
 			} else {
 				if (next_gitem) {
-					next_sec.SetSectorParam(next_gitem->track, next_gitem->side, next_gitem->sector_start, -1);
+					next_sec.SetSectorParam(next_gitem->GetTrack(), next_gitem->GetSide(), next_gitem->GetSectorStart(), -1);
 				} else {
 					next_sec.SetSectorParam(trk_num, sid_num, -1, -1);
 				}
@@ -371,7 +371,7 @@ void DiskBasicTypeS1OS::CalcDiskFreeSize(bool wrote)
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
 				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-				wxUint32 gnum = gitem->group;
+				wxUint32 gnum = gitem->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}
@@ -774,7 +774,7 @@ bool DiskBasicTypeS1OS::AdditionalProcessOnExpandedDirectory(DiskBasicDirItem *i
 	sector = basic->GetSector(trk_num, sid_num, sec_num);
 
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
-	bool found = (trk_num == gitem->track && sid_num == gitem->side && sec_num == gitem->sector_start);
+	bool found = (trk_num == gitem->GetTrack() && sid_num == gitem->GetSide() && sec_num == gitem->GetSectorStart());
 
 	// チェインの最後に新たに確保したセクタを追加する
 	int ptrk_num = 0;
@@ -788,9 +788,9 @@ bool DiskBasicTypeS1OS::AdditionalProcessOnExpandedDirectory(DiskBasicDirItem *i
 		DiskBasicDirItemS1OS::GetCHR(basic, &chain->next, trk_num, sid_num, sec_num);
 		if (trk_num <= 0 && sid_num <= 0 && sec_num <= 0) {
 			// 新規に追加するセクタ番号を書く
-			trk_num = gitem->track;
-			sid_num = gitem->side;
-			sec_num = gitem->sector_start;
+			trk_num = gitem->GetTrack();
+			sid_num = gitem->GetSide();
+			sec_num = gitem->GetSectorStart();
 			DiskBasicDirItemS1OS::SetCHR(basic, trk_num, sid_num, sec_num, &chain->next);
 			found = true;
 		}
@@ -993,7 +993,7 @@ int DiskBasicTypeS1OS::WriteFile(DiskBasicDirItem *item, wxInputStream &istream,
 	// ベリファイでチェインを追いかけるため仮で登録する
 	if (next_group) {
 		// セット
-		DiskBasicDirItemS1OS::SetCHR(basic, next_group->track, next_group->side, next_group->sector_start, &chain->next);
+		DiskBasicDirItemS1OS::SetCHR(basic, next_group->GetTrack(), next_group->GetSide(), next_group->GetSectorStart(), &chain->next);
 	}
 	return len;
 }
@@ -1012,7 +1012,7 @@ void DiskBasicTypeS1OS::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 		for(size_t n = 0; n < count; n++) {
 			DiskBasicGroupItem *curr = &groups->Item(n);
 			// 現セクタ
-			DiskImageSector *sector = basic->GetSector(curr->track, curr->side, curr->sector_start);
+			DiskImageSector *sector = basic->GetSector(curr->GetTrack(), curr->GetSide(), curr->GetSectorStart());
 			if (!sector) {
 				// Why?
 				break;
@@ -1026,11 +1026,11 @@ void DiskBasicTypeS1OS::AdditionalProcessOnSavedFile(DiskBasicDirItem *item)
 			// 次のセクタ番号を書く
 			if (n < (count - 1)) {
 				DiskBasicGroupItem *next = &groups->Item(n+1);
-				DiskBasicDirItemS1OS::SetCHR(basic, next->track, next->side, next->sector_start, &chain->next);
+				DiskBasicDirItemS1OS::SetCHR(basic, next->GetTrack(), next->GetSide(), next->GetSectorStart(), &chain->next);
 			}
 			// 前のセクタ番号を書く
 			if (prev) {
-				DiskBasicDirItemS1OS::SetCHR(basic, prev->track, prev->side, prev->sector_start, &chain->prev);
+				DiskBasicDirItemS1OS::SetCHR(basic, prev->GetTrack(), prev->GetSide(), prev->GetSectorStart(), &chain->prev);
 			}
 			prev = curr;
 		}
@@ -1051,7 +1051,7 @@ void DiskBasicTypeS1OS::DeleteGroups(const DiskBasicGroups &group_items)
 	for(size_t gidx=0; gidx<group_items.Count(); gidx++) {
 		DiskBasicGroupItem *gitem = &group_items.Item(gidx);
 		// FATエントリを削除
-		wxUint32 sgnum = FromGroupNum(gitem->group);
+		wxUint32 sgnum = FromGroupNum(gitem->GetGroup());
 		DeleteGroupNumber(sgnum);
 		// 各セクタのチェイン情報はクリアしない
 #if 0

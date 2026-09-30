@@ -507,7 +507,7 @@ int DiskBasicDirItemAppleDOS::RecalcFileSize(DiskBasicGroups &group_items, int o
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->GetTrack(), litem->GetSide(), litem->GetSectorEnd());
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();
@@ -530,7 +530,7 @@ void DiskBasicDirItemAppleDOS::TakeAddressesInFile(DiskBasicGroups &group_items)
 	}
 
 	DiskBasicGroupItem *item = &group_items.Item(0);
-	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorStart());
 	if (!sector) return;
 
 	int t1 = GetFileType1();

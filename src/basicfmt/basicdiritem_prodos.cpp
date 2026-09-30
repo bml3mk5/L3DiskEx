@@ -214,7 +214,7 @@ DiskBasicDirItemProDOS::DiskBasicDirItemProDOS(DiskBasic *basic, int n_num, cons
 	m_data.Attach(n_data);
 	AllocateItem(n_next);
 
-	m_dir_group_num = type->GetSectorPosFromNum(n_gitem->track, n_gitem->side, n_sector->GetSectorNumber());
+	m_dir_group_num = type->GetSectorPosFromNum(n_gitem->GetTrack(), n_gitem->GetSide(), n_sector->GetSectorNumber());
 	m_dir_group_num /= basic->GetSectorsPerGroup();
 
 	Used(CheckUsed(n_unuse));
@@ -798,7 +798,7 @@ void DiskBasicDirItemProDOS::TakeAddressesInFile(DiskBasicGroups &group_items)
 	}
 
 	DiskBasicGroupItem *item = &group_items.Item(0);
-	DiskImageSector *sector = basic->GetSector(item->track, item->side, item->sector_start);
+	DiskImageSector *sector = basic->GetSector(item->GetTrack(), item->GetSide(), item->GetSectorStart());
 	if (!sector) return;
 #if 0
 	int t1 = GetFileType1();

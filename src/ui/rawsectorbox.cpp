@@ -40,7 +40,7 @@ RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &capt
 
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
 
-	size.x = 32; size.y = -1;
+	size.x = FromDIP(32); size.y = -1;
 	hbox->Add(new wxStaticText(this, wxID_ANY, wxT("C")), flags);
 	txtID_C = new wxTextCtrl(this, IDC_TEXT_ID_C, wxString::Format(wxT("%d"), id_c), wxDefaultPosition, size, style, validate);
 	hbox->Add(txtID_C, flagsR);
@@ -85,7 +85,7 @@ RawSectorBox::RawSectorBox(wxWindow* parent, wxWindowID id, const wxString &capt
 	szrAll->Add(hbox, flags);
 
 	if ((hide_flags & SECTORBOX_HIDE_SECTOR_NUMS) == 0) {
-		wxSize ssize(64, -1);
+		wxSize ssize(FromDIP(64), -1);
 		wxString str;
 		str = rcrc >= 0 ? wxString::Format(wxT("%04x"), rcrc) : wxT("----");
 		hbox = new wxBoxSizer(wxHORIZONTAL);

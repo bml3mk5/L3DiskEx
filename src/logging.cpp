@@ -137,8 +137,9 @@ void MyLogging::SetMessage(int level, const wxString &msg)
 	mmsg += ndt.FormatISOTime();
 	mmsg += wxT(" ");
 	mmsg += msg;
-	mmsg += wxT("\n");
-
+	if (msg.Last() != wxT('\n')) {
+		mmsg += wxT("\n");
+	}
 	p_file->Write(mmsg);
 	p_file->Flush();
 }
@@ -155,8 +156,9 @@ void MyLogging::SetMessage(int level, const wxArrayString &msgs)
 		mmsg += ndt.FormatISOTime();
 		mmsg += wxT(" ");
 		mmsg += msgs.Item(i);
-		mmsg += wxT("\n");
-
+		if (msgs.Item(i).Last() != wxT('\n')) {
+			mmsg += wxT("\n");
+		}
 		p_file->Write(mmsg);
 	}
 	p_file->Flush();

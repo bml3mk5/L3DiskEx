@@ -252,7 +252,7 @@ int DiskBasicTypeFROST::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *i
 		if (flags == ALLOCATE_GROUPS_APPEND) {
 			// 追加のときはチェインをつなぐ
 			if (group_items.Count() > 0) {
-				rc = ChainGroups(item->GetStartGroup(0), group_items.Item(0).group);
+				rc = ChainGroups(item->GetStartGroup(0), group_items.Item(0).GetGroup());
 			}
 		}
 	} else {

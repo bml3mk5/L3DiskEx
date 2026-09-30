@@ -38,6 +38,7 @@ public:
 
 	void Set(long n_row, int n_icon, const wxString &n_value);
 	void Set(long n_row, const wxString &n_value);
+	const wxString &Get() const;
 };
 
 WX_DEFINE_ARRAY(MyCListValue *, MyCListValues);
@@ -172,6 +173,8 @@ public:
 	void InsertListItem(long row, MyCListValue *values, size_t count, wxUIntPtr data);
 	/// データを更新
 	void UpdateListItem(long row, MyCListValue *values, size_t count, wxUIntPtr data);
+	/// データを取得
+	void GetListItem(long row, MyCListValue *values, size_t count);
 
 //	int GetDirItemPos(const MyCListItem &item) const;
 	/// ファイル名テキストを設定

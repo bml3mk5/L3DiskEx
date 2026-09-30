@@ -388,7 +388,7 @@ int DiskBasicDirItemC1541::RecalcFileSize(DiskBasicGroups &group_items, int occu
 	if (group_items.Count() == 0) return occupied_size;
 
 	// 現在のセクタ
-	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Last().group);
+	DiskImageSector *sector = basic->GetSectorFromSectorPos(group_items.Last().GetGroup());
 	if (!sector) {
 		return occupied_size;
 	}
@@ -503,7 +503,7 @@ void DiskBasicDirItemC1541::GetExtraGroups(wxArrayInt &arr) const
 	if (type1 != FILETYPE_MASK_C1541_REL) return;
 
 	for(size_t i=0; i<m_ss_groups.Count(); i++) {
-		arr.Add((int)m_ss_groups.Item(i).group);
+		arr.Add((int)m_ss_groups.Item(i).GetGroup());
 	}
 }
 

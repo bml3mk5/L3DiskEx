@@ -428,10 +428,10 @@ void UiDiskFrame::PopulateToolbar(wxToolBar* toolBar)
 	INIT_TOOL_BMP(fd_5inch_16_import);
 	INIT_TOOL_BMP(fileicon_delete);
 
-	int w = toolBarBitmaps[fd_5inch_16_new].GetWidth(),
-		h = toolBarBitmaps[fd_5inch_16_new].GetHeight();
+//	int w = toolBarBitmaps[fd_5inch_16_new].GetWidth(),
+//		h = toolBarBitmaps[fd_5inch_16_new].GetHeight();
 
-	toolBar->SetToolBitmapSize(wxSize(w, h));
+//	toolBar->SetToolBitmapSize(wxSize(w, h));
 
 	toolBar->AddTool(IDM_NEW_FILE, _("New"),
 		toolBarBitmaps[fd_5inch_16_new], wxNullBitmap, wxITEM_NORMAL,

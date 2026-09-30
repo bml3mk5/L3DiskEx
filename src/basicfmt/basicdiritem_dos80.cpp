@@ -53,7 +53,7 @@ DiskBasicDirItemDOS80::DiskBasicDirItemDOS80(DiskBasic *basic, int n_num, const 
 	m_data.Attach(n_data);
 
 	// 2セクタ後に属性などがある
-	DiskImageSector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, n_sector->GetSectorNumber() + 2);
+	DiskImageSector *sector_2 = basic->GetSector(n_gitem->GetTrack(), n_gitem->GetSide(), n_sector->GetSectorNumber() + 2);
 	if (sector_2) {
 		wxUint8 *buffer2 = sector_2->GetSectorBuffer();
 		m_data2.Attach(&buffer2[n_secpos]);
@@ -100,7 +100,7 @@ void DiskBasicDirItemDOS80::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gi
 	m_data2.Delete();
 
 	// 2セクタ後に属性などがある
-	DiskImageSector *sector_2 = basic->GetSector(n_gitem->track, n_gitem->side, m_sector->GetSectorNumber() + 2);
+	DiskImageSector *sector_2 = basic->GetSector(n_gitem->GetTrack(), n_gitem->GetSide(), m_sector->GetSectorNumber() + 2);
 	if (sector_2) {
 		wxUint8 *buffer2 = sector_2->GetSectorBuffer();
 		m_data2.Attach(&buffer2[n_secpos]);

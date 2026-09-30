@@ -176,7 +176,7 @@ int DiskBasicTypeMZFDOS::AllocateUnitGroups(int fileunit_num, DiskBasicDirItem *
 	if (sector) {
 		struct st_fat_mz_fdos *f = (struct st_fat_mz_fdos *)sector->GetSectorBuffer();
 		if (f) {
-			wxUint16 group_end = (wxUint16)(group_items.Last().group + 1);
+			wxUint16 group_end = (wxUint16)(group_items.Last().GetGroup() + 1);
 			wxUint16 empty_start = basic->InvertAndOrderUint16(f->empty_start);
 			if (empty_start < group_end) {
 				f->empty_start = basic->InvertAndOrderUint16(group_end);
@@ -398,12 +398,12 @@ int DiskBasicTypeMZFDOS::WriteFile(DiskBasicDirItem *item, wxInputStream &istrea
 
 	// チェーン用のトラック＆セクタ番号を書く
 	if (need_chain) {
-		wxUint16 next_sector = group_item->group * basic->GetSectorsPerGroup();
+		wxUint16 next_sector = group_item->GetGroup() * basic->GetSectorsPerGroup();
 		// 次のデータがあるセクタ番号を入れる
 		if (sector_num < sector_end) {
 			next_sector++;
 		} else {
-			next_sector = (remain > size && next_group ? next_group->group * basic->GetSectorsPerGroup() : 0);
+			next_sector = (remain > size && next_group ? next_group->GetGroup() * basic->GetSectorsPerGroup() : 0);
 		}
 		next_sector /= basic->GetSectorsPerGroup();
 		if (next_sector > 0) {

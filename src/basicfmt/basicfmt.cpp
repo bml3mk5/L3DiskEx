@@ -862,14 +862,14 @@ int DiskBasic::AccessUnitData(int fileunit_num, DiskBasicDirItem *item, wxInputS
 	int gidx_end = (int)gitems.Count() - 1;
 	for(int gidx = 0; gidx <= gidx_end && remain > 0 && rc == 0; gidx++) {
 		DiskBasicGroupItem *gitem = &gitems.Item(gidx);
-		track_num = gitem->track;
-		side_num = gitem->side;
-		sector_start = gitem->sector_start;
-		sector_end = gitem->sector_end;
+		track_num = gitem->GetTrack();
+		side_num = gitem->GetSide();
+		sector_start = gitem->GetSectorStart();
+		sector_end = gitem->GetSectorEnd();
 		DiskImageTrack *track = p_disk->GetTrack(track_num, side_num);
 		if (!track) {
 			// トラックがない！
-			errinfo.SetError(DiskBasicError::ERRV_NO_TRACK, gitem->group, track_num, side_num);
+			errinfo.SetError(DiskBasicError::ERRV_NO_TRACK, gitem->GetGroup(), track_num, side_num);
 			rc = -1;
 			break;
 		}
@@ -878,25 +878,25 @@ int DiskBasic::AccessUnitData(int fileunit_num, DiskBasicDirItem *item, wxInputS
 			DiskImageSector *sector = track->GetSector(sector_num);
 			if (!sector) {
 				// セクタがない！
-				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, gitem->group, track_num, side_num, sector_num);
+				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, gitem->GetGroup(), track_num, side_num, sector_num);
 				rc = -1;
 				continue;
 			}
 			int bufsize = sector->GetSectorSize();
-			bufsize /= gitem->div_nums;
+			bufsize /= gitem->GetDivNums();
 			wxUint8 *buf = sector->GetSectorBuffer();
-			buf += (bufsize * gitem->div_num);
+			buf += (bufsize * gitem->GetDivNum());
 
 			// データの読み込み
 			bufsize = type->AccessFile(fileunit_num, item, istream, ostream, buf, bufsize, remain, sector_num, sector_end);
 			if (bufsize < 0) {
 				if (bufsize == -2) {
 					// セクタがおかしいぞ
-					errinfo.SetError(DiskBasicError::ERRV_INVALID_SECTOR, gitem->group, track_num, side_num, sector_num, bufsize);
+					errinfo.SetError(DiskBasicError::ERRV_INVALID_SECTOR, gitem->GetGroup(), track_num, side_num, sector_num, bufsize);
 					rc = -1;
 				} else {
 					// データが異なる
-					errinfo.SetError(DiskBasicError::ERRV_VERIFY_FILE, gitem->group, track_num, side_num, sector_num);
+					errinfo.SetError(DiskBasicError::ERRV_VERIFY_FILE, gitem->GetGroup(), track_num, side_num, sector_num);
 					rc = 1;
 				}
 				break;
@@ -1218,22 +1218,22 @@ bool DiskBasic::SaveUnitData(int fileunit_num, wxInputStream &istream, int isize
 		}
 //		group_num = gitem->group;
 //		next_group = gitem->next;
-		track_num = gitem->track;
-		side_num = gitem->side;
-		sector_start = gitem->sector_start;
-		sector_end = gitem->sector_end;
+		track_num = gitem->GetTrack();
+		side_num = gitem->GetSide();
+		sector_start = gitem->GetSectorStart();
+		sector_end = gitem->GetSectorEnd();
 
 		for(sector_num = sector_start; sector_num <= sector_end; sector_num++) {
 			DiskImageSector *sector = p_disk->GetSector(track_num, side_num, sector_num);
 			if (!sector) {
-				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, gitem->group, track_num, side_num, sector_num);
+				errinfo.SetError(DiskBasicError::ERRV_NO_SECTOR, gitem->GetGroup(), track_num, side_num, sector_num);
 				rc = -2;
 				continue;
 			}
 			int bufsize = sector->GetSectorSize();
-			bufsize /= gitem->div_nums;
+			bufsize /= gitem->GetDivNums();
 			wxUint8 *buf = sector->GetSectorBuffer();
-			buf += (bufsize * gitem->div_num);
+			buf += (bufsize * gitem->GetDivNum());
 
 			// ディスク内に書き込む
 			int last_size = type->WriteFile(item, istream, buf, bufsize, isize, sector_num, gitem, next_gitem, sector_end, seq_num);
@@ -2004,18 +2004,18 @@ bool DiskBasic::GetNumsFromGroup(wxUint32 group_num, wxUint32 next_group, int se
 	DiskBasicGroupItem itm(group_num, next_group, -1, -1, sector_start, sector_start);
 	for(int seq = sector_start; seq <= sector_end; seq++) {
 		CalcNumFromSectorPosForGroup(seq, track, side, sector, &div_num, &div_nums);
-		if (itm.track != track || itm.side != side || itm.sector_end + 1 != sector) {
+		if (itm.GetTrack() != track || itm.GetSide() != side || itm.GetSectorEnd() + 1 != sector) {
 			if (!first) {
 				items.Add(itm);
 			}
-			itm.sector_start = sector;
+			itm.SetSectorStart(sector);
 			first = false;
 		}
-		itm.track = track;
-		itm.side = side;
-		itm.sector_end = sector;
-		itm.div_num = div_num;
-		itm.div_nums = div_nums;
+		itm.SetTrack(track);
+		itm.SetSide(side);
+		itm.SetSectorEnd(sector);
+		itm.SetDivNum(div_num);
+		itm.SetDivNums(div_nums);
 	}
 
 	items.Add(itm);

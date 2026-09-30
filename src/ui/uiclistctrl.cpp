@@ -36,6 +36,10 @@ void MyCListValue::Set(long n_row, const wxString &n_value)
 	SetId((int)n_row);
 	SetText(n_value);
 }
+const wxString &MyCListValue::Get() const
+{
+	return GetText();
+}
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -307,18 +311,6 @@ void MyCListCtrl::AssignListIcons(const char ***icons)
 	AssignImageList( ilist, wxIMAGE_LIST_SMALL );
 }
 
-#if 0
-/// カラム幅を変えた
-void MyCListCtrl::OnColumnEndDrag(MyCListEvent& event)
-{
-	int col = event.GetColumn();
-	UiDiskFileListColumn *column = FindColumn(col, NULL);
-	if (column) {
-		column->SetWidth(GetListColumnWidth(col));
-	}
-}
-#endif
-
 /// カラムをソート
 void MyCListCtrl::OnColumnSorted(MyCListEvent& event)
 {
@@ -457,13 +449,19 @@ void MyCListCtrl::UpdateListItem(long row, MyCListValue *values, size_t count, w
 #endif
 }
 
-#if 0
-/// ディレクトリアイテムの位置を返す
-int MyCListCtrl::GetDirItemPos(const MyCListItem &item) const
+/// データを取得
+void MyCListCtrl::GetListItem(long row, MyCListValue *values, size_t count)
 {
-	return (int)GetListItemData(item);
-}
+#ifndef USE_VIRTUAL_ON_LIST_CTRL
+	for(int idx = 0; idx < (int)m_columns.Count(); idx++) {
+		if (m_columns[idx]->GetColumn() >= 0) {
+			values[idx].SetId(row);
+			values[idx].SetColumn(m_columns[idx]->GetColumn());
+			GetItem(values[idx]);
+		}
+	}
 #endif
+}
 
 /// ファイル名テキストを設定
 /// @param [in] item リストアイテム

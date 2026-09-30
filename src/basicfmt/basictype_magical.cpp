@@ -86,9 +86,9 @@ void DiskBasicTypeMAGICAL::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *it
 	if (group_items.Count() == 0) return;
 
 	const DiskBasicGroupItem *group = group_items.ItemPtr(0);
-	item->SetStartGroup(0, group->group, basic->GetSubDirGroupSize());
+	item->SetStartGroup(0, group->GetGroup(), basic->GetSubDirGroupSize());
 
-	DiskImageSector *sector = basic->GetSector(group->track, group->side, group->sector_start);
+	DiskImageSector *sector = basic->GetSector(group->GetTrack(), group->GetSide(), group->GetSectorStart());
 	if (!sector) return;
 
 	wxUint8 *buf = sector->GetSectorBuffer();
@@ -122,8 +122,8 @@ void DiskBasicTypeMAGICAL::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *it
 	s.sector = sec;
 	s.size = 1 + basic->GetDirEndSector() - basic->GetDirStartSector();
 	sector->Copy(&s, 3, 0x71);
-	s.track = group->track * basic->GetSidesPerDiskOnBasic() + group->side;
-	s.sector = group->sector_start;
+	s.track = group->GetTrack() * basic->GetSidesPerDiskOnBasic() + group->GetSide();
+	s.sector = group->GetSectorStart();
 	sector->Copy(&s, 3, 0x74);
 }
 

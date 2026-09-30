@@ -370,14 +370,14 @@ bool DiskBasicTypeOS9::IsEmptyDirectory(bool is_root, const DiskBasicGroups &gro
 	DiskBasicDirItem *nitem = dir->NewItem(NULL, 0, NULL);
 	for(size_t idx = 0; idx < group_items.Count(); idx++) {
 		const DiskBasicGroupItem *gitem = group_items.ItemPtr(idx);
-		int trk_num = gitem->track;
-		int sid_num = gitem->side;
+		int trk_num = gitem->GetTrack();
+		int sid_num = gitem->GetSide();
 		DiskImageTrack *track = basic->GetTrack(trk_num, sid_num);
 		if (!track) {
 			valid = false;
 			break;
 		}
-		for(int sec_num = gitem->sector_start; sec_num <= gitem->sector_end && valid && !last; sec_num++) {
+		for(int sec_num = gitem->GetSectorStart(); sec_num <= gitem->GetSectorEnd() && valid && !last; sec_num++) {
 			DiskImageSector *sector = track->GetSector(sec_num);
 //			nitem->SetSector(sector);
 			if (!sector) {
@@ -457,7 +457,7 @@ void DiskBasicTypeOS9::CalcDiskFreeSize(bool wrote)
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
 				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-				wxUint32 gnum = gitem->group;
+				wxUint32 gnum = gitem->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}
@@ -736,7 +736,7 @@ void DiskBasicTypeOS9::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, 
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskImageSector *sector = basic->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetSector(gitem->GetTrack(), gitem->GetSide(), gitem->GetSectorStart());
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);

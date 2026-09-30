@@ -123,42 +123,7 @@ MyCDListCtrl::MyCDListCtrl(UiDiskFrame *parentframe, wxWindow *parent, wxWindowI
 
 	// カラムを設定する
 	InsertListColumns();
-#if 0
-	// カラム位置を振り直し
-	MyCDListColumns arr;
-	for(int idx = 0; idx < column_count; idx++) {
-		arr.Add(m_columns[idx]);
-	}
-	arr.Sort(&SortByColumn);
-	int n_col = 0;
-	// 表示するカラムの順番を設定
-	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		MyCDListColumn *column = arr.Item(idx);
-		if (column->GetColumn() >= 0) {
-			column->SetColumn(n_col);
-			column->Shown(true);
-			if (n_col == 0) {
-				m_idOnFirstColumn = column->GetIndex();
-			}
-			n_col++;
-		}
-	}
-	// 表示しないカラムの順番を設定
-	for(size_t idx = 0; idx < arr.Count(); idx++) {
-		MyCDListColumn *column = arr.Item(idx);
-		if (column->GetColumn() < 0) {
-			column->SetColumn(n_col);
-			column->Shown(false);
-			n_col++;
-		}
-	}
 
-	// リストにカラムを設定
-	for(int col = 0; col < column_count; col++) {
-		InsertListColumn(col);
-	}
-	AppendTextColumn(wxT(""), wxDATAVIEW_CELL_INERT, 1, wxALIGN_LEFT, wxDATAVIEW_COL_RESIZABLE );
-#endif
 	// event handler
 
 	// カラムを入れ替えた
@@ -201,18 +166,6 @@ void MyCDListCtrl::AssignListIcons(const char ***icons)
 		m_icons.Add(new wxIcon(icons[idx]));
 	}
 }
-
-#if 0
-/// カラム幅を変えた
-void MyCDListCtrl::OnColumnEndDrag(MyCDListEvent& event)
-{
-	int col = event.GetColumn();
-	UiDiskFileListColumn *column = FindColumn(col, NULL);
-	if (column) {
-		column->SetWidth(GetColumnWidth(col));
-	}
-}
-#endif
 
 /// カラムを入れ替え
 /// @note implemented in wxWidgets 3.1.1 or higher
@@ -364,14 +317,6 @@ void MyCDListCtrl::UpdateListItem(long row, MyCDListValue *values, size_t count,
 		}
 	}
 }
-
-#if 0
-/// ディレクトリアイテムの位置を返す
-int MyCDListCtrl::GetDirItemPos(const MyCDListItem &item) const
-{
-	return (int)GetListItemData(item);
-}
-#endif
 
 /// ファイル名テキストを設定
 /// @param [in] item リストアイテム

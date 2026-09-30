@@ -298,7 +298,7 @@ void DiskBasicTypeMSDOS::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item
 	// カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->GetTrack(), gitem->GetSide(), gitem->GetSectorStart());
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);

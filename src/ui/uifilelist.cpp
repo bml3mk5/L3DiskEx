@@ -1211,17 +1211,17 @@ bool UiDiskFileList::SetDumpData(DiskBasicGroupItem &group_item)
 	if (!m_current_basic) return false;
 
 	DiskImageDisk *disk = m_current_basic->GetDisk();
-	DiskImageTrack *track = disk->GetTrack(group_item.track, group_item.side);
+	DiskImageTrack *track = disk->GetTrack(group_item.GetTrack(), group_item.GetSide());
 	if (!track) {
 		return false;
 	}
-	for(int s=group_item.sector_start; s<=group_item.sector_end; s++) {
+	for(int s=group_item.GetSectorStart(); s<=group_item.GetSectorEnd(); s++) {
 		DiskImageSector *sector;
 		sector = track->GetSector(s);
 		if (!sector) {
 			break;
 		}
-		if (s == group_item.sector_start) {
+		if (s == group_item.GetSectorStart()) {
 			frame->SetBinDumpData(sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetSectorBuffer(), sector->GetSectorSize());
 		} else {
 			frame->AppendBinDumpData(sector->GetIDC(), sector->GetIDH(), sector->GetIDR(), sector->GetSectorBuffer(), sector->GetSectorSize());

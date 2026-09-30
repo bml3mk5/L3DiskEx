@@ -301,6 +301,8 @@ public:
 	virtual bool	Check(bool &last) = 0;
 	/// @brief ディレクトリアイテムのチェック
 	static bool		CheckData(const wxUint8 *buf, size_t len, bool &last);
+	/// @brief ディレクトリアイテムをアサインした後の追加処理（機種依存）
+	virtual void	AdditionalProcessAfterAssigned() {}
 	/// @brief アイテムを削除できるか
 	virtual bool	IsDeletable() const;
 	/// @brief 削除（要実装）

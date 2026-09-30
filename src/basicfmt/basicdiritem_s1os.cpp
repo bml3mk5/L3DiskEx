@@ -726,7 +726,7 @@ void DiskBasicDirItemS1OS::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	wxStaticBoxSizer *staType1 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Kind")), wxVERTICAL);
 
 	comType1 = new wxChoice(parent, IDC_COMBO_TYPE1, wxDefaultPosition, wxDefaultSize, types1);
-	for(size_t i=0; gTypeNameS1OS_1[i].name != NULL; i++) {
+	for(int i=0; gTypeNameS1OS_1[i].name != NULL; i++) {
 		if (gTypeNameS1OS_1[i].value == file_type_1) {
 			comType1->SetSelection(i);
 			break;
@@ -741,7 +741,7 @@ void DiskBasicDirItemS1OS::CreateControlsForAttrDialog(IntNameBox *parent, int s
 	}
 	wxStaticBoxSizer *staType2 = new wxStaticBoxSizer(new wxStaticBox(parent, wxID_ANY, _("File Status")), wxVERTICAL);
 	comType2 = new wxChoice(parent, IDC_COMBO_TYPE2, wxDefaultPosition, wxDefaultSize, types2);
-	for(size_t i=0; gTypeNameS1OS_2[i].name != NULL; i++) {
+	for(int i=0; gTypeNameS1OS_2[i].name != NULL; i++) {
 		if (gTypeNameS1OS_2[i].value == file_type_2) {
 			comType2->SetSelection(i);
 			break;

@@ -362,7 +362,7 @@ void DiskBasicDirItemXDOSBase::GetUnitGroups(int fileunit_num, DiskBasicGroups &
 			if (idx != 0) {
 				if (group_items.Count() > 0) {
 					DiskBasicGroupItem *gitem = &group_items.Last();
-					gitem->next = group_num;
+					gitem->SetNextGroup(group_num);
 				}
 			}
 			for(int siz = 0; siz < size; siz++) {
@@ -387,7 +387,7 @@ int	DiskBasicDirItemXDOSBase::RecalcFileSize(DiskBasicGroups &group_items, int o
 	if (group_items.Count() == 0) return occupied_size;
 
 	DiskBasicGroupItem *litem = &group_items.Last();
-	DiskImageSector *sector = basic->GetSector(litem->track, litem->side, litem->sector_end);
+	DiskImageSector *sector = basic->GetSector(litem->GetTrack(), litem->GetSide(), litem->GetSectorEnd());
 	if (!sector) return occupied_size;
 
 	int sector_size = sector->GetSectorSize();

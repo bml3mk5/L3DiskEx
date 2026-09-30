@@ -79,7 +79,7 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 	wxTextValidator validigits(wxFILTER_EMPTY | wxFILTER_DIGITS);
 	wxTextValidator valialpha(wxFILTER_ASCII);
 	bool use_template = ((show_flags & SHOW_TEMPLATE_ALL) != 0);
-
+	wxSize fsize = GetTextExtent(wxT("00"));
 	wxBoxSizer *szrAll = new wxBoxSizer(wxVERTICAL);
 
 	//
@@ -119,26 +119,26 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 	//
 
 	wxBoxSizer *hbox = new wxBoxSizer(wxHORIZONTAL);
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtTracks = new wxTextCtrl(this, IDC_TEXT_TRACKS, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtTracks->SetMaxLength(4);
 	hbox->Add(txtTracks, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Tracks/Side")), flags);
-	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
+	hbox->AddSpacer(fsize.x);
 
 	txtSides = new wxTextCtrl(this, IDC_TEXT_SIDES, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSides->SetMaxLength(2);
 	hbox->Add(txtSides, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Side(s)/Disk")), flags);
-	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
+	hbox->AddSpacer(fsize.x);
 
 	txtSectors = new wxTextCtrl(this, IDC_TEXT_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSectors->SetMaxLength(3);
 	hbox->Add(txtSectors, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flags);
-	hbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
+	hbox->AddSpacer(fsize.x);
 
-	size.x = 80; size.y = -1;
+	size.x = fsize.x * 4 + FromDIP(16); size.y = -1;
 	comSecSize = new wxComboBox(this, IDC_COMBO_SECSIZE, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
 	for(int i=0; gSectorSizes[i] != 0; i++) {
 		comSecSize->Append(wxString::Format(wxT("%d"), gSectorSizes[i]));
@@ -154,15 +154,15 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Interleave")), flags);
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtSecIntl = new wxTextCtrl(this, IDC_TEXT_INTERLEAVE, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSecIntl->SetMaxLength(2);
 	hbox->Add(txtSecIntl, 0);
 
-	hbox->AddSpacer(16);
+	hbox->AddSpacer(fsize.x);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Numbering Sector")), flags);
-	size.x = 200; size.y = -1;
+	size.x = fsize.x * 16; size.y = -1;
 	comNumbSec = new wxChoice(this, IDC_COMBO_NUMBSEC, wxDefaultPosition, size);
 	for(int i=0; gNumberingSector[i] != 0; i++) {
 		comNumbSec->Append(wxGetTranslation(gNumberingSector[i]));
@@ -177,31 +177,31 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 	hbox = new wxBoxSizer(wxHORIZONTAL);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("First Track Number")), flags);
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtFirstTrack = new wxTextCtrl(this, IDC_TEXT_FIRST_TRACK, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtFirstTrack->SetMaxLength(2);
 	hbox->Add(txtFirstTrack, 0);
 
-	hbox->AddSpacer(16);
+	hbox->AddSpacer(fsize.x);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("First Side Number")), flags);
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtFirstSide = new wxTextCtrl(this, IDC_TEXT_FIRST_SIDE, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtFirstSide->SetMaxLength(2);
 	hbox->Add(txtFirstSide, 0);
 
-	hbox->AddSpacer(16);
+	hbox->AddSpacer(fsize.x);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("First Sector Number")), flags);
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtFirstSector = new wxTextCtrl(this, IDC_TEXT_FIRST_SECTOR, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtFirstSector->SetMaxLength(2);
 	hbox->Add(txtFirstSector, 0);
 
-	hbox->AddSpacer(16);
+	hbox->AddSpacer(fsize.x);
 
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("Data Size")), flags);
-	size.x = 120; size.y = -1;
+	size.x = fsize.x * 10; size.y = -1;
 	txtDiskSize = new wxTextCtrl(this, IDC_TEXT_DISKSIZE, wxEmptyString, wxDefaultPosition, size, wxTE_RIGHT | wxTE_READONLY);
 	hbox->Add(txtDiskSize, 0);
 	hbox->Add(new wxStaticText(this, wxID_ANY, _("bytes")), flags);
@@ -225,14 +225,14 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 
 	sbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
-	size.x = 40; size.y = -1;
+	size.x = fsize.x * 3; size.y = -1;
 	txtSingleSectors = new wxTextCtrl(this, IDC_TEXT_SINGLE_SECTORS, wxEmptyString, wxDefaultPosition, size, style, validigits);
 	txtSingleSectors->SetMaxLength(3);
 	sbox->Add(txtSingleSectors, 0);
 	sbox->Add(new wxStaticText(this, wxID_ANY, _("Sectors/Track")), flags);
 	sbox->Add(new wxStaticText(this, wxID_ANY, wxT(" ")), flags);
 
-	size.x = 80; size.y = -1;
+	size.x = fsize.x * 4 + FromDIP(16); size.y = -1;
 	comSingleSecSize = new wxComboBox(this, IDC_COMBO_SINGLE_SECSIZE, wxEmptyString, wxDefaultPosition, size, 0, NULL, wxCB_DROPDOWN | wxCB_READONLY);
 	for(int i=0; i <= 1; i++) {
 		comSingleSecSize->Append(wxString::Format(wxT("%d"), gSectorSizes[i]));
@@ -254,16 +254,17 @@ DiskParamBox::DiskParamBox(wxWindow* parent, wxWindowID id, DiskImage &image, Op
 	if ((show_flags & SHOW_DISKLABEL_ALL) != 0) {
 		hbox = new wxBoxSizer(wxHORIZONTAL);
 		hbox->Add(new wxStaticText(this, wxID_ANY, _("Disk Name")), flags);
-		size.x = 160; size.y = -1;
+		size.x = fsize.x * 12; size.y = -1;
 		txtDiskName = new wxTextCtrl(this, IDC_TEXT_DISKNAME, wxEmptyString, wxDefaultPosition, size, style);
 		txtDiskName->SetMaxLength(16);
 		hbox->Add(txtDiskName, 0);
+		hbox->AddSpacer(fsize.x);
 
 		wxArrayString densities;
 		p_image->GetDensityNames(densities);
 		comDensity = new wxChoice(this, IDC_COMBO_DENSITY, wxDefaultPosition, wxDefaultSize, densities);
 		comDensity->SetSelection(0);
-		hbox->Add(comDensity, flagsH);
+		hbox->Add(comDensity, 0);
 		chkWprotect = new wxCheckBox(this, IDC_CHK_WPROTECT, _("Write Protect"));
 		hbox->Add(chkWprotect, flagsH);
 

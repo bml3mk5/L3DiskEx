@@ -149,7 +149,7 @@ DiskBasicDirItemAmiga::DiskBasicDirItemAmiga(DiskBasic *basic, int n_num, const 
 {
 	m_temp_pre = NULL;
 	m_temp_post = NULL;
-	if (n_gitem) m_chain = *n_gitem->user_data;
+	if (n_gitem) m_chain = n_gitem->GetUserData();
 
 	AllocData(n_sector, n_data);
 
@@ -226,7 +226,7 @@ void DiskBasicDirItemAmiga::SetDataPtr(int n_num, const DiskBasicGroupItem *n_gi
 {
 	DiskBasicDirItem::SetDataPtr(n_num, n_gitem, n_sector, n_secpos, n_data, n_next);
 
-	if (n_gitem) m_chain = *n_gitem->user_data;
+	if (n_gitem) m_chain = n_gitem->GetUserData();
 	AllocData(n_sector, n_data);
 }
 

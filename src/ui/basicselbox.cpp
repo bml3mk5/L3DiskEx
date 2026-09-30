@@ -45,7 +45,7 @@ wxSizer *VolumeCtrl::CreateVolumeCtrl(wxWindow* parent, wxWindowID id, const Dis
 	wxSizerFlags flags = wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(4));
 	wxSizerFlags vflags = wxSizerFlags().Expand().Border(wxALL, parent->FromDIP(1));
 
-	int vmax_width = 192;
+	int vmax_width = parent->FromDIP(192);
 	wxFlexGridSizer *gszr = new wxFlexGridSizer(2, 2, 2);
 	for(int i=0; i<VOLUME_ROWS; i++) {
 		bool enable = true;

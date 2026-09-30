@@ -209,6 +209,8 @@ public:
 	virtual wxUint32 GetEmptyGroupNumber();
 	/// @brief 次の空きFAT位置を返す
 	virtual wxUint32 GetNextEmptyGroupNumber(wxUint32 curr_group);
+	/// @brief FAT種類を返す（機種依存）
+	virtual int GetFatType() const { return 0; }
 	//@}
 
 	/// @name check / assign FAT area

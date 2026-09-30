@@ -125,45 +125,45 @@ bool DiskBasicFileType::IsDirectory() const
 //
 DiskBasicGroupItem::DiskBasicGroupItem()
 {
-	group = 0;
-	next = 0;
-	track = 0;
-	side = 0;
-	sector_start = 0;
-	sector_end = 0;
-	div_num = 0;
-	div_nums = 1;
-	user_data = NULL;
+	m_group = 0;
+	m_next = 0;
+	m_track = 0;
+	m_side = 0;
+	m_sector_start = 0;
+	m_sector_end = 0;
+	m_div_num = 0;
+	m_div_nums = 1;
+	p_user_data = NULL;
 }
 DiskBasicGroupItem::DiskBasicGroupItem(const DiskBasicGroupItem &src)
 {
-	group = src.group;
-	next = src.next;
-	track = src.track;
-	side = src.side;
-	sector_start = src.sector_start;
-	sector_end = src.sector_end;
-	div_num = src.div_num;
-	div_nums = src.div_nums;
-	user_data = NULL;
-	if (src.user_data) {
-		user_data = src.user_data->Clone();
+	m_group = src.m_group;
+	m_next = src.m_next;
+	m_track = src.m_track;
+	m_side = src.m_side;
+	m_sector_start = src.m_sector_start;
+	m_sector_end = src.m_sector_end;
+	m_div_num = src.m_div_num;
+	m_div_nums = src.m_div_nums;
+	p_user_data = NULL;
+	if (src.p_user_data) {
+		p_user_data = src.p_user_data->Clone();
 	}
 }
 /// @brief 代入
 DiskBasicGroupItem &DiskBasicGroupItem::operator=(const DiskBasicGroupItem &src)
 {
-	group = src.group;
-	next = src.next;
-	track = src.track;
-	side = src.side;
-	sector_start = src.sector_start;
-	sector_end = src.sector_end;
-	div_num = src.div_num;
-	div_nums = src.div_nums;
-	user_data = NULL;
-	if (src.user_data) {
-		user_data = src.user_data->Clone();
+	m_group = src.m_group;
+	m_next = src.m_next;
+	m_track = src.m_track;
+	m_side = src.m_side;
+	m_sector_start = src.m_sector_start;
+	m_sector_end = src.m_sector_end;
+	m_div_num = src.m_div_num;
+	m_div_nums = src.m_div_nums;
+	p_user_data = NULL;
+	if (src.p_user_data) {
+		p_user_data = src.p_user_data->Clone();
 	}
 	return *this;
 }
@@ -193,7 +193,7 @@ DiskBasicGroupItem::DiskBasicGroupItem(wxUint32 n_group, wxUint32 n_next, int n_
 /// デストラクタ
 DiskBasicGroupItem::~DiskBasicGroupItem()
 {
-	delete user_data;
+	delete p_user_data;
 }
 /// データセット
 /// @param[in] n_group グループ番号
@@ -207,15 +207,15 @@ DiskBasicGroupItem::~DiskBasicGroupItem()
 /// @param[in] n_user  機種依存データ
 void DiskBasicGroupItem::Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div, int n_divs, DiskBasicGroupUserData *n_user)
 {
-	group = n_group;
-	next = n_next;
-	track = n_track;
-	side = n_side;
-	sector_start = n_start;
-	sector_end = n_end;
-	div_num = n_div;
-	div_nums = n_divs;
-	user_data = n_user;
+	m_group = n_group;
+	m_next = n_next;
+	m_track = n_track;
+	m_side = n_side;
+	m_sector_start = n_start;
+	m_sector_end = n_end;
+	m_div_num = n_div;
+	m_div_nums = n_divs;
+	p_user_data = n_user;
 }
 /// データセット
 /// @param[in] n_group グループ番号
@@ -226,20 +226,20 @@ void DiskBasicGroupItem::Set(wxUint32 n_group, wxUint32 n_next, int n_track, int
 /// @param[in] n_user  機種依存データ
 void DiskBasicGroupItem::Set(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, DiskBasicGroupUserData *n_user)
 {
-	group = n_group;
-	next = n_next;
-	track = n_track;
-	side = n_side;
-	sector_start = n_start;
-	sector_end = n_start;
-	div_num = 0;
-	div_nums = 1;
-	user_data = n_user;
+	m_group = n_group;
+	m_next = n_next;
+	m_track = n_track;
+	m_side = n_side;
+	m_sector_start = n_start;
+	m_sector_end = n_start;
+	m_div_num = 0;
+	m_div_nums = 1;
+	p_user_data = n_user;
 }
 /// グループ番号でソートする際の比較
 int DiskBasicGroupItem::Compare(DiskBasicGroupItem **item1, DiskBasicGroupItem **item2)
 {
-	return ((*item1)->group == (*item2)->group ? 0 : ((*item1)->group > (*item2)->group ? 1 : -1));
+	return ((*item1)->m_group == (*item2)->m_group ? 0 : ((*item1)->m_group > (*item2)->m_group ? 1 : -1));
 }
 
 #include <wx/arrimpl.cpp>
@@ -251,9 +251,9 @@ WX_DEFINE_OBJARRAY(DiskBasicGroupItems);
 //
 DiskBasicGroups::DiskBasicGroups()
 {
-	nums = 0;
-	size = 0;
-	size_per_group = 0;
+	m_nums = 0;
+	m_size = 0;
+	m_size_per_group = 0;
 }
 /// 追加
 /// @param[in] n_group グループ番号
@@ -267,7 +267,7 @@ DiskBasicGroups::DiskBasicGroups()
 /// @param[in] n_user  機種依存データ
 void DiskBasicGroups::Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, int n_end, int n_div, int n_divs, DiskBasicGroupUserData *n_user)
 {
-	items.Add(DiskBasicGroupItem(n_group, n_next, n_track, n_side, n_start, n_end, n_div, n_divs, n_user));
+	m_items.Add(DiskBasicGroupItem(n_group, n_next, n_track, n_side, n_start, n_end, n_div, n_divs, n_user));
 }
 /// 追加
 /// @param[in] n_group グループ番号
@@ -278,75 +278,75 @@ void DiskBasicGroups::Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_
 /// @param[in] n_user  機種依存データ
 void DiskBasicGroups::Add(wxUint32 n_group, wxUint32 n_next, int n_track, int n_side, int n_start, DiskBasicGroupUserData *n_user)
 {
-	items.Add(DiskBasicGroupItem(n_group, n_next, n_track, n_side, n_start, n_user));
+	m_items.Add(DiskBasicGroupItem(n_group, n_next, n_track, n_side, n_start, n_user));
 }
 /// 追加
 /// @param[in] n_item アイテム
 void DiskBasicGroups::Add(const DiskBasicGroupItem &n_item)
 {
-	items.Add(n_item);
+	m_items.Add(n_item);
 }
 /// 追加
 /// @param[in] n_items アイテムリスト
 void DiskBasicGroups::Add(const DiskBasicGroups &n_items)
 {
 	for(size_t i=0; i<n_items.Count(); i++) {
-		items.Add(n_items.Item(i));
+		m_items.Add(n_items.Item(i));
 	}
-	nums += n_items.nums;
-	size += n_items.size;
+	m_nums += n_items.m_nums;
+	m_size += n_items.m_size;
 }
 /// クリア
 void DiskBasicGroups::Empty()
 {
-	items.Empty();
-	nums = 0;
-	size = 0;
-	size_per_group = 0;
+	m_items.Empty();
+	m_nums = 0;
+	m_size = 0;
+	m_size_per_group = 0;
 }
 /// アイテム数
 size_t DiskBasicGroups::Count() const
 {
-	return items.Count();
+	return m_items.Count();
 }
 /// リストからアイテムを削除
 void DiskBasicGroups::RemoveAt(size_t idx)
 {
-	items.RemoveAt(idx);
+	m_items.RemoveAt(idx);
 }
 /// 最終アイテム
 DiskBasicGroupItem &DiskBasicGroups::Last() const
 {
-	return items.Last();
+	return m_items.Last();
 }
 /// アイテム
 DiskBasicGroupItem &DiskBasicGroups::Item(size_t idx) const
 {
-	return items.Item(idx);
+	return m_items.Item(idx);
 }
 /// アイテム
 DiskBasicGroupItem *DiskBasicGroups::ItemPtr(size_t idx) const
 {
-	return &items.Item(idx);
+	return &m_items.Item(idx);
 }
 /// グループ数を足す
 int DiskBasicGroups::AddNums(int val)
 {
-	nums += val;
-	return nums;
+	m_nums += val;
+	return m_nums;
 }
 
 /// 占有サイズを足す
 int DiskBasicGroups::AddSize(int val)
 {
-	size += val;
-	return (int)size;
+	m_size += val;
+	return (int)m_size;
 }
 
 /// グループ番号でソート
 void DiskBasicGroups::SortItems()
 {
-	items.Sort(&DiskBasicGroupItem::Compare);
+	m_items.Sort(&DiskBasicGroupItem::Compare);
 }
 
 //////////////////////////////////////////////////////////////////////

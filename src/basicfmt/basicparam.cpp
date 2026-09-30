@@ -9,7 +9,6 @@
 #include "../utils.h"
 #include <wx/xml/xml.h>
 
-
 //////////////////////////////////////////////////////////////////////
 //
 // DISK BASICの基本パラメータ
@@ -429,9 +428,6 @@ bool DiskBasicParam::FindBasicCategoryName(const wxString &str) const
 /// @return true
 bool DiskBasicParam::LoadReservedGroupsInTypes(const wxXmlNode *node, const wxString &locale_name, wxArrayString &errmsgs)
 {
-	// reserved_groups 予約済みグループ
-	wxArrayInt reserved_groups;
-
 	wxXmlNode *citemnode = node->GetChildren();
 	while(citemnode) {
 		if (citemnode->GetName() == "Group") {

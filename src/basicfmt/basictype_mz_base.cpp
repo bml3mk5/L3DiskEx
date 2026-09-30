@@ -62,7 +62,7 @@ void DiskBasicTypeMZBase::CalcDiskFreeSize(bool wrote)
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
 				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-				wxUint32 gnum = gitem->group;
+				wxUint32 gnum = gitem->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}

@@ -519,7 +519,7 @@ void DiskBasicDirItemOS9::GetUnitGroups(int fileunit_num, DiskBasicGroups &group
 		if (i != 0) {
 			if (group_items.Count() > 0) {
 				DiskBasicGroupItem *gitm = &group_items.Last();
-				gitm->next = lsn;
+				gitm->SetNextGroup(lsn);
 			}
 		}
 		for(int n = 0; n < siz; n++) {

@@ -147,7 +147,7 @@ void DiskBasicTypeMZ::CalcDiskFreeSize(bool wrote)
 			size_t gcnt = item->GetGroupCount();
 			if (gcnt > 0) {
 				const DiskBasicGroupItem *gitem = item->GetGroup(gcnt - 1);
-				wxUint32 gnum = gitem->group;
+				wxUint32 gnum = gitem->GetGroup();
 				if (gnum <= basic->GetFatEndGroup()) {
 					fat_availability.Set(gnum, FAT_AVAIL_USED_LAST);
 				}
@@ -469,7 +469,7 @@ void DiskBasicTypeMZ::AdditionalProcessOnMadeDirectory(DiskBasicDirItem *item, D
 	// ボリューム番号、カレントと親ディレクトリのエントリを作成する
 	DiskBasicGroupItem *gitem = &group_items.Item(0);
 
-	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->track, gitem->side, gitem->sector_start);
+	DiskImageSector *sector = basic->GetDisk()->GetSector(gitem->GetTrack(), gitem->GetSide(), gitem->GetSectorStart());
 
 	wxUint8 *buf = sector->GetSectorBuffer();
 	DiskBasicDirItem *newitem = basic->CreateDirItem(sector, 0, buf);
@@ -634,12 +634,12 @@ int DiskBasicTypeMZ::WriteFile(DiskBasicDirItem *item, wxInputStream &istream, w
 
 	// チェーン用のセクタ番号を書く
 	if (need_chain) {
-		wxUint16 next_sector = group_item->group * basic->GetSectorsPerGroup();
+		wxUint16 next_sector = group_item->GetGroup() * basic->GetSectorsPerGroup();
 		// 次のデータがあるセクタ番号を入れる
 		if (sector_num < sector_end) {
 			next_sector++;
 		} else {
-			next_sector = (remain > size && next_group ? next_group->group * basic->GetSectorsPerGroup() : 0);
+			next_sector = (remain > size && next_group ? next_group->GetGroup() * basic->GetSectorsPerGroup() : 0);
 		}
 		*((wxUint16 *)&buffer[size]) = basic->InvertAndOrderUint16(next_sector);
 	}
